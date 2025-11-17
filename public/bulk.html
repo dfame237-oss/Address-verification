@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bulk Address Verification</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -24,6 +25,8 @@
     </script>
     <style>
         body { font-family: 'Inter', sans-serif; }
+        /* Add a style to hide the file reader when PapaParse is used */
+        #csvFileInput.hidden-file-input { display: none; }
     </style>
 </head>
 <body class="bg-neutral-gray min-h-screen flex items-center justify-center p-4">
@@ -83,11 +86,29 @@
     
     <script>
         const API_ENDPOINT = "https://address-verification-app.vercel.app/api/verify-single-address";
+        
+        // Output headers for the final CSV
+        const OUTPUT_HEADERS = [
+            "ORDER ID", "CUSTOMER NAME", "RAW ADDRESS", 
+            "CLEAN NAME", "CLEAN ADDRESS LINE 1", "LANDMARK", 
+            "STATE", "DISTRICT", "PIN", "REMARKS", "QUALITY"
+        ];
+        
+        // Array to store output rows during processing
+        let outputRows = [OUTPUT_HEADERS.map(h => `"${h}"`).join(',')];
+        let totalRows = 0;
+        let processedCount = 0;
 
         document.addEventListener('DOMContentLoaded', () => {
             const downloadTemplateButton = document.getElementById('downloadTemplateButton');
             const csvFileInput = document.getElementById('csvFileInput');
             const processButton = document.getElementById('processButton');
+            
+            // Re-initialize state variables
+            outputRows = [OUTPUT_HEADERS.map(h => `"${h}"`).join(',')];
+            totalRows = 0;
+            processedCount = 0;
+
 
             if (downloadTemplateButton) {
                 downloadTemplateButton.addEventListener('click', handleTemplateDownload);
@@ -97,6 +118,15 @@
                 csvFileInput.addEventListener('change', () => {
                     if (processButton) {
                         processButton.disabled = !csvFileInput.files.length;
+                        // Reset progress on new file selection
+                        document.getElementById('progressBarFill').style.width = '0%';
+                        document.getElementById('status-message').textContent = 'File selected. Ready to process.';
+                        document.getElementById('downloadLink').classList.add('hidden');
+                        
+                        // Reset global state for new run
+                        outputRows = [OUTPUT_HEADERS.map(h => `"${h}"`).join(',')];
+                        totalRows = 0;
+                        processedCount = 0;
                     }
                 });
             }
@@ -106,14 +136,12 @@
             }
         });
 
-        // Function to handle status message display, including errors
         function updateStatusMessage(message, isError = false) {
             const statusMessage = document.getElementById('status-message');
             statusMessage.textContent = message;
             
-            // Reset colors
             statusMessage.classList.remove('text-red-700', 'bg-red-100', 'text-gray-600');
-            statusMessage.classList.add('p-2', 'rounded'); // Ensure padding/rounded for error background
+            statusMessage.classList.add('p-2', 'rounded'); 
 
             if (isError) {
                 statusMessage.classList.add('text-red-700', 'bg-red-100', 'font-bold');
@@ -126,7 +154,6 @@
 
 
         function handleTemplateDownload() {
-            // FIX: Use a single '\n' for the newline character for correct CSV formatting
             const templateHeaders = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS\n";
             const templateData = 
                 "1,\"John Doe\",\"H.No. 123, Sector 40B, near bus stand, Chandigarh\"\n" +
@@ -143,52 +170,9 @@
             document.body.removeChild(link);
         }
 
-        // Existing parseCSV function (kept for robustness)
-        function parseCSV(text) {
-            // Split by the actual newline character '\n'
-            const lines = text.split('\n'); 
-            if (lines.length < 2) return [];
-
-            // Simple split for headers (handles the first row)
-            const header = lines[0].split(',').map(h => h.trim().replace(/^\"|\"$/g, ''));
-            const data = [];
-            
-            // Indices for required columns
-            const idIndex = header.indexOf('ORDER ID');
-            const nameIndex = header.indexOf('CUSTOMER NAME');
-            const addressIndex = header.indexOf('CUSTOMER RAW ADDRESS');
-
-            if (idIndex === -1 || nameIndex === -1 || addressIndex === -1) {
-                console.error("CSV header is missing one of the required columns.");
-                return [];
-            }
-
-            // Start from line 1 to skip header
-            for (let i = 1; i < lines.length; i++) {
-                if (lines[i].trim() === '') continue;
-                
-                // Using a regex match that can handle basic quoted fields
-                const row = lines[i].match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g) || [];
-                
-                // Clean up quoted values
-                const cleanedRow = row.map(cell => cell.trim().replace(/^\"|\"$/g, '').replace(/\"\"/g, '\"'));
-
-                // Ensure the row has enough columns based on max index
-                if (cleanedRow.length > Math.max(idIndex, nameIndex, addressIndex)) {
-                    data.push({
-                        'ORDER ID': cleanedRow[idIndex],
-                        'CUSTOMER NAME': cleanedRow[nameIndex],
-                        'CUSTOMER RAW ADDRESS': cleanedRow[addressIndex],
-                    });
-                }
-            }
-            return data;
-        }
-
-
+        // Renamed function to match the one in api/verify-single-address.js for consistency
         async function fetchVerification(rawAddress, customerName) {
             const payload = { address: rawAddress, customerName }; 
-            
             const maxRetries = 3;
             let lastError = null;
 
@@ -215,14 +199,14 @@
                     }
                 }
             }
-            // Return a predictable structure even on network/fetch errors to prevent CSV output breaks
+            
             return { 
                 status: "Error", 
                 error: `Verification failed after ${maxRetries} attempts.`,
                 remarks: `Error: ${lastError ? lastError.message : 'Unknown Network Error'}`,
                 customerCleanName: customerName,
                 addressLine1: "API Error: See Remarks",
-                landmark: "", // Always provide this field
+                landmark: "", 
                 state: "",
                 district: "",
                 pin: "",
@@ -231,20 +215,60 @@
         }
 
         function createAndDownloadCSV(rows, filename) {
-            // Updated header to match the output columns including LANDMARK
-            const header = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS,CLEAN NAME,CLEAN ADDRESS LINE 1,LANDMARK,STATE,DISTRICT,PIN,REMARKS,QUALITY\n";
-            const csvContent = header + rows.join('\n');
-            
+            const csvContent = rows.join('\n');
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const downloadLink = document.getElementById('downloadLink');
             downloadLink.href = URL.createObjectURL(blob);
+            downloadLink.setAttribute('download', filename);
             downloadLink.classList.remove('hidden');
         }
+
+        async function processRow(row, headers) {
+            processedCount++;
+            
+            // Map the input data based on the header indices
+            const orderId = row[headers[0]] || '';
+            const customerName = row[headers[1]] || '';
+            const rawAddress = row[headers[2]] || '';
+            
+            let verificationResult;
+            
+            if (!rawAddress || rawAddress.trim() === "") { 
+                verificationResult = { status: "Skipped", remarks: "Missing raw address in CSV row.", addressQuality: "Poor", customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "" };
+            } else {
+                verificationResult = await fetchVerification(rawAddress, customerName);
+            }
+
+            // Function to escape and quote CSV cell values
+            const escapeAndQuote = (cell) => `\"${String(cell || '').replace(/\"/g, '\"\"')}\"`;
+
+            // Format the output row based on the defined OUTPUT_HEADERS
+            const outputRow = [
+                orderId,
+                customerName,
+                rawAddress,
+                verificationResult.customerCleanName,
+                verificationResult.addressLine1,
+                verificationResult.landmark,
+                verificationResult.state,
+                verificationResult.district,
+                verificationResult.pin,
+                verificationResult.remarks,
+                verificationResult.addressQuality
+            ].map(escapeAndQuote).join(',');
+
+            outputRows.push(outputRow);
+            
+            // Update progress bar
+            const progress = (processedCount / totalRows) * 100;
+            document.getElementById('progressBarFill').style.width = `${progress}%`;
+            updateStatusMessage(`Processing... ${processedCount} of ${totalRows} addresses completed.`);
+        }
+
 
         async function handleBulkVerification() {
             const fileInput = document.getElementById('csvFileInput');
             const processButton = document.getElementById('processButton');
-            const progressBarFill = document.getElementById('progressBarFill');
             const downloadLink = document.getElementById('downloadLink');
 
             if (!fileInput.files.length) {
@@ -253,86 +277,122 @@
             }
 
             const file = fileInput.files[0];
-            const reader = new FileReader();
+            const startTime = Date.now();
 
-            // Reset UI
+            // Reset UI and state for a new run
             processButton.disabled = true;
             fileInput.disabled = true;
             downloadLink.classList.add('hidden');
-            progressBarFill.style.width = '0%';
-            updateStatusMessage('Reading file...');
+            document.getElementById('progressBarFill').style.width = '0%';
+            updateStatusMessage('Starting file parsing...');
+            outputRows = [OUTPUT_HEADERS.map(h => `"${h}"`).join(',')];
+            processedCount = 0;
+            totalRows = 0;
             
-            reader.onload = async function(e) {
-                const text = e.target.result;
-                const addresses = parseCSV(text);
+            // Set up PapaParse configuration for streaming/stepping
+            const config = {
+                header: true, // Treat the first row as headers
+                dynamicTyping: false,
+                skipEmptyLines: true,
+                worker: true, // Use a Web Worker for better performance on large files
                 
-                if (addresses.length === 0) {
-                    updateStatusMessage("Error: No valid addresses found in CSV. Check format and required columns.", true);
+                // --- Step 1: Pre-process for header validation and row count ---
+                // PapaParse doesn't provide total rows in advance when streaming, 
+                // so we run a quick pass (without verification) just to count valid rows.
+                beforeFirstChunk: function(chunk) {
+                    // Quick way to estimate total rows for the progress bar
+                    // This is less accurate than a full count but works for the UI
+                    totalRows = chunk.split('\n').filter(line => line.trim() !== '').length - 1;
+                    if (totalRows <= 0) {
+                        return { action: "abort", reason: "CSV file is empty or contains only headers." };
+                    }
+                    updateStatusMessage(`File has ${totalRows} rows. Starting verification...`);
+                },
+                
+                // This callback is triggered once for the file's metadata
+                complete: function(results, file) {
+                    if (results.errors.length > 0) {
+                        updateStatusMessage(`Parsing Error: ${results.errors[0].message}`, true);
+                        processButton.disabled = false;
+                        fileInput.disabled = false;
+                        return;
+                    }
+                    
+                    // --- Step 3: All verification calls are complete ---
+                    // Re-enable UI elements and download the result
+                    const endTime = Date.now();
+                    const duration = ((endTime - startTime) / 1000).toFixed(1);
+                    updateStatusMessage(`Verification complete! ${processedCount} addresses processed in ${duration}s. Click 'Download Verified CSV'.`, false);
+                    createAndDownloadCSV(outputRows, "verified_addresses.csv");
                     processButton.disabled = false;
                     fileInput.disabled = false;
-                    return;
-                }
-
-                const totalAddresses = addresses.length;
-                let processedCount = 0;
-                const outputRows = [];
-
-                updateStatusMessage(`Starting verification of ${totalAddresses} addresses...`);
-
-                for (const row of addresses) {
-                    const orderId = row['ORDER ID'] || '';
-                    const customerName = row['CUSTOMER NAME'] || '';
-                    const rawAddress = row['CUSTOMER RAW ADDRESS'] || '';
-
-                    let verificationResult;
-
-                    if (!rawAddress || rawAddress.trim() === "") { // Defensive check for missing address
-                        verificationResult = { status: "Skipped", remarks: "Missing raw address in CSV row.", addressQuality: "Poor", customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "" };
-                    } else {
-                        verificationResult = await fetchVerification(rawAddress, customerName);
+                },
+                
+                // This function is run for every row in the CSV
+                step: function(results, parser) {
+                    // Check headers only on the first run (or if the parser object has meta)
+                    if (results.meta && results.meta.fields) {
+                        const requiredHeaders = ['ORDER ID', 'CUSTOMER NAME', 'CUSTOMER RAW ADDRESS'];
+                        
+                        // Check if required headers exist (case-insensitive check)
+                        const currentHeaders = results.meta.fields.map(h => h.trim().toUpperCase());
+                        const missingHeaders = requiredHeaders.filter(h => !currentHeaders.includes(h));
+                        
+                        if (missingHeaders.length > 0) {
+                            updateStatusMessage(`Error: Missing required columns: ${missingHeaders.join(', ')}. Aborting.`, true);
+                            parser.abort(); // Stop parsing
+                            
+                            // Re-enable UI
+                            processButton.disabled = false;
+                            fileInput.disabled = false;
+                            return; 
+                        }
                     }
 
-                    // Function to escape and quote CSV cell values
-                    const escapeAndQuote = (cell) => `\"${String(cell || '').replace(/\"/g, '\"\"')}\"`;
-
-                    // Format the output row
-                    const outputRow = [
-                        orderId,
-                        customerName,
-                        rawAddress,
-                        verificationResult.customerCleanName,
-                        verificationResult.addressLine1,
-                        verificationResult.landmark,
-                        verificationResult.state,
-                        verificationResult.district,
-                        verificationResult.pin,
-                        verificationResult.remarks,
-                        verificationResult.addressQuality
-                    ].map(escapeAndQuote).join(',');
-
-                    outputRows.push(outputRow);
+                    // Map fields by case-insensitive header name for robustness
+                    const headerMap = {
+                        'ORDER ID': results.data[0]['ORDER ID'] || results.data[0]['order id'],
+                        'CUSTOMER NAME': results.data[0]['CUSTOMER NAME'] || results.data[0]['customer name'],
+                        'CUSTOMER RAW ADDRESS': results.data[0]['CUSTOMER RAW ADDRESS'] || results.data[0]['customer raw address']
+                    };
                     
-                    processedCount++;
-                    const progress = (processedCount / totalAddresses) * 100;
-                    progressBarFill.style.width = `${progress}%`;
-                    
-                    // UPDATED: Simple status message showing only progress count
-                    updateStatusMessage(`Processing... ${processedCount} of ${totalAddresses} addresses completed.`);
+                    // The PapaParse step function requires synchronization to wait for the API call
+                    parser.pause(); // Pause the parser while waiting for the API
+
+                    // We wrap the API call logic in an IIFE to use async/await
+                    (async () => {
+                        try {
+                            // Extract data from the array of objects returned by PapaParse
+                            const rowData = results.data[0];
+                            
+                            // Find the correct, case-insensitive headers
+                            const inputHeaders = [
+                                currentHeaders.find(h => h.toUpperCase() === 'ORDER ID'),
+                                currentHeaders.find(h => h.toUpperCase() === 'CUSTOMER NAME'),
+                                currentHeaders.find(h => h.toUpperCase() === 'CUSTOMER RAW ADDRESS')
+                            ];
+
+                            const orderId = rowData[inputHeaders[0]] || '';
+                            const customerName = rowData[inputHeaders[1]] || '';
+                            const rawAddress = rowData[inputHeaders[2]] || '';
+                            
+                            await processRow({
+                                [inputHeaders[0]]: orderId,
+                                [inputHeaders[1]]: customerName,
+                                [inputHeaders[2]]: rawAddress
+                            }, ['ORDER ID', 'CUSTOMER NAME', 'CUSTOMER RAW ADDRESS']); // Pass generic headers for internal mapping
+                            
+                        } catch (error) {
+                            console.error("Row processing error:", error);
+                        } finally {
+                            parser.resume(); // Resume parsing for the next row
+                        }
+                    })();
                 }
-
-                updateStatusMessage(`Processing complete! ${totalAddresses} addresses verified. Click 'Download Verified CSV'.`, false);
-                createAndDownloadCSV(outputRows, "verified_addresses.csv");
-                processButton.disabled = false;
-                fileInput.disabled = false;
             };
-
-            reader.onerror = function() {
-                updateStatusMessage("Error reading file.", true);
-                processButton.disabled = false;
-                fileInput.disabled = false;
-            };
-
-            reader.readAsText(file);
+            
+            // Execute PapaParse
+            Papa.parse(file, config);
         }
     </script>
 </body>
