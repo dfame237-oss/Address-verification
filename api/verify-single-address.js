@@ -98,7 +98,6 @@ async function getGeminiResponse(prompt) {
 }
 
 function extractPin(address) {
-    // Ensure the match is explicitly a 6-digit number
     const match = String(address).match(/\b\d{6}\b/);
     return match ? match[0] : null;
 }
@@ -206,16 +205,12 @@ module.exports = async (req, res) => {
         }
 
         // 3. --- PIN VERIFICATION & CORRECTION LOGIC ---
-        // Ensure PIN is a string and matches the 6-digit format from Gemini output.
-        // Convert to string to handle potential JSON parsing issues (number vs string).
-        let finalPin = String(parsedData.PIN).match(/\b\d{6}\b/) ? String(parsedData.PIN) : initialPin;
+        let finalPin = String(parsedData.PIN).match(/\b\d{6}\b/) ? parsedData.PIN : initialPin;
         let primaryPostOffice = postalData.PostOfficeList ? postalData.PostOfficeList[0] : {};
 
         if (finalPin) {
             // Re-run India Post lookup if PIN is different or original lookup failed
             if (postalData.PinStatus !== 'Success' || (initialPin && finalPin !== initialPin)) {
-                
-                // Fetch postal data for the PIN suggested by AI (finalPin)
                 const aiPostalData = await getIndiaPostData(finalPin);
 
                 if (aiPostalData.PinStatus === 'Success') {
@@ -255,15 +250,14 @@ module.exports = async (req, res) => {
         let finalLandmark = '';
 
         if (landmarkValue.toString().trim() !== '') {
-            // Check for any directional word in the original address
             const foundDirectionalWord = directionalKeywords.find(keyword => originalAddressLower.includes(keyword));
             
             if (foundDirectionalWord) {
-                // Find the original spelling and case of the directional word in the raw address
+                // Find the original spelling of the directional word in the raw address
                 const originalDirectionalWordMatch = address.match(new RegExp(`\\b${foundDirectionalWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i'));
                 const originalDirectionalWord = originalDirectionalWordMatch ? originalDirectionalWordMatch[0] : foundDirectionalWord;
                 
-                // Capitalize the first letter for clean display (e.g., 'near' -> 'Near')
+                // Capitalize the first letter for clean display
                 const prefixedWord = originalDirectionalWord.charAt(0).toUpperCase() + originalDirectionalWord.slice(1);
                 
                 finalLandmark = `${prefixedWord} ${landmarkValue.toString().trim()}`;
@@ -282,7 +276,6 @@ module.exports = async (req, res) => {
 
 
         // 5. Construct the Final JSON Response
-        // Use the most reliable source for geo components: India Post if successful, otherwise Gemini's parsed data.
         const finalResponse = {
             status: "Success",
             customerRawName: customerName,
@@ -290,14 +283,14 @@ module.exports = async (req, res) => {
             
             // Core Address Components
             addressLine1: parsedData.FormattedAddress || address.replace(meaninglessRegex, '').trim() || '',
-            landmark: finalLandmark, 
+            landmark: finalLandmark, // <<< UPDATED
             
             // Geographic Components (Prioritize India Post verification)
             postOffice: primaryPostOffice.Name || parsedData['P.O.'] || '',
             tehsil: primaryPostOffice.Taluk || parsedData.Tehsil || '',
             district: primaryPostOffice.District || parsedData['DIST.'] || '',
             state: primaryPostOffice.State || parsedData.State || '',
-            pin: finalPin, 
+            pin: finalPin, // <<< UPDATED
 
             // Quality/Verification Metrics
             addressQuality: parsedData.AddressQuality || 'Medium',
@@ -305,7 +298,7 @@ module.exports = async (req, res) => {
             locationSuitability: parsedData.LocationSuitability || 'Unknown',
             
             // Remarks
-            remarks: remarks.join('; ').trim(), 
+            remarks: remarks.join('; ').trim(), // <<< UPDATED: Send as a single string
         };
 
         return res.status(200).json(finalResponse);
