@@ -61,30 +61,15 @@
     </div>
     
     <script>
-        // Store the SHA-256 hash of the correct code "Pkboss@12"
-        // HASH: 152d001e4a329434851167120a1c6edb5c907b36f75359d9972c3d1000b08008
-        const CORRECT_ACCESS_HASH = "152d001e4a329434851167120a1c6edb5c907b36f75359d9972c3d1000b08008"; 
+        // Set the Vercel API endpoint for the server-side access check
+        const ACCESS_API_ENDPOINT = "https://address-verification-app.vercel.app/api/check-access";
         const BULK_PAGE_URL = "bulk.html";
         
-        // Asynchronous function to compute SHA-256 hash of a string
-        async function sha256(message) {
-            // Encode the string as utf-8
-            const msgBuffer = new TextEncoder().encode(message);                    
-            // Hash the message
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            // Convert buffer to byte array
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            // Convert bytes to hex string                  
-            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            return hashHex;
-        }
-
         document.getElementById('bulkVerificationButton').addEventListener('click', async function() {
             // Prompt the user for the access code
             const userInput = prompt("Please enter the access code for Bulk Address Verification:");
             
             if (userInput === null) {
-                // User clicked Cancel
                 return;
             }
             
@@ -94,15 +79,27 @@
                 return;
             }
 
-            // Hash the user's input and compare to the stored hash
-            const inputHash = await sha256(userCode);
-            
-            if (inputHash === CORRECT_ACCESS_HASH) {
-                // SUCCESS: Redirect to the bulk page
-                window.location.href = BULK_PAGE_URL;
-            } else {
-                // FAILURE: Show an error message
-                alert("Incorrect access code. Please contact support via WhatsApp to get the code.");
+            // Call the Serverless API to check the code
+            try {
+                const response = await fetch(ACCESS_API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: userCode })
+                });
+                
+                const result = await response.json();
+
+                if (response.ok && result.status === "Success") {
+                    // SUCCESS: Redirect to the bulk page
+                    window.location.href = BULK_PAGE_URL;
+                } else {
+                    // FAILURE: Show error message from the server
+                    alert("Incorrect access code. Please contact support via WhatsApp to get the code.");
+                }
+            } catch (e) {
+                console.error("API Fetch Error:", e);
+                // This catch handles network errors or CORS issues
+                alert("A network error occurred while checking access. Please ensure the server (Vercel) is running and check console for details.");
             }
         });
     </script>
