@@ -73,7 +73,7 @@
             // Hash the message
             const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
             // Convert buffer to byte array
-            const hashArray = Array.from(new Uint8랫Array(hashBuffer));
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
             // Convert bytes to hex string                  
             const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
             return hashHex;
@@ -98,10 +98,10 @@
             const inputHash = await sha256(userCode);
             
             if (inputHash === CORRECT_ACCESS_HASH) {
-                // Correct code, navigate to the bulk page
+                // SUCCESS: Redirect to the bulk page
                 window.location.href = BULK_PAGE_URL;
             } else {
-                // Incorrect code, show an error message
+                // FAILURE: Show an error message
                 alert("Incorrect access code. Please contact support via WhatsApp to get the code.");
             }
         });
