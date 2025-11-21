@@ -1,252 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dfame Address AI – SaaS Address Verification</title>
-
-  <!-- Tailwind CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'primary-blue': '#1D4ED8',
-            'secondary-green': '#059669',
-            'accent-yellow': '#FBBF24',
-            'muted-bg': '#0B1220',
-          },
-          boxShadow: {
-            soft: '0 18px 45px rgba(15,23,42,0.28)',
-          },
-        },
-      },
-    };
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Address Verification</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Re-use your color palette for consistency
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#1D4ED8', // Dark Blue
+                        'secondary-green': '#059669', // Dark Green
+                        'neutral-gray': '#E5E7EB',
+                        'accent-yellow': '#FCD34D', // A nice accent for the bulk button
+                        'whatsapp-green': '#25D366', // Added WhatsApp Green
+                    },
+                    fontFamily: {
+                        // Ensure consistent font
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
+<body class="bg-neutral-gray min-h-screen flex items-center justify-center p-4">
+    
+    <div class="w-full max-w-lg bg-white p-8 sm:p-10 rounded-xl shadow-2xl border border-gray-100">
 
-<body class="bg-slate-950 text-white">
-
-  <!-- NAVBAR -->
-  <header class="bg-slate-900/80 border-b border-white/10 backdrop-blur sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-
-      <a href="index.html" class="flex items-center gap-2">
-        <div class="h-9 w-9 rounded-xl bg-gradient-to-br from-primary-blue to-secondary-green flex items-center justify-center font-bold shadow-soft">
-          DF
+        <header class="header text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-2">
+                <span class="text-primary-blue">AI Address</span> Verification
+            </h1>
+            <p class="text-lg text-gray-500 mt-2">Choose a method to clean, normalize, and verify addresses using advanced AI.</p>
+        </header>
+        
+        <div class="options-container space-y-6 mt-8">
+            
+            <a href="single.html" class="block w-full text-center py-4 px-6 bg-secondary-green text-white font-bold text-xl rounded-lg shadow-md transition duration-300 transform hover:scale-[1.02] hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-secondary-green focus:ring-opacity-50">
+                <span class="mr-2">📝</span> Verify Single Address
+            </a>
+            
+            <button id="bulkVerificationButton" class="block w-full text-center py-4 px-6 bg-accent-yellow text-gray-900 font-bold text-xl rounded-lg shadow-md transition duration-300 transform hover:scale-[1.02] hover:bg-yellow-500 focus:outline-none focus:ring-4 focus:ring-accent-yellow focus:ring-opacity-50">
+                <span class="mr-2">📦</span> Bulk Address Verification
+            </button>
+            
+            <a href="https://wa.me/9193246219" target="_blank" class="block w-full text-center py-3 px-6 bg-whatsapp-green text-white font-semibold rounded-lg shadow-md transition duration-300 transform hover:scale-[1.01] hover:bg-green-600 focus:outline-none focus:ring-4 focus:ring-whatsapp-green focus:ring-opacity-50">
+                <span class="mr-2">📞</span> Get Access Code / WhatsApp Support
+            </a>
         </div>
-        <span class="font-semibold tracking-tight">Dfame Address AI</span>
-      </a>
-
-      <nav class="hidden md:flex gap-6 text-sm">
-        <a href="#features" class="text-slate-300 hover:text-white">Features</a>
-        <a href="#pricing" class="text-slate-300 hover:text-white">Pricing</a>
-        <a href="#how" class="text-slate-300 hover:text-white">How it works</a>
-        <a href="https://dfame.in/api/verify-single-address" target="_blank" class="text-slate-300 hover:text-white">API</a>
-      </nav>
-
-      <div class="flex items-center gap-3">
-        <a href="single.html" class="hidden sm:inline-flex px-4 py-2 text-sm border border-white/20 rounded-full hover:bg-white/10">
-          Dashboard
-        </a>
-        <a href="single.html" class="px-4 py-2 text-sm bg-gradient-to-r from-primary-blue to-secondary-green rounded-full shadow-soft hover:brightness-110">
-          Start Free
-        </a>
-      </div>
-
-    </div>
-  </header>
-
-  <!-- HERO SECTION -->
-  <section class="relative max-w-6xl mx-auto px-4 py-16">
-
-    <div class="absolute -top-20 left-0 w-[500px] h-[500px] bg-primary-blue/20 blur-[150px] rounded-full"></div>
-    <div class="absolute bottom-0 right-0 w-[500px] h-[500px] bg-secondary-green/20 blur-[150px] rounded-full"></div>
-
-    <div class="relative grid lg:grid-cols-2 gap-10 items-center">
-
-      <div>
-        <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-xs mb-4">
-          <span>⚡</span> Gemini + India Post Powered
-        </div>
-
-        <h1 class="text-4xl md:text-5xl font-extrabold leading-tight">
-          Fix Indian addresses
-          <span class="block text-transparent bg-clip-text bg-gradient-to-r from-primary-blue to-secondary-green">
-            before they fail delivery.
-          </span>
-        </h1>
-
-        <p class="text-slate-300 mt-4 max-w-lg">
-          Clean, standardize, and validate messy Indian addresses with AI.
-          Reduce RTO, catch PIN–district mismatches, extract landmarks,
-          and auto-correct incomplete addresses.
+        
+        <p class="text-center mt-8 text-sm text-gray-500 border-t pt-4">
+            The bulk verification process is handled directly in your browser to maintain **data privacy** and speed.
         </p>
-
-        <div class="mt-6 flex flex-col sm:flex-row gap-3">
-          <a href="single.html" class="px-5 py-3 bg-gradient-to-r from-primary-blue to-secondary-green rounded-xl text-sm font-semibold shadow-soft hover:brightness-110">
-            🚀 Verify Single Address
-          </a>
-          <a href="bulk.html" class="px-5 py-3 border border-white/10 bg-white/5 hover:bg-white/10 rounded-xl text-sm">
-            📦 Bulk CSV Verification
-          </a>
-        </div>
-
-        <p class="mt-4 text-xs text-slate-500">Designed for Meesho, Shopify, ONDC, Shiprocket & all D2C sellers.</p>
-      </div>
-
-      <div class="relative">
-        <div class="bg-slate-900/70 p-5 rounded-2xl border border-white/10 backdrop-blur shadow-soft">
-
-          <h3 class="text-sm mb-3 text-slate-300">Live Example</h3>
-
-          <div class="text-xs space-y-4">
-
-            <div class="bg-slate-800/60 border border-white/10 p-3 rounded-xl">
-              <p class="text-slate-400">RAW INPUT</p>
-              <p class="font-mono">H No-7, Khushi Vatika, Amlihdih, Raipur</p>
-            </div>
-
-            <div class="bg-slate-800/60 border border-emerald-500/30 p-3 rounded-xl">
-              <p class="text-slate-400 flex justify-between">
-                CLEANED OUTPUT
-                <span class="bg-emerald-500/20 text-emerald-300 text-[10px] px-2 py-0.5 rounded-full">
-                  Quality: GOOD
-                </span>
-              </p>
-              <p class="font-mono">
-                H.No. 7, Khushi Vatika, Amlihdih, P.O. Amlihdih,
-                Tehsil Raipur, Raipur, Chhattisgarh - 492015
-              </p>
-
-              <div class="grid grid-cols-3 gap-3 mt-3 text-[10px]">
-                <div><p class="text-slate-500">District</p>Raipur</div>
-                <div><p class="text-slate-500">State</p>Chhattisgarh</div>
-                <div><p class="text-slate-500">PIN</p>492015</div>
-              </div>
-            </div>
-
-            <div class="bg-slate-800/60 border border-white/10 p-3 rounded-xl">
-              <p class="text-slate-400">REMARKS</p>
-              <p>Address cleaned & IndiaPost-verified.</p>
-            </div>
-
-          </div>
-
-        </div>
-      </div>
-
     </div>
+    
+    <script>
+        // Set the Vercel API endpoint for the server-side access check
+        const ACCESS_API_ENDPOINT = "https://address-verification-app.vercel.app/api/check-access";
+        const BULK_PAGE_URL = "bulk.html";
+        
+        document.getElementById('bulkVerificationButton').addEventListener('click', async function() {
+            // Prompt the user for the access code
+            const userInput = prompt("Please enter the access code for Bulk Address Verification:");
+            
+            if (userInput === null) {
+                return;
+            }
+            
+            const userCode = userInput.trim();
+            if (userCode === "") {
+                alert("Access code cannot be empty.");
+                return;
+            }
 
-  </section>
+            // Call the Serverless API to check the code
+            try {
+                const response = await fetch(ACCESS_API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: userCode })
+                });
+                
+                const result = await response.json();
 
-  <!-- FEATURES -->
-  <section id="features" class="max-w-6xl mx-auto px-4 py-16">
-    <h2 class="text-2xl font-bold mb-6">Why sellers use Dfame Address AI</h2>
-
-    <div class="grid md:grid-cols-3 gap-6">
-
-      <div class="bg-slate-900/60 p-5 rounded-2xl border border-white/10">
-        <h3 class="font-semibold">📍 India-first Address Understanding</h3>
-        <p class="text-xs text-slate-300 mt-2">
-          Handles Hindi, Hinglish, villages, mohallas, sectors, post offices,
-          missing house numbers & difficult localities.
-        </p>
-      </div>
-
-      <div class="bg-slate-900/60 p-5 rounded-2xl border border-white/10">
-        <h3 class="font-semibold">🎯 Accurate PIN & District Mapping</h3>
-        <p class="text-xs text-slate-300 mt-2">
-          Detects wrong PINs, maps to correct district & tehsil using IndiaPost dataset.
-        </p>
-      </div>
-
-      <div class="bg-slate-900/60 p-5 rounded-2xl border border-white/10">
-        <h3 class="font-semibold">🔍 Landmark Extraction</h3>
-        <p class="text-xs text-slate-300 mt-2">
-          Automatically extracts “Near”, “Opp”, “Behind”, malls, metro stations & more.
-        </p>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- HOW IT WORKS -->
-  <section id="how" class="max-w-6xl mx-auto px-4 py-16">
-    <h2 class="text-2xl font-bold mb-6">How it works</h2>
-
-    <div class="grid md:grid-cols-3 gap-6 text-sm text-slate-300">
-
-      <div class="bg-slate-900/60 p-5 rounded-xl border border-white/10">
-        <p class="text-xs text-slate-500">STEP 1</p>
-        <p class="font-semibold mb-1">Paste or upload</p>
-        Paste a messy address or upload a CSV.
-      </div>
-
-      <div class="bg-slate-900/60 p-5 rounded-xl border border-white/10">
-        <p class="text-xs text-slate-500">STEP 2</p>
-        <p class="font-semibold mb-1">AI + India Post verify</p>
-        We clean, expand & validate with postal-level rules.
-      </div>
-
-      <div class="bg-slate-900/60 p-5 rounded-xl border border-white/10">
-        <p class="text-xs text-slate-500">STEP 3</p>
-        <p class="font-semibold mb-1">Export & ship</p>
-        Download CSV or copy cleaned address.
-      </div>
-
-    </div>
-  </section>
-
-  <!-- PRICING -->
-  <section id="pricing" class="max-w-6xl mx-auto px-4 py-16">
-    <h2 class="text-2xl font-bold mb-6">Simple, predictable pricing</h2>
-
-    <div class="grid md:grid-cols-3 gap-6">
-
-      <div class="bg-slate-900/60 p-6 rounded-2xl border border-white/10 flex flex-col">
-        <h3 class="font-semibold">Free</h3>
-        <p class="text-xs text-slate-400 mb-3">Try the engine</p>
-        <p class="text-3xl font-bold">₹0</p>
-        <p class="text-xs text-slate-400 mb-4">50 verifications</p>
-        <a href="single.html" class="mt-auto px-4 py-2 border border-white/20 rounded-lg text-center text-xs">
-          Start Free
-        </a>
-      </div>
-
-      <div class="bg-gradient-to-br from-primary-blue/70 to-secondary-green/70 p-6 rounded-2xl border border-white/20 flex flex-col shadow-soft">
-        <h3 class="font-semibold">Growth</h3>
-        <p class="text-xs text-slate-200/80 mb-3">For active sellers</p>
-        <p class="text-3xl font-bold">₹999</p>
-        <p class="text-xs text-slate-200/80 mb-4">5,000 verifications</p>
-        <a href="single.html" class="mt-auto px-4 py-2 bg-black/30 rounded-lg text-center text-xs hover:bg-black/50">
-          Upgrade
-        </a>
-      </div>
-
-      <div class="bg-slate-900/60 p-6 rounded-2xl border border-white/10 flex flex-col">
-        <h3 class="font-semibold">Business</h3>
-        <p class="text-xs text-slate-400 mb-3">For logistics / 3PL</p>
-        <p class="text-3xl font-bold">Custom</p>
-        <p class="text-xs text-slate-400 mb-4">50,000+ verifications</p>
-        <a href="mailto:support@dfame.in" class="mt-auto px-4 py-2 border border-white/20 rounded-lg text-center text-xs">
-          Contact Sales
-        </a>
-      </div>
-
-    </div>
-
-  </section>
-
-  <!-- FOOTER -->
-  <footer class="border-t border-white/10 mt-10 py-6 text-center text-xs text-slate-500">
-    © <span id="year"></span> Dfame Address AI • Built for India 🇮🇳
-  </footer>
-
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
-
+                if (response.ok && result.status === "Success") {
+                    // SUCCESS: Redirect to the bulk page
+                    window.location.href = BULK_PAGE_URL;
+                } else {
+                    // FAILURE: Show error message from the server
+                    alert("Incorrect access code. Please contact support via WhatsApp to get the code.");
+                }
+            } catch (e) {
+                console.error("API Fetch Error:", e);
+                // This catch handles network errors or CORS issues
+                alert("A network error occurred while checking access. Please ensure the server (Vercel) is running and check console for details.");
+            }
+        });
+    </script>
 </body>
 </html>
