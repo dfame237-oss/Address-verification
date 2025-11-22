@@ -145,7 +145,7 @@ function processAddress(address, postalData) {
 module.exports = async (req, res) => {
     // START OF CORS FIX (Step 36)
     res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader('Access-Control-Allow-Origin', 'https://pankajbossgu.github.io');
+    res.setHeader('Access-Control-Allow-Origin', 'https://dfame237-oss.github.io/Address-verification');
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
     
