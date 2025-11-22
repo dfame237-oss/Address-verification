@@ -2,7 +2,7 @@
 module.exports = async (req, res) => {
     // 1. CORS Headers (Same as verify-single-address.js)
     res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader('Access-Control-Allow-Origin', 'https://pankajbossgu.github.io');
+    res.setHeader('Access-Control-Allow-Origin', 'https://dfame237-oss.github.io/Address-verification');
     res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     
