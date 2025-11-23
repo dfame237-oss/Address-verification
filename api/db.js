@@ -1,48 +1,64 @@
-// Address-verification-main/api/db.js
-// This code ensures the connection is not attempted until connectToDatabase() is called, 
-// preventing global initialization crashes in Vercel.
+// Improved api/db.js
+// Safe MongoDB connection helper for Vercel Serverless.
+// - Does NOT connect globally
+// - Caches the client properly
+// - Gives clear error messages when env is missing
+// - Works in both dev and production
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient } = require('mongodb');
 
-// Vercel Environment Variable (read directly from process.env)
-const uri = process.env.MONGO_URI; 
+// Read environment variable (must be set in Vercel → Settings → Environment Variables)
+const MONGO_URI = process.env.MONGO_URI;
 
-// We define the MongoClient properties globally but DO NOT connect it here.
-const client = new MongoClient(uri, {
-    serverApi: {
-        version: ServerApiVersion.v1,
-        strict: true,
-        deprecationErrors: true,
-    },
-});
+if (!MONGO_URI) {
+  console.error("❌ ERROR: MONGO_URI is missing. Set it in Vercel Environment Variables.");
+}
 
-// Use a global promise variable to cache the single client connection 
-// across multiple calls during the serverless instance lifecycle.
-let dbClientPromise;
+// Database name
+const DB_NAME = "AddressVerificationDB";
+
+// Global cache to reuse connections across function calls
+let cachedClient = global._cachedMongoClient;
+let cachedDb = global._cachedMongoDb;
 
 module.exports = {
   connectToDatabase: async () => {
-    if (!uri) {
-        console.error("Database connection failed. MONGO_URI missing.");
-        throw new Error("Database connection failed. MONGO_URI missing.");
+    // If missing URI, throw clean error
+    if (!MONGO_URI) {
+      throw new Error("Database connection failed. MONGO_URI missing in environment variables.");
     }
-    
-    // Check if running in a global environment (like Codespace/Dev)
-    if (process.env.NODE_ENV === 'development') {
-        if (!global._mongoClientPromise) {
-            global._mongoClientPromise = client.connect();
-        }
-        dbClientPromise = global._mongoClientPromise;
-    } else {
-        // Production: Use the local file scope variable for caching
-        if (!dbClientPromise) {
-            dbClientPromise = client.connect();
-        }
+
+    // If already connected, reuse cached instance
+    if (cachedClient && cachedDb) {
+      return { dbClient: cachedClient, db: cachedDb };
     }
-    
-    const dbClient = await dbClientPromise;
-    const db = dbClient.db("AddressVerificationDB"); 
-    
-    return { dbClient, db };
+
+    // Create new client
+    const client = new MongoClient(MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
+
+    try {
+      // Connect
+      await client.connect();
+
+      const db = client.db(DB_NAME);
+
+      // Cache for serverless re-use
+      global._cachedMongoClient = client;
+      global._cachedMongoDb = db;
+
+      cachedClient = client;
+      cachedDb = db;
+
+      console.log("📦 Connected to MongoDB:", DB_NAME);
+
+      return { dbClient: client, db };
+
+    } catch (err) {
+      console.error("❌ MongoDB Connection Error:", err);
+      throw new Error("Failed to connect to MongoDB — " + err.message);
+    }
   }
 };
