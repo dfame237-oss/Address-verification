@@ -13,9 +13,9 @@
                         'primary-blue': '#1D4ED8',
                         'secondary-green': '#059669',
                         'neutral-gray': '#E5E7EB',
-                        'alert-dark': '#991B1B', // Red for errors
+                        'alert-dark': '#991B1B',
                     },
-                    fontFamily: { sans: ['Inter', 'sans-serif'], },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
                 }
             }
         }
@@ -52,8 +52,7 @@
     </div>
     
     <script>
-        // Use a RELATIVE endpoint so the request goes to the same Vercel deployment that serves this page
-        const LOGIN_API_ENDPOINT = "/api/admin/login"; 
+        const LOGIN_API_ENDPOINT = "/api/admin/login";
         const ADMIN_DASHBOARD_URL = "admin-dashboard.html"; 
 
         document.getElementById('adminLoginForm').addEventListener('submit', async function(event) {
@@ -76,20 +75,18 @@
                     body: JSON.stringify({ username, password })
                 });
 
-                // show raw response in console for debugging
                 const result = await response.json();
-                console.log('admin login response:', response.status, result);
+                console.log("admin login response:", response.status, result);
 
                 if (response.ok && result.status === "Success") {
-                    // Store the token for future authenticated requests
                     localStorage.setItem('adminToken', result.token); 
-                    message.classList.remove('text-red-600', 'text-alert-dark');
+                    message.classList.remove('text-alert-dark');
                     message.classList.add('text-secondary-green', 'block');
                     message.textContent = "Login successful! Redirecting...";
                     
                     setTimeout(() => {
                         window.location.href = ADMIN_DASHBOARD_URL;
-                    }, 500);
+                    }, 600);
 
                 } else {
                     message.classList.remove('text-secondary-green');
@@ -99,7 +96,7 @@
             } catch (e) {
                 message.classList.remove('text-secondary-green');
                 message.classList.add('text-alert-dark', 'block');
-                message.textContent = "A network error occurred. Check console for details.";
+                message.textContent = "Network error. Please try again.";
                 console.error("Fetch Error:", e);
             } finally {
                 loginButton.disabled = false;
