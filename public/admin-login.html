@@ -52,8 +52,8 @@
     </div>
     
     <script>
-        // NOTE: Replace the placeholder with your actual Vercel deployment domain
-        const LOGIN_API_ENDPOINT = "https://address-verification-one.vercel.app/api/admin/login"; 
+        // Use a RELATIVE endpoint so the request goes to the same Vercel deployment that serves this page
+        const LOGIN_API_ENDPOINT = "/api/admin/login"; 
         const ADMIN_DASHBOARD_URL = "admin-dashboard.html"; 
 
         document.getElementById('adminLoginForm').addEventListener('submit', async function(event) {
@@ -76,7 +76,9 @@
                     body: JSON.stringify({ username, password })
                 });
 
+                // show raw response in console for debugging
                 const result = await response.json();
+                console.log('admin login response:', response.status, result);
 
                 if (response.ok && result.status === "Success") {
                     // Store the token for future authenticated requests
