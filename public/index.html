@@ -53,6 +53,7 @@
     
     <header class="pt-16 pb-24 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12 items-center">
+            
             <div class="text-left">
                 <p class="text-primary-blue font-semibold mb-3 uppercase tracking-wider">Stop Losing Money to RTO</p>
                 <h1 class="text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight mb-6">
@@ -72,7 +73,79 @@
                 </div>
             </div>
             
-            <div class="hidden md:block"></div> 
+            <div class="p-4 bg-neutral-gray rounded-xl shadow-2xl border border-blue-100">
+                <h3 class="text-2xl font-bold text-center text-primary-blue mb-6">AI Verification Flow</h3>
+                <div class="space-y-4 relative ml-4">
+                    <div class="absolute left-2 top-0 bottom-0 w-1 bg-secondary-green opacity-30 hidden sm:block"></div>
+                    
+                    <div class="relative flex items-start p-3 border-b border-gray-100 bg-white rounded-md shadow-sm">
+                        <div class="h-5 w-5 rounded-full bg-primary-blue absolute -left-[27px] top-1/2 transform -translate-y-1/2 hidden sm:block"></div>
+                        <div class="flex-shrink-0 text-2xl mr-3 text-primary-blue">
+                            📝
+                        </div>
+                        <div>
+                            <strong class="text-md text-gray-900 block">Raw Customer Input</strong>
+                            <span class="text-sm text-gray-600">Initial, messy address data.</span>
+                        </div>
+                    </div>
+
+                    <div class="relative flex items-start p-3 border-b border-gray-100 bg-white rounded-md shadow-sm">
+                        <div class="h-5 w-5 rounded-full bg-secondary-green absolute -left-[27px] top-1/2 transform -translate-y-1/2 hidden sm:block"></div>
+                        <div class="flex-shrink-0 text-2xl mr-3 text-secondary-green">
+                            🧠
+                        </div>
+                        <div>
+                            <strong class="text-md text-gray-900 block">1. AI Cleanup & Parsing</strong>
+                            <span class="text-sm text-gray-600">Standardizes format, corrects spelling, and extracts components.</span>
+                        </div>
+                    </div>
+
+                    <div class="relative flex items-start p-3 border-b border-gray-100 bg-white rounded-md shadow-sm">
+                        <div class="h-5 w-5 rounded-full bg-secondary-green absolute -left-[27px] top-1/2 transform -translate-y-1/2 hidden sm:block"></div>
+                        <div class="flex-shrink-0 text-2xl mr-3 text-secondary-green">
+                            📌
+                        </div>
+                        <div>
+                            <strong class="text-md text-gray-900 block">2. India Post PIN Validation</strong>
+                            <span class="text-sm text-gray-600">Grounding truth for Pin, PO, District, State.</span>
+                        </div>
+                    </div>
+
+                    <div class="relative flex items-start p-3 border-b border-gray-100 bg-white rounded-md shadow-sm">
+                        <div class="h-5 w-5 rounded-full bg-secondary-green absolute -left-[27px] top-1/2 transform -translate-y-1/2 hidden sm:block"></div>
+                        <div class="flex-shrink-0 text-2xl mr-3 text-secondary-green">
+                            🗺️
+                        </div>
+                        <div>
+                            <strong class="text-md text-gray-900 block">3. Landmark Re-attachment</strong>
+                            <span class="text-sm text-gray-600">Analyzes and re-inserts directional markers (e.g., 'near').</span>
+                        </div>
+                    </div>
+
+                    <div class="relative flex items-start p-3 border-b border-gray-100 bg-white rounded-md shadow-sm">
+                        <div class="h-5 w-5 rounded-full bg-secondary-green absolute -left-[27px] top-1/2 transform -translate-y-1/2 hidden sm:block"></div>
+                        <div class="flex-shrink-0 text-2xl mr-3 text-secondary-green">
+                            🌐
+                        </div>
+                        <div>
+                            <strong class="text-md text-gray-900 block">4. Geo-Coding Consistency</strong>
+                            <span class="text-sm text-gray-600">Ensures logical consistency of all address components.</span>
+                        </div>
+                    </div>
+
+                    <div class="relative flex items-start p-3 bg-white rounded-md shadow-sm">
+                        <div class="h-5 w-5 rounded-full bg-secondary-green absolute -left-[27px] top-1/2 transform -translate-y-1/2 hidden sm:block"></div>
+                        <div class="flex-shrink-0 text-2xl mr-3 text-accent-yellow">
+                            ✅
+                        </div>
+                        <div>
+                            <strong class="text-md text-gray-900 block">5. Final Output & Score</strong>
+                            <span class="text-sm text-gray-600">Standardized, complete address with a **Deliverability Score**.</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
 
         </div>
     </header>
@@ -105,129 +178,30 @@
             </div>
         </div>
     </section>
-
-    <section id="ai-process" class="py-20 bg-neutral-gray">
+    
+    <section id="how-it-works-condensed" class="py-20 bg-neutral-gray">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-10 text-center">
-                Our Advanced AI Verification Technology
+                Deep Dive: The Advanced AI Process
             </h2>
+            <p class="text-xl text-gray-600 mb-12 max-w-3xl mx-auto text-center">
+                Our system uses a proprietary, multi-stage engine combining Generative AI with official India Post data to guarantee the highest possible deliverability score.
+            </p>
             
-            <div class="grid md:grid-cols-2 gap-12 items-start">
-                
-                <div>
-                    <h3 class="text-2xl font-bold text-primary-blue mb-4">How It Works: The 5-Stage Verification Flow</h3>
-                    <p class="text-gray-700 mb-6">
-                        We use a proprietary, multi-stage engine combining Generative AI with official India Post data to guarantee the highest possible deliverability score.
-                    </p>
-                    
-                    <ul class="space-y-4 text-gray-700">
-                        <li class="flex items-start">
-                            <span class="text-secondary-green font-bold mr-3 mt-1">1.</span>
-                            <div>
-                                <strong class="block">Generative AI Cleaning (NLP):</strong> The AI performs natural language processing, correcting phonetic and spelling errors, standardizing abbreviations ('rd' to 'Road'), and parsing the address into component fields.
-                            </div>
-                        </li>
-                        <li class="flex items-start">
-                            <span class="text-secondary-green font-bold mr-3 mt-1">2.</span>
-                            <div>
-                                <strong class="block">India Post Grounding:</strong> The PIN is validated instantly against the official India Post API to confirm the **District, State, and Official Post Office (P.O.) Name**. If the PIN is wrong, the AI corrects or suggests the deliverable one.
-                            </div>
-                        </li>
-                        <li class="flex items-start">
-                            <span class="text-secondary-green font-bold mr-3 mt-1">3.</span>
-                            <div>
-                                <strong class="block">Directional Landmark Prefix:</strong> We analyze the original text for key directional phrases ('near', 'opposite') and re-attach them precisely to the clean landmark field (e.g., "Near Apollo Hospital").
-                            </div>
-                        </li>
-                        <li class="flex items-start">
-                            <span class="text-secondary-green font-bold mr-3 mt-1">4.</span>
-                            <div>
-                                <strong class="block">Geo-Coding Confidence Check:</strong> The cleaned, grounded address is checked against proprietary geo-spatial data to ensure the P.O. and street level components are logically consistent.
-                            </div>
-                        </li>
-                        <li class="flex items-start">
-                            <span class="text-secondary-green font-bold mr-3 mt-1">5.</span>
-                            <div>
-                                <strong class="block">Deliverability Scoring:</strong> The final output receives a clear score (Very Good, Medium, Bad) based on component completeness, official validation, and geo-confidence, allowing you to manage risk.
-                            </div>
-                        </li>
-                    </ul>
+            <div class="grid md:grid-cols-3 gap-8 bg-white p-8 rounded-xl shadow-lg">
+                <div class="border-l-4 border-secondary-green pl-4">
+                    <strong class="block text-lg text-gray-900 mb-1">AI Cleaning & Grounding</strong>
+                    <p class="text-sm text-gray-600">The AI corrects spelling, standardizes format, and validates the PIN instantly against the official India Post API for ground truth on District and State.</p>
                 </div>
-                
-                <div class="order-first md:order-last p-4 bg-white rounded-xl shadow-2xl border border-blue-100">
-                    <h3 class="text-2xl font-bold text-center text-primary-blue mb-6">AI Verification Flow</h3>
-                    <div class="space-y-4 relative ml-4">
-                        <div class="absolute left-2 top-0 bottom-0 w-1 bg-secondary-green opacity-30 hidden sm:block"></div>
-                        
-                        <div class="relative flex items-start p-3 border-b border-gray-100">
-                            <div class="h-5 w-5 rounded-full bg-primary-blue absolute -left-[27px] top-1/2 transform -translate-y-1/2 hidden sm:block"></div>
-                            <div class="flex-shrink-0 text-2xl mr-3 text-primary-blue">
-                                📝
-                            </div>
-                            <div>
-                                <strong class="text-md text-gray-900 block">Raw Customer Input</strong>
-                                <span class="text-sm text-gray-600">Initial, messy address data.</span>
-                            </div>
-                        </div>
-
-                        <div class="relative flex items-start p-3 border-b border-gray-100">
-                            <div class="h-5 w-5 rounded-full bg-secondary-green absolute -left-[27px] top-1/2 transform -translate-y-1/2 hidden sm:block"></div>
-                            <div class="flex-shrink-0 text-2xl mr-3 text-secondary-green">
-                                🧠
-                            </div>
-                            <div>
-                                <strong class="text-md text-gray-900 block">1. AI Cleanup & Parsing</strong>
-                                <span class="text-sm text-gray-600">Standardizes format, corrects spelling, and extracts components.</span>
-                            </div>
-                        </div>
-
-                        <div class="relative flex items-start p-3 border-b border-gray-100">
-                            <div class="h-5 w-5 rounded-full bg-secondary-green absolute -left-[27px] top-1/2 transform -translate-y-1/2 hidden sm:block"></div>
-                            <div class="flex-shrink-0 text-2xl mr-3 text-secondary-green">
-                                📌
-                            </div>
-                            <div>
-                                <strong class="text-md text-gray-900 block">2. India Post PIN Validation</strong>
-                                <span class="text-sm text-gray-600">Grounding truth for Pin, PO, District, State.</span>
-                            </div>
-                        </div>
-
-                        <div class="relative flex items-start p-3 border-b border-gray-100">
-                            <div class="h-5 w-5 rounded-full bg-secondary-green absolute -left-[27px] top-1/2 transform -translate-y-1/2 hidden sm:block"></div>
-                            <div class="flex-shrink-0 text-2xl mr-3 text-secondary-green">
-                                🗺️
-                            </div>
-                            <div>
-                                <strong class="text-md text-gray-900 block">3. Landmark Re-attachment</strong>
-                                <span class="text-sm text-gray-600">Analyzes and re-inserts directional markers (e.g., 'near').</span>
-                            </div>
-                        </div>
-
-                        <div class="relative flex items-start p-3 border-b border-gray-100">
-                            <div class="h-5 w-5 rounded-full bg-secondary-green absolute -left-[27px] top-1/2 transform -translate-y-1/2 hidden sm:block"></div>
-                            <div class="flex-shrink-0 text-2xl mr-3 text-secondary-green">
-                                🌐
-                            </div>
-                            <div>
-                                <strong class="text-md text-gray-900 block">4. Geo-Coding Consistency</strong>
-                                <span class="text-sm text-gray-600">Ensures logical consistency of all address components.</span>
-                            </div>
-                        </div>
-
-                        <div class="relative flex items-start p-3">
-                            <div class="h-5 w-5 rounded-full bg-secondary-green absolute -left-[27px] top-1/2 transform -translate-y-1/2 hidden sm:block"></div>
-                            <div class="flex-shrink-0 text-2xl mr-3 text-accent-yellow">
-                                ✅
-                            </div>
-                            <div>
-                                <strong class="text-md text-gray-900 block">5. Final Output & Score</strong>
-                                <span class="text-sm text-gray-600">Standardized, complete address with a **Deliverability Score**.</span>
-                            </div>
-                        </div>
-
-                    </div>
+                <div class="border-l-4 border-secondary-green pl-4">
+                    <strong class="block text-lg text-gray-900 mb-1">Locational Intelligence</strong>
+                    <p class="text-sm text-gray-600">Directional phrases ('near', 'opposite') are accurately re-attached, and the final address is checked against proprietary geo-spatial data for logical consistency.</p>
                 </div>
+                <div class="border-l-4 border-secondary-green pl-4">
+                    <strong class="block text-lg text-gray-900 mb-1">Risk Management & Output</strong>
+                    <p class="text-sm text-gray-600">The output provides a final, standardized address and a clear **Deliverability Score** (Good, Medium, Bad) to inform your dispatch decision.</p>
                 </div>
+            </div>
         </div>
     </section>
 
