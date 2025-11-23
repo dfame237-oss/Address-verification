@@ -108,13 +108,6 @@
             <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Verification Results</h3>
             <div class="space-y-4">
                 
-                <div id="quality-block" class="p-4 rounded-lg shadow-md flex items-center justify-between transition-colors duration-300">
-                    <strong class="text-lg flex items-center">
-                        <span id="quality-icon" class="text-2xl mr-3"></span> Address Quality:
-                    </strong> 
-                    <span id="out-quality" class="text-xl font-extrabold"></span>
-                </div>
-
                 <div class="result-block bg-success-light p-4 rounded-lg border border-green-300 shadow-sm">
                     <button class="copy-btn" data-target="out-name" title="Copy Clean Name">Copy</button>
                     <div class="result-content">
@@ -165,7 +158,14 @@
                         <strong class="text-gray-600 block mb-1">Country:</strong> 
                         <span class="text-gray-800 font-bold">INDIA</span>
                     </div>
-                </div>
+                    
+                    <div id="quality-block" class="result-block col-span-2 p-4 rounded-lg shadow-md flex items-center justify-between transition-colors duration-300 mt-4">
+                        <strong class="text-lg flex items-center">
+                            <span id="quality-icon" class="text-2xl mr-3"></span> Address Quality:
+                        </strong> 
+                        <span id="out-quality" class="text-xl font-extrabold"></span>
+                    </div>
+                    </div>
                 
                 <div id="remarks-block" class="result-block remarks-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                     <strong class="text-gray-600 block mb-1">Remarks:</strong> 
@@ -223,8 +223,6 @@
 
             setTimeout(() => {
                 button.textContent = originalText;
-                // Restore original class name which includes the CSS styles defined in the <style> block
-                button.className = originalClassName.includes('copy-btn') ? 'copy-btn' : originalClassName; 
                 // A safer way to restore to the base class structure
                 button.className = 'copy-btn';
             }, duration);
@@ -320,12 +318,12 @@
             let icon = '';
 
             // Clean previous classes
-            qualityBlock.className = 'p-4 rounded-lg shadow-md flex items-center justify-between transition-colors duration-300';
+            qualityBlock.className = 'result-block col-span-2 p-4 rounded-lg shadow-md flex items-center justify-between transition-colors duration-300 mt-4';
             qualityText.className = 'text-xl font-extrabold';
             
             qualityText.textContent = quality;
 
-            if (quality.includes('Good') || quality.includes('Verified')) {
+            if (quality.includes('Very Good') || quality.includes('Good')) {
                 colorClasses = 'bg-success-light border border-secondary-green text-secondary-green';
                 icon = '✅';
             } else if (quality.includes('Medium') || quality.includes('Partial')) {
@@ -342,7 +340,7 @@
 
             qualityBlock.classList.add(...colorClasses.split(' '));
             qualityIcon.textContent = icon;
-            qualityText.classList.add(`text-[${qualityBlock.style.color}]`); // Apply the determined text color
+            // Removed: The line adding text color via style as Tailwind classes are now used directly.
         }
 
 
@@ -389,7 +387,7 @@
                 
                 const qualityScore = verificationResult.addressQuality || 'N/A';
                 
-                // NEW UI UPDATES
+                // UI UPDATES
                 updateQualityScoreUI(qualityScore); 
                 applyRemarksStyle(verificationResult.remarks || '');
                 
