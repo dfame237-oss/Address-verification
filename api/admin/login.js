@@ -1,7 +1,7 @@
 // Address-verification-main/api/admin/login.js
 
 const jwt = require('jsonwebtoken'); 
-// NOTE: Removed the require('./db') import to prevent MongoDB connection initialization crash.
+// NOTE: We rely only on ENV variables and JWT, not MongoDB, for core Admin Login stability.
 
 // Vercel Environment Variables
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME; 
@@ -23,22 +23,22 @@ module.exports = async (req, res) => {
         return res.status(405).json({ status: "Error", error: 'Method Not Allowed' });
     }
 
-    // Check for missing secrets before trying to authenticate
     if (!ADMIN_USERNAME || !CORRECT_PASSWORD || !JWT_SECRET) {
+        // If secrets are missing, report an error, though Vercel should have crashed earlier.
         return res.status(500).json({ status: "Error", message: "Server configuration error: Admin credentials or JWT secret missing." });
     }
 
     try {
         const { username, password } = req.body;
         
-        // 2. Simple String Comparison (Should now execute without crashing)
+        // 2. Simple String Comparison (Using Vercel ENV variables)
         if (username === ADMIN_USERNAME && password === CORRECT_PASSWORD) {
             
             // 3. Generate a JWT Token
             const token = jwt.sign(
                 { id: 'admin', username: ADMIN_USERNAME }, 
                 JWT_SECRET, 
-                { expiresIn: '1h' }
+                { expiresIn: '1h' } // Token expires in 1 hour
             );
 
             return res.status(200).json({ 
@@ -51,8 +51,7 @@ module.exports = async (req, res) => {
         }
         
     } catch (e) {
-        // If it still crashes here, it's a dependency failure (jsonwebtoken)
-        console.error("Admin Login Server Error (Dependency Crash):", e);
+        console.error("Admin Login Server Error:", e);
         return res.status(500).json({ status: "Error", message: `Internal Server Error: ${e.message}` });
     }
 };

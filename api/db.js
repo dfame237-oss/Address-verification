@@ -1,13 +1,13 @@
 // Address-verification-main/api/db.js
+// This code ensures the connection is not attempted until connectToDatabase() is called, 
+// preventing global initialization crashes in Vercel.
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
 // Vercel Environment Variable (read directly from process.env)
 const uri = process.env.MONGO_URI; 
 
-// We DO NOT initialize or connect the client globally. 
-// We define the parameters once.
-
+// We define the MongoClient properties globally but DO NOT connect it here.
 const client = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
@@ -16,25 +16,31 @@ const client = new MongoClient(uri, {
     },
 });
 
-// Caching the database client connection promise globally 
-// ensures we only connect once per Vercel instance lifecycle.
+// Use a global promise variable to cache the single client connection 
+// across multiple calls during the serverless instance lifecycle.
 let dbClientPromise;
 
 module.exports = {
   connectToDatabase: async () => {
     if (!uri) {
-        // This will now only throw if the connection is attempted
-        console.error("MONGO_URI environment variable not set.");
+        console.error("Database connection failed. MONGO_URI missing.");
         throw new Error("Database connection failed. MONGO_URI missing.");
     }
     
-    // Use the global cache in production environments
-    if (!dbClientPromise) {
-        dbClientPromise = client.connect();
+    // Check if running in a global environment (like Codespace/Dev)
+    if (process.env.NODE_ENV === 'development') {
+        if (!global._mongoClientPromise) {
+            global._mongoClientPromise = client.connect();
+        }
+        dbClientPromise = global._mongoClientPromise;
+    } else {
+        // Production: Use the local file scope variable for caching
+        if (!dbClientPromise) {
+            dbClientPromise = client.connect();
+        }
     }
     
     const dbClient = await dbClientPromise;
-    // Define your database name here
     const db = dbClient.db("AddressVerificationDB"); 
     
     return { dbClient, db };
