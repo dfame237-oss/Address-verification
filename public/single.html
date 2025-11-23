@@ -12,16 +12,22 @@
                     colors: {
                         'primary-blue': '#1D4ED8', // Dark Blue
                         'secondary-green': '#059669', // Dark Green
-                        'neutral-gray': '#E5E7EB',
-                        'success-light': '#D1FAE5',
-                        'success-dark': '#065F46',
-                        // Added colors for the critical alert
+                        'neutral-gray': '#F9FAFB', // Lightest gray for background
+                        
+                        // Success/Good Colors
+                        'success-light': '#D1FAE5', // Green-100
+                        'success-dark': '#065F46', // Green-800
+                        
+                        // Alert/Bad Colors (Critical Error)
                         'alert-light': '#FEE2E2', // Red-100
                         'alert-dark': '#991B1B', // Red-800
-                        // Added colors for copy button feedback
-                        'yellow-100': '#FEF3C7',
-                        'yellow-800': '#92400E',
-                        'yellow-300': '#FCD34D',
+                        
+                        // Warning/Medium Colors (for Quality Score)
+                        'warning-light': '#FEF3C7', // Yellow-100 (Renamed from yellow-100)
+                        'warning-dark': '#92400E', // Yellow-800 (Renamed from yellow-800)
+                        
+                        // Neutral Copy Feedback
+                        'copy-neutral-border': '#D1D5DB', // Gray-300
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
@@ -32,13 +38,11 @@
     </script>
     <style>
         body { font-family: 'Inter', sans-serif; }
-        /* Style for the remarks block to ensure it's easily targetable for the alert class */
         .remarks-block {
             transition: all 0.3s ease;
         }
-        /* All result blocks are relative for button positioning */
         .result-block {
-            position: relative; /* For button placement */
+            position: relative;
         }
         /* Style for the copy button */
         .copy-btn {
@@ -48,10 +52,9 @@
             padding: 0.25rem 0.5rem;
             font-size: 0.75rem; /* text-xs */
             line-height: 1rem;
-            /* Added utility classes for a clean look */
             background-color: transparent;
             color: #4B5563; /* Gray-600 */
-            border: 1px solid #D1D5DB; /* Gray-300 */
+            border: 1px solid var(--copy-neutral-border); /* Use Tailwind color */
             border-radius: 0.375rem; /* rounded-md */
             transition: all 0.15s;
             cursor: pointer;
@@ -61,20 +64,14 @@
             background-color: #F3F4F6; /* Gray-50 */
             color: #1F2937; /* Gray-800 */
         }
-        .copy-btn:focus {
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(29, 77, 216, 0.5); /* Primary-blue ring */
-        }
-        /* Ensure the content is not covered by the button, ONLY for blocks with a button */
         .result-content {
-            padding-right: 3.5rem; /* To prevent content from going under the button */
+            padding-right: 3.5rem;
         }
     </style>
 </head>
 <body class="bg-neutral-gray min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-2xl bg-white p-8 sm:p-10 rounded-xl shadow-2xl">
 
-        <!-- UPDATED: Back to Home link -->
         <a href="index.html" class="text-primary-blue hover:text-blue-700 font-medium mb-6 inline-flex items-center transition duration-150">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             Back to Home
@@ -111,6 +108,13 @@
             <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Verification Results</h3>
             <div class="space-y-4">
                 
+                <div id="quality-block" class="p-4 rounded-lg shadow-md flex items-center justify-between transition-colors duration-300">
+                    <strong class="text-lg flex items-center">
+                        <span id="quality-icon" class="text-2xl mr-3"></span> Address Quality:
+                    </strong> 
+                    <span id="out-quality" class="text-xl font-extrabold"></span>
+                </div>
+
                 <div class="result-block bg-success-light p-4 rounded-lg border border-green-300 shadow-sm">
                     <button class="copy-btn" data-target="out-name" title="Copy Clean Name">Copy</button>
                     <div class="result-content">
@@ -135,7 +139,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-4">
                     <div class="result-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                         <button class="copy-btn" data-target="out-district" title="Copy District">Copy</button>
                         <div class="result-content">
@@ -158,8 +162,8 @@
                         </div>
                     </div>
                     <div class="result-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                        <strong class="text-gray-600 block mb-1">Quality:</strong> 
-                        <span id="out-quality" class="text-gray-800"></span>
+                        <strong class="text-gray-600 block mb-1">Country:</strong> 
+                        <span class="text-gray-800 font-bold">INDIA</span>
                     </div>
                 </div>
                 
@@ -171,7 +175,6 @@
         </div>
     </div>
     
-    <!-- Existing JavaScript below... -->
     <script>
         const API_ENDPOINT = "https://address-verification-one.vercel.app/api/verify-single-address";
         const REMARKS_ALERT_PREFIX = "CRITICAL_ALERT:";
@@ -182,9 +185,8 @@
                 verifyButton.addEventListener('click', handleSingleVerification);
             }
             
-            // NEW: Add event listener for all copy buttons
+            // Add event listener for all copy buttons
             document.querySelectorAll('.copy-btn').forEach(button => {
-                // Set original text for flashButton to restore
                 button.setAttribute('data-original-text', 'Copy'); 
                 button.addEventListener('click', (event) => {
                     const targetId = event.currentTarget.getAttribute('data-target');
@@ -193,14 +195,13 @@
             });
         });
 
-        // NEW: Copy function
+        // Copy function
         function copyToClipboard(elementId, button) {
             const element = document.getElementById(elementId);
             const textToCopy = element ? element.textContent.trim() : '';
 
-            if (textToCopy === 'N/A' || textToCopy === 'No specific remarks.' || textToCopy === '') {
-                // Do not copy placeholder text
-                flashButton(button, 'No Data', 1000, 'bg-yellow-100 text-yellow-800 border-yellow-300');
+            if (textToCopy === 'N/A' || textToCopy === 'No specific remarks.' || textToCopy === '' || textToCopy === 'INDIA') {
+                flashButton(button, 'No Data', 1000, 'bg-warning-light text-warning-dark border-yellow-300');
                 return;
             }
 
@@ -212,20 +213,20 @@
             });
         }
         
-        // NEW: Utility function to temporarily change button text and style
+        // Utility function to temporarily change button text and style
         function flashButton(button, newText, duration, flashClasses) {
             const originalText = button.getAttribute('data-original-text');
             const originalClassName = button.className; 
             
-            // Apply flash style
-            // Note: We're replacing the entire class list with 'copy-btn' plus the flash classes
-            button.className = 'copy-btn ' + flashClasses + ' border'; // Added 'border' back for the flash state
+            button.className = 'copy-btn ' + flashClasses + ' border';
             button.textContent = newText;
 
             setTimeout(() => {
-                // Restore original state
                 button.textContent = originalText;
-                button.className = originalClassName; // Restore original classes
+                // Restore original class name which includes the CSS styles defined in the <style> block
+                button.className = originalClassName.includes('copy-btn') ? 'copy-btn' : originalClassName; 
+                // A safer way to restore to the base class structure
+                button.className = 'copy-btn';
             }, duration);
         }
 
@@ -234,19 +235,17 @@
             if (element) {
                 element.textContent = text;
                 if (isError) {
-                    element.classList.remove('bg-blue-50', 'text-primary-blue');
-                    element.classList.add('bg-red-50', 'text-red-700');
+                    element.classList.remove('bg-blue-50', 'text-primary-blue', 'border-blue-200');
+                    element.classList.add('bg-alert-light', 'text-alert-dark', 'border-red-300');
                 } else {
-                    element.classList.remove('bg-red-50', 'text-red-700');
-                    element.classList.add('bg-blue-50', 'text-primary-blue');
+                    element.classList.remove('bg-alert-light', 'text-alert-dark', 'border-red-300');
+                    element.classList.add('bg-blue-50', 'text-primary-blue', 'border-blue-200');
                 }
             }
         }
 
         async function fetchVerification(rawAddress, customerName) {
             const payload = { address: rawAddress, customerName }; 
-            
-            // Simple exponential backoff retry mechanism
             const maxRetries = 3;
             let lastError = null;
 
@@ -259,7 +258,7 @@
                     });
                     
                     if (!response.ok) {
-                        const errorBody = await response.json();
+                        const errorBody = await response.json().catch(() => ({}));
                         throw new Error(errorBody.error || `Server responded with status ${response.status}`);
                     }
                     
@@ -269,13 +268,11 @@
                     lastError = error;
                     console.error(`Verification API Attempt ${attempt + 1} failed:`, error);
                     if (attempt < maxRetries - 1) {
-                        // Wait for 2^attempt seconds before retrying
                         await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
                     }
                 }
             }
 
-            // If all retries fail, return a structured error response
             return { 
                 status: "Error", 
                 error: `Verification failed after ${maxRetries} attempts.`,
@@ -287,28 +284,65 @@
             const remarksBlock = document.getElementById('remarks-block');
             const remarksSpan = document.getElementById('out-remarks');
             
-            // Default classes (white background, gray border, gray text)
-            const defaultClasses = ['bg-white', 'border-gray-200', 'text-gray-800', 'italic'];
-            // Alert classes (red background, red border, red text, bold font)
-            const alertClasses = ['bg-alert-light', 'border-red-300', 'text-alert-dark', 'font-bold', 'border-4'];
+            // Common classes for reset
+            const resetClasses = ['bg-white', 'border-gray-200', 'text-gray-800', 'italic', 'font-bold', 'border-4', 'bg-alert-light', 'border-red-300', 'text-alert-dark'];
 
-            // Check if any critical alert exists in the remarks string
-            const isAlert = remarks.includes(REMARKS_ALERT_PREFIX);
+            // Remove all specific classes before applying new ones
+            remarksBlock.classList.remove(...resetClasses);
+            remarksSpan.classList.remove('italic', 'font-bold', 'text-alert-dark');
 
             // Set the raw remarks text
-            remarksSpan.textContent = remarks.replace(new RegExp(REMARKS_ALERT_PREFIX, 'g'), '').trim() || 'No specific remarks.';
+            const cleanRemarks = remarks.replace(new RegExp(REMARKS_ALERT_PREFIX, 'g'), '').trim() || 'No specific remarks.';
+            remarksSpan.textContent = cleanRemarks;
+
+            // Default Style
+            remarksBlock.classList.add('bg-white', 'border', 'border-gray-200', 'shadow-sm');
+            remarksSpan.classList.add('italic', 'text-gray-800');
+
+
+            // Check for Alert
+            const isAlert = remarks.includes(REMARKS_ALERT_PREFIX);
 
             if (isAlert) {
-                // Apply alert styles and remove default styles
-                remarksBlock.classList.remove(...defaultClasses.filter(c => !alertClasses.includes(c)));
-                remarksBlock.classList.add(...alertClasses);
+                remarksBlock.classList.add('bg-alert-light', 'border-4', 'border-red-300', 'shadow-lg');
+                remarksSpan.classList.add('font-bold', 'text-alert-dark');
+                remarksBlock.classList.remove('bg-white', 'border-gray-200', 'shadow-sm'); // Remove default classes
                 remarksSpan.classList.remove('italic');
-            } else {
-                // Apply default styles and remove alert styles
-                remarksBlock.classList.remove(...alertClasses);
-                remarksBlock.classList.add(...defaultClasses.filter(c => c !== 'italic'));
-                remarksSpan.classList.add('italic');
             }
+        }
+
+        function updateQualityScoreUI(quality) {
+            const qualityBlock = document.getElementById('quality-block');
+            const qualityText = document.getElementById('out-quality');
+            const qualityIcon = document.getElementById('quality-icon');
+            
+            let colorClasses = '';
+            let icon = '';
+
+            // Clean previous classes
+            qualityBlock.className = 'p-4 rounded-lg shadow-md flex items-center justify-between transition-colors duration-300';
+            qualityText.className = 'text-xl font-extrabold';
+            
+            qualityText.textContent = quality;
+
+            if (quality.includes('Good') || quality.includes('Verified')) {
+                colorClasses = 'bg-success-light border border-secondary-green text-secondary-green';
+                icon = '✅';
+            } else if (quality.includes('Medium') || quality.includes('Partial')) {
+                colorClasses = 'bg-warning-light border border-warning-dark text-warning-dark';
+                icon = '⚠️';
+            } else if (quality.includes('Bad') || quality.includes('Unverified')) {
+                colorClasses = 'bg-alert-light border border-alert-dark text-alert-dark';
+                icon = '❌';
+            } else {
+                 // Default/N/A state
+                colorClasses = 'bg-gray-100 border border-gray-300 text-gray-500';
+                icon = '❓';
+            }
+
+            qualityBlock.classList.add(...colorClasses.split(' '));
+            qualityIcon.textContent = icon;
+            qualityText.classList.add(`text-[${qualityBlock.style.color}]`); // Apply the determined text color
         }
 
 
@@ -333,13 +367,10 @@
             verifyButton.textContent = 'Verifying...';
 
             try {
-                // 1. UPDATED Loading Message
                 showMessage('loading-message', 'Verifying address using AI...');
-
                 const verificationResult = await fetchVerification(rawAddress, customerName);
 
                 if (verificationResult.status === "Error") {
-                     // Display the error clearly
                     showMessage('loading-message', `Verification Error: ${verificationResult.error || 'Unknown Error'}`, true);
                     return;
                 }
@@ -355,14 +386,16 @@
                 document.getElementById('out-district').textContent = verificationResult.district || 'N/A';
                 document.getElementById('out-state').textContent = verificationResult.state || 'N/A';
                 document.getElementById('out-pin').textContent = verificationResult.pin || 'N/A';
-                document.getElementById('out-quality').textContent = verificationResult.addressQuality || 'N/A';
                 
-                // Apply the new styling logic for remarks
-                applyRemarksStyle(verificationResult.remarks);
+                const qualityScore = verificationResult.addressQuality || 'N/A';
+                
+                // NEW UI UPDATES
+                updateQualityScoreUI(qualityScore); 
+                applyRemarksStyle(verificationResult.remarks || '');
                 
             } catch (e) {
                 showMessage('loading-message', `An unexpected error occurred: ${e.message}`, true);
-                loadingMessage.classList.remove('hidden'); // Ensure message is visible on catch
+                loadingMessage.classList.remove('hidden'); 
                 resultsContainer.classList.add('hidden');
             } finally {
                 verifyButton.disabled = false;
