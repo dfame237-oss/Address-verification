@@ -37,7 +37,12 @@
             <div class="text-2xl font-bold text-gray-900">
                 <span class="text-primary-blue">AI</span> VERIFY
             </div>
-            <div class="space-x-4">
+            
+            <!-- Navigation Links -->
+            <div class="space-x-4 flex items-center">
+                <!-- HIDDEN ADMIN LINK: Very small, light gray, not easily visible -->
+                <a href="admin-login.html" class="text-[10px] text-gray-300 hover:text-gray-500 transition-colors duration-300" title="Admin Login">Admin</a>
+
                 <a href="#demoModal" class="bg-primary-blue text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition duration-300">Request Demo</a>
                 <!-- Link to the Client Login page for paying customers -->
                 <a href="client-login.html" class="text-gray-700 hover:text-primary-blue font-semibold">Login</a>
@@ -71,7 +76,6 @@
             
             <!-- Placeholder Image/Diagram -->
             <div class="hidden md:block">
-                <!-- Use a relevant placeholder image for a SaaS platform diagram -->
                 <img src="https://placehold.co/600x400/1D4ED8/FFFFFF?text=AI+Verification+Flow" alt="AI Verification Workflow Diagram" class="rounded-xl shadow-2xl border border-blue-100">
             </div>
         </div>
@@ -213,11 +217,10 @@
     </div>
     
     <script>
-        // Use the existing support message API (File 5)
+        // Use the existing support message API
         const API_SUPPORT_ENDPOINT = "https://address-verification-one.vercel.app/api/support/message";
         
         // --- MODAL HANDLING ---
-        // Function to show the modal (triggered by Request Demo button)
         document.querySelectorAll('a[href="#demoModal"]').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -255,7 +258,6 @@
                     statusMessage.className = 'text-secondary-green mt-3';
                     statusMessage.textContent = 'Demo request sent! We will contact you shortly.';
                     document.getElementById('demoForm').reset();
-                    // Optional: Close modal after success
                     setTimeout(() => document.getElementById('demoModal').classList.add('hidden'), 2000);
                 } else {
                     statusMessage.className = 'text-alert-dark mt-3';
