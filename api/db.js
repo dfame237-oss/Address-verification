@@ -2,54 +2,41 @@
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
-// Vercel Environment Variable (set in Step 2 of the previous response)
+// Vercel Environment Variable (read directly from process.env)
 const uri = process.env.MONGO_URI; 
 
-// MongoClient instance, reused for performance in serverless functions
-let client;
-let clientPromise;
+// We DO NOT initialize or connect the client globally. 
+// We define the parameters once.
 
-if (!uri) {
-  // Use console.error instead of throwing error directly for Vercel logging consistency
-  console.error('MONGO_URI environment variable not set.');
-}
-
-// Global caching logic for development environments (like Codespaces)
-if (process.env.NODE_ENV === 'development') {
-  if (!global._mongoClientPromise) {
-    client = new MongoClient(uri, {
-      serverApi: {
+const client = new MongoClient(uri, {
+    serverApi: {
         version: ServerApiVersion.v1,
         strict: true,
         deprecationErrors: true,
-      },
-    });
-    global._mongoClientPromise = client.connect();
-  }
-  clientPromise = global._mongoClientPromise;
-} else {
-  // Production environment (Vercel)
-  client = new MongoClient(uri, {
-    serverApi: {
-      version: ServerApiVersion.v1,
-      strict: true,
-      deprecationErrors: true,
     },
-  });
-  clientPromise = client.connect();
-}
+});
 
-// Export a module-scoped promise that resolves to the MongoClient
+// Caching the database client connection promise globally 
+// ensures we only connect once per Vercel instance lifecycle.
+let dbClientPromise;
+
 module.exports = {
   connectToDatabase: async () => {
-    try {
-      const dbClient = await clientPromise;
-      // Define your database name here
-      const db = dbClient.db("AddressVerificationDB"); 
-      return { dbClient, db };
-    } catch (error) {
-      console.error("Failed to connect to MongoDB:", error);
-      throw new Error("Database connection failed.");
+    if (!uri) {
+        // This will now only throw if the connection is attempted
+        console.error("MONGO_URI environment variable not set.");
+        throw new Error("Database connection failed. MONGO_URI missing.");
     }
+    
+    // Use the global cache in production environments
+    if (!dbClientPromise) {
+        dbClientPromise = client.connect();
+    }
+    
+    const dbClient = await dbClientPromise;
+    // Define your database name here
+    const db = dbClient.db("AddressVerificationDB"); 
+    
+    return { dbClient, db };
   }
 };
