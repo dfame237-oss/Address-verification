@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "engines": {
-    "node": "18.x"
+    "node": "22.x"
   },
   "dependencies": {
-    "jsonwebtoken": "^9.0.0",
+    "jsonwebtoken": "^9.0.2",
     "bcryptjs": "^2.4.3",
-    "mongodb": "^5.7.0"
+    "mongodb": "^5.8.0"
   }
 }
