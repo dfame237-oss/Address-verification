@@ -1,9 +1,9 @@
-// Improved api/db.js
+// api/db.js (refined)
 // Safe MongoDB connection helper for Vercel Serverless.
-// - Does NOT connect globally
-// - Caches the client properly
-// - Gives clear error messages when env is missing
-// - Works in both dev and production
+// - Does NOT connect at import time
+// - Caches the client & db on global for serverless reuse
+// - Clear error messages when env is missing
+// - Adds a serverSelectionTimeoutMS to fail fast on network issues
 
 const { MongoClient } = require('mongodb');
 
@@ -14,7 +14,7 @@ if (!MONGO_URI) {
   console.error("❌ ERROR: MONGO_URI is missing. Set it in Vercel Environment Variables.");
 }
 
-// Database name
+// Database name (ensure this matches the DB in your connection string if needed)
 const DB_NAME = "AddressVerificationDB";
 
 // Global cache to reuse connections across function calls
@@ -33,10 +33,10 @@ module.exports = {
       return { dbClient: cachedClient, db: cachedDb };
     }
 
-    // Create new client
+    // Create new client (serverSelectionTimeoutMS fails faster if network unreachable)
     const client = new MongoClient(MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
+      serverSelectionTimeoutMS: 5000, // fail fast if cannot reach server
+      // maxPoolSize: 10, // optional tuning
     });
 
     try {
@@ -53,6 +53,20 @@ module.exports = {
       cachedDb = db;
 
       console.log("📦 Connected to MongoDB:", DB_NAME);
+
+      // Optional: in local dev, close client on process exit to avoid warnings
+      if (process.env.NODE_ENV === 'development') {
+        process.on('SIGINT', async () => {
+          try {
+            await client.close();
+            console.log('MongoDB client closed on app termination');
+            process.exit(0);
+          } catch (err) {
+            console.error('Error closing MongoDB client on exit:', err);
+            process.exit(1);
+          }
+        });
+      }
 
       return { dbClient: client, db };
 
