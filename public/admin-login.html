@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#1D4ED8',
+                        'secondary-green': '#059669',
+                        'neutral-gray': '#E5E7EB',
+                        'alert-dark': '#991B1B', // Red for errors
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'], },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-neutral-gray min-h-screen flex items-center justify-center p-4">
+    
+    <div class="w-full max-w-md bg-white p-8 sm:p-10 rounded-xl shadow-2xl border border-gray-100">
+
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-gray-900 mb-2">
+                <span class="text-primary-blue">Admin</span> Panel Login
+            </h1>
+            <p class="text-gray-500">Secure access for managing clients and plans.</p>
+        </header>
+
+        <form id="adminLoginForm" class="space-y-6">
+            <div>
+                <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                <input type="text" id="username" name="username" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue transition duration-150">
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input type="password" id="password" name="password" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue transition duration-150">
+            </div>
+
+            <button type="submit" id="loginButton" class="w-full py-3 bg-secondary-green text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition duration-200 focus:outline-none focus:ring-4 focus:ring-secondary-green focus:ring-opacity-50">
+                Login
+            </button>
+            
+            <p id="message" class="text-center text-sm hidden"></p>
+        </form>
+    </div>
+    
+    <script>
+        // NOTE: Replace the placeholder with your actual Vercel deployment domain
+        const LOGIN_API_ENDPOINT = "https://address-verification-one.vercel.app/api/admin/login"; 
+        const ADMIN_DASHBOARD_URL = "admin-dashboard.html"; 
+
+        document.getElementById('adminLoginForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const loginButton = document.getElementById('loginButton');
+            const message = document.getElementById('message');
+
+            loginButton.disabled = true;
+            loginButton.textContent = 'Authenticating...';
+            message.textContent = '';
+            message.classList.add('hidden');
+
+            try {
+                const response = await fetch(LOGIN_API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.status === "Success") {
+                    // Store the token for future authenticated requests
+                    localStorage.setItem('adminToken', result.token); 
+                    message.classList.remove('text-red-600', 'text-alert-dark');
+                    message.classList.add('text-secondary-green', 'block');
+                    message.textContent = "Login successful! Redirecting...";
+                    
+                    setTimeout(() => {
+                        window.location.href = ADMIN_DASHBOARD_URL;
+                    }, 500);
+
+                } else {
+                    message.classList.remove('text-secondary-green');
+                    message.classList.add('text-alert-dark', 'block');
+                    message.textContent = result.message || "Login failed. Check username and password.";
+                }
+            } catch (e) {
+                message.classList.remove('text-secondary-green');
+                message.classList.add('text-alert-dark', 'block');
+                message.textContent = "A network error occurred. Check console for details.";
+                console.error("Fetch Error:", e);
+            } finally {
+                loginButton.disabled = false;
+                loginButton.textContent = 'Login';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact & Plan Purchase</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#1D4ED8',
+                        'secondary-green': '#059669',
+                        'neutral-gray': '#E5E7EB',
+                        'whatsapp-green': '#25D366',
+                        'alert-dark': '#991B1B',
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'], },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-neutral-gray min-h-screen flex items-center justify-center p-4">
+    
+    <div class="w-full max-w-xl bg-white p-8 sm:p-10 rounded-xl shadow-2xl">
+
+        <a href="index.html" class="text-primary-blue hover:text-blue-700 font-medium mb-6 inline-flex items-center transition duration-150">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Back to Home
+        </a>
+
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-gray-900 mb-2">
+                <span class="text-secondary-green">Contact & Plan</span> Purchase
+            </h1>
+            <p class="text-lg text-gray-500 mt-2">Get in touch to purchase a bulk verification plan or for support.</p>
+        </header>
+        
+        <div class="space-y-6">
+            
+            <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h3 class="font-bold text-xl text-primary-blue mb-3">Quick Contact</h3>
+                <a href="https://wa.me/9193246219" target="_blank" class="block w-full text-center py-3 px-6 bg-whatsapp-green text-white font-semibold rounded-lg shadow-md transition hover:bg-green-600 mb-3">
+                    <span class="mr-2">🟢</span> WhatsApp Us for Plans & Support
+                </a>
+                <p class="text-center text-sm text-gray-700">Call Support: +91 93246219</p>
+            </div>
+
+            <div class="p-4 border border-gray-200 rounded-lg shadow-md">
+                <h3 class="font-bold text-xl text-gray-800 mb-4">Send a Direct Message</h3>
+                <form id="contactForm" class="space-y-4">
+                    <div>
+                        <label for="clientName" class="block text-sm font-medium text-gray-700">Your Name</label>
+                        <input type="text" id="clientName" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-secondary-green focus:border-secondary-green">
+                    </div>
+                    <div>
+                        <label for="clientEmail" class="block text-sm font-medium text-gray-700">Your Email</label>
+                        <input type="email" id="clientEmail" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-secondary-green focus:border-secondary-green">
+                    </div>
+                    <div>
+                        <label for="messageText" class="block text-sm font-medium text-gray-700">Your Message (e.g., "Need a plan for 2,000 addresses")</label>
+                        <textarea id="messageText" rows="4" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-secondary-green focus:border-secondary-green resize-none"></textarea>
+                    </div>
+                    <button type="submit" id="sendMessageButton" class="w-full py-3 bg-primary-blue text-white font-bold rounded-lg hover:bg-blue-700 transition">
+                        Send Message to Admin
+                    </button>
+                    <p id="messageStatus" class="text-center text-sm font-semibold"></p>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_SUPPORT_ENDPOINT = "https://address-verification-one.vercel.app/api/support/message";
+
+        document.getElementById('contactForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const button = document.getElementById('sendMessageButton');
+            const statusMessage = document.getElementById('messageStatus');
+            
+            button.disabled = true;
+            button.textContent = 'Sending...';
+            statusMessage.textContent = '';
+
+            const messageData = {
+                clientName: document.getElementById('clientName').value,
+                clientEmail: document.getElementById('clientEmail').value,
+                messageText: document.getElementById('messageText').value,
+            };
+
+            try {
+                const response = await fetch(API_SUPPORT_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(messageData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.status === "Success") {
+                    statusMessage.className = 'text-secondary-green mt-3';
+                    statusMessage.textContent = 'Message sent successfully! We will contact you shortly.';
+                    document.getElementById('contactForm').reset(); // Clear the form
+                } else {
+                    statusMessage.className = 'text-alert-dark mt-3';
+                    statusMessage.textContent = `Error: ${result.message || 'Failed to send message.'}`;
+                }
+            } catch (e) {
+                statusMessage.className = 'text-alert-dark mt-3';
+                statusMessage.textContent = 'Network error occurred. Check console for details.';
+                console.error("Contact Form Submission Error:", e);
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Send Message to Admin';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -43,15 +43,15 @@
         <div class="options-container space-y-6 mt-8">
             
             <a href="single.html" class="block w-full text-center py-4 px-6 bg-secondary-green text-white font-bold text-xl rounded-lg shadow-md transition duration-300 transform hover:scale-[1.02] hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-secondary-green focus:ring-opacity-50">
-                <span class="mr-2">📝</span> Verify Single Address
+                <span class="mr-2">📝</span> Verify Single Address (Free)
             </a>
             
-            <button id="bulkVerificationButton" class="block w-full text-center py-4 px-6 bg-accent-yellow text-gray-900 font-bold text-xl rounded-lg shadow-md transition duration-300 transform hover:scale-[1.02] hover:bg-yellow-500 focus:outline-none focus:ring-4 focus:ring-accent-yellow focus:ring-opacity-50">
-                <span class="mr-2">📦</span> Bulk Address Verification
-            </button>
+            <a href="client-login.html" id="bulkVerificationLink" class="block w-full text-center py-4 px-6 bg-accent-yellow text-gray-900 font-bold text-xl rounded-lg shadow-md transition duration-300 transform hover:scale-[1.02] hover:bg-yellow-500 focus:outline-none focus:ring-4 focus:ring-accent-yellow focus:ring-opacity-50">
+                <span class="mr-2">📦</span> Bulk Address Verification (Paid Access)
+            </a>
             
-            <a href="https://wa.me/9193246219" target="_blank" class="block w-full text-center py-3 px-6 bg-whatsapp-green text-white font-semibold rounded-lg shadow-md transition duration-300 transform hover:scale-[1.01] hover:bg-green-600 focus:outline-none focus:ring-4 focus:ring-whatsapp-green focus:ring-opacity-50">
-                <span class="mr-2">📞</span> Get Access Code / WhatsApp Support
+            <a href="contact.html" class="block w-full text-center py-3 px-6 bg-whatsapp-green text-white font-semibold rounded-lg shadow-md transition duration-300 transform hover:scale-[1.01] hover:bg-green-600 focus:outline-none focus:ring-4 focus:ring-whatsapp-green focus:ring-opacity-50">
+                <span class="mr-2">📞</span> Get Bulk Plan / WhatsApp Support
             </a>
         </div>
         
@@ -60,48 +60,5 @@
         </p>
     </div>
     
-    <script>
-        // Set the Vercel API endpoint for the server-side access check
-        const ACCESS_API_ENDPOINT = "https://address-verification-one.vercel.app/api/check-access";
-        const BULK_PAGE_URL = "bulk.html";
-        
-        document.getElementById('bulkVerificationButton').addEventListener('click', async function() {
-            // Prompt the user for the access code
-            const userInput = prompt("Please enter the access code for Bulk Address Verification:");
-            
-            if (userInput === null) {
-                return;
-            }
-            
-            const userCode = userInput.trim();
-            if (userCode === "") {
-                alert("Access code cannot be empty.");
-                return;
-            }
-
-            // Call the Serverless API to check the code
-            try {
-                const response = await fetch(ACCESS_API_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code: userCode })
-                });
-                
-                const result = await response.json();
-
-                if (response.ok && result.status === "Success") {
-                    // SUCCESS: Redirect to the bulk page
-                    window.location.href = BULK_PAGE_URL;
-                } else {
-                    // FAILURE: Show error message from the server
-                    alert("Incorrect access code. Please contact support via WhatsApp to get the code.");
-                }
-            } catch (e) {
-                console.error("API Fetch Error:", e);
-                // This catch handles network errors or CORS issues
-                alert("A network error occurred while checking access. Please ensure the server (Vercel) is running and check console for details.");
-            }
-        });
-    </script>
-</body>
+    </body>
 </html>

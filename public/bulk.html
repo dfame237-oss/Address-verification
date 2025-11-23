@@ -14,6 +14,8 @@
                         'secondary-green': '#059669', // Dark Green
                         'neutral-gray': '#E5E7EB',
                         'accent-yellow': '#FCD34D', // For contrast/highlight
+                        'whatsapp-green': '#25D366', // Added WhatsApp Green
+                        'alert-dark': '#991B1B', // Red for errors
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
@@ -29,10 +31,13 @@
 <body class="bg-neutral-gray min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-3xl bg-white p-8 sm:p-10 rounded-xl shadow-2xl">
 
-        <a href="https://pankajbossgu.github.io/address-verification-app/" class="text-primary-blue hover:text-blue-700 font-medium mb-6 inline-flex items-center transition duration-150">
+        <a href="index.html" class="text-primary-blue hover:text-blue-700 font-medium mb-6 inline-flex items-center transition duration-150">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             Back to Home
         </a>
+        
+        <a href="client-login.html" onclick="localStorage.removeItem('clientToken'); localStorage.removeItem('planDetails');" class="text-alert-dark hover:text-red-700 font-medium float-right -mt-8 transition duration-150">Logout</a>
+
 
         <header class="text-center mb-8">
             <h1 class="text-4xl font-extrabold text-gray-900 mb-2">
@@ -41,7 +46,7 @@
             <p class="text-lg text-gray-500 mt-2">Upload a CSV file for high-volume cleaning and verification.</p>
         </header>
         
-        <div class="space-y-6">
+        <div id="bulkContent" class="space-y-6">
             
             <div class="bg-blue-50 p-6 rounded-xl border-l-4 border-primary-blue shadow-lg">
                 <p class="font-bold text-xl text-primary-blue mb-3 flex items-center">
@@ -82,9 +87,16 @@
     </div>
     
     <script>
-        const API_ENDPOINT = "https://address-verification-one.vercel.app/api/verify-single-address";
+        // Use the existing single verification API endpoint
+        const API_ENDPOINT = "https://address-verification-one.vercel.app/api/verify-single-address"; 
+        const LOGIN_PAGE = "client-login.html";
 
         document.addEventListener('DOMContentLoaded', () => {
+            // CRUCIAL: Check plan validity immediately
+            if (!checkPlanValidity()) {
+                return;
+            }
+
             const downloadTemplateButton = document.getElementById('downloadTemplateButton');
             const csvFileInput = document.getElementById('csvFileInput');
             const processButton = document.getElementById('processButton');
@@ -106,14 +118,86 @@
             }
         });
 
-        // Function to handle status message display, including errors
+        // --- NEW PLAN VALIDATION LOGIC ---
+        function checkPlanValidity() {
+            const token = localStorage.getItem('clientToken');
+            const planDetailsString = localStorage.getItem('planDetails');
+            
+            if (!token || !planDetailsString) {
+                // Not logged in -> Redirect to login page
+                showAccessDenied("Please log in to access Bulk Address Verification.");
+                setTimeout(() => { window.location.href = LOGIN_PAGE; }, 1500);
+                return false;
+            }
+
+            try {
+                const planDetails = JSON.parse(planDetailsString);
+                const validityEnd = new Date(planDetails.validityEnd);
+                const now = new Date();
+                
+                if (!planDetails.isActive) {
+                    // Disabled by admin
+                    showAccessDenied("Your account has been **disabled** by the administrator. Please contact support.");
+                    return false;
+                }
+
+                if (validityEnd < now) {
+                    // Plan expired
+                    showAccessDenied(`Your bulk plan (${planDetails.planName}) expired on **${validityEnd.toLocaleDateString()}**. Please contact support to renew.`);
+                    return false;
+                }
+                
+                // Plan is valid
+                return true; 
+            } catch (e) {
+                // Handle corrupted localStorage data
+                console.error("Error parsing plan details:", e);
+                showAccessDenied("Client authentication data is corrupted. Please log in again.");
+                setTimeout(() => { localStorage.clear(); window.location.href = LOGIN_PAGE; }, 1500);
+                return false;
+            }
+        }
+
+        function showAccessDenied(message) {
+            // Hide the normal content and replace it with an error block
+            const contentContainer = document.getElementById('bulkContent');
+            const progressContainer = document.querySelector('.progress-container');
+            
+            if (contentContainer) contentContainer.classList.add('hidden');
+            if (progressContainer) progressContainer.classList.add('hidden');
+
+            const errorBlock = document.createElement('div');
+            errorBlock.className = 'space-y-6';
+            errorBlock.innerHTML = `
+                <div class="bg-red-50 p-6 rounded-xl border-l-4 border-alert-dark shadow-lg">
+                    <p class="font-bold text-2xl text-alert-dark mb-3 flex items-center">
+                        🛑 Access Denied
+                    </p>
+                    <p class="text-base text-gray-700 mb-6">${message.replace(/\*\*/g, '<strong>')}</p>
+                    <p class="text-sm font-semibold text-gray-800 mb-2">Next Steps:</p>
+                </div>
+                <a href="contact.html" class="block w-full py-3 bg-secondary-green text-white text-center font-bold rounded-lg hover:bg-green-700 transition">
+                    Contact Support / Renew Plan
+                </a>
+                <a href="https://wa.me/9193246219" target="_blank" class="block w-full py-3 bg-whatsapp-green text-white text-center font-bold rounded-lg hover:bg-green-600">
+                    <span class="mr-2">🟢</span> WhatsApp Support
+                </a>
+            `;
+            // Insert the error block before the progress container
+            document.querySelector('.w-full.max-w-3xl.bg-white').insertBefore(errorBlock, progressContainer);
+        }
+
+        // --- END NEW PLAN VALIDATION LOGIC ---
+
         function updateStatusMessage(message, isError = false) {
             const statusMessage = document.getElementById('status-message');
+            // Check if the status message element exists (it won't if access is denied)
+            if (!statusMessage) return; 
+
             statusMessage.textContent = message;
             
-            // Reset colors
             statusMessage.classList.remove('text-red-700', 'bg-red-100', 'text-gray-600');
-            statusMessage.classList.add('p-2', 'rounded'); // Ensure padding/rounded for error background
+            statusMessage.classList.add('p-2', 'rounded');
 
             if (isError) {
                 statusMessage.classList.add('text-red-700', 'bg-red-100', 'font-bold');
@@ -126,7 +210,6 @@
 
 
         function handleTemplateDownload() {
-            // FIX: Use a single '\n' for the newline character for correct CSV formatting
             const templateHeaders = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS\n";
             const templateData = 
                 "1,\"John Doe\",\"H.No. 123, Sector 40B, near bus stand, Chandigarh\"\n" +
@@ -145,7 +228,6 @@
 
         // Existing parseCSV function (kept for robustness)
         function parseCSV(text) {
-            // Split by the actual newline character '\n'
             const lines = text.split('\n'); 
             if (lines.length < 2) return [];
 
@@ -153,7 +235,6 @@
             const header = lines[0].split(',').map(h => h.trim().replace(/^\"|\"$/g, ''));
             const data = [];
             
-            // Indices for required columns
             const idIndex = header.indexOf('ORDER ID');
             const nameIndex = header.indexOf('CUSTOMER NAME');
             const addressIndex = header.indexOf('CUSTOMER RAW ADDRESS');
@@ -173,7 +254,6 @@
                 // Clean up quoted values
                 const cleanedRow = row.map(cell => cell.trim().replace(/^\"|\"$/g, '').replace(/\"\"/g, '\"'));
 
-                // Ensure the row has enough columns based on max index
                 if (cleanedRow.length > Math.max(idIndex, nameIndex, addressIndex)) {
                     data.push({
                         'ORDER ID': cleanedRow[idIndex],
@@ -191,12 +271,20 @@
             
             const maxRetries = 3;
             let lastError = null;
+            // Get the client token for the API call (optional for single API, but good practice)
+            const clientToken = localStorage.getItem('clientToken'); 
 
             for (let attempt = 0; attempt < maxRetries; attempt++) {
                 try {
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (clientToken) {
+                         // Send the client token if needed for tracking/quota in the single API
+                        headers['Authorization'] = `Bearer ${clientToken}`; 
+                    }
+
                     const response = await fetch(API_ENDPOINT, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: headers,
                         body: JSON.stringify(payload)
                     });
                     
@@ -215,14 +303,14 @@
                     }
                 }
             }
-            // Return a predictable structure even on network/fetch errors to prevent CSV output breaks
+            // Return a predictable structure even on network/fetch errors
             return { 
                 status: "Error", 
                 error: `Verification failed after ${maxRetries} attempts.`,
                 remarks: `Error: ${lastError ? lastError.message : 'Unknown Network Error'}`,
                 customerCleanName: customerName,
                 addressLine1: "API Error: See Remarks",
-                landmark: "", // Always provide this field
+                landmark: "",
                 state: "",
                 district: "",
                 pin: "",
@@ -231,7 +319,6 @@
         }
 
         function createAndDownloadCSV(rows, filename) {
-            // Updated header to match the output columns including LANDMARK
             const header = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS,CLEAN NAME,CLEAN ADDRESS LINE 1,LANDMARK,STATE,DISTRICT,PIN,REMARKS,QUALITY\n";
             const csvContent = header + rows.join('\n');
             
@@ -242,6 +329,11 @@
         }
 
         async function handleBulkVerification() {
+            // Re-run plan check to be absolutely sure access is still valid
+            if (!checkPlanValidity()) {
+                return;
+            }
+
             const fileInput = document.getElementById('csvFileInput');
             const processButton = document.getElementById('processButton');
             const progressBarFill = document.getElementById('progressBarFill');
@@ -286,7 +378,7 @@
 
                     let verificationResult;
 
-                    if (!rawAddress || rawAddress.trim() === "") { // Defensive check for missing address
+                    if (!rawAddress || rawAddress.trim() === "") { 
                         verificationResult = { status: "Skipped", remarks: "Missing raw address in CSV row.", addressQuality: "Poor", customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "" };
                     } else {
                         verificationResult = await fetchVerification(rawAddress, customerName);
@@ -316,7 +408,6 @@
                     const progress = (processedCount / totalAddresses) * 100;
                     progressBarFill.style.width = `${progress}%`;
                     
-                    // UPDATED: Simple status message showing only progress count
                     updateStatusMessage(`Processing... ${processedCount} of ${totalAddresses} addresses completed.`);
                 }
 
