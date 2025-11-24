@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -79,6 +80,7 @@
                 console.log("admin login response:", response.status, result);
 
                 if (response.ok && result.status === "Success") {
+                    // Store token and redirect
                     localStorage.setItem('adminToken', result.token); 
                     message.classList.remove('text-alert-dark');
                     message.classList.add('text-secondary-green', 'block');
@@ -89,16 +91,19 @@
                     }, 600);
 
                 } else {
+                    // Display specific error message from the API
                     message.classList.remove('text-secondary-green');
                     message.classList.add('text-alert-dark', 'block');
                     message.textContent = result.message || "Login failed. Check username and password.";
                 }
             } catch (e) {
+                // Handle network failure
                 message.classList.remove('text-secondary-green');
                 message.classList.add('text-alert-dark', 'block');
                 message.textContent = "Network error. Please try again.";
                 console.error("Fetch Error:", e);
             } finally {
+                // Re-enable button
                 loginButton.disabled = false;
                 loginButton.textContent = 'Login';
             }
