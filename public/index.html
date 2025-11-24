@@ -27,6 +27,10 @@
     <style>
         body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
         .feature-icon { color: #1D4ED8; }
+        .input-focus:focus {
+            --tw-ring-color: #059669; /* secondary-green */
+            border-color: #059669;
+        }
     </style>
 </head>
 <body class="bg-neutral-gray">
@@ -198,15 +202,28 @@
                 <p class="text-sm text-gray-600">Fill in your details, and our sales team will contact you for a personalized demo setup.</p>
                 <div>
                     <label for="demo-clientName" class="block text-sm font-medium text-gray-700">Your Name</label>
-                    <input type="text" id="demo-clientName" required class="w-full p-2 border rounded-lg focus:ring-secondary-green focus:border-secondary-green">
+                    <input type="text" id="demo-clientName" required class="w-full p-2 border rounded-lg focus:ring-secondary-green focus:border-secondary-green input-focus">
                 </div>
                 <div>
                     <label for="demo-clientEmail" class="block text-sm font-medium text-gray-700">Your Email</label>
-                    <input type="email" id="demo-clientEmail" required class="w-full p-2 border rounded-lg focus:ring-secondary-green focus:border-secondary-green">
+                    <input type="email" id="demo-clientEmail" required class="w-full p-2 border rounded-lg focus:ring-secondary-green focus:border-secondary-green input-focus">
+                </div>
+                <!-- ADDED Mobile Field for Consistency -->
+                <div>
+                    <label for="demo-clientMobile" class="block text-sm font-medium text-gray-700">Mobile Number</label>
+                    <div class="flex">
+                        <span class="inline-flex items-center px-3 border border-r-0 border-gray-300 bg-gray-50 text-gray-500 rounded-l-lg">
+                            +91
+                        </span>
+                        <input type="tel" id="demo-clientMobile" required 
+                            pattern="[0-9]{10}" title="10 digit Indian Mobile Number"
+                            placeholder="9876543210"
+                            class="w-full p-2 border rounded-r-lg focus:ring-secondary-green focus:border-secondary-green input-focus">
+                    </div>
                 </div>
                 <div>
                     <label for="demo-messageText" class="block text-sm font-medium text-gray-700">Message / Requirement</label>
-                    <textarea id="demo-messageText" rows="3" required class="w-full p-2 border rounded-lg focus:ring-secondary-green focus:border-secondary-green resize-none">I am interested in a demo for bulk verification.</textarea>
+                    <textarea id="demo-messageText" rows="3" required class="w-full p-2 border rounded-lg focus:ring-secondary-green focus:border-secondary-green resize-none input-focus">I am interested in a demo for bulk verification.</textarea>
                 </div>
                 <button type="submit" id="sendDemoButton" class="w-full py-3 bg-secondary-green text-white font-bold rounded-lg hover:bg-green-700 transition">
                     Submit Demo Request
@@ -217,14 +234,18 @@
     </div>
     
     <script>
-        // Use the existing support message API
-        const API_SUPPORT_ENDPOINT = "https://address-verification-one.vercel.app/api/support/message";
+        // Changed absolute URL to relative path for better deployment stability
+        const API_SUPPORT_ENDPOINT = "/api/support/message";
         
         // --- MODAL HANDLING ---
         document.querySelectorAll('a[href="#demoModal"]').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-                document.getElementById('demoModal').classList.remove('hidden');
+                // Check if the link target exists before showing the modal
+                const modal = document.getElementById('demoModal');
+                if (modal) {
+                    modal.classList.remove('hidden');
+                }
             });
         });
 
@@ -239,9 +260,21 @@
             button.textContent = 'Sending...';
             statusMessage.textContent = '';
 
+            const clientMobile = document.getElementById('demo-clientMobile').value.trim();
+            
+            // Basic client-side validation
+            if (clientMobile.length !== 10 || !/^\d{10}$/.test(clientMobile)) {
+                statusMessage.className = 'text-alert-dark mt-3';
+                statusMessage.textContent = 'Please enter a valid 10-digit mobile number.';
+                button.disabled = false;
+                button.textContent = 'Submit Demo Request';
+                return;
+            }
+
             const messageData = {
                 clientName: document.getElementById('demo-clientName').value,
                 clientEmail: document.getElementById('demo-clientEmail').value,
+                clientMobile: clientMobile, 
                 messageText: document.getElementById('demo-messageText').value,
             };
 
@@ -258,6 +291,8 @@
                     statusMessage.className = 'text-secondary-green mt-3';
                     statusMessage.textContent = 'Demo request sent! We will contact you shortly.';
                     document.getElementById('demoForm').reset();
+                    // Clear the custom mobile input field specifically
+                    document.getElementById('demo-clientMobile').value = '';
                     setTimeout(() => document.getElementById('demoModal').classList.add('hidden'), 2000);
                 } else {
                     statusMessage.className = 'text-alert-dark mt-3';
@@ -266,9 +301,12 @@
             } catch (e) {
                 statusMessage.className = 'text-alert-dark mt-3';
                 statusMessage.textContent = 'Network error occurred.';
+                console.error("Demo Form Submission Error:", e);
             } finally {
-                button.disabled = false;
-                button.textContent = 'Submit Demo Request';
+                setTimeout(() => { 
+                    button.disabled = false;
+                    button.textContent = 'Submit Demo Request';
+                }, 2000);
             }
         });
     </script>

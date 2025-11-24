@@ -52,13 +52,16 @@
         .modal-button:hover { background-color: #059669; }
 
         /* Inbox Styling */
-        #inbox-messages { max-height: 400px; overflow-y: auto; padding-right: 10px; }
+        #inbox-messages-container { max-height: 400px; overflow-y: auto; padding-right: 10px; }
         .message-card { border: 1px solid #eee; padding: 12px; border-radius: 6px; margin-bottom: 10px; cursor: pointer; transition: background-color 0.2s; border-left: 4px solid transparent; }
         .message-card:hover { background-color: #f9fafb; border-left-color: #1D4ED8; }
         .message-card.unread { background-color: #FFFBEB; border-left-color: #FCD34D; font-weight: 600; }
         .message-card p { margin: 0; }
 
         #reply-form { border-top: 1px solid #eee; margin-top: 20px; padding-top: 20px; display: none; }
+        
+        .tab-btn { padding: 10px 15px; border-radius: 6px 6px 0 0; cursor: pointer; background-color: #f0f0f0; border: none; font-weight: 600; transition: background-color 0.2s; }
+        .tab-btn.active { background-color: white; border-bottom: 2px solid #1D4ED8; color: #1D4ED8; }
     </style>
 </head>
 <body>
@@ -67,13 +70,13 @@
         <header class="header">
             <h1>Admin Panel</h1>
             <div class="controls">
-                <!-- Notification Icon -->
-                <div id="notification-icon" class="icon-btn" onclick="toggleInbox('notifications')">
+                <!-- Notification Icon (Counts all unread messages) -->
+                <div id="notification-icon" class="icon-btn" onclick="toggleInbox('messages')">
                     <i class="fas fa-bell"></i>
                     <span id="notification-badge" class="badge" style="display: none;">0</span>
                 </div>
                 <!-- Inbox Icon -->
-                <div id="inbox-icon" class="icon-btn" onclick="toggleInbox('inbox')">
+                <div id="inbox-icon" class="icon-btn" onclick="toggleInbox('messages')">
                     <i class="fas fa-inbox"></i>
                     <span id="inbox-badge" class="badge" style="display: none;">0</span>
                 </div>
@@ -81,18 +84,24 @@
             </div>
         </header>
 
-        <!-- Notification/Inbox Modal -->
+        <!-- Notification/Inbox Modal (Updated Structure) -->
         <div id="inbox-modal" class="modal">
             <div class="modal-content">
                 <span class="modal-close" onclick="closeInbox()">&times;</span>
                 <h2 class="text-2xl font-bold mb-4" id="inbox-title">Admin Inbox</h2>
                 
-                <!-- Message List -->
-                <div id="inbox-messages">
+                <!-- Tab Navigation for Inbox Types -->
+                <div class="flex border-b border-gray-200 mb-4">
+                    <button id="tab-messages-btn" class="tab-btn active" onclick="switchInboxTab('messages')">Client Messages</button>
+                    <button id="tab-support-btn" class="tab-btn" onclick="switchInboxTab('support')">Demo Requests</button>
+                </div>
+
+                <!-- Message List Container -->
+                <div id="inbox-messages-container">
                     <p class="text-center text-gray-500">Loading messages...</p>
                 </div>
                 
-                <!-- Reply Form -->
+                <!-- Reply Form (Only used for Client Messages) -->
                 <div id="reply-form" class="mt-4">
                     <h3 class="font-semibold text-xl mb-3">Send Reply to <span id="reply-to-client" class="text-primary-blue"></span></h3>
                     <div class="form-group">
@@ -102,7 +111,7 @@
                         <textarea id="reply-body" rows="3" placeholder="Your reply message" required></textarea>
                     </div>
                     <button class="action-btn modal-button w-full" onclick="sendMessage()">Send Reply</button>
-                    <p id="reply-status" class="mt-2 text-sm text-center"></p>
+                    <p id="reply-status" class="mt-3 text-sm text-center"></p>
                 </div>
             </div>
         </div>
@@ -218,6 +227,7 @@
         let activeClients = [];
         let selectedClientId = null; 
         let selectedClientUsername = null; 
+        let currentInboxTab = 'messages'; // State for the active inbox tab
 
         // Check auth status on load
         if (!AUTH_TOKEN) {
@@ -248,7 +258,7 @@
             return response;
         }
 
-        // --- CLIENT MANAGEMENT LOGIC ---
+        // --- CLIENT MANAGEMENT LOGIC (unchanged) ---
         async function loadClients() {
             const clientListBody = document.getElementById('client-list');
             clientListBody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-4">Loading clients...</td></tr>';
@@ -322,18 +332,32 @@
                 });
 
                 if (response.ok) {
-                    alert("Client deleted successfully.");
+                    // Using custom modal/message box instead of alert()
+                    const messageBox = document.createElement('div');
+                    messageBox.className = "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
+                    messageBox.innerHTML = '<div class="bg-white p-6 rounded-lg shadow-xl"><p class="font-bold text-lg text-green-600">Client deleted successfully.</p></div>';
+                    document.body.appendChild(messageBox);
+                    setTimeout(() => messageBox.remove(), 2000); 
+
                     loadClients(); 
                 } else {
                     const result = await response.json();
-                    alert(`Deletion failed: ${result.message}`);
+                    const messageBox = document.createElement('div');
+                    messageBox.className = "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
+                    messageBox.innerHTML = `<div class="bg-white p-6 rounded-lg shadow-xl"><p class="font-bold text-lg text-red-600">Deletion failed: ${result.message}</p></div>`;
+                    document.body.appendChild(messageBox);
+                    setTimeout(() => messageBox.remove(), 3000);
                 }
             } catch (error) {
-                alert(`Network error: ${error.message}`);
+                const messageBox = document.createElement('div');
+                messageBox.className = "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
+                messageBox.innerHTML = `<div class="bg-white p-6 rounded-lg shadow-xl"><p class="font-bold text-lg text-red-600">Network error: ${error.message}</p></div>`;
+                document.body.appendChild(messageBox);
+                setTimeout(() => messageBox.remove(), 3000);
             }
         }
 
-        // --- ADD CLIENT MODAL LOGIC ---
+        // --- ADD CLIENT MODAL LOGIC (unchanged) ---
         function openAddClientModal() {
             document.getElementById('add-client-modal').style.display = 'flex';
             document.getElementById('add-client-form').reset();
@@ -383,7 +407,7 @@
             }
         });
 
-        // --- UPDATE CLIENT MODAL LOGIC ---
+        // --- UPDATE CLIENT MODAL LOGIC (unchanged) ---
         function openUpdateModal(clientId) {
             const client = activeClients.find(c => c._id === clientId);
             if (!client) return alert("Client data not found.");
@@ -449,54 +473,99 @@
             }
         });
 
-        // --- MESSAGING / INBOX LOGIC ---
+        // --- MESSAGING / INBOX LOGIC (UPDATED) ---
+        
+        // Function to load counts from BOTH collections
+        async function loadInboxCounts() {
+            let totalUnread = 0;
+            
+            try {
+                // 1. Authenticated Client Messages
+                const msgResponse = await authFetch(`${API_BASE}/inbox/message`);
+                const msgResult = await msgResponse.json();
+                if (msgResult.status === "Success") {
+                    // Admin should only count messages RECEIVED by them
+                    const adminReceivedMessages = msgResult.messages.filter(m => m.receiverId === ADMIN_ID);
+                    const unreadClientCount = adminReceivedMessages.filter(m => m.isRead === false).length;
+                    totalUnread += unreadClientCount;
+                }
+            } catch (e) {
+                console.error("Failed to load client message counts:", e);
+            }
+            
+            try {
+                // 2. Unauthenticated Support/Demo Requests
+                const supportResponse = await authFetch(`${API_BASE}/admin/support`); // NEW API
+                const supportResult = await supportResponse.json();
+                if (supportResult.status === "Success") {
+                    totalUnread += supportResult.unreadCount; // Already calculated on server
+                }
+            } catch (e) {
+                // If this fails, the count just won't update, but the app stays running
+                console.error("Failed to load support message counts:", e);
+            }
+            
+            const badgeElement = document.getElementById('notification-badge');
+            const inboxBadgeElement = document.getElementById('inbox-badge');
 
-        function toggleInbox(viewType) {
-            loadInbox(viewType);
-            document.getElementById('reply-form').style.display = 'none';
-            document.getElementById('inbox-messages').style.display = 'block';
+            if (totalUnread > 0) {
+                badgeElement.textContent = totalUnread;
+                inboxBadgeElement.textContent = totalUnread;
+                badgeElement.style.display = 'block';
+                inboxBadgeElement.style.display = 'block';
+            } else {
+                badgeElement.style.display = 'none';
+                inboxBadgeElement.style.display = 'none';
+            }
+        }
+        
+        // --- INBOX VIEW CONTROL ---
+
+        function toggleInbox(defaultTab = 'messages') {
             document.getElementById('inbox-modal').style.display = 'flex';
+            document.getElementById('reply-form').style.display = 'none';
+            document.getElementById('inbox-messages-container').style.display = 'block';
+            switchInboxTab(defaultTab);
         }
         
         function closeInbox() {
             document.getElementById('inbox-modal').style.display = 'none';
             selectedClientId = null; 
             selectedClientUsername = null;
-            loadInboxCounts();
+            loadInboxCounts(); // Refresh counts after closing
         }
 
+        function switchInboxTab(tabType) {
+            currentInboxTab = tabType;
+            
+            document.getElementById('tab-messages-btn').classList.remove('active');
+            document.getElementById('tab-support-btn').classList.remove('active');
+            
+            if (tabType === 'messages') {
+                document.getElementById('tab-messages-btn').classList.add('active');
+                loadClientMessages();
+            } else if (tabType === 'support') {
+                document.getElementById('tab-support-btn').classList.add('active');
+                loadSupportMessages();
+            }
+        }
+        
         function openReplyForm(clientId, username) {
             selectedClientId = clientId;
             selectedClientUsername = username;
-            document.getElementById('inbox-modal').style.display = 'flex';
-            document.getElementById('inbox-title').textContent = `Send Message`;
+            document.getElementById('inbox-title').textContent = `Send Reply`;
             document.getElementById('reply-to-client').textContent = username;
             document.getElementById('reply-form').style.display = 'block';
-            document.getElementById('inbox-messages').style.display = 'none';
+            document.getElementById('inbox-messages-container').style.display = 'none';
+            // Clear previous status
+            document.getElementById('reply-status').textContent = '';
         }
 
-        async function loadInboxCounts() {
-            try {
-                const response = await authFetch(`${API_BASE}/inbox/message`);
-                const result = await response.json();
-                
-                if (result.status === "Success" && result.unreadCount > 0) {
-                    document.getElementById('notification-badge').textContent = result.unreadCount;
-                    document.getElementById('inbox-badge').textContent = result.unreadCount;
-                    document.getElementById('notification-badge').style.display = 'block';
-                    document.getElementById('inbox-badge').style.display = 'block';
-                } else {
-                    document.getElementById('notification-badge').style.display = 'none';
-                    document.getElementById('inbox-badge').style.display = 'none';
-                }
-            } catch (e) {
-                console.error("Failed to load inbox counts:", e);
-            }
-        }
-
-        async function loadInbox(viewType) {
-            document.getElementById('inbox-title').textContent = 'Admin Inbox';
-            document.getElementById('inbox-messages').innerHTML = '<p class="text-center text-gray-500 py-4">Loading messages...</p>';
+        // --- MESSAGE LOADING FUNCTIONS ---
+        
+        async function loadClientMessages() {
+            const msgContainer = document.getElementById('inbox-messages-container');
+            msgContainer.innerHTML = '<p class="text-center text-gray-500 py-4">Loading client messages...</p>';
             
             try {
                 const response = await authFetch(`${API_BASE}/inbox/message`);
@@ -505,11 +574,10 @@
                 if (result.status === "Success") {
                     // Admin should see messages where they are the receiver (from a client)
                     const receivedMessages = result.messages.filter(m => m.receiverId === ADMIN_ID);
-                    const msgContainer = document.getElementById('inbox-messages');
                     msgContainer.innerHTML = '';
 
                     if (receivedMessages.length === 0) {
-                        msgContainer.innerHTML = '<p class="text-center text-gray-500 py-4">No messages in inbox.</p>';
+                        msgContainer.innerHTML = '<p class="text-center text-gray-500 py-4">No authenticated messages from clients.</p>';
                         return;
                     }
 
@@ -520,7 +588,7 @@
                         
                         const messageHtml = `
                             <div class="message-card ${cardClass}" 
-                                 onclick="viewMessage('${msg._id}', '${msg.subject}', '${msg.body}', '${msg.senderId}', '${clientName}', ${isUnread}, '${msg.timestamp}')">
+                                 onclick="viewClientMessage('${msg._id}', '${msg.subject}', '${msg.body}', '${msg.senderId}', '${clientName}', ${isUnread}, '${msg.timestamp}')">
                                 <p class="text-sm text-gray-700">From: <strong>${clientName}</strong> (${isUnread ? 'NEW' : 'Read'})</p>
                                 <p class="text-md font-bold">${msg.subject}</p>
                                 <small class="text-gray-500">${new Date(msg.timestamp).toLocaleString()}</small>
@@ -529,30 +597,114 @@
                         msgContainer.insertAdjacentHTML('beforeend', messageHtml);
                     });
                 } else {
-                    document.getElementById('inbox-messages').innerHTML = `<p class="text-center text-red-500 py-4">Failed to load inbox: ${result.message}</p>`;
+                    msgContainer.innerHTML = `<p class="text-center text-red-500 py-4">Failed to load client inbox: ${result.message}</p>`;
                 }
             } catch (error) {
-                document.getElementById('inbox-messages').innerHTML = `<p class="text-center text-red-500 py-4">Network Error: ${error.message}</p>`;
+                msgContainer.innerHTML = `<p class="text-center text-red-500 py-4">Network Error: ${error.message}</p>`;
             }
         }
 
-        function viewMessage(messageId, subject, body, senderId, clientUsername, isUnread, timestamp) {
+        async function loadSupportMessages() {
+            const msgContainer = document.getElementById('inbox-messages-container');
+            msgContainer.innerHTML = '<p class="text-center text-gray-500 py-4">Loading demo requests...</p>';
+            
+            try {
+                const response = await authFetch(`${API_BASE}/admin/support`);
+                const result = await response.json();
+
+                if (result.status === "Success") {
+                    const supportMessages = result.messages;
+                    msgContainer.innerHTML = '';
+
+                    if (supportMessages.length === 0) {
+                        msgContainer.innerHTML = '<p class="text-center text-gray-500 py-4">No demo requests or public inquiries.</p>';
+                        return;
+                    }
+
+                    supportMessages.forEach(msg => {
+                        const isUnread = !msg.isRead;
+                        const cardClass = isUnread ? 'unread' : '';
+                        
+                        // Display name/email since these are unauthenticated
+                        const senderInfo = `${msg.clientName || 'N/A'} (${msg.clientEmail || 'N/A'})`;
+                        
+                        const messageHtml = `
+                            <div class="message-card ${cardClass}" 
+                                 onclick="viewSupportMessage('${msg._id}', '${msg.messageText}', '${msg.clientName}', '${msg.clientEmail}', '${msg.clientMobile}', ${isUnread}, '${msg.receivedAt}')">
+                                <p class="text-sm text-gray-700">From: <strong>${senderInfo}</strong> (${isUnread ? 'NEW' : 'Read'})</p>
+                                <p class="text-md font-bold">Inquiry: ${msg.messageText.substring(0, 50)}...</p>
+                                <small class="text-gray-500">Received: ${new Date(msg.receivedAt).toLocaleString()}</small>
+                            </div>
+                        `;
+                        msgContainer.insertAdjacentHTML('beforeend', messageHtml);
+                    });
+                } else {
+                    msgContainer.innerHTML = `<p class="text-center text-red-500 py-4">Failed to load requests: ${result.message}</p>`;
+                }
+            } catch (error) {
+                msgContainer.innerHTML = `<p class="text-center text-red-500 py-4">Network Error: ${error.message}</p>`;
+            }
+        }
+
+        // --- MESSAGE VIEW / REPLY FUNCTIONS ---
+
+        function viewClientMessage(messageId, subject, body, senderId, clientUsername, isUnread, timestamp) {
+            
             if (isUnread) {
                 authFetch(`${API_BASE}/inbox/message?messageId=${messageId}`, { method: 'PUT' });
-                setTimeout(loadInbox, 200); 
+                // We reload the client messages to mark it read visually
+                setTimeout(loadClientMessages, 200); 
             }
             
-            alert(`
-Subject: ${subject}
-From: ${clientUsername}
-Date: ${new Date(timestamp).toLocaleString()}
+            // Use custom modal/message box instead of alert()
+            const messageContent = `
+                <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg">
+                    <h3 class="text-xl font-bold mb-2 text-primary-blue">Client Message: ${subject}</h3>
+                    <p class="text-sm text-gray-600 mb-3">From: <strong>${clientUsername}</strong> | Date: ${new Date(timestamp).toLocaleString()}</p>
+                    <div class="p-4 bg-gray-50 border rounded whitespace-pre-wrap">${body}</div>
+                    <div class="mt-4 flex justify-end">
+                        <button onclick="document.querySelector('#message-view-modal').remove()" class="action-btn delete">Close</button>
+                    </div>
+                </div>
+            `;
+            const modal = document.createElement('div');
+            modal.id = 'message-view-modal';
+            modal.className = "fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50";
+            modal.innerHTML = messageContent;
+            document.body.appendChild(modal);
 
---- Message ---
-${body}
-            `.trim());
-            
-            // Optionally set up reply form immediately after viewing
+            // Set up reply form after viewing
             openReplyForm(senderId, clientUsername);
+        }
+
+        function viewSupportMessage(messageId, messageText, clientName, clientEmail, clientMobile, isUnread, receivedAt) {
+            
+            if (isUnread) {
+                authFetch(`${API_BASE}/admin/support?messageId=${messageId}`, { method: 'PUT' });
+                // We reload the support messages to mark it read visually
+                setTimeout(loadSupportMessages, 200); 
+            }
+
+            // Use custom modal/message box instead of alert()
+            const messageContent = `
+                <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg">
+                    <h3 class="text-xl font-bold mb-2 text-secondary-green">Demo/Support Request</h3>
+                    <p class="text-sm text-gray-600">Name: <strong>${clientName || 'N/A'}</strong></p>
+                    <p class="text-sm text-gray-600">Email: <strong>${clientEmail || 'N/A'}</strong></p>
+                    <p class="text-sm text-gray-600 mb-3">Mobile: <strong>${clientMobile || 'N/A'}</strong> | Received: ${new Date(receivedAt).toLocaleString()}</p>
+                    <div class="p-4 bg-gray-50 border rounded whitespace-pre-wrap">${messageText}</div>
+                    <div class="mt-4 flex justify-end">
+                        <a href="mailto:${clientEmail}" target="_blank" class="action-btn modal-button mr-2 bg-primary-blue">Reply via Email</a>
+                        <a href="https://wa.me/${clientMobile}" target="_blank" class="action-btn modal-button mr-2 bg-green-600 hover:bg-green-700">WhatsApp</a>
+                        <button onclick="document.querySelector('#message-view-modal').remove()" class="action-btn delete">Close</button>
+                    </div>
+                </div>
+            `;
+            const modal = document.createElement('div');
+            modal.id = 'message-view-modal';
+            modal.className = "fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50";
+            modal.innerHTML = messageContent;
+            document.body.appendChild(modal);
         }
         
         async function sendMessage() {
@@ -591,6 +743,8 @@ ${body}
                     statusMsg.style.color = '#10b981';
                     document.getElementById('reply-subject').value = '';
                     document.getElementById('reply-body').value = '';
+                    // Return to the message list after sending
+                    setTimeout(() => switchInboxTab('messages'), 100); 
                     setTimeout(closeInbox, 1500);
                 } else {
                     statusMsg.textContent = `Send Failed: ${result.message}`;
