@@ -59,7 +59,8 @@
             <div class="space-x-4 flex items-center">
                 <a href="admin-login.html" class="text-[10px] text-gray-300 hover:text-gray-500 transition-colors duration-300" title="Admin Login">Admin</a>
 
-                <a href="#pricing" class="bg-primary-blue text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition duration-300">View Plans</a>
+                <a href="#single-check" class="text-gray-700 hover:text-primary-blue font-semibold">Single Check</a>
+                <a href="#pricing" class="bg-primary-blue text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition duration-300">Pricing</a>
                 <a href="client-login.html" class="text-gray-700 hover:text-primary-blue font-semibold">Login</a>
             </div>
         </div>
@@ -124,6 +125,48 @@
             </div>
         </div>
     </header>
+
+    <!-- NEW SECTION: SINGLE ADDRESS CHECK (Re-added) -->
+    <section id="single-check" class="py-20 bg-white border-t border-gray-100">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-4 text-center">
+                Try a Single Address Check (Free)
+            </h2>
+            <p class="text-xl text-gray-600 mb-12 max-w-3xl mx-auto text-center">
+                See our AI in action! Enter a messy or incomplete address below for real-time verification and correction.
+            </p>
+
+            <form id="singleCheckForm" class="bg-neutral-gray p-8 rounded-2xl shadow-xl space-y-6">
+                 <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                         <label for="customerName" class="block text-sm font-medium text-gray-700 mb-1">Customer Name (Optional)</label>
+                         <input type="text" id="customerName" placeholder="e.g., John Doe" class="w-full p-3 border rounded-lg input-focus">
+                    </div>
+                    <div>
+                         <label for="rawAddress" class="block text-sm font-medium text-gray-700 mb-1">Raw Address (Required)</label>
+                         <input type="text" id="rawAddress" required placeholder="e.g., house 123, Sector 40B, chd" class="w-full p-3 border rounded-lg input-focus">
+                    </div>
+                 </div>
+                 <button type="submit" id="checkButton" class="w-full py-3 bg-primary-blue text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition transform hover:scale-[1.005]">
+                    Verify Address Now
+                 </button>
+                 <p id="checkStatus" class="text-center text-sm font-semibold pt-2"></p>
+            </form>
+            
+            <!-- Result Display -->
+            <div id="checkResult" class="mt-8 p-6 bg-green-50 border-l-4 border-secondary-green rounded-xl shadow-lg" style="display: none;">
+                <h3 class="text-2xl font-bold text-secondary-green mb-4">Verification Result</h3>
+                <div class="grid md:grid-cols-2 gap-4 text-sm">
+                    <div class="font-semibold">Clean Address:</div><div id="resultAddress" class="font-medium text-gray-700"></div>
+                    <div class="font-semibold">PIN Code:</div><div id="resultPin" class="font-medium text-gray-700"></div>
+                    <div class="font-semibold">State/District:</div><div id="resultState" class="font-medium text-gray-700"></div>
+                    <div class="font-semibold">Quality Score:</div><div id="resultQuality" class="font-medium text-gray-700"></div>
+                    <div class="font-semibold md:col-span-2">Remarks:</div><div id="resultRemarks" class="font-medium text-gray-700 md:col-span-2"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- END SINGLE ADDRESS CHECK -->
 
     <!-- NEW PRICING SECTION -->
     <section id="pricing" class="py-20 bg-neutral-gray">
@@ -264,7 +307,7 @@
 
     
     <script>
-        // --- PLAN & PRICING DATA MODEL ---
+        // --- PLAN & PRICING DATA MODEL (Used for Pricing Table and Demo Select) ---
         const PLANS = [
             { name: 'Growth Starter', basePrice: 1000, credits: '10,000' },
             { name: 'Business Pro', basePrice: 2000, credits: '25,000' },
@@ -277,6 +320,9 @@
             { months: 6, label: "6 Months", discount: 0.30, bestValue: true }, // Highlight 6 months
             { months: 12, label: "1 Year", discount: 0.40, bestValue: false },
         ];
+
+        const API_VERIFY_ENDPOINT = "/api/verify-single-address"; 
+        const API_SUPPORT_ENDPOINT = "/api/support/message";
 
         // Function to calculate the final price including GST
         function calculatePrice(basePrice, months, discount) {
@@ -373,11 +419,63 @@
             demoPlanSelect.innerHTML = selectOptions;
         }
 
+        // --- SINGLE CHECK LOGIC ---
 
-        // --- DEMO FORM SUBMISSION LOGIC (Remains similar, adapted for new select field) ---
+        function setSingleCheckStatus(message, isError = false) {
+             const statusEl = document.getElementById('checkStatus');
+             statusEl.textContent = message;
+             statusEl.className = `text-center text-sm font-semibold pt-2 ${isError ? 'text-alert-dark' : 'text-secondary-green'}`;
+        }
         
-        // Changed absolute URL to relative path for better deployment stability
-        const API_SUPPORT_ENDPOINT = "/api/support/message";
+        function updateSingleCheckResult(data) {
+            document.getElementById('checkResult').style.display = 'block';
+            document.getElementById('resultAddress').textContent = `${data.addressLine1}, ${data.landmark}, ${data.district}, ${data.state}`;
+            document.getElementById('resultPin').textContent = data.pin;
+            document.getElementById('resultState').textContent = `${data.state}, ${data.district}`;
+            document.getElementById('resultQuality').textContent = data.addressQuality;
+            document.getElementById('resultRemarks').textContent = data.remarks;
+        }
+
+        document.getElementById('singleCheckForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const rawAddress = document.getElementById('rawAddress').value;
+            const customerName = document.getElementById('customerName').value;
+            const checkButton = document.getElementById('checkButton');
+
+            checkButton.disabled = true;
+            checkButton.textContent = 'Verifying...';
+            document.getElementById('checkResult').style.display = 'none';
+            setSingleCheckStatus("Sending request...");
+
+            try {
+                // NOTE: No token/Auth header is needed for this free, unauthenticated endpoint
+                const response = await fetch(API_VERIFY_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        address: rawAddress, 
+                        customerName: customerName || 'Guest' 
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok && result.status === "Success") {
+                    setSingleCheckStatus("Verification successful!", false);
+                    updateSingleCheckResult(result);
+                } else {
+                    setSingleCheckStatus(`Verification Failed: ${result.remarks || result.message || 'Unknown error.'}`, true);
+                }
+            } catch (e) {
+                setSingleCheckStatus("Network error occurred. Could not reach server.", true);
+                console.error("Single Check Error:", e);
+            } finally {
+                checkButton.disabled = false;
+                checkButton.textContent = 'Verify Address Now';
+            }
+        });
+
+        // --- DEMO FORM SUBMISSION LOGIC ---
         
         // Function to handle the form submission
         document.getElementById('demoForm').addEventListener('submit', async function(event) {
