@@ -40,6 +40,8 @@
         .status-offline-dot { color: #9CA3AF; font-size: 10px; margin-right: 4px; }
         .status-online-text { color: #10B981; font-weight: 600; }
         .status-offline-text { color: #9CA3AF; font-size: 0.85rem; }
+        .status-enabled { background-color: #d1fae5; color: #10b981; padding: 4px 10px; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; }
+        .status-disabled { background-color: #fee2e2; color: #dc2626; padding: 4px 10px; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; }
 
         /* Modal Styles */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; display: none; }
@@ -82,7 +84,7 @@
             </div>
         </header>
 
-        <!-- Notification/Inbox Modal (Updated Structure) -->
+        <!-- Notification/Inbox Modal -->
         <div id="inbox-modal" class="modal">
             <div class="modal-content">
                 <span class="modal-close" onclick="closeInbox()">&times;</span>
@@ -100,7 +102,7 @@
                 </div>
                 
                 <!-- Reply Form (Only used for Client Messages) -->
-                <div id="reply-form" class="mt-4">
+                <div id="reply-form" class="mt-4" style="display: none;">
                     <h3 class="font-semibold text-xl mb-3">Send Reply to <span id="reply-to-client" class="text-primary-blue"></span></h3>
                     <div class="form-group">
                         <input type="text" id="reply-subject" placeholder="Subject (Optional)" required>
@@ -148,9 +150,10 @@
                     <div class="form-group">
                         <label for="update-plan"><i class="fas fa-tag mr-2"></i> Plan Name</label>
                         <select id="update-plan" required>
-                            <option value="Basic">Basic</option>
-                            <option value="Standard">Standard</option>
-                            <option value="Premium">Premium</option>
+                            <!-- UPDATED Plan Names -->
+                            <option value="Growth Starter">Growth Starter</option>
+                            <option value="Business Pro">Business Pro</option>
+                            <option value="Enterprise Max">Enterprise Max</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -199,9 +202,10 @@
                     <div class="form-group">
                         <label for="add-plan"><i class="fas fa-tag mr-2"></i> Plan Name</label>
                         <select id="add-plan" required>
-                            <option value="Basic">Basic</option>
-                            <option value="Standard">Standard</option>
-                            <option value="Premium">Premium</option>
+                            <!-- UPDATED Plan Names -->
+                            <option value="Growth Starter">Growth Starter</option>
+                            <option value="Business Pro">Business Pro</option>
+                            <option value="Enterprise Max">Enterprise Max</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -225,7 +229,7 @@
         let activeClients = [];
         let selectedClientId = null; 
         let selectedClientUsername = null; 
-        let currentInboxTab = 'messages'; // State for the active inbox tab
+        let currentInboxTab = 'messages'; 
         const ONLINE_THRESHOLD_MS = 300000; // 5 minutes in milliseconds - Defines "Online" status
 
         // Check auth status on load
@@ -262,7 +266,6 @@
             const clientListBody = document.getElementById('client-list');
             clientListBody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-4">Loading clients...</td></tr>';
             try {
-                // Ensure the /admin/client API returns lastActivityAt (assuming it will, given the DB update)
                 const response = await authFetch(`${API_BASE}/admin/client`); 
                 const result = await response.json();
                 
@@ -311,8 +314,8 @@
             clients.forEach(client => {
                 const isActive = client.isActive;
                 const statusBadge = isActive 
-                    ? `<span class="status-badge status-enabled">Enabled</span>` 
-                    : `<span class="status-badge status-disabled">Disabled</span>`;
+                    ? `<span class="status-enabled">Enabled</span>` 
+                    : `<span class="status-disabled">Disabled</span>`;
                 
                 const onlineStatusHtml = formatLastActive(client.lastActivityAt);
 
@@ -394,7 +397,7 @@
             });
         }
         
-        // --- ADD/UPDATE CLIENT MODAL LOGIC (unchanged) ---
+        // --- ADD/UPDATE CLIENT MODAL LOGIC ---
         function openAddClientModal() {
             document.getElementById('add-client-modal').style.display = 'flex';
             document.getElementById('add-client-form').reset();
@@ -509,7 +512,7 @@
             }
         });
 
-        // --- MESSAGING / INBOX LOGIC (Updated to use new elements) ---
+        // --- MESSAGING / INBOX LOGIC ---
         
         async function loadInboxCounts() {
             let totalUnread = 0;

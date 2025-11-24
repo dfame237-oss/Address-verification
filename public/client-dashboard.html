@@ -166,6 +166,7 @@
                 <div class="plan-card">
                     <h3 class="text-xl font-semibold text-secondary-green mb-4 flex items-center"><i class="fas fa-award mr-2"></i> Plan Status</h3>
                     <div class="space-y-3">
+                        <!-- Updated Plan Names -->
                         <div class="info-item"><p><strong>Current Plan:</strong> <span id="plan-name" class="font-bold"></span></p></div>
                         <div class="info-item"><p><strong>Status:</strong> <span id="account-status"></span></p></div>
                         <div class="info-item"><p><strong>Valid Until:</strong> <span id="validity-end"></span></p></div>
@@ -224,7 +225,6 @@
         const AUTH_TOKEN = localStorage.getItem('clientToken');
         
         let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
-        // Retrieve client ID from planDetails, which comes from the JWT payload
         const CLIENT_ID = planDetails.id || null; 
         const CLIENT_NAME = localStorage.getItem('clientName') || planDetails.username;
         let isPlanValid = true; 
@@ -239,7 +239,6 @@
             // 1. Attempt to notify the server of logout status
             try {
                 // Send a request to the new endpoint.
-                // authFetch will automatically include the JWT token.
                 await authFetch(`${API_BASE}/client/logout`, {
                     method: 'POST',
                 });
@@ -274,18 +273,6 @@
             return response;
         }
         
-        // --- MOCK PROFILE DATA FETCH (assuming this may eventually update the local cache) ---
-        async function fetchProfileData() {
-             // We can optionally check for updates to plan details or activity here.
-             // For now, we rely on the data stored at login (planDetails).
-            return {
-                username: planDetails.username || CLIENT_NAME,
-                email: planDetails.email || 'client@example.com', // Placeholder
-                mobile: planDetails.mobile || '+91-9988776655', // Placeholder
-                clientName: planDetails.clientName || CLIENT_NAME,
-            };
-        }
-        
         // --- HEARTBEAT FUNCTION ---
         async function sendHeartbeat() {
             if (!AUTH_TOKEN) return;
@@ -294,11 +281,19 @@
                 await authFetch(`${API_BASE}/client/activity`, {
                     method: 'POST',
                 });
-                // Success updates the timestamp on the server, which admin sees
             } catch (e) {
                 console.warn("Heartbeat failed (Session likely expired or network error).", e);
-                // Auth fetch handles 401/403 errors by calling logout()
             }
+        }
+        
+        // --- MOCK PROFILE DATA FETCH ---
+        async function fetchProfileData() {
+            return {
+                username: planDetails.username || CLIENT_NAME,
+                email: planDetails.email || 'client@example.com', 
+                mobile: planDetails.mobile || '+91-9988776655', 
+                clientName: planDetails.clientName || CLIENT_NAME,
+            };
         }
 
 
@@ -335,16 +330,15 @@
             statusEl.textContent = statusText;
             statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
 
+            // Updated Plan Names
             document.getElementById('plan-name').textContent = planDetails.planName || 'Not Set';
             document.getElementById('validity-end').textContent = new Date(planDetails.validityEnd).toLocaleDateString() || 'N/A';
             
-            // Re-run the plan check to ensure bulk features are enabled/disabled correctly
             checkPlanValidity();
         }
 
         // --- PLAN VALIDATION LOGIC ---
         function checkPlanValidity() {
-            // ... (unchanged validation logic)
             const token = localStorage.getItem('clientToken');
             const planDetailsString = localStorage.getItem('planDetails');
             const bulkContent = document.getElementById('bulkContent');
@@ -662,22 +656,19 @@
         // --- END BULK LOGIC ---
 
 
-        // --- MESSAGING / SUPPORT LOGIC ---
+        // --- MESSAGING / SUPPORT LOGIC (FIXED) ---
         document.getElementById('support-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const subject = document.getElementById('support-subject').value;
             const body = document.getElementById('support-body').value;
             const statusMsg = document.getElementById('support-status');
 
-            // --- START: FIX FOR MISSING SENDER ID ---
             const clientId = planDetails.id || null;
             if (!clientId) {
                 statusMsg.textContent = 'Error: Authentication context missing. Please log in again.';
                 statusMsg.style.color = '#dc2626';
                 return;
             }
-            // --- END: FIX FOR MISSING SENDER ID ---
-
 
             if (!body) {
                 statusMsg.textContent = 'Message body cannot be empty.';
@@ -687,30 +678,34 @@
 
             statusMsg.textContent = 'Sending...';
             statusMsg.style.color = '#f59e0b';
-
+            
             try {
                 const response = await authFetch(`${API_BASE}/inbox/message`, {
                     method: 'POST',
                     body: JSON.stringify({
                         subject,
                         body,
-                        recipientId: 'admin', // Explicitly target the admin ID
-                        senderId: clientId, // Use the client's actual ID here
+                        recipientId: 'admin', 
+                        senderId: clientId, 
                     }),
                 });
-                const result = await response.json();
-
-                if (response.ok) {
+                
+                // Read response body regardless of status, as the server sends JSON errors
+                const result = await response.json(); 
+                
+                if (response.ok && result.status === "Success") {
                     statusMsg.textContent = 'Message sent successfully! Admin will reply soon.';
                     statusMsg.style.color = '#10b981';
                     document.getElementById('support-subject').value = '';
                     document.getElementById('support-body').value = '';
                     loadClientInbox(); 
                 } else {
-                    statusMsg.textContent = `Send Failed: ${result.message}`;
+                    // Display the specific error message from the API result object
+                    statusMsg.textContent = `Send Failed: ${result.message || 'Unknown API Error'}`; 
                     statusMsg.style.color = '#dc2626';
                 }
             } catch (error) {
+                // If a fetch or JSON parsing error occurs
                 statusMsg.textContent = `Network Error: ${error.message}`;
                 statusMsg.style.color = '#dc2626';
             }
@@ -807,4 +802,4 @@
         };
     </script>
 </body>
-</html>
+</html> 
