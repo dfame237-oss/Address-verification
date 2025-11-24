@@ -6,9 +6,30 @@
     <title>Client Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Custom Tailwind config from user's bulk.html
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#1D4ED8',
+                        'secondary-green': '#059669',
+                        'neutral-gray': '#E5E7EB',
+                        'accent-yellow': '#FCD34D',
+                        'whatsapp-green': '#25D366',
+                        'alert-dark': '#991B1B',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
     <style>
         /* Shared Dashboard Styles */
-        body { font-family: sans-serif; background-color: #f0f4f8; }
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; }
         .dashboard-container { max-width: 1200px; margin: 20px auto; padding: 20px; background-color: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #ddd; }
         .nav-tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; }
@@ -32,6 +53,11 @@
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; display: none; }
         .modal-content { background-color: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 600px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); }
         .modal-close { float: right; font-size: 1.5rem; cursor: pointer; }
+        
+        /* Bulk Specific Styles */
+        .progress-container { margin-top: 2.5rem; padding: 1.5rem; background-color: #f9fafb; border-radius: 0.5rem; border: 1px solid #e5e7eb; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
+        .progress-bar { width: 100%; background-color: #e5e7eb; border-radius: 9999px; height: 0.75rem; }
+        .progress-fill { height: 0.75rem; background-color: #059669; border-radius: 9999px; transition: all 0.5s ease-in-out; }
     </style>
 </head>
 <body>
@@ -49,19 +75,61 @@
         </header>
 
         <div class="nav-tabs">
-            <button class="tab-button active" onclick="showTab('bulk-verification', this)">Bulk Address Verification</button>
+            <button id="bulk-tab-btn" class="tab-button active" onclick="showTab('bulk-verification', this)">Bulk Address Verification</button>
             <button class="tab-button" onclick="showTab('profile-plan', this)">Profile & Plan Status</button>
             <button class="tab-button" onclick="showTab('support', this)">Support/Messaging</button>
         </div>
 
-        <!-- TAB 1: Bulk Address Verification -->
+        <!-- TAB 1: Bulk Address Verification (Content from bulk.html) -->
         <div id="bulk-verification" class="tab-content">
-            <h2 class="text-xl font-semibold mb-3">Bulk Verification Tool</h2>
-            <p>Your Bulk Access Code: <strong id="bulk-code">Loading...</strong></p>
-            <!-- Your bulk file upload and processing UI goes here -->
-            <div class="mt-4 p-4 border rounded border-blue-200 bg-blue-50">
-                <p>Upload your CSV file here for batch processing.</p>
+            <header class="text-center mb-8">
+                <h1 class="text-4xl font-extrabold text-gray-900 mb-2">
+                    <span class="text-secondary-green">Bulk Address</span> Verification
+                </h1>
+                <p class="text-lg text-gray-500 mt-2">Upload a CSV file for high-volume cleaning and verification.</p>
+            </header>
+            
+            <div id="bulkContent" class="space-y-6">
+                
+                <div class="bg-blue-50 p-6 rounded-xl border-l-4 border-primary-blue shadow-lg">
+                    <p class="font-bold text-xl text-primary-blue mb-3 flex items-center">
+                        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        1. Download Template
+                    </p>
+                    <p class="text-sm text-gray-700 mb-4">Use this template to ensure your CSV file has the required columns: <code class="bg-gray-200 px-1 rounded font-mono">ORDER ID</code>, <code class="bg-gray-200 px-1 rounded font-mono">CUSTOMER NAME</code>, <code class="bg-gray-200 px-1 rounded font-mono">CUSTOMER RAW ADDRESS</code>.</p>
+                    <button id="downloadTemplateButton" class="w-full py-2 bg-primary-blue text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-4 focus:ring-primary-blue focus:ring-opacity-50">
+                        Download Verification Template (CSV)
+                    </button>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-lg text-center">
+                    <p class="font-bold text-xl text-gray-800 mb-4 flex items-center justify-center">
+                        <svg class="w-6 h-6 mr-3 text-secondary-green" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        2. Upload Your CSV File
+                    </p>
+                    <input type="file" id="csvFileInput" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-secondary-green/10 file:text-secondary-green hover:file:bg-secondary-green/20">
+                    <p class="text-xs text-gray-500 mt-2">Maximum 1000 rows recommended for stability.</p>
+                </div>
+
+                <button id="processButton" class="w-full py-3 bg-secondary-green text-white font-bold text-lg rounded-lg shadow-xl transition duration-200 transform hover:scale-[1.01] focus:outline-none focus:ring-4 focus:ring-secondary-green focus:ring-opacity-50" disabled>
+                    Start Verification
+                </button>
             </div>
+
+            <div class="progress-container mt-10 p-6 bg-gray-50 rounded-xl border border-gray-200 shadow-inner">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Verification Status</h3>
+                <p id="status-message" class="font-semibold text-gray-600 mb-4 transition duration-300">Ready to upload.</p>
+                <div class="progress-bar w-full bg-gray-200 rounded-full h-3">
+                    <div class="progress-fill h-3 bg-secondary-green rounded-full transition-all duration-500 ease-in-out" id="progressBarFill" style="width: 0%;"></div>
+                </div>
+                
+                <a id="downloadLink" class="hidden mt-6 w-full py-3 bg-primary-blue text-white font-bold text-center rounded-lg shadow-xl transition duration-200 transform hover:scale-[1.01] focus:outline-none focus:ring-4 focus:ring-primary-blue focus:ring-opacity-50" href="#" download="verified_addresses.csv">
+                    ⬇️ Download Verified CSV
+                </a>
+            </div>
+
+            <p id="access-denied-message" class="hidden mt-6 text-center text-red-700 font-bold"></p>
+
         </div>
 
         <!-- TAB 2: Profile & Plan Status -->
@@ -120,22 +188,25 @@
     <script>
         // --- CONSTANTS AND STATE ---
         const API_BASE = '/api';
+        const API_ENDPOINT = "/api/verify-single-address"; // Use relative path for Vercel deployment
+        const LOGIN_PAGE = "client-login.html";
         const AUTH_TOKEN = localStorage.getItem('clientToken');
-        const CLIENT_ID = localStorage.getItem('clientId'); // Needs to be fetched/stored on login
+        const CLIENT_ID = localStorage.getItem('clientId');
         let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
         const CLIENT_NAME = localStorage.getItem('clientName') || planDetails.username;
+        let isPlanValid = true; // State to track access status
 
         // --- AUTH CHECK ---
         if (!AUTH_TOKEN) {
-            window.location.href = 'client-login.html';
+            window.location.href = LOGIN_PAGE;
         }
         
         function logout() {
             localStorage.clear();
-            window.location.href = 'client-login.html';
+            window.location.href = LOGIN_PAGE;
         }
 
-        // --- AUTHENTICATED FETCH HELPER (Need an API endpoint to fetch full profile) ---
+        // --- AUTHENTICATED FETCH HELPER ---
         async function authFetch(url, options = {}) {
             const defaultHeaders = {
                 'Content-Type': 'application/json',
@@ -162,16 +233,96 @@
             document.getElementById(tabId).style.display = 'block';
             button.classList.add('active');
 
-            // Load inbox immediately if switching to Support tab
             if (tabId === 'support') {
                 loadClientInbox();
             }
         }
 
+        // --- PLAN VALIDATION LOGIC (From bulk.html) ---
+        function checkPlanValidity() {
+            const token = localStorage.getItem('clientToken');
+            const planDetailsString = localStorage.getItem('planDetails');
+            const bulkTab = document.getElementById('bulk-verification');
+            const bulkContent = document.getElementById('bulkContent');
+
+            if (!token || !planDetailsString) {
+                showAccessDenied("Please log in to access Bulk Address Verification.");
+                isPlanValid = false;
+                return false;
+            }
+
+            try {
+                const planDetails = JSON.parse(planDetailsString);
+                const validityEnd = new Date(planDetails.validityEnd);
+                const now = new Date();
+                
+                if (!planDetails.isActive) {
+                    showAccessDenied("Your account has been **disabled** by the administrator. Please contact support.");
+                    isPlanValid = false;
+                    return false;
+                }
+
+                if (validityEnd < now) {
+                    showAccessDenied(`Your bulk plan (${planDetails.planName}) expired on **${validityEnd.toLocaleDateString()}**. Please contact support to renew.`);
+                    isPlanValid = false;
+                    return false;
+                }
+                
+                // If plan is valid, ensure content is visible
+                if (bulkContent) bulkContent.classList.remove('hidden');
+                document.getElementById('access-denied-message').classList.add('hidden');
+                isPlanValid = true;
+                return true; 
+            } catch (e) {
+                console.error("Error parsing plan details:", e);
+                showAccessDenied("Client authentication data is corrupted. Please log in again.");
+                setTimeout(() => { localStorage.clear(); window.location.href = LOGIN_PAGE; }, 1500);
+                isPlanValid = false;
+                return false;
+            }
+        }
+
+        function showAccessDenied(message) {
+            // Display message directly in the bulk tab area
+            const bulkContent = document.getElementById('bulkContent');
+            const progressContainer = document.querySelector('#bulk-verification .progress-container');
+            const deniedMsgEl = document.getElementById('access-denied-message');
+            
+            if (bulkContent) bulkContent.classList.add('hidden');
+            if (progressContainer) progressContainer.classList.add('hidden');
+
+            const errorBlock = document.createElement('div');
+            errorBlock.className = 'space-y-6 mt-6';
+            errorBlock.innerHTML = `
+                <div class="bg-red-50 p-6 rounded-xl border-l-4 border-alert-dark shadow-lg">
+                    <p class="font-bold text-2xl text-alert-dark mb-3 flex items-center">
+                        🛑 Access Denied
+                    </p>
+                    <p class="text-base text-gray-700 mb-6">${message.replace(/\*\*/g, '<strong>')}</p>
+                    <p class="text-sm font-semibold text-gray-800 mb-2">Next Steps:</p>
+                </div>
+                <button onclick="showTab('support', document.querySelector('.tab-button:nth-child(3)'))" class="block w-full py-3 bg-secondary-green text-white text-center font-bold rounded-lg hover:bg-green-700 transition">
+                    Contact Support / Renew Plan
+                </button>
+                <a href="https://wa.me/9193246219" target="_blank" class="block w-full py-3 bg-whatsapp-green text-white text-center font-bold rounded-lg hover:bg-green-600">
+                    <span class="mr-2">🟢</span> WhatsApp Support
+                </a>
+            `;
+            const bulkVerificationDiv = document.getElementById('bulk-verification');
+            // Check if errorBlock already exists to prevent duplication
+            if (bulkVerificationDiv.querySelector('.space-y-6.mt-6')) return;
+            bulkVerificationDiv.appendChild(errorBlock);
+        }
+
         // --- PROFILE & PLAN LOGIC ---
         function loadProfileAndPlan() {
             document.getElementById('client-name-display').textContent = CLIENT_NAME;
-            document.getElementById('bulk-code').textContent = planDetails.bulkAccessCode || 'N/A';
+            
+            // Check if bulk code element exists (it only exists in the bulk tab)
+            const bulkCodeEl = document.getElementById('bulk-code');
+            if(bulkCodeEl) {
+                bulkCodeEl.textContent = planDetails.bulkAccessCode || 'N/A';
+            }
             
             // Note: Since we don't have a dedicated API to fetch full profile (email, mobile), 
             // we'll display what we stored at login.
@@ -184,13 +335,243 @@
             document.getElementById('plan-name').textContent = planDetails.planName || 'Not Set';
             document.getElementById('validity-end').textContent = new Date(planDetails.validityEnd).toLocaleDateString() || 'N/A';
             document.getElementById('profile-username').textContent = planDetails.username || 'N/A';
-            // Placeholder for real data
-            document.getElementById('profile-email').textContent = 'Loading...';
-            document.getElementById('profile-mobile').textContent = 'Loading...';
+            document.getElementById('profile-email').textContent = planDetails.email || 'N/A'; // Assuming email is now stored in planDetails
+            document.getElementById('profile-mobile').textContent = planDetails.mobile || 'N/A'; // Assuming mobile is now stored in planDetails
             
-            // TODO: Fetch full profile data if a dedicated API existed (e.g., GET /api/client/profile)
+            // Re-run the plan check to ensure bulk features are enabled/disabled correctly
+            checkPlanValidity();
         }
 
+        // --- BULK VERIFICATION LOGIC (from bulk.html) ---
+        
+        function updateStatusMessage(message, isError = false) {
+            const statusMessage = document.getElementById('status-message');
+            if (!statusMessage) return; // Prevent error if access is denied and element is hidden
+
+            statusMessage.textContent = message;
+            
+            statusMessage.classList.remove('text-red-700', 'bg-red-100', 'text-gray-600');
+            statusMessage.classList.add('p-2', 'rounded');
+
+            if (isError) {
+                statusMessage.classList.add('text-red-700', 'bg-red-100', 'font-bold');
+                statusMessage.classList.remove('text-gray-600');
+            } else {
+                statusMessage.classList.add('text-gray-600');
+                statusMessage.classList.remove('bg-red-100', 'font-bold');
+            }
+        }
+
+        function handleTemplateDownload() {
+            const templateHeaders = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS\n";
+            const templateData = 
+                "1,\"John Doe\",\"H.No. 123, Sector 40B, near bus stand, Chandigarh\"\n" +
+                "2,\"Jane Smith\",\"5th Floor, Alpha Tower, Mumbai 400001\"\n";
+                
+            const csvContent = templateHeaders + templateData;
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', 'address_verification_template.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function parseCSV(text) {
+            const lines = text.split('\n'); 
+            if (lines.length < 2) return [];
+
+            const header = lines[0].split(',').map(h => h.trim().replace(/^\"|\"$/g, ''));
+            const data = [];
+            
+            const idIndex = header.indexOf('ORDER ID');
+            const nameIndex = header.indexOf('CUSTOMER NAME');
+            const addressIndex = header.indexOf('CUSTOMER RAW ADDRESS');
+
+            if (idIndex === -1 || nameIndex === -1 || addressIndex === -1) {
+                console.error("CSV header is missing one of the required columns.");
+                return [];
+            }
+
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim() === '') continue;
+                
+                const row = lines[i].match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g) || [];
+                
+                const cleanedRow = row.map(cell => cell.trim().replace(/^\"|\"$/g, '').replace(/\"\"/g, '\"'));
+
+                if (cleanedRow.length > Math.max(idIndex, nameIndex, addressIndex)) {
+                    data.push({
+                        'ORDER ID': cleanedRow[idIndex],
+                        'CUSTOMER NAME': cleanedRow[nameIndex],
+                        'CUSTOMER RAW ADDRESS': cleanedRow[addressIndex],
+                    });
+                }
+            }
+            return data;
+        }
+
+
+        async function fetchVerification(rawAddress, customerName) {
+            const payload = { address: rawAddress, customerName }; 
+            
+            const maxRetries = 3;
+            let lastError = null;
+            const clientToken = localStorage.getItem('clientToken'); 
+
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+                try {
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (clientToken) {
+                        headers['Authorization'] = `Bearer ${clientToken}`; 
+                    }
+
+                    const response = await fetch(API_ENDPOINT, {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorBody = await response.json();
+                        throw new Error(errorBody.error || `Server responded with status ${response.status}`);
+                    }
+                    
+                    return await response.json();
+
+                } catch (error) {
+                    lastError = error;
+                    console.error(`Verification API Attempt ${attempt + 1} failed:`, error);
+                    if (attempt < maxRetries - 1) {
+                        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+                    }
+                }
+            }
+            // Return a predictable structure even on network/fetch errors
+            return { 
+                status: "Error", 
+                error: `Verification failed after ${maxRetries} attempts.`,
+                remarks: `Error: ${lastError ? lastError.message : 'Unknown Network Error'}`,
+                customerCleanName: customerName,
+                addressLine1: "API Error: See Remarks",
+                landmark: "",
+                state: "",
+                district: "",
+                pin: "",
+                addressQuality: "VERY BAD"
+            };
+        }
+
+        function createAndDownloadCSV(rows, filename) {
+            const header = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS,CLEAN NAME,CLEAN ADDRESS LINE 1,LANDMARK,STATE,DISTRICT,PIN,REMARKS,QUALITY\n";
+            const csvContent = header + rows.join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const downloadLink = document.getElementById('downloadLink');
+            downloadLink.href = URL.createObjectURL(blob);
+            downloadLink.classList.remove('hidden');
+        }
+
+        async function handleBulkVerification() {
+            // Re-run plan check to be absolutely sure access is still valid
+            if (!checkPlanValidity() || !isPlanValid) {
+                updateStatusMessage("Access denied. Plan is expired or disabled.", true);
+                return;
+            }
+
+            const fileInput = document.getElementById('csvFileInput');
+            const processButton = document.getElementById('processButton');
+            const progressBarFill = document.getElementById('progressBarFill');
+            const downloadLink = document.getElementById('downloadLink');
+
+            if (!fileInput.files.length) {
+                updateStatusMessage("Please select a CSV file first.", true);
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            // Reset UI
+            processButton.disabled = true;
+            fileInput.disabled = true;
+            downloadLink.classList.add('hidden');
+            progressBarFill.style.width = '0%';
+            updateStatusMessage('Reading file...');
+            
+            reader.onload = async function(e) {
+                const text = e.target.result;
+                const addresses = parseCSV(text);
+                
+                if (addresses.length === 0) {
+                    updateStatusMessage("Error: No valid addresses found in CSV. Check format and required columns.", true);
+                    processButton.disabled = false;
+                    fileInput.disabled = false;
+                    return;
+                }
+
+                const totalAddresses = addresses.length;
+                let processedCount = 0;
+                const outputRows = [];
+
+                updateStatusMessage(`Starting verification of ${totalAddresses} addresses...`);
+
+                for (const row of addresses) {
+                    const orderId = row['ORDER ID'] || '';
+                    const customerName = row['CUSTOMER NAME'] || '';
+                    const rawAddress = row['CUSTOMER RAW ADDRESS'] || '';
+
+                    let verificationResult;
+
+                    if (!rawAddress || rawAddress.trim() === "") { 
+                        verificationResult = { status: "Skipped", remarks: "Missing raw address in CSV row.", addressQuality: "Poor", customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "" };
+                    } else {
+                        verificationResult = await fetchVerification(rawAddress, customerName);
+                    }
+
+                    // Function to escape and quote CSV cell values
+                    const escapeAndQuote = (cell) => `\"${String(cell || '').replace(/\"/g, '\"\"')}\"`;
+
+                    // Format the output row
+                    const outputRow = [
+                        orderId,
+                        customerName,
+                        rawAddress,
+                        verificationResult.customerCleanName,
+                        verificationResult.addressLine1,
+                        verificationResult.landmark,
+                        verificationResult.state,
+                        verificationResult.district,
+                        verificationResult.pin,
+                        verificationResult.remarks,
+                        verificationResult.addressQuality
+                    ].map(escapeAndQuote).join(',');
+
+                    outputRows.push(outputRow);
+                    
+                    processedCount++;
+                    const progress = (processedCount / totalAddresses) * 100;
+                    progressBarFill.style.width = `${progress}%`;
+                    
+                    updateStatusMessage(`Processing... ${processedCount} of ${totalAddresses} addresses completed.`);
+                }
+
+                updateStatusMessage(`Processing complete! ${totalAddresses} addresses verified. Click 'Download Verified CSV'.`, false);
+                createAndDownloadCSV(outputRows, "verified_addresses.csv");
+                processButton.disabled = false;
+                fileInput.disabled = false;
+            };
+
+            reader.onerror = function() {
+                updateStatusMessage("Error reading file.", true);
+                processButton.disabled = false;
+                fileInput.disabled = false;
+            };
+
+            reader.readAsText(file);
+        }
 
         // --- MESSAGING / SUPPORT LOGIC ---
         document.getElementById('support-form').addEventListener('submit', async (e) => {
@@ -268,13 +649,13 @@
                     }
 
                     result.messages.forEach(msg => {
-                        const isUnread = !msg.isRead && msg.receiverId !== 'admin'; // Only check unread if client is receiver
+                        const isUnread = !msg.isRead && msg.receiverId !== msg.senderId; // Check unread only if client is the receiver
                         const cardClass = isUnread ? 'font-bold bg-yellow-50' : 'bg-white';
                         const sender = msg.senderId === 'admin' ? 'Admin' : 'You';
                         
                         const messageHtml = `
                             <div class="p-3 border rounded mb-2 ${cardClass}" 
-                                 onclick="viewClientMessage('${msg._id}', '${msg.subject}', '${msg.body}', '${msg.senderId}', ${isUnread})">
+                                 onclick="viewClientMessage('${msg._id}', '${msg.subject}', '${msg.body}', '${msg.senderId}', ${isUnread}, '${msg.timestamp}')">
                                 <p class="text-sm text-gray-700">From: <strong>${sender}</strong></p>
                                 <p class="text-md">${msg.subject}</p>
                                 <small class="text-gray-500">${new Date(msg.timestamp).toLocaleString()}</small>
@@ -293,6 +674,13 @@
         function toggleInbox() {
             // Open the inbox modal
             document.getElementById('inbox-modal').style.display = 'flex';
+            // Reload client inbox messages inside the modal
+            loadClientInboxInModal();
+        }
+
+        async function loadClientInboxInModal() {
+             // Reusing the modal for a dedicated message viewer
+             // This is simpler than re-rendering the whole support tab in the modal
         }
         
         function closeInbox() {
@@ -301,11 +689,11 @@
             loadInboxCounts();
         }
 
-        function viewClientMessage(messageId, subject, body, senderId, isUnread) {
+        function viewClientMessage(messageId, subject, body, senderId, isUnread, timestamp) {
             // Populate modal content
             document.getElementById('full-message-subject').textContent = subject;
             document.getElementById('full-message-body').textContent = body;
-            // You can add timestamp here if you pass it
+            document.getElementById('full-message-date').textContent = new Date(timestamp).toLocaleString();
             
             if (isUnread) {
                 // Mark message as read
@@ -314,16 +702,45 @@
                 setTimeout(loadClientInbox, 500); 
             }
             
-            toggleInbox();
+            document.getElementById('inbox-modal').style.display = 'flex';
         }
 
+
         // --- INITIALIZATION ---
+        function initBulkListeners() {
+             // Only attach listeners if the plan check passes initially
+             if (isPlanValid) {
+                const downloadTemplateButton = document.getElementById('downloadTemplateButton');
+                const csvFileInput = document.getElementById('csvFileInput');
+                const processButton = document.getElementById('processButton');
+
+                if (downloadTemplateButton) {
+                    downloadTemplateButton.addEventListener('click', handleTemplateDownload);
+                }
+
+                if (csvFileInput) {
+                    csvFileInput.addEventListener('change', () => {
+                        if (processButton) {
+                            processButton.disabled = !csvFileInput.files.length;
+                        }
+                    });
+                }
+
+                if (processButton) {
+                    processButton.addEventListener('click', handleBulkVerification);
+                }
+            }
+        }
+
+
         window.onload = () => {
             loadProfileAndPlan();
             loadInboxCounts();
+            initBulkListeners(); // Attach listeners after content loads
+            
             // Poll for new messages every 60 seconds
             setInterval(loadInboxCounts, 60000); 
-            showTab('bulk-verification', document.querySelector('.tab-button')); // Default tab
+            showTab('bulk-verification', document.getElementById('bulk-tab-btn')); // Default tab
         };
     </script>
 </body>
