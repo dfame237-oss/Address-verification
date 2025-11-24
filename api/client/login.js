@@ -31,7 +31,6 @@ module.exports = async (req, res) => {
         const clientsCollection = db.collection("clients");
 
         // 1. Find the client by username
-        // IMPORTANT: We include the fields needed for the profile section here (clientName, email, mobile)
         const client = await clientsCollection.findOne({ username });
 
         if (!client) {
@@ -45,6 +44,14 @@ module.exports = async (req, res) => {
             return sendFailure(res); // Invalid password
         }
 
+        // --- FIX: Record Last Activity Time on Login ---
+        const lastActivityAt = new Date();
+        await clientsCollection.updateOne(
+            { _id: client._id },
+            { $set: { lastActivityAt: lastActivityAt } }
+        );
+        // --- END FIX ---
+        
         // 3. Generate a JWT Token containing key plan info
         const token = jwt.sign(
             { 
