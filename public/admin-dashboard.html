@@ -265,8 +265,9 @@
                 DURATIONS.forEach(duration => {
                     const finalPrice = calculatePrice(plan.basePrice, duration.months, duration.discount);
                     
-                    // Format: PlanName_Price_DurationLabel (e.g., Growth Starter_1180_1_Month)
-                    const value = `${plan.name}_${finalPrice}_${duration.months}_Month`;
+                    // Format: PlanName_Price_DurationMonths_Month (e.g., Growth Starter_1180_1_Month)
+                    // The duration months are now encoded for easy calculation
+                    const value = `${plan.name}_${finalPrice}_${duration.months}_Month`; 
                     const label = `${plan.name} - ₹${finalPrice} (${duration.label}${duration.discount > 0 ? ` - ${duration.discount*100}% OFF` : ''})`;
                     
                     options.push(`<option value="${value}">${label}</option>`);
@@ -274,12 +275,58 @@
             });
             return options.join('');
         }
-
+        
         function populatePlanDropdowns() {
             const optionsHtml = generatePlanOptions();
             document.getElementById('add-plan').innerHTML = optionsHtml;
             document.getElementById('update-plan').innerHTML = optionsHtml;
+            
+            // FIX: Add event listeners for auto-filling validity
+            document.getElementById('add-plan').addEventListener('change', (e) => {
+                updateValidityDate(e.target.value, 'add-validity');
+            });
+            document.getElementById('update-plan').addEventListener('change', (e) => {
+                updateValidityDate(e.target.value, 'update-validity');
+            });
+            
+            // Auto-set the date for the default selected plan on load
+            const defaultAddPlanValue = document.getElementById('add-plan').value;
+            if (defaultAddPlanValue) updateValidityDate(defaultAddPlanValue, 'add-validity');
         }
+
+        // --- FIX: CORE FUNCTION TO CALCULATE AND SET VALIDITY DATE ---
+        function updateValidityDate(planValue, dateInputId) {
+            if (!planValue) return;
+
+            // Extract the duration (in months) from the plan value string
+            // Value format: PlanName_Price_DurationMonths_Month
+            const parts = planValue.split('_');
+            // The number of months is the 3rd part (index 2)
+            const durationMonths = parseInt(parts[2], 10); 
+            
+            if (isNaN(durationMonths) || durationMonths === 0) return;
+
+            const dateInput = document.getElementById(dateInputId);
+            const now = new Date();
+            
+            // Calculate the expiration date: add durationMonths to current month
+            const expirationDate = new Date(now.getFullYear(), now.getMonth() + durationMonths, now.getDate());
+            
+            // Edge case: ensure the date doesn't skip a month (e.g., setting Feb 30th to Mar 2nd)
+            // If the day changed, set it back to the last day of the target month
+            if (expirationDate.getDate() !== now.getDate()) {
+                expirationDate.setDate(0); // This automatically sets it to the last day of the previous month
+            }
+
+            // Format the date as YYYY-MM-DD for the input type="date"
+            const year = expirationDate.getFullYear();
+            const month = String(expirationDate.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+            const day = String(expirationDate.getDate()).padStart(2, '0');
+            
+            dateInput.value = `${year}-${month}-${day}`;
+        }
+        // --- END FIX ---
+
 
         // --- AUTHENTICATED FETCH HELPER (unchanged) ---
         async function authFetch(url, options = {}) {
@@ -441,6 +488,10 @@
             document.getElementById('add-client-modal').style.display = 'flex';
             document.getElementById('add-client-form').reset();
             document.getElementById('add-status-msg').textContent = '';
+            
+            // Trigger validity update for the newly selected default option
+            const defaultAddPlanValue = document.getElementById('add-plan').value;
+            if (defaultAddPlanValue) updateValidityDate(defaultAddPlanValue, 'add-validity');
         }
         
         function closeAddClientModal() {
