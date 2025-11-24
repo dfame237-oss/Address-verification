@@ -49,9 +49,16 @@ module.exports = async (req, res) => {
         if (!userId) return res.status(403).json({ status: "Error", message: "Authentication required to send message." });
         
         let body = req.body;
-        if (typeof body === 'string') body = JSON.parse(body);
+        // Ensure body is parsed if it's a raw string buffer from the request stream
+        if (typeof body === 'string') {
+             try { body = JSON.parse(body); } catch (e) { 
+                 console.error("Failed to parse incoming JSON body:", e);
+                 return res.status(400).json({ status: "Error", message: "Invalid JSON format in request body." });
+             }
+        }
 
-        const { subject, body: messageBody, recipientId } = body || {};
+        // The client-dashboard POST payload doesn't include recipientId, so it defaults to 'admin'
+        const { subject, body: messageBody, recipientId } = body || {}; 
 
         if (!subject || !messageBody) {
             return res.status(400).json({ status: "Error", message: "Subject and message body are required." });
@@ -68,6 +75,7 @@ module.exports = async (req, res) => {
 
         try {
             const result = await messagesCollection.insertOne(newMessage);
+            // HTTP Status 201 Created is appropriate for a successful POST
             return res.status(201).json({ status: "Success", message: "Message sent.", messageId: result.insertedId });
         } catch (e) {
             return res.status(500).json({ status: "Error", message: `Failed to send message: ${e.message}` });

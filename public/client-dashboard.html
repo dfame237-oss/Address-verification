@@ -225,6 +225,7 @@
         const AUTH_TOKEN = localStorage.getItem('clientToken');
         
         let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
+        // NOTE: The server passes the ID in the JWT payload, which is why we rely on planDetails.id.
         const CLIENT_ID = planDetails.id || null; 
         const CLIENT_NAME = localStorage.getItem('clientName') || planDetails.username;
         let isPlanValid = true; 
@@ -236,19 +237,15 @@
         
         // --- FIX: Updated Logout Function to Call Server ---
         async function logout() {
-            // 1. Attempt to notify the server of logout status
             try {
-                // Send a request to the new endpoint.
                 await authFetch(`${API_BASE}/client/logout`, {
                     method: 'POST',
                 });
                 console.log("Server logout status recorded successfully.");
             } catch (error) {
-                // Log the error but proceed with local logout anyway.
                 console.warn("Could not notify server of logout status, proceeding with local logout:", error);
             }
 
-            // 2. Clear local storage and redirect
             localStorage.clear();
             window.location.href = LOGIN_PAGE;
         }
@@ -277,7 +274,6 @@
         async function sendHeartbeat() {
             if (!AUTH_TOKEN) return;
             try {
-                // Call the new activity endpoint periodically
                 await authFetch(`${API_BASE}/client/activity`, {
                     method: 'POST',
                 });
@@ -288,6 +284,7 @@
         
         // --- MOCK PROFILE DATA FETCH ---
         async function fetchProfileData() {
+            // The profile details are sourced from the JWT payload cached in localStorage
             return {
                 username: planDetails.username || CLIENT_NAME,
                 email: planDetails.email || 'client@example.com', 
@@ -330,8 +327,10 @@
             statusEl.textContent = statusText;
             statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
 
-            // Updated Plan Names
-            document.getElementById('plan-name').textContent = planDetails.planName || 'Not Set';
+            // Handle Plan Name Display (show only the name part)
+            const fullPlanName = planDetails.planName || 'Not Set';
+            document.getElementById('plan-name').textContent = fullPlanName.split('_')[0]; 
+            
             document.getElementById('validity-end').textContent = new Date(planDetails.validityEnd).toLocaleDateString() || 'N/A';
             
             checkPlanValidity();
@@ -700,13 +699,14 @@
                     document.getElementById('support-body').value = '';
                     loadClientInbox(); 
                 } else {
-                    // Display the specific error message from the API result object
-                    statusMsg.textContent = `Send Failed: ${result.message || 'Unknown API Error'}`; 
+                    // FIX: Ensure we display the message property, falling back to a known error
+                    statusMsg.textContent = `Send Failed: ${result.message || 'Unknown API Error. Check console.'}`; 
                     statusMsg.style.color = '#dc2626';
                 }
             } catch (error) {
-                // If a fetch or JSON parsing error occurs
-                statusMsg.textContent = `Network Error: ${error.message}`;
+                // Network error, connection issue, or JSON parse failure
+                statusMsg.textContent = `Network Error. Check console for details.`;
+                console.error("Messaging Fetch Error:", error);
                 statusMsg.style.color = '#dc2626';
             }
         });
@@ -802,4 +802,4 @@
         };
     </script>
 </body>
-</html> 
+</html>
