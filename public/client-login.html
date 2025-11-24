@@ -4,76 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Client Login</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'primary-blue': '#1D4ED8',
-                        'secondary-green': '#059669',
-                        'neutral-gray': '#E5E7EB',
-                        'alert-dark': '#991B1B',
-                    },
-                    fontFamily: { sans: ['Inter', 'sans-serif'], },
-                }
-            }
-        }
-    </script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f0f4f8; }
+        .login-container { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); width: 100%; max-width: 400px; }
+        h1 { text-align: center; color: #1f2937; margin-bottom: 25px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #374151; }
+        .form-group input { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; }
+        .btn-login { width: 100%; padding: 12px; background-color: #3b82f6; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s; }
+        .btn-login:hover { background-color: #2563eb; }
+        #error-message { color: #ef4444; text-align: center; margin-top: 15px; font-weight: 500; }
+    </style>
 </head>
-<body class="bg-neutral-gray min-h-screen flex items-center justify-center p-4">
-    
-    <div class="w-full max-w-md bg-white p-8 sm:p-10 rounded-xl shadow-2xl border border-gray-100">
-
-        <header class="text-center mb-8">
-            <h1 class="text-3xl font-extrabold text-gray-900 mb-2">
-                <span class="text-secondary-green">Client</span> Login
-            </h1>
-            <p class="text-gray-500">Access your purchased bulk verification plan.</p>
-        </header>
-
-        <form id="clientLoginForm" class="space-y-6">
-            <div>
-                <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                <input type="text" id="username" name="username" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-secondary-green focus:border-secondary-green transition duration-150">
+<body>
+    <div class="login-container">
+        <h1>Client Login</h1>
+        <form id="client-login-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
             </div>
-
-            <div>
-                <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                <input type="password" id="password" name="password" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-secondary-green focus:border-secondary-green transition duration-150">
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
             </div>
-
-            <button type="submit" id="loginButton" class="w-full py-3 bg-primary-blue text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition duration-200">
-                Login to Bulk Verification
-            </button>
-            
-            <p class="text-center text-sm text-gray-500">
-                Don't have an account? <a href="contact.html" class="text-secondary-green hover:underline font-medium">Purchase a plan</a>
-            </p>
-            
-            <p id="message" class="text-center text-sm hidden"></p>
+            <button type="submit" class="btn-login">Login</button>
+            <p id="error-message"></p>
         </form>
     </div>
-    
+
     <script>
-        const LOGIN_API_ENDPOINT = "https://address-verification-one.vercel.app/api/client/login";
-        const BULK_PAGE_URL = "bulk.html";
+        const API_LOGIN_URL = '/api/client/login';
+        const form = document.getElementById('client-login-form');
+        const errorMessage = document.getElementById('error-message');
 
-        document.getElementById('clientLoginForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
+        // Check if already logged in (optional, but good practice)
+        if (localStorage.getItem('clientToken')) {
+            window.location.href = 'client-dashboard.html';
+        }
 
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const loginButton = document.getElementById('loginButton');
-            const message = document.getElementById('message');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorMessage.textContent = 'Logging in...';
 
-            loginButton.disabled = true;
-            loginButton.textContent = 'Verifying...';
-            message.textContent = '';
-            message.classList.add('hidden');
+            const username = form.elements['username'].value;
+            const password = form.elements['password'].value;
 
             try {
-                const response = await fetch(LOGIN_API_ENDPOINT, {
+                const response = await fetch(API_LOGIN_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
@@ -82,30 +61,25 @@
                 const result = await response.json();
 
                 if (response.ok && result.status === "Success") {
-                    // Store the token and plan details in localStorage
-                    localStorage.setItem('clientToken', result.token); 
+                    // SUCCESS: Store token and user details
+                    localStorage.setItem('clientToken', result.token);
+                    
+                    // Store plan details and name for the dashboard
+                    localStorage.setItem('clientName', result.planDetails.clientName || username);
                     localStorage.setItem('planDetails', JSON.stringify(result.planDetails));
                     
-                    message.classList.remove('text-red-600', 'text-alert-dark');
-                    message.classList.add('text-secondary-green', 'block');
-                    message.textContent = "Login successful! Redirecting to bulk verification...";
-                    
-                    setTimeout(() => {
-                        window.location.href = BULK_PAGE_URL;
-                    }, 500);
-
+                    window.location.href = 'client-dashboard.html'; // Redirect to new dashboard
+                } else if (response.status === 401) {
+                    // AUTH FAILURE (Crucial Fix): Display the server's "Invalid username or password" message
+                    errorMessage.textContent = result.message || 'Authentication failed. Please check credentials.';
                 } else {
-                    message.classList.remove('text-secondary-green');
-                    message.classList.add('text-alert-dark', 'block');
-                    message.textContent = result.message || "Login failed. Invalid username or password.";
+                    // Other server errors (400, 500)
+                    errorMessage.textContent = result.message || 'An unexpected error occurred.';
                 }
-            } catch (e) {
-                message.classList.remove('text-secondary-green');
-                message.classList.add('text-alert-dark', 'block');
-                message.textContent = "A network error occurred.";
-            } finally {
-                loginButton.disabled = false;
-                loginButton.textContent = 'Login to Bulk Verification';
+
+            } catch (error) {
+                console.error('Network error during login:', error);
+                errorMessage.textContent = 'Could not connect to the server.';
             }
         });
     </script>

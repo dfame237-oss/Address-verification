@@ -1,367 +1,476 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- (keep same head) -->
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'primary-blue': '#1D4ED8',
-            'secondary-green': '#059669',
-            'neutral-gray': '#E5E7EB',
-            'alert-dark': '#991B1B',
-            'whatsapp-green': '#25D366',
-          },
-          fontFamily: { sans: ['Inter', 'sans-serif'], },
-        }
-      }
-    }
-  </script>
-  <style>
-    .data-table th, .data-table td { padding: 0.75rem; border-bottom: 1px solid #E5E7EB; text-align: left; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Basic Tailwind-like classes for quick styling, assuming style.css is simple */
+        .dashboard-container { max-width: 1200px; margin: 20px auto; padding: 20px; background-color: #f7f7f7; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #ddd; }
+        .controls { display: flex; gap: 15px; }
+        .icon-btn { cursor: pointer; position: relative; font-size: 24px; color: #333; }
+        .badge { position: absolute; top: -5px; right: -5px; background-color: #ef4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; }
+        .section-title { font-size: 1.5rem; font-weight: 700; color: #1f2937; margin-top: 30px; margin-bottom: 15px; }
+        .client-table { width: 100%; border-collapse: collapse; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .client-table th, .client-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        .client-table th { background-color: #e5e7eb; color: #374151; font-weight: 600; }
+        .status-active { color: #10b981; font-weight: 600; }
+        .status-disabled { color: #f59e0b; font-weight: 600; }
+        .action-btn { background-color: #3b82f6; color: white; padding: 6px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.875rem; transition: background-color 0.2s; margin-right: 5px; }
+        .action-btn:hover { background-color: #2563eb; }
+        .action-btn.delete { background-color: #dc2626; }
+        .action-btn.delete:hover { background-color: #b91c1c; }
+
+        /* Modal Styles */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; display: none; }
+        .modal-content { background-color: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); }
+        .modal-close { float: right; font-size: 1.5rem; cursor: pointer; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+    </style>
 </head>
-<body class="bg-neutral-gray min-h-screen p-4 sm:p-8">
-  <div class="max-w-6xl mx-auto bg-white p-6 sm:p-10 rounded-xl shadow-2xl">
-    <header class="mb-8 border-b pb-4 flex justify-between items-center">
-      <h1 class="text-3xl font-extrabold text-gray-900">
-        <span class="text-secondary-green">Admin</span> Dashboard
-      </h1>
-      <a href="admin-login.html" class="text-alert-dark hover:text-red-700 font-medium transition duration-150" onclick="localStorage.removeItem('adminToken')">Logout</a>
-    </header>
+<body>
 
-    <!-- Add Client Section (same UI) -->
-    <div id="addClientSection" class="mb-10 p-6 border border-primary-blue/30 rounded-lg shadow-lg">
-      <h2 class="text-2xl font-bold text-primary-blue mb-4">➕ Add New Client</h2>
-      <form id="addClientForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div><label class="block text-sm font-medium text-gray-700">Client Name</label><input type="text" id="add-clientName" class="w-full p-2 border rounded-lg"></div>
-        <div><label class="block text-sm font-medium text-gray-700">Username*</label><input type="text" id="add-username" required class="w-full p-2 border rounded-lg"></div>
-        <div><label class="block text-sm font-medium text-gray-700">Password*</label><input type="password" id="add-password" required class="w-full p-2 border rounded-lg"></div>
-        <div><label class="block text-sm font-medium text-gray-700">Mobile Number</label><input type="tel" id="add-mobile" class="w-full p-2 border rounded-lg"></div>
-        <div><label class="block text-sm font-medium text-gray-700">Email Address</label><input type="email" id="add-email" class="w-full p-2 border rounded-lg"></div>
-        <div><label class="block text-sm font-medium text-gray-700">Business Name</label><input type="text" id="add-businessName" class="w-full p-2 border rounded-lg"></div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Plan Name*</label>
-          <select id="add-planName" required class="w-full p-2 border rounded-lg bg-white">
-            <option value="Basic 1000">Basic 1000</option>
-            <option value="Pro 5000">Pro 5000</option>
-            <option value="Enterprise">Enterprise (Unlimited)</option>
-          </select>
-        </div>
-        <div><label class="block text-sm font-medium text-gray-700">Validity End Date*</label><input type="date" id="add-validity" required class="w-full p-2 border rounded-lg"></div>
-        <div class="md:col-span-2 mt-4">
-          <button type="submit" id="addClientButton" class="w-full py-3 bg-secondary-green text-white font-bold rounded-lg hover:bg-green-700 transition">
-            Add Client
-          </button>
-          <p id="addClientMessage" class="text-center mt-3 font-semibold"></p>
-        </div>
-      </form>
-    </div>
+    <div class="dashboard-container">
+        <header class="header">
+            <h1 class="text-2xl font-bold text-gray-800">Admin Panel</h1>
+            <div class="controls">
+                <!-- Notification Icon -->
+                <div id="notification-icon" class="icon-btn" onclick="toggleInbox('notifications')">
+                    <i class="fas fa-bell"></i>
+                    <span id="notification-badge" class="badge" style="display: none;">0</span>
+                </div>
+                <!-- Inbox Icon -->
+                <div id="inbox-icon" class="icon-btn" onclick="toggleInbox('inbox')">
+                    <i class="fas fa-inbox"></i>
+                    <span id="inbox-badge" class="badge" style="display: none;">0</span>
+                </div>
+                <button onclick="logout()" class="action-btn delete">Logout</button>
+            </div>
+        </header>
 
-    <!-- Manage clients and support sections (unchanged) -->
-    <div id="manageClientSection" class="mt-10">
-      <h2 class="text-2xl font-bold text-gray-800 mb-4">📋 Manage Clients</h2>
-      <div id="clientTableContainer" class="overflow-x-auto shadow-md rounded-lg">
-        <table class="data-table min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
-              <th class="text-xs font-medium text-gray-500 uppercase tracking-wider">Plan / Access Code</th>
-              <th class="text-xs font-medium text-gray-500 uppercase tracking-wider">Validity</th>
-              <th class="text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th class="text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="clientsTableBody" class="bg-white divide-y divide-gray-200"></tbody>
+        <!-- Notification/Inbox Modal -->
+        <div id="inbox-modal" class="modal">
+            <div class="modal-content">
+                <span class="modal-close" onclick="closeInbox()">&times;</span>
+                <h2 class="section-title" id="inbox-title">Admin Inbox</h2>
+                <div id="inbox-messages">
+                    <!-- Messages will be loaded here -->
+                    <p class="text-center text-gray-500">Loading messages...</p>
+                </div>
+                <div id="reply-form" class="mt-4">
+                    <h3 class="font-semibold mb-2">Reply to Client</h3>
+                    <div class="form-group">
+                        <input type="text" id="reply-subject" placeholder="Subject (Optional)" class="w-full">
+                    </div>
+                    <div class="form-group">
+                        <textarea id="reply-body" rows="3" placeholder="Your reply message" class="w-full p-2 border rounded"></textarea>
+                    </div>
+                    <button class="action-btn w-full" onclick="sendMessage()">Send Reply</button>
+                    <p id="reply-status" class="mt-2 text-sm text-center"></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Client Management Section -->
+        <h2 class="section-title">Client Management</h2>
+        <table class="client-table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Name</th>
+                    <th>Plan</th>
+                    <th>Validity End</th>
+                    <th>Status</th>
+                    <th>Last Active</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="client-list">
+                <!-- Client rows will be loaded here -->
+                <tr><td colspan="7" class="text-center text-gray-500">Loading clients...</td></tr>
+            </tbody>
         </table>
-      </div>
-      <p id="clientTableMessage" class="text-center mt-4 text-gray-500">Loading clients...</p>
-    </div>
 
-    <div id="supportInboxSection" class="mt-10 pt-6 border-t border-gray-200">
-      <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-        📧 Support Message Inbox 
-        <span id="unreadCount" class="ml-3 text-sm font-semibold text-alert-dark bg-red-100 px-2 py-0.5 rounded-full"></span>
-      </h2>
-      <div id="messagesContainer" class="space-y-4">
-        <div class="bg-gray-50 p-4 rounded-lg text-gray-600 text-center" id="messagePlaceholder">Loading messages...</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Edit Modal (unchanged) -->
-  <div id="editModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-    <div class="relative top-10 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
-      <h3 class="text-xl font-bold mb-4">Edit Client: <span id="modal-username" class="text-primary-blue"></span></h3>
-      <form id="editClientForm" class="space-y-4">
-        <input type="hidden" id="edit-client-id">
-        <div><label class="block text-sm font-medium text-gray-700">New Plan</label><input type="text" id="edit-planName" class="w-full p-2 border rounded-lg"></div>
-        <div><label class="block text-sm font-medium text-gray-700">New Validity End Date</label><input type="date" id="edit-validity" class="w-full p-2 border rounded-lg"></div>
-        <div><label class="block text-sm font-medium text-gray-700">Enable/Disable (true/false)</label><input type="text" id="edit-isActive" class="w-full p-2 border rounded-lg"></div>
-        <div><label class="block text-sm font-medium text-gray-700">New Password (Leave blank to keep old)</label><input type="password" id="edit-password" class="w-full p-2 border rounded-lg"></div>
-        <div class="flex justify-end space-x-2 pt-4">
-          <button type="button" onclick="closeEditModal()" class="py-2 px-4 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">Cancel</button>
-          <button type="submit" id="saveEditButton" class="py-2 px-4 bg-primary-blue text-white rounded-md hover:bg-blue-700">Save Changes</button>
+        <!-- Client Update Modal -->
+        <div id="update-client-modal" class="modal">
+            <div class="modal-content">
+                <span class="modal-close" onclick="closeUpdateModal()">&times;</span>
+                <h2 class="section-title">Update Client</h2>
+                <form id="update-client-form">
+                    <input type="hidden" id="update-client-id">
+                    <div class="form-group">
+                        <label for="update-plan">Plan Name</label>
+                        <select id="update-plan" required>
+                            <option value="Basic">Basic</option>
+                            <option value="Standard">Standard</option>
+                            <option value="Premium">Premium</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="update-validity">Validity End Date</label>
+                        <input type="date" id="update-validity" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="update-password">New Password (leave blank to keep current)</label>
+                        <input type="password" id="update-password">
+                    </div>
+                    <div class="form-group">
+                        <label for="update-status">Account Status</label>
+                        <select id="update-status" required>
+                            <option value="true">Enabled</option>
+                            <option value="false">Disabled</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="action-btn w-full">Apply Changes</button>
+                    <p id="update-status-msg" class="mt-2 text-sm text-center"></p>
+                </form>
+            </div>
         </div>
-      </form>
-      <p id="editClientMessage" class="text-center mt-3 font-semibold text-sm"></p>
+
     </div>
-  </div>
 
-  <script>
-    // Use relative endpoints so frontend always hits same deployment
-    const API_CLIENT_ENDPOINT = "/api/admin/client";
-    const API_SUPPORT_ENDPOINT = "/api/admin/support";
-    const LOGIN_PAGE = "admin-login.html";
+    <!-- Script to handle all client-side logic -->
+    <script>
+        // --- CONSTANTS AND UTILS ---
+        const API_BASE = '/api'; 
+        const AUTH_TOKEN = localStorage.getItem('adminToken');
+        const CLIENTS_COLLECTION = 'clients'; // Match collection in api/admin/client.js
+        const ADMIN_ID = 'admin'; // Used as receiverId for client messages
+        let activeClients = []; // Store client data globally
+        let selectedClientId = null; // For messaging/updates
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        alert("You must log in to access the dashboard.");
-        window.location.href = LOGIN_PAGE;
-        return;
-      }
-
-      // Use handlers; token will be read inside handlers for reliability
-      fetchClients();
-      fetchSupportMessages();
-      document.getElementById('addClientForm').addEventListener('submit', (e) => handleAddClient(e));
-      document.getElementById('editClientForm').addEventListener('submit', (e) => handleEditClient(e));
-    });
-
-    // --- FETCH & DISPLAY CLIENTS ---
-    async function fetchClients() {
-      const tableBody = document.getElementById('clientsTableBody');
-      const message = document.getElementById('clientTableMessage');
-      message.textContent = 'Loading clients...';
-      tableBody.innerHTML = '';
-
-      const token = localStorage.getItem('adminToken');
-      try {
-        const response = await fetch(API_CLIENT_ENDPOINT, {
-          method: 'GET',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const result = await response.json();
-
-        if (response.ok && result.status === "Success") {
-          const clients = result.data;
-          message.classList.add('hidden');
-
-          if (clients.length === 0) {
-            message.textContent = 'No clients found.';
-            message.classList.remove('hidden');
-            return;
-          }
-
-          clients.forEach(client => {
-            const row = tableBody.insertRow();
-            const validityDate = new Date(client.validityEnd).toLocaleDateString();
-            const statusText = client.isActive ? 'Active' : 'Disabled';
-            const statusColor = client.isActive ? 'text-secondary-green' : 'text-alert-dark';
-            const planAndCode = `${client.planName}<br><span class="text-xs text-gray-500">${client.bulkAccessCode || 'N/A'}</span>`;
-
-            row.innerHTML = `
-              <td>${client.username}</td>
-              <td>${planAndCode}</td>
-              <td>${validityDate}</td>
-              <td class="${statusColor} font-semibold">${statusText}</td>
-              <td>
-                <button onclick="openEditModal('${client._id}', '${client.username}', '${client.planName}', '${client.validityEnd.substring(0, 10)}', ${client.isActive})" class="text-primary-blue hover:underline text-sm mr-2">Edit</button>
-                <button onclick="handleDeleteClient('${client._id}', '${client.username}')" class="text-alert-dark hover:underline text-sm">Remove</button>
-              </td>
-            `;
-          });
-
-        } else {
-          message.textContent = `Error loading clients: ${result?.message || 'Authentication failed.'}`;
-          if (response.status === 403) {
-            setTimeout(() => { localStorage.removeItem('adminToken'); window.location.href = LOGIN_PAGE; }, 1000);
-          }
+        // Check auth status on load
+        if (!AUTH_TOKEN) {
+            window.location.href = 'admin-login.html';
         }
-      } catch (e) {
-        message.textContent = `Network error: ${e.message}`;
-      }
-    }
+        
+        function logout() {
+            localStorage.removeItem('adminToken');
+            window.location.href = 'admin-login.html';
+        }
 
-    // --- ADD CLIENT HANDLER ---
-    async function handleAddClient(event) {
-      event.preventDefault();
-      const button = document.getElementById('addClientButton');
-      const message = document.getElementById('addClientMessage');
+        // --- AUTHENTICATED FETCH HELPER ---
+        async function authFetch(url, options = {}) {
+            const defaultHeaders = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${AUTH_TOKEN}`,
+            };
 
-      button.disabled = true;
-      button.textContent = 'Adding...';
-      message.textContent = '';
+            const response = await fetch(url, {
+                ...options,
+                headers: { ...defaultHeaders, ...options.headers },
+            });
 
-      const token = localStorage.getItem('adminToken'); // read fresh token here
-      const clientData = {
-        clientName: document.getElementById('add-clientName').value,
-        username: document.getElementById('add-username').value,
-        password: document.getElementById('add-password').value,
-        mobile: document.getElementById('add-mobile').value,
-        email: document.getElementById('add-email').value,
-        businessName: document.getElementById('add-businessName').value,
-        businessType: document.getElementById('add-businessType') ? document.getElementById('add-businessType').value : null,
-        planName: document.getElementById('add-planName').value,
-        validity: document.getElementById('add-validity').value,
-      };
+            if (response.status === 403 || response.status === 401) {
+                // Token expired or invalid
+                logout();
+                throw new Error("Session expired. Please log in again.");
+            }
+            return response;
+        }
 
-      console.log('DEBUG add client - payload:', clientData);
+        // --- CLIENT MANAGEMENT LOGIC ---
+        async function loadClients() {
+            const clientListBody = document.getElementById('client-list');
+            clientListBody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Loading clients...</td></tr>';
+            try {
+                const response = await authFetch(`${API_BASE}/admin/client`);
+                const result = await response.json();
+                
+                if (result.status === "Success") {
+                    activeClients = result.data;
+                    renderClients(activeClients);
+                } else {
+                    clientListBody.innerHTML = `<tr><td colspan="7" class="text-center text-red-500">Failed to load clients: ${result.message}</td></tr>`;
+                }
 
-      try {
-        const response = await fetch(API_CLIENT_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify(clientData)
+            } catch (error) {
+                console.error('Error loading clients:', error);
+                clientListBody.innerHTML = `<tr><td colspan="7" class="text-center text-red-500">Network Error: ${error.message}</td></tr>`;
+            }
+        }
+
+        function renderClients(clients) {
+            const clientListBody = document.getElementById('client-list');
+            clientListBody.innerHTML = ''; // Clear existing rows
+
+            if (clients.length === 0) {
+                clientListBody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">No clients found.</td></tr>';
+                return;
+            }
+
+            clients.forEach(client => {
+                const isActive = client.isActive;
+                const statusClass = isActive ? 'status-active' : 'status-disabled';
+                const statusText = isActive ? 'Enabled' : 'Disabled';
+                
+                // Simple online check (advanced feature is stubbed)
+                const lastActive = client.lastActivityAt ? new Date(client.lastActivityAt).toLocaleString() : 'N/A';
+                const onlineStatus = client.isOnline ? '<span class="status-active">Online</span>' : 'Offline';
+
+                const row = `
+                    <tr>
+                        <td>${client.username}</td>
+                        <td>${client.clientName || 'N/A'}</td>
+                        <td>${client.planName}</td>
+                        <td>${new Date(client.validityEnd).toLocaleDateString()}</td>
+                        <td><span class="${statusClass}">${statusText}</span></td>
+                        <td>${lastActive}</td>
+                        <td>
+                            <button class="action-btn" onclick="openUpdateModal('${client._id}')">Edit</button>
+                            <button class="action-btn delete" onclick="deleteClient('${client._id}')">Remove</button>
+                            <button class="action-btn" onclick="openReplyForm('${client._id}', '${client.username}')">Message</button>
+                        </td>
+                    </tr>
+                `;
+                clientListBody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        async function deleteClient(clientId) {
+            if (!confirm("Are you sure you want to permanently delete this client?")) return;
+            
+            try {
+                const response = await authFetch(`${API_BASE}/admin/client`, {
+                    method: 'DELETE',
+                    body: JSON.stringify({ clientId }),
+                });
+
+                if (response.ok) {
+                    alert("Client deleted successfully.");
+                    loadClients(); // Reload list
+                } else {
+                    const result = await response.json();
+                    alert(`Deletion failed: ${result.message}`);
+                }
+            } catch (error) {
+                alert(`Network error: ${error.message}`);
+            }
+        }
+
+        // --- UPDATE MODAL LOGIC ---
+        function openUpdateModal(clientId) {
+            const client = activeClients.find(c => c._id === clientId);
+            if (!client) return alert("Client data not found.");
+
+            document.getElementById('update-client-id').value = client._id;
+            document.getElementById('update-plan').value = client.planName;
+            
+            // Format date for input[type="date"] (YYYY-MM-DD)
+            const date = new Date(client.validityEnd);
+            const formattedDate = date.toISOString().substring(0, 10);
+            document.getElementById('update-validity').value = formattedDate;
+
+            document.getElementById('update-status').value = String(client.isActive);
+
+            document.getElementById('update-client-modal').style.display = 'flex';
+        }
+
+        function closeUpdateModal() {
+            document.getElementById('update-client-modal').style.display = 'none';
+            document.getElementById('update-client-form').reset();
+            document.getElementById('update-password').value = '';
+            document.getElementById('update-status-msg').textContent = '';
+        }
+
+        document.getElementById('update-client-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const clientId = form.elements['update-client-id'].value;
+            const planName = form.elements['update-plan'].value;
+            const validity = form.elements['update-validity'].value;
+            const isActive = form.elements['update-status'].value === 'true';
+            const password = form.elements['update-password'].value;
+            const statusMsg = document.getElementById('update-status-msg');
+
+            const updateData = {
+                clientId,
+                planName,
+                validity,
+                isActive,
+            };
+
+            if (password) {
+                updateData.password = password;
+            }
+
+            statusMsg.textContent = 'Updating...';
+            statusMsg.style.color = '#f59e0b';
+
+            try {
+                const response = await authFetch(`${API_BASE}/admin/client`, {
+                    method: 'PUT',
+                    body: JSON.stringify(updateData),
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    statusMsg.textContent = 'Client updated successfully!';
+                    statusMsg.style.color = '#10b981';
+                    loadClients(); // Reload list
+                    setTimeout(closeUpdateModal, 1500);
+                } else {
+                    statusMsg.textContent = `Update Failed: ${result.message}`;
+                    statusMsg.style.color = '#dc2626';
+                }
+            } catch (error) {
+                statusMsg.textContent = `Network Error: ${error.message}`;
+                statusMsg.style.color = '#dc2626';
+            }
         });
 
-        const result = await response.json();
-        console.log('DEBUG add client - response:', response.status, result);
+        // --- MESSAGING / INBOX LOGIC ---
 
-        if (response.ok && result.status === "Success") {
-          message.className = 'text-secondary-green mt-3 font-semibold';
-          message.textContent = 'Client added successfully!';
-          document.getElementById('addClientForm').reset();
-          fetchClients();
-        } else {
-          message.className = 'text-alert-dark mt-3 font-semibold';
-          message.textContent = `Error: ${result?.message || 'Failed to add client.'}`;
-          if (response.status === 403) {
-            // token problem — redirect to login
-            setTimeout(() => { localStorage.removeItem('adminToken'); window.location.href = LOGIN_PAGE; }, 800);
-          }
+        function toggleInbox(viewType) {
+            loadInbox(viewType);
+            document.getElementById('inbox-modal').style.display = 'flex';
         }
-      } catch (e) {
-        console.error('Network Error on add client:', e);
-        message.className = 'text-alert-dark mt-3 font-semibold';
-        message.textContent = `Network Error: ${e.message}`;
-      } finally {
-        button.disabled = false;
-        button.textContent = 'Add Client';
-      }
-    }
-
-    // --- EDIT / DELETE handlers read token fresh as well ---
-    async function handleEditClient(event) {
-      event.preventDefault();
-      const button = document.getElementById('saveEditButton');
-      const message = document.getElementById('editClientMessage');
-
-      button.disabled = true;
-      button.textContent = 'Saving...';
-      message.textContent = '';
-
-      const token = localStorage.getItem('adminToken');
-      const clientId = document.getElementById('edit-client-id').value;
-      const updatedData = {
-        clientId: clientId,
-        planName: document.getElementById('edit-planName').value,
-        validity: document.getElementById('edit-validity').value,
-        isActive: document.getElementById('edit-isActive').value === 'true',
-      };
-
-      const newPassword = document.getElementById('edit-password').value;
-      if (newPassword) updatedData.password = newPassword;
-
-      try {
-        const response = await fetch(API_CLIENT_ENDPOINT, {
-          method: 'PUT',
-          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify(updatedData)
-        });
-        const result = await response.json();
-        if (response.ok && result.status === "Success") {
-          message.className = 'text-secondary-green mt-3 font-semibold';
-          message.textContent = 'Client updated successfully! Refreshing list...';
-          setTimeout(() => { closeEditModal(); fetchClients(); }, 1000);
-        } else {
-          message.className = 'text-alert-dark mt-3 font-semibold';
-          message.textContent = `Error: ${result?.message || 'Failed to update client.'}`;
+        
+        function closeInbox() {
+            document.getElementById('inbox-modal').style.display = 'none';
+            document.getElementById('reply-form').style.display = 'none';
+            selectedClientId = null; // Clear selected client
+            loadInboxCounts(); // Refresh counts after closing inbox
         }
-      } catch (e) {
-        message.className = 'text-alert-dark mt-3 font-semibold';
-        message.textContent = `Network Error: ${e.message}`;
-      } finally {
-        button.disabled = false;
-        button.textContent = 'Save Changes';
-      }
-    }
 
-    async function handleDeleteClient(clientId, username) {
-      if (!confirm(`Are you sure you want to permanently delete the client: ${username}?`)) return;
-      const token = localStorage.getItem('adminToken');
-
-      try {
-        const response = await fetch(API_CLIENT_ENDPOINT, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ clientId: clientId })
-        });
-        const result = await response.json();
-        if (response.ok && result.status === "Success") {
-          alert(`Client ${username} deleted successfully.`);
-          fetchClients();
-        } else {
-          alert(`Error deleting client: ${result?.message || 'Unknown error.'}`);
+        function openReplyForm(clientId, username) {
+            selectedClientId = clientId;
+            document.getElementById('inbox-modal').style.display = 'flex';
+            document.getElementById('inbox-title').textContent = `Reply to ${username}`;
+            document.getElementById('reply-form').style.display = 'block';
+            document.getElementById('inbox-messages').style.display = 'none';
         }
-      } catch (e) {
-        alert(`Network error during deletion: ${e.message}`);
-      }
-    }
 
-    // SUPPORT messages (mocked; unchanged)
-    async function fetchSupportMessages() {
-      const container = document.getElementById('messagesContainer');
-      const placeholder = document.getElementById('messagePlaceholder');
-      const unreadCount = document.getElementById('unreadCount');
-      container.innerHTML = '';
-      placeholder.classList.remove('hidden');
-      const mockMessages = [
-        { _id: '1', clientName: 'Alpha Logistics', clientEmail: 'alpha@log.com', messageText: 'My bulk plan expired unexpectedly, please check validity.', receivedAt: new Date(Date.now() - 3600000), isRead: false },
-        { _id: '2', clientName: 'Beta Retail', clientEmail: 'beta@ret.com', messageText: 'Query on custom plan pricing for 10,000 verifications/month.', receivedAt: new Date(Date.now() - 86400000), isRead: true }
-      ];
-      let unread = 0;
-      if (mockMessages.length === 0) {
-        placeholder.textContent = 'No support messages received yet.';
-        return;
-      }
-      mockMessages.forEach(msg => {
-        if (!msg.isRead) unread++;
-        const messageBlock = document.createElement('div');
-        messageBlock.className = `p-4 rounded-lg shadow-sm border ${msg.isRead ? 'bg-white border-gray-200' : 'bg-yellow-50 border-yellow-300'}`;
-        const formattedDate = new Date(msg.receivedAt).toLocaleString();
-        messageBlock.innerHTML = `
-          <div class="flex justify-between items-center mb-1">
-            <strong class="text-gray-800">${msg.clientName} (${msg.clientEmail})</strong>
-            <span class="text-xs text-gray-500">${formattedDate}</span>
-          </div>
-          <p class="text-sm text-gray-700 italic">${msg.messageText}</p>
-          <button class="text-xs text-primary-blue hover:underline mt-2">Mark as Read</button>
-        `;
-        container.appendChild(messageBlock);
-      });
-      placeholder.classList.add('hidden');
-      unreadCount.textContent = unread > 0 ? `${unread} Unread` : '';
-    }
+        async function loadInboxCounts() {
+            try {
+                const response = await authFetch(`${API_BASE}/inbox/message`);
+                const result = await response.json();
+                
+                if (result.status === "Success" && result.unreadCount > 0) {
+                    document.getElementById('notification-badge').textContent = result.unreadCount;
+                    document.getElementById('inbox-badge').textContent = result.unreadCount;
+                    document.getElementById('notification-badge').style.display = 'block';
+                    document.getElementById('inbox-badge').style.display = 'block';
+                } else {
+                    document.getElementById('notification-badge').style.display = 'none';
+                    document.getElementById('inbox-badge').style.display = 'none';
+                }
+            } catch (e) {
+                console.error("Failed to load inbox counts:", e);
+                // Silence error, just no badge count
+            }
+        }
 
-    // Modal functions
-    function openEditModal(id, username, planName, validityDate, isActive) {
-      document.getElementById('modal-username').textContent = username;
-      document.getElementById('edit-client-id').value = id;
-      document.getElementById('edit-planName').value = planName;
-      document.getElementById('edit-validity').value = validityDate;
-      document.getElementById('edit-isActive').value = isActive.toString();
-      document.getElementById('edit-password').value = '';
-      document.getElementById('editClientMessage').textContent = '';
-      document.getElementById('editModal').classList.remove('hidden');
-    }
-    function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
-  </script>
+        async function loadInbox(viewType) {
+            document.getElementById('inbox-title').textContent = (viewType === 'inbox' ? 'Admin Inbox' : 'Notifications');
+            document.getElementById('inbox-messages').style.display = 'block';
+            document.getElementById('reply-form').style.display = 'none';
+            const msgContainer = document.getElementById('inbox-messages');
+            msgContainer.innerHTML = '<p class="text-center text-gray-500">Loading messages...</p>';
+            
+            try {
+                const response = await authFetch(`${API_BASE}/inbox/message`);
+                const result = await response.json();
+
+                if (result.status === "Success") {
+                    const receivedMessages = result.messages.filter(m => m.receiverId === ADMIN_ID);
+                    msgContainer.innerHTML = '';
+
+                    if (receivedMessages.length === 0) {
+                        msgContainer.innerHTML = '<p class="text-center text-gray-500">No messages in inbox.</p>';
+                        return;
+                    }
+
+                    receivedMessages.forEach(msg => {
+                        const isUnread = !msg.isRead;
+                        const cardClass = isUnread ? 'font-bold bg-yellow-50' : 'bg-white';
+                        const messageHtml = `
+                            <div class="p-3 border rounded mb-2 ${cardClass}" 
+                                 onclick="viewMessage('${msg._id}', '${msg.subject}', '${msg.body}', '${msg.senderId}', ${isUnread})">
+                                <p class="text-sm text-gray-700">From: ${msg.senderId === ADMIN_ID ? 'You' : msg.senderId}</p>
+                                <p class="text-md">${msg.subject}</p>
+                                <small class="text-gray-500">${new Date(msg.timestamp).toLocaleString()}</small>
+                            </div>
+                        `;
+                        msgContainer.insertAdjacentHTML('beforeend', messageHtml);
+                    });
+                } else {
+                    msgContainer.innerHTML = `<p class="text-center text-red-500">Failed to load inbox: ${result.message}</p>`;
+                }
+            } catch (error) {
+                msgContainer.innerHTML = `<p class="text-center text-red-500">Network Error: ${error.message}</p>`;
+            }
+        }
+
+        function viewMessage(messageId, subject, body, senderId, isUnread) {
+            if (isUnread) {
+                // Mark message as read on click
+                authFetch(`${API_BASE}/inbox/message?messageId=${messageId}`, { method: 'PUT' });
+                // Simple page reload to update read status and count
+                setTimeout(loadInbox, 500); 
+            }
+            // Display the full message content in the modal (replace with a dedicated view in a larger app)
+            alert(`Subject: ${subject}\n\nBody: ${body}\n\nFrom Client ID: ${senderId}`);
+        }
+        
+        async function sendMessage() {
+            const subject = document.getElementById('reply-subject').value;
+            const body = document.getElementById('reply-body').value;
+            const statusMsg = document.getElementById('reply-status');
+
+            if (!selectedClientId) {
+                statusMsg.textContent = 'Error: No client selected.';
+                statusMsg.style.color = '#dc2626';
+                return;
+            }
+            if (!body) {
+                statusMsg.textContent = 'Message body cannot be empty.';
+                statusMsg.style.color = '#dc2626';
+                return;
+            }
+
+            statusMsg.textContent = 'Sending...';
+            statusMsg.style.color = '#f59e0b';
+            
+            try {
+                const response = await authFetch(`${API_BASE}/inbox/message`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        subject,
+                        body,
+                        recipientId: selectedClientId,
+                    }),
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    statusMsg.textContent = 'Reply sent successfully!';
+                    statusMsg.style.color = '#10b981';
+                    document.getElementById('reply-subject').value = '';
+                    document.getElementById('reply-body').value = '';
+                    setTimeout(closeInbox, 1500);
+                } else {
+                    statusMsg.textContent = `Send Failed: ${result.message}`;
+                    statusMsg.style.color = '#dc2626';
+                }
+            } catch (error) {
+                statusMsg.textContent = `Network Error: ${error.message}`;
+                statusMsg.style.color = '#dc2626';
+            }
+        }
+
+        // --- INITIALIZATION ---
+        window.onload = () => {
+            loadClients();
+            loadInboxCounts();
+            // Poll for new messages every 60 seconds
+            setInterval(loadInboxCounts, 60000); 
+        };
+    </script>
 </body>
 </html>

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Shared Dashboard Styles */
+        body { font-family: sans-serif; background-color: #f0f4f8; }
+        .dashboard-container { max-width: 1200px; margin: 20px auto; padding: 20px; background-color: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #ddd; }
+        .nav-tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; }
+        .tab-button { padding: 10px 15px; cursor: pointer; border: none; background: none; font-weight: 600; color: #6b7280; transition: color 0.3s, border-bottom 0.3s; }
+        .tab-button.active { color: #3b82f6; border-bottom: 2px solid #3b82f6; }
+        .tab-content { padding: 15px 0; }
+        .controls { display: flex; gap: 15px; align-items: center; }
+        .icon-btn { cursor: pointer; position: relative; font-size: 24px; color: #333; }
+        .badge { position: absolute; top: -5px; right: -5px; background-color: #ef4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; }
+        .profile-card, .plan-card { background-color: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #eee; }
+        .plan-status { font-size: 1.1rem; font-weight: 700; color: #10b981; }
+        .plan-disabled { color: #f59e0b; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .action-btn { background-color: #3b82f6; color: white; padding: 8px 15px; border-radius: 4px; border: none; cursor: pointer; transition: background-color 0.2s; }
+        .action-btn:hover { background-color: #2563eb; }
+        .action-btn.logout { background-color: #dc2626; }
+        .action-btn.logout:hover { background-color: #b91c1c; }
+        /* Modal Styles (same as Admin) */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; display: none; }
+        .modal-content { background-color: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 600px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); }
+        .modal-close { float: right; font-size: 1.5rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="header">
+            <h1 class="text-2xl font-bold text-gray-800">Welcome, <span id="client-name-display">Client</span></h1>
+            <div class="controls">
+                <!-- Inbox Icon -->
+                <div id="inbox-icon" class="icon-btn" onclick="toggleInbox()">
+                    <i class="fas fa-inbox"></i>
+                    <span id="inbox-badge" class="badge" style="display: none;">0</span>
+                </div>
+                <button onclick="logout()" class="action-btn logout">Logout</button>
+            </div>
+        </header>
+
+        <div class="nav-tabs">
+            <button class="tab-button active" onclick="showTab('bulk-verification', this)">Bulk Address Verification</button>
+            <button class="tab-button" onclick="showTab('profile-plan', this)">Profile & Plan Status</button>
+            <button class="tab-button" onclick="showTab('support', this)">Support/Messaging</button>
+        </div>
+
+        <!-- TAB 1: Bulk Address Verification -->
+        <div id="bulk-verification" class="tab-content">
+            <h2 class="text-xl font-semibold mb-3">Bulk Verification Tool</h2>
+            <p>Your Bulk Access Code: <strong id="bulk-code">Loading...</strong></p>
+            <!-- Your bulk file upload and processing UI goes here -->
+            <div class="mt-4 p-4 border rounded border-blue-200 bg-blue-50">
+                <p>Upload your CSV file here for batch processing.</p>
+            </div>
+        </div>
+
+        <!-- TAB 2: Profile & Plan Status -->
+        <div id="profile-plan" class="tab-content" style="display: none;">
+            <h2 class="text-xl font-semibold mb-3">My Profile</h2>
+            <div class="profile-card">
+                <p><strong>Username:</strong> <span id="profile-username"></span></p>
+                <p><strong>Email:</strong> <span id="profile-email"></span></p>
+                <p><strong>Mobile:</strong> <span id="profile-mobile"></span></p>
+            </div>
+
+            <h2 class="text-xl font-semibold mb-3">Plan Details</h2>
+            <div class="plan-card">
+                <p><strong>Plan:</strong> <span id="plan-name" class="plan-status"></span></p>
+                <p><strong>Account Status:</strong> <span id="account-status" class="plan-status"></span></p>
+                <p><strong>Valid Until:</strong> <span id="validity-end"></span></p>
+                <p><strong>Remaining Credits:</strong> <span id="remaining-credits">N/A (Needs API integration)</span></p>
+            </div>
+            <!-- Future: Password Change option here -->
+        </div>
+
+        <!-- TAB 3: Support/Messaging -->
+        <div id="support" class="tab-content" style="display: none;">
+            <h2 class="text-xl font-semibold mb-3">Send a Message to Admin</h2>
+            <form id="support-form">
+                <div class="form-group">
+                    <label for="support-subject">Subject</label>
+                    <input type="text" id="support-subject" required>
+                </div>
+                <div class="form-group">
+                    <label for="support-body">Message</label>
+                    <textarea id="support-body" rows="5" required></textarea>
+                </div>
+                <button type="submit" class="action-btn">Send Support Message</button>
+                <p id="support-status" class="mt-2 text-sm text-center"></p>
+            </form>
+
+            <h2 class="text-xl font-semibold mt-6 mb-3">My Inbox</h2>
+            <div id="client-inbox-list" class="mt-4">
+                 <p class="text-center text-gray-500">Loading messages...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inbox Modal (Shared Structure) -->
+    <div id="inbox-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeInbox()">&times;</span>
+            <h2 class="text-xl font-semibold mb-3">Full Message</h2>
+            <p id="full-message-subject" class="font-bold"></p>
+            <small id="full-message-date" class="text-gray-500 block mb-3"></small>
+            <div id="full-message-body" class="p-4 border rounded bg-gray-50 whitespace-pre-wrap"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONSTANTS AND STATE ---
+        const API_BASE = '/api';
+        const AUTH_TOKEN = localStorage.getItem('clientToken');
+        const CLIENT_ID = localStorage.getItem('clientId'); // Needs to be fetched/stored on login
+        let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
+        const CLIENT_NAME = localStorage.getItem('clientName') || planDetails.username;
+
+        // --- AUTH CHECK ---
+        if (!AUTH_TOKEN) {
+            window.location.href = 'client-login.html';
+        }
+        
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'client-login.html';
+        }
+
+        // --- AUTHENTICATED FETCH HELPER (Need an API endpoint to fetch full profile) ---
+        async function authFetch(url, options = {}) {
+            const defaultHeaders = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${AUTH_TOKEN}`,
+            };
+
+            const response = await fetch(url, {
+                ...options,
+                headers: { ...defaultHeaders, ...options.headers },
+            });
+
+            if (response.status === 403 || response.status === 401) {
+                logout();
+                throw new Error("Session expired. Please log in again.");
+            }
+            return response;
+        }
+
+        // --- TAB NAVIGATION ---
+        function showTab(tabId, button) {
+            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabId).style.display = 'block';
+            button.classList.add('active');
+
+            // Load inbox immediately if switching to Support tab
+            if (tabId === 'support') {
+                loadClientInbox();
+            }
+        }
+
+        // --- PROFILE & PLAN LOGIC ---
+        function loadProfileAndPlan() {
+            document.getElementById('client-name-display').textContent = CLIENT_NAME;
+            document.getElementById('bulk-code').textContent = planDetails.bulkAccessCode || 'N/A';
+            
+            // Note: Since we don't have a dedicated API to fetch full profile (email, mobile), 
+            // we'll display what we stored at login.
+            
+            const statusEl = document.getElementById('account-status');
+            const isActive = planDetails.isActive;
+            statusEl.textContent = isActive ? 'Enabled' : 'Disabled';
+            statusEl.className = isActive ? 'plan-status' : 'plan-status plan-disabled';
+
+            document.getElementById('plan-name').textContent = planDetails.planName || 'Not Set';
+            document.getElementById('validity-end').textContent = new Date(planDetails.validityEnd).toLocaleDateString() || 'N/A';
+            document.getElementById('profile-username').textContent = planDetails.username || 'N/A';
+            // Placeholder for real data
+            document.getElementById('profile-email').textContent = 'Loading...';
+            document.getElementById('profile-mobile').textContent = 'Loading...';
+            
+            // TODO: Fetch full profile data if a dedicated API existed (e.g., GET /api/client/profile)
+        }
+
+
+        // --- MESSAGING / SUPPORT LOGIC ---
+        document.getElementById('support-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const subject = document.getElementById('support-subject').value;
+            const body = document.getElementById('support-body').value;
+            const statusMsg = document.getElementById('support-status');
+
+            if (!body) {
+                statusMsg.textContent = 'Message body cannot be empty.';
+                statusMsg.style.color = '#dc2626';
+                return;
+            }
+
+            statusMsg.textContent = 'Sending...';
+            statusMsg.style.color = '#f59e0b';
+
+            try {
+                const response = await authFetch(`${API_BASE}/inbox/message`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        subject,
+                        body,
+                        // recipientId is optional, defaults to 'admin' in api/inbox/message.js
+                    }),
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    statusMsg.textContent = 'Message sent successfully! Admin will reply soon.';
+                    statusMsg.style.color = '#10b981';
+                    document.getElementById('support-subject').value = '';
+                    document.getElementById('support-body').value = '';
+                    loadClientInbox(); // Reload inbox to see sent message
+                } else {
+                    statusMsg.textContent = `Send Failed: ${result.message}`;
+                    statusMsg.style.color = '#dc2626';
+                }
+            } catch (error) {
+                statusMsg.textContent = `Network Error: ${error.message}`;
+                statusMsg.style.color = '#dc2626';
+            }
+        });
+
+        async function loadInboxCounts() {
+            try {
+                const response = await authFetch(`${API_BASE}/inbox/message`);
+                const result = await response.json();
+                
+                if (result.status === "Success" && result.unreadCount > 0) {
+                    document.getElementById('inbox-badge').textContent = result.unreadCount;
+                    document.getElementById('inbox-badge').style.display = 'block';
+                } else {
+                    document.getElementById('inbox-badge').style.display = 'none';
+                }
+            } catch (e) {
+                console.error("Failed to load client inbox counts:", e);
+                // Silence error, just no badge count
+            }
+        }
+
+        async function loadClientInbox() {
+            const msgContainer = document.getElementById('client-inbox-list');
+            msgContainer.innerHTML = '<p class="text-center text-gray-500">Loading messages...</p>';
+            
+            try {
+                const response = await authFetch(`${API_BASE}/inbox/message`);
+                const result = await response.json();
+
+                if (result.status === "Success") {
+                    msgContainer.innerHTML = '';
+                    if (result.messages.length === 0) {
+                        msgContainer.innerHTML = '<p class="text-center text-gray-500">No messages in your inbox.</p>';
+                        return;
+                    }
+
+                    result.messages.forEach(msg => {
+                        const isUnread = !msg.isRead && msg.receiverId !== 'admin'; // Only check unread if client is receiver
+                        const cardClass = isUnread ? 'font-bold bg-yellow-50' : 'bg-white';
+                        const sender = msg.senderId === 'admin' ? 'Admin' : 'You';
+                        
+                        const messageHtml = `
+                            <div class="p-3 border rounded mb-2 ${cardClass}" 
+                                 onclick="viewClientMessage('${msg._id}', '${msg.subject}', '${msg.body}', '${msg.senderId}', ${isUnread})">
+                                <p class="text-sm text-gray-700">From: <strong>${sender}</strong></p>
+                                <p class="text-md">${msg.subject}</p>
+                                <small class="text-gray-500">${new Date(msg.timestamp).toLocaleString()}</small>
+                            </div>
+                        `;
+                        msgContainer.insertAdjacentHTML('beforeend', messageHtml);
+                    });
+                } else {
+                    msgContainer.innerHTML = `<p class="text-center text-red-500">Failed to load inbox: ${result.message}</p>`;
+                }
+            } catch (error) {
+                msgContainer.innerHTML = `<p class="text-center text-red-500">Network Error: ${error.message}</p>`;
+            }
+        }
+
+        function toggleInbox() {
+            // Open the inbox modal
+            document.getElementById('inbox-modal').style.display = 'flex';
+        }
+        
+        function closeInbox() {
+            // Close the inbox modal and refresh counts
+            document.getElementById('inbox-modal').style.display = 'none';
+            loadInboxCounts();
+        }
+
+        function viewClientMessage(messageId, subject, body, senderId, isUnread) {
+            // Populate modal content
+            document.getElementById('full-message-subject').textContent = subject;
+            document.getElementById('full-message-body').textContent = body;
+            // You can add timestamp here if you pass it
+            
+            if (isUnread) {
+                // Mark message as read
+                authFetch(`${API_BASE}/inbox/message?messageId=${messageId}`, { method: 'PUT' });
+                // Simple page reload to update read status and count
+                setTimeout(loadClientInbox, 500); 
+            }
+            
+            toggleInbox();
+        }
+
+        // --- INITIALIZATION ---
+        window.onload = () => {
+            loadProfileAndPlan();
+            loadInboxCounts();
+            // Poll for new messages every 60 seconds
+            setInterval(loadInboxCounts, 60000); 
+            showTab('bulk-verification', document.querySelector('.tab-button')); // Default tab
+        };
+    </script>
+</body>
+</html>
