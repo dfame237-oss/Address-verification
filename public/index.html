@@ -58,35 +58,31 @@
             
             <div class="space-x-4 flex items-center">
                 <a href="admin-login.html" class="text-[10px] text-gray-300 hover:text-gray-500 transition-colors duration-300" title="Admin Login">Admin</a>
-
-                <a href="#single-check" class="text-gray-700 hover:text-primary-blue font-semibold">Single Check</a>
+                
+                <!-- NEW PRICING BUTTON -->
                 <a href="#pricing" class="bg-primary-blue text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition duration-300">Pricing</a>
+                <!-- END NEW PRICING BUTTON -->
+
+                <a href="#demoModal" class="bg-secondary-green text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition duration-300">Request Demo</a>
                 <a href="client-login.html" class="text-gray-700 hover:text-primary-blue font-semibold">Login</a>
             </div>
         </div>
     </nav>
     
-    <header id="bulk-hero" class="pt-16 pb-12 bg-white">
+    <header id="bulk-hero" class="pt-16 pb-24 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h1 class="text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight mb-4 text-center">
                 Stop RTO. Start Scaling.
             </h1>
-            <p class="text-xl text-gray-600 mb-12 max-w-4xl mx-auto text-center">
+            <p class="text-xl text-gray-600 mb-16 max-w-4xl mx-auto text-center">
                 The **Smartest AI Address Platform** built to process 100% of your customer database, eliminate errors, and guarantee first-attempt delivery success.
             </p>
 
-            <!-- CTA button pointing to the new pricing section -->
-            <div class="flex justify-center mb-16">
-                 <a href="#pricing" class="py-4 px-10 bg-secondary-green text-white font-extrabold text-lg rounded-xl shadow-xl hover:bg-green-700 transition transform hover:scale-[1.05] focus:ring-4 focus:ring-secondary-green/50">
-                    See All Pricing Plans
-                </a>
-            </div>
-            
             <div class="bg-neutral-gray p-8 md:p-12 rounded-2xl shadow-2xl border border-blue-100">
                 <h3 class="text-3xl font-bold text-gray-800 mb-8 text-center">Automated 3-Step Bulk Process</h3>
 
                 <div class="grid md:grid-cols-3 gap-8 md:gap-12 relative">
-                    <!-- ... (3-step process cards remain the same) ... -->
+                    
                     <div class="absolute inset-x-1/2 top-1/2 hidden md:block" style="width: calc(100% - 300px); transform: translate(-50%, -50%);">
                         <div class="flex justify-between">
                             <div class="w-1/2 h-1 bg-primary-blue/30 relative">
@@ -121,52 +117,20 @@
                         <h4 class="text-xl font-bold text-gray-900 mb-2">3. Download Score</h4>
                         <p class="text-gray-600">Instantly receive a new CSV with clean addresses and a risk score.</p>
                     </div>
+
+                </div>
+                
+                <div class="mt-12 pt-8 border-t border-gray-200 flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+                    <a href="#pricing" class="py-4 px-10 bg-primary-blue text-white font-extrabold text-lg rounded-xl shadow-lg hover:bg-blue-700 transition transform hover:scale-[1.05] focus:ring-4 focus:ring-primary-blue/50">
+                        Request Bulk Pricing & Demo
+                    </a>
+                    <a href="single.html" class="py-4 px-10 bg-secondary-green text-white font-bold text-lg rounded-xl shadow-lg hover:bg-green-700 transition transform hover:scale-[1.05]">
+                        Try Single Check (Free)
+                    </a>
                 </div>
             </div>
         </div>
     </header>
-
-    <!-- NEW SECTION: SINGLE ADDRESS CHECK (Re-added) -->
-    <section id="single-check" class="py-20 bg-white border-t border-gray-100">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-4 text-center">
-                Try a Single Address Check (Free)
-            </h2>
-            <p class="text-xl text-gray-600 mb-12 max-w-3xl mx-auto text-center">
-                See our AI in action! Enter a messy or incomplete address below for real-time verification and correction.
-            </p>
-
-            <form id="singleCheckForm" class="bg-neutral-gray p-8 rounded-2xl shadow-xl space-y-6">
-                 <div class="grid md:grid-cols-2 gap-6">
-                    <div>
-                         <label for="customerName" class="block text-sm font-medium text-gray-700 mb-1">Customer Name (Optional)</label>
-                         <input type="text" id="customerName" placeholder="e.g., John Doe" class="w-full p-3 border rounded-lg input-focus">
-                    </div>
-                    <div>
-                         <label for="rawAddress" class="block text-sm font-medium text-gray-700 mb-1">Raw Address (Required)</label>
-                         <input type="text" id="rawAddress" required placeholder="e.g., house 123, Sector 40B, chd" class="w-full p-3 border rounded-lg input-focus">
-                    </div>
-                 </div>
-                 <button type="submit" id="checkButton" class="w-full py-3 bg-primary-blue text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition transform hover:scale-[1.005]">
-                    Verify Address Now
-                 </button>
-                 <p id="checkStatus" class="text-center text-sm font-semibold pt-2"></p>
-            </form>
-            
-            <!-- Result Display -->
-            <div id="checkResult" class="mt-8 p-6 bg-green-50 border-l-4 border-secondary-green rounded-xl shadow-lg" style="display: none;">
-                <h3 class="text-2xl font-bold text-secondary-green mb-4">Verification Result</h3>
-                <div class="grid md:grid-cols-2 gap-4 text-sm">
-                    <div class="font-semibold">Clean Address:</div><div id="resultAddress" class="font-medium text-gray-700"></div>
-                    <div class="font-semibold">PIN Code:</div><div id="resultPin" class="font-medium text-gray-700"></div>
-                    <div class="font-semibold">State/District:</div><div id="resultState" class="font-medium text-gray-700"></div>
-                    <div class="font-semibold">Quality Score:</div><div id="resultQuality" class="font-medium text-gray-700"></div>
-                    <div class="font-semibold md:col-span-2">Remarks:</div><div id="resultRemarks" class="font-medium text-gray-700 md:col-span-2"></div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <!-- END SINGLE ADDRESS CHECK -->
 
     <!-- NEW PRICING SECTION -->
     <section id="pricing" class="py-20 bg-neutral-gray">
@@ -239,7 +203,6 @@
             </p>
 
             <div class="grid md:grid-cols-3 gap-8">
-                <!-- ... (Feature cards remain the same) ... -->
                 <div class="bg-red-50 p-6 rounded-xl shadow-md border-t-4 border-alert-dark">
                     <div class="text-4xl feature-icon mb-3 text-alert-dark">📦</div>
                     <h3 class="text-xl font-bold text-gray-900 mb-3">Minimize RTO Losses</h3>
@@ -306,6 +269,51 @@
     </footer>
 
     
+    <div id="demoModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-[100]">
+        <div class="relative top-10 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 class="text-xl font-bold text-primary-blue">Request a Bulk Demo</h3>
+                <button onclick="document.getElementById('demoModal').classList.add('hidden')" class="text-gray-500 hover:text-gray-800 text-2xl">
+                    &times;
+                </button>
+            </div>
+            
+            <form id="demoFormModal" class="space-y-4">
+                <p class="text-sm text-gray-600">Fill in your details, and our sales team will contact you for a personalized demo setup.</p>
+                <div>
+                    <label for="demo-clientName-modal" class="block text-sm font-medium text-gray-700">Your Name</label>
+                    <input type="text" id="demo-clientName-modal" required class="w-full p-2 border rounded-lg focus:ring-secondary-green focus:border-secondary-green input-focus">
+                </div>
+                <div>
+                    <label for="demo-clientEmail-modal" class="block text-sm font-medium text-gray-700">Your Email</label>
+                    <input type="email" id="demo-clientEmail-modal" required class="w-full p-2 border rounded-lg focus:ring-secondary-green focus:border-secondary-green input-focus">
+                </div>
+                <!-- ADDED Mobile Field for Consistency -->
+                <div>
+                    <label for="demo-clientMobile-modal" class="block text-sm font-medium text-gray-700">Mobile Number</label>
+                    <div class="flex">
+                        <span class="inline-flex items-center px-3 border border-r-0 border-gray-300 bg-gray-50 text-gray-500 rounded-l-lg">
+                            +91
+                        </span>
+                        <input type="tel" id="demo-clientMobile-modal" required 
+                            pattern="[0-9]{10}" title="10 digit Indian Mobile Number"
+                            placeholder="9876543210"
+                            class="w-full p-2 border rounded-r-lg focus:ring-secondary-green focus:border-secondary-green input-focus">
+                    </div>
+                </div>
+                <div>
+                    <label for="demo-messageText-modal" class="block text-sm font-medium text-gray-700">Message / Requirement</label>
+                    <textarea id="demo-messageText-modal" rows="3" required class="w-full p-2 border rounded-lg focus:ring-secondary-green focus:border-secondary-green resize-none input-focus">I am interested in a demo for bulk verification.</textarea>
+                </div>
+                <button type="submit" id="sendDemoButton-modal" class="w-full py-3 bg-secondary-green text-white font-bold rounded-lg hover:bg-green-700 transition">
+                    Submit Demo Request
+                </button>
+                <p id="demoMessageStatus-modal" class="text-center text-sm font-semibold"></p>
+            </form>
+        </div>
+    </div>
+
+    
     <script>
         // --- PLAN & PRICING DATA MODEL (Used for Pricing Table and Demo Select) ---
         const PLANS = [
@@ -321,7 +329,6 @@
             { months: 12, label: "1 Year", discount: 0.40, bestValue: false },
         ];
 
-        const API_VERIFY_ENDPOINT = "/api/verify-single-address"; 
         const API_SUPPORT_ENDPOINT = "/api/support/message";
 
         // Function to calculate the final price including GST
@@ -345,17 +352,15 @@
                  durationLabel: duration.label,
                  discountPercent,
                  isBestValue: duration.bestValue,
-                 // Value string format for Admin: PlanName_Price_DurationMonths_Month
-                 valueString: `${plan.name}_${price}_${duration.months}_Month`
+                 // Value string format for Admin: PlanName_Price_DurationMonths_Month (used for inquiry subject)
+                 valueString: `${plan.name} - ₹${price} (${duration.label} ${discountPercent > 0 ? `${discountPercent}% OFF` : 'No Discount'})`
              };
         }
 
         function renderPricingTable() {
             const container = document.getElementById('pricing-table');
-            const demoPlanSelect = document.getElementById('demo-plan-select');
             
             let html = '';
-            let selectOptions = `<option value="" disabled selected>Select Interested Plan...</option>`;
 
             PLANS.forEach((plan, index) => {
                 let cardHtml = '';
@@ -363,8 +368,6 @@
                 DURATIONS.forEach(duration => {
                     const details = getPlanDetails(plan, duration);
                     
-                    selectOptions += `<option value="${details.valueString}">${details.planName} - ₹${details.price} (${details.durationLabel}${details.discountPercent > 0 ? ` - ${details.discountPercent}% OFF` : ''})</option>`;
-
                     const pricePerMonth = Math.round(details.price / duration.months);
                     const discountBadge = details.discountPercent > 0 
                         ? `<span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full absolute top-[-10px] right-[-10px] shadow-lg">${details.discountPercent}% OFF</span>` 
@@ -408,7 +411,7 @@
                         
                         ${cardHtml}
 
-                        <a href="#demo-inquiry" class="mt-6 w-full py-3 bg-primary-blue text-white font-bold rounded-lg shadow-md hover:bg-blue-700 block text-center">
+                        <a href="#demoModal" onclick="setDemoPlan('${plan.name}')" class="mt-6 w-full py-3 bg-primary-blue text-white font-bold rounded-lg shadow-md hover:bg-blue-700 block text-center">
                             Inquire about ${plan.name}
                         </a>
                     </div>
@@ -416,102 +419,53 @@
             });
 
             container.innerHTML = html;
-            demoPlanSelect.innerHTML = selectOptions;
         }
 
-        // --- SINGLE CHECK LOGIC ---
-
-        function setSingleCheckStatus(message, isError = false) {
-             const statusEl = document.getElementById('checkStatus');
-             statusEl.textContent = message;
-             statusEl.className = `text-center text-sm font-semibold pt-2 ${isError ? 'text-alert-dark' : 'text-secondary-green'}`;
+        // --- NEW: Function to pre-fill modal (or just open it) based on plan tier ---
+        function setDemoPlan(planName) {
+            // This function is for future use if we want to pre-select a plan in the modal form.
+            // For now, it ensures the modal opens when clicking the Inquire button on the card.
+            const modal = document.getElementById('demoModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                // Optional: If you had a hidden input in the modal, you could set the preferred plan here.
+                // document.getElementById('preferred-plan-input').value = planName; 
+            }
         }
         
-        function updateSingleCheckResult(data) {
-            document.getElementById('checkResult').style.display = 'block';
-            document.getElementById('resultAddress').textContent = `${data.addressLine1}, ${data.landmark}, ${data.district}, ${data.state}`;
-            document.getElementById('resultPin').textContent = data.pin;
-            document.getElementById('resultState').textContent = `${data.state}, ${data.district}`;
-            document.getElementById('resultQuality').textContent = data.addressQuality;
-            document.getElementById('resultRemarks').textContent = data.remarks;
-        }
-
-        document.getElementById('singleCheckForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            const rawAddress = document.getElementById('rawAddress').value;
-            const customerName = document.getElementById('customerName').value;
-            const checkButton = document.getElementById('checkButton');
-
-            checkButton.disabled = true;
-            checkButton.textContent = 'Verifying...';
-            document.getElementById('checkResult').style.display = 'none';
-            setSingleCheckStatus("Sending request...");
-
-            try {
-                // NOTE: No token/Auth header is needed for this free, unauthenticated endpoint
-                const response = await fetch(API_VERIFY_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        address: rawAddress, 
-                        customerName: customerName || 'Guest' 
-                    })
-                });
-
-                const result = await response.json();
-                
-                if (response.ok && result.status === "Success") {
-                    setSingleCheckStatus("Verification successful!", false);
-                    updateSingleCheckResult(result);
-                } else {
-                    setSingleCheckStatus(`Verification Failed: ${result.remarks || result.message || 'Unknown error.'}`, true);
-                }
-            } catch (e) {
-                setSingleCheckStatus("Network error occurred. Could not reach server.", true);
-                console.error("Single Check Error:", e);
-            } finally {
-                checkButton.disabled = false;
-                checkButton.textContent = 'Verify Address Now';
-            }
-        });
-
         // --- DEMO FORM SUBMISSION LOGIC ---
         
-        // Function to handle the form submission
-        document.getElementById('demoForm').addEventListener('submit', async function(event) {
+        // Function to handle the form submission for the MODAL FORM
+        document.getElementById('demoFormModal').addEventListener('submit', async function(event) {
             event.preventDefault();
 
-            const button = document.getElementById('sendDemoButton');
-            const statusMessage = document.getElementById('demoMessageStatus');
+            const button = document.getElementById('sendDemoButton-modal');
+            const statusMessage = document.getElementById('demoMessageStatus-modal');
             
             button.disabled = true;
             button.textContent = 'Sending...';
             statusMessage.textContent = '';
 
-            const clientMobile = document.getElementById('demo-clientMobile').value.trim();
+            const clientMobile = document.getElementById('demo-clientMobile-modal').value.trim();
             
             // Basic client-side validation
             if (clientMobile.length !== 10 || !/^\d{10}$/.test(clientMobile)) {
                 statusMessage.className = 'text-alert-dark mt-3';
                 statusMessage.textContent = 'Please enter a valid 10-digit mobile number.';
                 button.disabled = false;
-                button.textContent = 'Submit Inquiry';
+                button.textContent = 'Submit Demo Request';
                 return;
             }
 
+            // Note: The form inside the modal doesn't capture specific duration, only tier, 
+            // so we send a general inquiry message.
             const messageData = {
-                clientName: document.getElementById('demo-clientName').value,
-                clientEmail: document.getElementById('demo-clientEmail').value,
+                clientName: document.getElementById('demo-clientName-modal').value,
+                clientEmail: document.getElementById('demo-clientEmail-modal').value,
                 clientMobile: clientMobile, 
-                // New logic: Grab both the text and the value string of the selected plan
-                planInterest: document.getElementById('demo-plan-select').options[document.getElementById('demo-plan-select').selectedIndex].text,
-                messageText: document.getElementById('demo-messageText').value,
+                messageText: document.getElementById('demo-messageText-modal').value,
             };
             
-            // Append the selected plan details to the message text so admin knows exactly what was selected
-            messageData.messageText = `[PLAN INTERESTED: ${messageData.planInterest}] - ${messageData.messageText}`;
-
-
             try {
                 const response = await fetch(API_SUPPORT_ENDPOINT, {
                     method: 'POST',
@@ -524,9 +478,9 @@
                 if (response.ok && result.status === "Success") {
                     statusMessage.className = 'text-secondary-green mt-3';
                     statusMessage.textContent = 'Inquiry submitted! We will contact you shortly.';
-                    document.getElementById('demoForm').reset();
-                    // Clear the custom mobile input field specifically
-                    document.getElementById('demo-clientMobile').value = '';
+                    document.getElementById('demoFormModal').reset();
+                    document.getElementById('demo-clientMobile-modal').value = '';
+                    setTimeout(() => document.getElementById('demoModal').classList.add('hidden'), 2000);
                 } else {
                     statusMessage.className = 'text-alert-dark mt-3';
                     statusMessage.textContent = `Error: ${result.message || 'Failed to send request.'}`;
@@ -538,7 +492,7 @@
             } finally {
                 setTimeout(() => { 
                     button.disabled = false;
-                    button.textContent = 'Submit Inquiry';
+                    button.textContent = 'Submit Demo Request';
                 }, 2000);
             }
         });
