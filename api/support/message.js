@@ -1,4 +1,5 @@
-// Address-verification-main/api/support/message.js
+// api/support/message.js
+// Handles unauthenticated public inquiries (from contact.html).
 
 const { connectToDatabase } = require('../db');
 
@@ -16,20 +17,27 @@ module.exports = async (req, res) => {
         return res.status(405).json({ status: "Error", error: 'Method Not Allowed' });
     }
 
+    // Ensure JSON body is parsed
+    let body = req.body;
+    if (typeof body === 'string') {
+        try { body = JSON.parse(body); } catch (e) { /* ignore */ }
+    }
+
     try {
-        const { clientName, clientEmail, messageText } = req.body;
+        const { clientName, clientEmail, clientMobile, messageText } = body;
         
         if (!clientName || !clientEmail || !messageText) {
-            return res.status(400).json({ status: "Error", message: "All fields are required." });
+            return res.status(400).json({ status: "Error", message: "Name, Email, and Requirement are required." });
         }
 
         const { db } = await connectToDatabase();
-        // Use a new collection for support messages
+        // Use a new collection for unauthenticated support messages
         const supportCollection = db.collection("supportMessages"); 
 
         const messageData = {
             clientName,
             clientEmail,
+            clientMobile: clientMobile || 'N/A',
             messageText,
             receivedAt: new Date(),
             isRead: false, // Helps admin track new messages

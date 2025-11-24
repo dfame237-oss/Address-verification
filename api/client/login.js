@@ -5,6 +5,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_default_secret_for_dev_only';
+// Helper function for unified failure message
+const sendFailure = (res) => {
+    return res.status(401).json({ status: "Error", message: "Invalid username or password." });
+}
+
 
 module.exports = async (req, res) => {
     // CORS Headers
@@ -26,17 +31,18 @@ module.exports = async (req, res) => {
         const clientsCollection = db.collection("clients");
 
         // 1. Find the client by username
+        // IMPORTANT: We include the fields needed for the profile section here (clientName, email, mobile)
         const client = await clientsCollection.findOne({ username });
 
         if (!client) {
-            return res.status(401).json({ status: "Error", message: "Invalid username or password." });
+            return sendFailure(res); // Invalid username
         }
 
         // 2. Check the password against the stored hash
         const isPasswordValid = await bcrypt.compare(password, client.passwordHash);
 
         if (!isPasswordValid) {
-            return res.status(401).json({ status: "Error", message: "Invalid username or password." });
+            return sendFailure(res); // Invalid password
         }
 
         // 3. Generate a JWT Token containing key plan info
@@ -44,6 +50,10 @@ module.exports = async (req, res) => {
             { 
                 id: client._id, 
                 username: client.username,
+                // Add fields to payload that the dashboard will rely on
+                clientName: client.clientName, 
+                email: client.email,
+                mobile: client.mobile,
                 bulkAccessCode: client.bulkAccessCode,
                 planName: client.planName,
                 validityEnd: client.validityEnd,
@@ -58,7 +68,12 @@ module.exports = async (req, res) => {
             status: "Success", 
             message: "Login successful.",
             token: token,
+            // Return ALL relevant profile/plan details for localStorage caching
             planDetails: {
+                clientName: client.clientName, 
+                username: client.username,
+                email: client.email,
+                mobile: client.mobile,
                 planName: client.planName,
                 validityEnd: client.validityEnd,
                 isActive: client.isActive,

@@ -12,7 +12,15 @@ function getUserId(req) {
     if (!token) return null;
     try {
         const payload = jwt.verify(token, process.env.JWT_SECRET);
-        return payload.id.toString(); // Return user ID as string
+        
+        // --- FIX: Check if the ID is the known admin string ---
+        if (payload.id === 'admin') {
+            return 'admin';
+        }
+        
+        // For clients, return the MongoDB ObjectId string
+        return payload.id.toString(); 
+
     } catch (err) {
         return null;
     }
@@ -32,7 +40,8 @@ module.exports = async (req, res) => {
     } catch (e) {
         return res.status(500).json({ status: "Error", message: "Database connection failed." });
     }
-    const messagesCollection = db.collection("messages");
+    // Consistent collection name for ALL authenticated messages
+    const messagesCollection = db.collection("messages"); 
     const userId = getUserId(req);
 
     // --- POST: Send Message (Client to Admin / Admin to Client) ---
@@ -49,8 +58,8 @@ module.exports = async (req, res) => {
         }
 
         const newMessage = {
-            senderId: userId, // ID of the person logged in
-            receiverId: recipientId || 'admin', // Default target is 'admin'
+            senderId: userId, 
+            receiverId: recipientId || 'admin', 
             subject: subject,
             body: messageBody,
             isRead: false,
@@ -77,10 +86,10 @@ module.exports = async (req, res) => {
                     { receiverId: userId }
                 ]
             })
-            .sort({ timestamp: -1 }) // Sort newest first
+            .sort({ timestamp: -1 }) 
             .toArray();
 
-            // Calculate unread count for notification badge
+            // Calculate unread count for notification badge (Only counts messages RECEIVED by the current user)
             const unreadCount = messages.filter(m => m.receiverId === userId && m.isRead === false).length;
 
             return res.status(200).json({ 
@@ -93,18 +102,31 @@ module.exports = async (req, res) => {
         }
     }
 
-    // --- PUT: Mark as Read ---
+    // --- PUT: Mark as Read (FIXED LOGIC) ---
     if (req.method === 'PUT') {
         const messageId = req.query.messageId; 
         if (!messageId) return res.status(400).json({ status: "Error", message: "Message ID is required." });
         
         try {
+            // Attempt to parse messageId as ObjectId; if it fails, the find query won't match, which is safer
+            let objectId;
+            try {
+                objectId = new ObjectId(messageId);
+            } catch (err) {
+                 return res.status(400).json({ status: "Error", message: "Invalid message ID format." });
+            }
+
+            // Ensure the requesting userId is the intended RECEIVER of the message before marking it read
             const result = await messagesCollection.updateOne(
-                { _id: new ObjectId(messageId), receiverId: userId },
+                { 
+                    _id: objectId, 
+                    receiverId: userId 
+                },
                 { $set: { isRead: true } }
             );
             if (result.matchedCount === 0) {
-                 return res.status(404).json({ status: "Error", message: "Message not found or unauthorized." });
+                 // 403 is more appropriate if the user is authenticated but not authorized for this specific resource
+                 return res.status(403).json({ status: "Error", message: "Message not found or unauthorized to mark as read." });
             }
             return res.status(200).json({ status: "Success", message: "Message marked as read." });
         } catch (e) {

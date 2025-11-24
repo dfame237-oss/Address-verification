@@ -97,7 +97,8 @@
     </div>
     
     <script>
-        const API_SUPPORT_ENDPOINT = "https://address-verification-one.vercel.app/api/support/message";
+        // Use a relative path for the support API
+        const API_SUPPORT_ENDPOINT = "/api/support/message";
 
         document.getElementById('contactForm').addEventListener('submit', async function(event) {
             event.preventDefault();
@@ -109,18 +110,17 @@
             button.textContent = 'Sending...';
             statusMessage.textContent = '';
 
-            // 1. Capture the new mobile field
             const clientMobile = document.getElementById('clientMobile').value.trim();
 
             const messageData = {
                 clientName: document.getElementById('clientName').value,
                 clientEmail: document.getElementById('clientEmail').value,
-                // 2. Include mobile number in the message payload
                 clientMobile: clientMobile, 
-                messageText: `MOBILE: +91 ${clientMobile}\n\n${document.getElementById('messageText').value}`,
+                // Message text is the main body
+                messageText: document.getElementById('messageText').value,
             };
 
-            // Basic client-side validation (already handled by 'pattern' in HTML, but good to double-check)
+            // Basic client-side validation
             if (clientMobile.length !== 10 || !/^\d{10}$/.test(clientMobile)) {
                  statusMessage.className = 'text-alert-dark mt-3';
                  statusMessage.textContent = 'Please enter a valid 10-digit mobile number.';
@@ -142,7 +142,7 @@
                 if (response.ok && result.status === "Success") {
                     statusMessage.className = 'text-secondary-green mt-3';
                     statusMessage.textContent = 'Inquiry submitted! We will contact you via email or phone shortly.';
-                    document.getElementById('contactForm').reset(); // Clear the form
+                    document.getElementById('contactForm').reset(); 
                 } else {
                     statusMessage.className = 'text-alert-dark mt-3';
                     statusMessage.textContent = `Error: ${result.message || 'Failed to submit inquiry.'}`;
@@ -152,7 +152,7 @@
                 statusMessage.textContent = 'Network error occurred. Please try WhatsApp instead.';
                 console.error("Contact Form Submission Error:", e);
             } finally {
-                setTimeout(() => { // Keep the success message visible briefly
+                setTimeout(() => { 
                     button.disabled = false;
                     button.textContent = 'Submit Inquiry';
                 }, 2000);
