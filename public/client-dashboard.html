@@ -224,6 +224,8 @@
         const AUTH_TOKEN = localStorage.getItem('clientToken');
         
         let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
+        // Retrieve client ID from planDetails, which comes from the JWT payload
+        const CLIENT_ID = planDetails.id || null; 
         const CLIENT_NAME = localStorage.getItem('clientName') || planDetails.username;
         let isPlanValid = true; 
         
@@ -232,10 +234,26 @@
             window.location.href = LOGIN_PAGE;
         }
         
-        function logout() {
+        // --- FIX: Updated Logout Function to Call Server ---
+        async function logout() {
+            // 1. Attempt to notify the server of logout status
+            try {
+                // Send a request to the new endpoint.
+                // authFetch will automatically include the JWT token.
+                await authFetch(`${API_BASE}/client/logout`, {
+                    method: 'POST',
+                });
+                console.log("Server logout status recorded successfully.");
+            } catch (error) {
+                // Log the error but proceed with local logout anyway.
+                console.warn("Could not notify server of logout status, proceeding with local logout:", error);
+            }
+
+            // 2. Clear local storage and redirect
             localStorage.clear();
             window.location.href = LOGIN_PAGE;
         }
+        // --- END FIX ---
 
         // --- AUTHENTICATED FETCH HELPER ---
         async function authFetch(url, options = {}) {
@@ -256,18 +274,31 @@
             return response;
         }
         
-        // --- MOCK PROFILE DATA FETCH (since server endpoints for full profile aren't implemented) ---
-        // In a real app, this would be a GET /api/client/profile endpoint
+        // --- MOCK PROFILE DATA FETCH (assuming this may eventually update the local cache) ---
         async function fetchProfileData() {
-            // Mock fetching the full client object from the server
-            // In a real app, you would fetch it by ID stored in the JWT
-            // For now, we simulate pulling the data stored at login
+             // We can optionally check for updates to plan details or activity here.
+             // For now, we rely on the data stored at login (planDetails).
             return {
                 username: planDetails.username || CLIENT_NAME,
                 email: planDetails.email || 'client@example.com', // Placeholder
                 mobile: planDetails.mobile || '+91-9988776655', // Placeholder
                 clientName: planDetails.clientName || CLIENT_NAME,
             };
+        }
+        
+        // --- HEARTBEAT FUNCTION ---
+        async function sendHeartbeat() {
+            if (!AUTH_TOKEN) return;
+            try {
+                // Call the new activity endpoint periodically
+                await authFetch(`${API_BASE}/client/activity`, {
+                    method: 'POST',
+                });
+                // Success updates the timestamp on the server, which admin sees
+            } catch (e) {
+                console.warn("Heartbeat failed (Session likely expired or network error).", e);
+                // Auth fetch handles 401/403 errors by calling logout()
+            }
         }
 
 
@@ -284,7 +315,7 @@
             }
         }
 
-        // --- PROFILE & PLAN LOGIC (UPDATED) ---
+        // --- PROFILE & PLAN LOGIC ---
         async function loadProfileAndPlan() {
             const profileData = await fetchProfileData();
             
@@ -311,15 +342,14 @@
             checkPlanValidity();
         }
 
-        // --- PLAN VALIDATION LOGIC (Bulk Access Check) ---
+        // --- PLAN VALIDATION LOGIC ---
         function checkPlanValidity() {
-            // ... (Logic remains mostly the same, ensures bulk features are hidden if invalid)
+            // ... (unchanged validation logic)
             const token = localStorage.getItem('clientToken');
             const planDetailsString = localStorage.getItem('planDetails');
             const bulkContent = document.getElementById('bulkContent');
             const progressContainer = document.querySelector('#bulk-verification .progress-container');
 
-            // Hide old error block if it exists
             const existingErrorBlock = document.querySelector('#bulk-verification .space-y-6.mt-6');
             if (existingErrorBlock) existingErrorBlock.remove();
 
@@ -346,7 +376,6 @@
                     return false;
                 }
                 
-                // Plan is valid
                 if (bulkContent) bulkContent.classList.remove('hidden');
                 if (progressContainer) progressContainer.classList.remove('hidden');
                 isPlanValid = true;
@@ -389,15 +418,249 @@
             bulkVerificationDiv.appendChild(errorBlock);
         }
         
-        // --- BULK VERIFICATION LOGIC (REMOVED HTML specific functions, simplified to keep context) ---
-        function updateStatusMessage(message, isError = false) { /* ... */ }
-        function handleTemplateDownload() { /* ... */ }
-        function parseCSV(text) { /* ... */ }
-        async function fetchVerification(rawAddress, customerName) { /* ... */ }
-        function createAndDownloadCSV(rows, filename) { /* ... */ }
-        async function handleBulkVerification() { /* ... */ }
-        function initBulkListeners() { /* ... */ }
-        // (Keeping bulk logic functions in the final output script below to ensure completeness)
+        // --- BULK VERIFICATION LOGIC (functions were copied from conversation history, included for completeness) ---
+        function updateStatusMessage(message, isError = false) { 
+            const statusMessage = document.getElementById('status-message');
+            if (!statusMessage) return; 
+
+            statusMessage.textContent = message;
+            
+            statusMessage.classList.remove('text-red-700', 'bg-red-100', 'text-gray-600');
+            statusMessage.classList.add('p-2', 'rounded');
+
+            if (isError) {
+                statusMessage.classList.add('text-red-700', 'bg-red-100', 'font-bold');
+                statusMessage.classList.remove('text-gray-600');
+            } else {
+                statusMessage.classList.add('text-gray-600');
+                statusMessage.classList.remove('bg-red-100', 'font-bold');
+            }
+        }
+        function handleTemplateDownload() {
+            const templateHeaders = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS\n";
+            const templateData = 
+                "1,\"John Doe\",\"H.No. 123, Sector 40B, near bus stand, Chandigarh\"\n" +
+                "2,\"Jane Smith\",\"5th Floor, Alpha Tower, Mumbai 400001\"\n";
+                
+            const csvContent = templateHeaders + templateData;
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', 'address_verification_template.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        function parseCSV(text) {
+            const lines = text.split('\n'); 
+            if (lines.length < 2) return [];
+
+            const header = lines[0].split(',').map(h => h.trim().replace(/^\"|\"$/g, ''));
+            const data = [];
+            
+            const idIndex = header.indexOf('ORDER ID');
+            const nameIndex = header.indexOf('CUSTOMER NAME');
+            const addressIndex = header.indexOf('CUSTOMER RAW ADDRESS');
+
+            if (idIndex === -1 || nameIndex === -1 || addressIndex === -1) {
+                console.error("CSV header is missing one of the required columns.");
+                return [];
+            }
+
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim() === '') continue;
+                
+                const row = lines[i].match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g) || [];
+                
+                const cleanedRow = row.map(cell => cell.trim().replace(/^\"|\"$/g, '').replace(/\"\"/g, '\"'));
+
+                if (cleanedRow.length > Math.max(idIndex, nameIndex, addressIndex)) {
+                    data.push({
+                        'ORDER ID': cleanedRow[idIndex],
+                        'CUSTOMER NAME': cleanedRow[nameIndex],
+                        'CUSTOMER RAW ADDRESS': cleanedRow[addressIndex],
+                    });
+                }
+            }
+            return data;
+        }
+        async function fetchVerification(rawAddress, customerName) {
+            const payload = { address: rawAddress, customerName }; 
+            
+            const maxRetries = 3;
+            let lastError = null;
+            const clientToken = localStorage.getItem('clientToken'); 
+
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+                try {
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (clientToken) {
+                        headers['Authorization'] = `Bearer ${clientToken}`; 
+                    }
+
+                    const response = await fetch(API_ENDPOINT, {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorBody = await response.json();
+                        throw new Error(errorBody.error || `Server responded with status ${response.status}`);
+                    }
+                    
+                    return await response.json();
+
+                } catch (error) {
+                    lastError = error;
+                    console.error(`Verification API Attempt ${attempt + 1} failed:`, error);
+                    if (attempt < maxRetries - 1) {
+                        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+                    }
+                }
+            }
+            return { 
+                status: "Error", 
+                error: `Verification failed after ${maxRetries} attempts.`,
+                remarks: `Error: ${lastError ? lastError.message : 'Unknown Network Error'}`,
+                customerCleanName: customerName,
+                addressLine1: "API Error: See Remarks",
+                landmark: "",
+                state: "",
+                district: "",
+                pin: "",
+                addressQuality: "VERY BAD"
+            };
+        }
+        function createAndDownloadCSV(rows, filename) {
+            const header = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS,CLEAN NAME,CLEAN ADDRESS LINE 1,LANDMARK,STATE,DISTRICT,PIN,REMARKS,QUALITY\n";
+            const csvContent = header + rows.join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const downloadLink = document.getElementById('downloadLink');
+            downloadLink.href = URL.createObjectURL(blob);
+            downloadLink.classList.remove('hidden');
+        }
+        async function handleBulkVerification() {
+            if (!checkPlanValidity() || !isPlanValid) {
+                updateStatusMessage("Access denied. Plan is expired or disabled.", true);
+                return;
+            }
+
+            const fileInput = document.getElementById('csvFileInput');
+            const processButton = document.getElementById('processButton');
+            const progressBarFill = document.getElementById('progressBarFill');
+            const downloadLink = document.getElementById('downloadLink');
+
+            if (!fileInput.files.length) {
+                updateStatusMessage("Please select a CSV file first.", true);
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            processButton.disabled = true;
+            fileInput.disabled = true;
+            downloadLink.classList.add('hidden');
+            progressBarFill.style.width = '0%';
+            updateStatusMessage('Reading file...');
+            
+            reader.onload = async function(e) {
+                const text = e.target.result;
+                const addresses = parseCSV(text);
+                
+                if (addresses.length === 0) {
+                    updateStatusMessage("Error: No valid addresses found in CSV. Check format and required columns.", true);
+                    processButton.disabled = false;
+                    fileInput.disabled = false;
+                    return;
+                }
+
+                const totalAddresses = addresses.length;
+                let processedCount = 0;
+                const outputRows = [];
+
+                updateStatusMessage(`Starting verification of ${totalAddresses} addresses...`);
+
+                for (const row of addresses) {
+                    const orderId = row['ORDER ID'] || '';
+                    const customerName = row['CUSTOMER NAME'] || '';
+                    const rawAddress = row['CUSTOMER RAW ADDRESS'] || '';
+
+                    let verificationResult;
+
+                    if (!rawAddress || rawAddress.trim() === "") { 
+                        verificationResult = { status: "Skipped", remarks: "Missing raw address in CSV row.", addressQuality: "Poor", customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "" };
+                    } else {
+                        verificationResult = await fetchVerification(rawAddress, customerName);
+                    }
+
+                    const escapeAndQuote = (cell) => `\"${String(cell || '').replace(/\"/g, '\"\"')}\"`;
+
+                    const outputRow = [
+                        orderId,
+                        customerName,
+                        rawAddress,
+                        verificationResult.customerCleanName,
+                        verificationResult.addressLine1,
+                        verificationResult.landmark,
+                        verificationResult.state,
+                        verificationResult.district,
+                        verificationResult.pin,
+                        verificationResult.remarks,
+                        verificationResult.addressQuality
+                    ].map(escapeAndQuote).join(',');
+
+                    outputRows.push(outputRow);
+                    
+                    processedCount++;
+                    const progress = (processedCount / totalAddresses) * 100;
+                    progressBarFill.style.width = `${progress}%`;
+                    
+                    updateStatusMessage(`Processing... ${processedCount} of ${totalAddresses} addresses completed.`);
+                }
+
+                updateStatusMessage(`Processing complete! ${totalAddresses} addresses verified. Click 'Download Verified CSV'.`, false);
+                createAndDownloadCSV(outputRows, "verified_addresses.csv");
+                processButton.disabled = false;
+                fileInput.disabled = false;
+            };
+
+            reader.onerror = function() {
+                updateStatusMessage("Error reading file.", true);
+                processButton.disabled = false;
+                fileInput.disabled = false;
+            };
+
+            reader.readAsText(file);
+        }
+        function initBulkListeners() {
+             if (isPlanValid) {
+                const downloadTemplateButton = document.getElementById('downloadTemplateButton');
+                const csvFileInput = document.getElementById('csvFileInput');
+                const processButton = document.getElementById('processButton');
+
+                if (downloadTemplateButton) {
+                    downloadTemplateButton.addEventListener('click', handleTemplateDownload);
+                }
+
+                if (csvFileInput) {
+                    csvFileInput.addEventListener('change', () => {
+                        if (processButton) {
+                            processButton.disabled = !csvFileInput.files.length;
+                        }
+                    });
+                }
+
+                if (processButton) {
+                    processButton.addEventListener('click', handleBulkVerification);
+                }
+            }
+        }
+        // --- END BULK LOGIC ---
+
 
         // --- MESSAGING / SUPPORT LOGIC ---
         document.getElementById('support-form').addEventListener('submit', async (e) => {
@@ -405,6 +668,16 @@
             const subject = document.getElementById('support-subject').value;
             const body = document.getElementById('support-body').value;
             const statusMsg = document.getElementById('support-status');
+
+            // --- START: FIX FOR MISSING SENDER ID ---
+            const clientId = planDetails.id || null;
+            if (!clientId) {
+                statusMsg.textContent = 'Error: Authentication context missing. Please log in again.';
+                statusMsg.style.color = '#dc2626';
+                return;
+            }
+            // --- END: FIX FOR MISSING SENDER ID ---
+
 
             if (!body) {
                 statusMsg.textContent = 'Message body cannot be empty.';
@@ -421,6 +694,8 @@
                     body: JSON.stringify({
                         subject,
                         body,
+                        recipientId: 'admin', // Explicitly target the admin ID
+                        senderId: clientId, // Use the client's actual ID here
                     }),
                 });
                 const result = await response.json();
@@ -519,262 +794,14 @@
         }
 
 
-        // --- BULK LOGIC FUNCTIONS (Re-included for completeness) ---
-        function updateStatusMessage(message, isError = false) {
-            const statusMessage = document.getElementById('status-message');
-            if (!statusMessage) return; 
-
-            statusMessage.textContent = message;
-            
-            statusMessage.classList.remove('text-red-700', 'bg-red-100', 'text-gray-600');
-            statusMessage.classList.add('p-2', 'rounded');
-
-            if (isError) {
-                statusMessage.classList.add('text-red-700', 'bg-red-100', 'font-bold');
-                statusMessage.classList.remove('text-gray-600');
-            } else {
-                statusMessage.classList.add('text-gray-600');
-                statusMessage.classList.remove('bg-red-100', 'font-bold');
-            }
-        }
-
-        function handleTemplateDownload() {
-            const templateHeaders = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS\n";
-            const templateData = 
-                "1,\"John Doe\",\"H.No. 123, Sector 40B, near bus stand, Chandigarh\"\n" +
-                "2,\"Jane Smith\",\"5th Floor, Alpha Tower, Mumbai 400001\"\n";
-                
-            const csvContent = templateHeaders + templateData;
-            
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.setAttribute('download', 'address_verification_template.csv');
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        function parseCSV(text) {
-            const lines = text.split('\n'); 
-            if (lines.length < 2) return [];
-
-            const header = lines[0].split(',').map(h => h.trim().replace(/^\"|\"$/g, ''));
-            const data = [];
-            
-            const idIndex = header.indexOf('ORDER ID');
-            const nameIndex = header.indexOf('CUSTOMER NAME');
-            const addressIndex = header.indexOf('CUSTOMER RAW ADDRESS');
-
-            if (idIndex === -1 || nameIndex === -1 || addressIndex === -1) {
-                console.error("CSV header is missing one of the required columns.");
-                return [];
-            }
-
-            for (let i = 1; i < lines.length; i++) {
-                if (lines[i].trim() === '') continue;
-                
-                const row = lines[i].match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g) || [];
-                
-                const cleanedRow = row.map(cell => cell.trim().replace(/^\"|\"$/g, '').replace(/\"\"/g, '\"'));
-
-                if (cleanedRow.length > Math.max(idIndex, nameIndex, addressIndex)) {
-                    data.push({
-                        'ORDER ID': cleanedRow[idIndex],
-                        'CUSTOMER NAME': cleanedRow[nameIndex],
-                        'CUSTOMER RAW ADDRESS': cleanedRow[addressIndex],
-                    });
-                }
-            }
-            return data;
-        }
-
-
-        async function fetchVerification(rawAddress, customerName) {
-            const payload = { address: rawAddress, customerName }; 
-            
-            const maxRetries = 3;
-            let lastError = null;
-            const clientToken = localStorage.getItem('clientToken'); 
-
-            for (let attempt = 0; attempt < maxRetries; attempt++) {
-                try {
-                    const headers = { 'Content-Type': 'application/json' };
-                    if (clientToken) {
-                        headers['Authorization'] = `Bearer ${clientToken}`; 
-                    }
-
-                    const response = await fetch(API_ENDPOINT, {
-                        method: 'POST',
-                        headers: headers,
-                        body: JSON.stringify(payload)
-                    });
-                    
-                    if (!response.ok) {
-                        const errorBody = await response.json();
-                        throw new Error(errorBody.error || `Server responded with status ${response.status}`);
-                    }
-                    
-                    return await response.json();
-
-                } catch (error) {
-                    lastError = error;
-                    console.error(`Verification API Attempt ${attempt + 1} failed:`, error);
-                    if (attempt < maxRetries - 1) {
-                        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
-                    }
-                }
-            }
-            return { 
-                status: "Error", 
-                error: `Verification failed after ${maxRetries} attempts.`,
-                remarks: `Error: ${lastError ? lastError.message : 'Unknown Network Error'}`,
-                customerCleanName: customerName,
-                addressLine1: "API Error: See Remarks",
-                landmark: "",
-                state: "",
-                district: "",
-                pin: "",
-                addressQuality: "VERY BAD"
-            };
-        }
-
-        function createAndDownloadCSV(rows, filename) {
-            const header = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS,CLEAN NAME,CLEAN ADDRESS LINE 1,LANDMARK,STATE,DISTRICT,PIN,REMARKS,QUALITY\n";
-            const csvContent = header + rows.join('\n');
-            
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const downloadLink = document.getElementById('downloadLink');
-            downloadLink.href = URL.createObjectURL(blob);
-            downloadLink.classList.remove('hidden');
-        }
-
-        async function handleBulkVerification() {
-            if (!checkPlanValidity() || !isPlanValid) {
-                updateStatusMessage("Access denied. Plan is expired or disabled.", true);
-                return;
-            }
-
-            const fileInput = document.getElementById('csvFileInput');
-            const processButton = document.getElementById('processButton');
-            const progressBarFill = document.getElementById('progressBarFill');
-            const downloadLink = document.getElementById('downloadLink');
-
-            if (!fileInput.files.length) {
-                updateStatusMessage("Please select a CSV file first.", true);
-                return;
-            }
-
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-
-            processButton.disabled = true;
-            fileInput.disabled = true;
-            downloadLink.classList.add('hidden');
-            progressBarFill.style.width = '0%';
-            updateStatusMessage('Reading file...');
-            
-            reader.onload = async function(e) {
-                const text = e.target.result;
-                const addresses = parseCSV(text);
-                
-                if (addresses.length === 0) {
-                    updateStatusMessage("Error: No valid addresses found in CSV. Check format and required columns.", true);
-                    processButton.disabled = false;
-                    fileInput.disabled = false;
-                    return;
-                }
-
-                const totalAddresses = addresses.length;
-                let processedCount = 0;
-                const outputRows = [];
-
-                updateStatusMessage(`Starting verification of ${totalAddresses} addresses...`);
-
-                for (const row of addresses) {
-                    const orderId = row['ORDER ID'] || '';
-                    const customerName = row['CUSTOMER NAME'] || '';
-                    const rawAddress = row['CUSTOMER RAW ADDRESS'] || '';
-
-                    let verificationResult;
-
-                    if (!rawAddress || rawAddress.trim() === "") { 
-                        verificationResult = { status: "Skipped", remarks: "Missing raw address in CSV row.", addressQuality: "Poor", customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "" };
-                    } else {
-                        verificationResult = await fetchVerification(rawAddress, customerName);
-                    }
-
-                    const escapeAndQuote = (cell) => `\"${String(cell || '').replace(/\"/g, '\"\"')}\"`;
-
-                    const outputRow = [
-                        orderId,
-                        customerName,
-                        rawAddress,
-                        verificationResult.customerCleanName,
-                        verificationResult.addressLine1,
-                        verificationResult.landmark,
-                        verificationResult.state,
-                        verificationResult.district,
-                        verificationResult.pin,
-                        verificationResult.remarks,
-                        verificationResult.addressQuality
-                    ].map(escapeAndQuote).join(',');
-
-                    outputRows.push(outputRow);
-                    
-                    processedCount++;
-                    const progress = (processedCount / totalAddresses) * 100;
-                    progressBarFill.style.width = `${progress}%`;
-                    
-                    updateStatusMessage(`Processing... ${processedCount} of ${totalAddresses} addresses completed.`);
-                }
-
-                updateStatusMessage(`Processing complete! ${totalAddresses} addresses verified. Click 'Download Verified CSV'.`, false);
-                createAndDownloadCSV(outputRows, "verified_addresses.csv");
-                processButton.disabled = false;
-                fileInput.disabled = false;
-            };
-
-            reader.onerror = function() {
-                updateStatusMessage("Error reading file.", true);
-                processButton.disabled = false;
-                fileInput.disabled = false;
-            };
-
-            reader.readAsText(file);
-        }
-
-        function initBulkListeners() {
-             if (isPlanValid) {
-                const downloadTemplateButton = document.getElementById('downloadTemplateButton');
-                const csvFileInput = document.getElementById('csvFileInput');
-                const processButton = document.getElementById('processButton');
-
-                if (downloadTemplateButton) {
-                    downloadTemplateButton.addEventListener('click', handleTemplateDownload);
-                }
-
-                if (csvFileInput) {
-                    csvFileInput.addEventListener('change', () => {
-                        if (processButton) {
-                            processButton.disabled = !csvFileInput.files.length;
-                        }
-                    });
-                }
-
-                if (processButton) {
-                    processButton.addEventListener('click', handleBulkVerification);
-                }
-            }
-        }
-
-
         // --- INITIALIZATION ---
         window.onload = () => {
             loadProfileAndPlan();
             loadInboxCounts();
             initBulkListeners();
             
+            // Heartbeat call every 60 seconds (60000ms) to update server timestamp
+            setInterval(sendHeartbeat, 60000); 
             setInterval(loadInboxCounts, 60000); 
             showTab('bulk-verification', document.getElementById('bulk-tab-btn'));
         };

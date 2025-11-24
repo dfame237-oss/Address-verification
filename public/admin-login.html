@@ -66,8 +66,9 @@
 
             loginButton.disabled = true;
             loginButton.textContent = 'Authenticating...';
+            // Reset message visibility
             message.textContent = '';
-            message.classList.add('hidden');
+            message.classList.add('hidden'); // Ensure hidden initially
 
             try {
                 const response = await fetch(LOGIN_API_ENDPOINT, {
@@ -76,14 +77,15 @@
                     body: JSON.stringify({ username, password })
                 });
 
+                // Since the API returns JSON even on error (status 401/400/500), we read the body first.
                 const result = await response.json();
                 console.log("admin login response:", response.status, result);
 
                 if (response.ok && result.status === "Success") {
-                    // Store token and redirect
+                    // --- SUCCESS PATH ---
                     localStorage.setItem('adminToken', result.token); 
-                    message.classList.remove('text-alert-dark');
-                    message.classList.add('text-secondary-green', 'block');
+                    message.classList.remove('text-alert-dark', 'hidden');
+                    message.classList.add('text-secondary-green', 'block'); // Ensure 'block' makes it visible
                     message.textContent = "Login successful! Redirecting...";
                     
                     setTimeout(() => {
@@ -91,16 +93,18 @@
                     }, 600);
 
                 } else {
-                    // Display specific error message from the API
-                    message.classList.remove('text-secondary-green');
-                    message.classList.add('text-alert-dark', 'block');
-                    message.textContent = result.message || "Login failed. Check username and password.";
+                    // --- API FAILURE PATH (e.g., status 401) ---
+                    message.classList.remove('text-secondary-green', 'hidden');
+                    message.classList.add('text-alert-dark', 'block'); // Make visible and show error style
+                    
+                    // The API's sendFailure() returns { message: "Invalid credentials." }
+                    message.textContent = result.message || "Login failed. Please check username and password.";
                 }
             } catch (e) {
-                // Handle network failure
-                message.classList.remove('text-secondary-green');
-                message.classList.add('text-alert-dark', 'block');
-                message.textContent = "Network error. Please try again.";
+                // --- NETWORK FAILURE PATH (e.g., Vercel 404 or connection failure) ---
+                message.classList.remove('text-secondary-green', 'hidden');
+                message.classList.add('text-alert-dark', 'block'); // Make visible and show error style
+                message.textContent = "Network error. Could not connect to the authentication server.";
                 console.error("Fetch Error:", e);
             } finally {
                 // Re-enable button
