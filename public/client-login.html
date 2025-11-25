@@ -4,22 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Client Login</title>
-    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Custom Tailwind config for the professional look
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'tf-dark': '#0F172A', // Deep Blue-Gray Background
+                        'tf-primary': '#6366F1', // Indigo/Violet Primary Accent
+                        'tf-secondary': '#06B6D4', // Cyan Secondary Accent
+                        'tf-text': '#E2E8F0', // Light Text
+                        'tf-card': '#1E293B', // Darker Card Background
+                        'alert-dark': '#DC2626',
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                }
+            }
+        }
+    </style>
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f0f4f8; }
-        .login-container { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); width: 100%; max-width: 400px; }
-        h1 { text-align: center; color: #1f2937; margin-bottom: 25px; }
+        body { font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #F1F5F9; }
+        
+        .login-container { 
+            background: white; 
+            padding: 45px; 
+            border-radius: 16px; 
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1); 
+            width: 100%; 
+            max-width: 420px; 
+            border-top: 5px solid #6366F1; /* Accent border */
+        }
+        
         .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #374151; }
-        .form-group input { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; }
-        .btn-login { width: 100%; padding: 12px; background-color: #3b82f6; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s; }
-        .btn-login:hover { background-color: #2563eb; }
-        #error-message { color: #ef4444; text-align: center; margin-top: 15px; font-weight: 500; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #1E293B; }
+        .form-group input { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #CBD5E1; 
+            border-radius: 8px; 
+            box-sizing: border-box; 
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-group input:focus {
+            border-color: #6366F1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+        
+        .btn-login { 
+            width: 100%; 
+            padding: 12px; 
+            background-color: #06B6D4; /* Secondary accent color */
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 1.1rem; 
+            font-weight: 700;
+            cursor: pointer; 
+            transition: background-color 0.3s, transform 0.1s; 
+            box-shadow: 0 4px 10px rgba(6, 182, 212, 0.3);
+        }
+        .btn-login:hover { 
+            background-color: #0891B2; /* Slightly darker cyan */
+            transform: translateY(-1px);
+        }
+        
+        #error-message { color: #DC2626; text-align: center; margin-top: 15px; font-weight: 500; }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <h1>Client Login</h1>
+        <h1 class="text-3xl font-extrabold text-center text-gray-900 mb-8">
+            <span class="text-tf-primary">Client</span> Portal
+        </h1>
         <form id="client-login-form">
             <div class="form-group">
                 <label for="username">Username</label>
@@ -29,24 +86,29 @@
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" required>
             </div>
-            <button type="submit" class="btn-login">Login</button>
+            <button type="submit" class="btn-login">Secure Login</button>
             <p id="error-message"></p>
         </form>
+        <p class="text-center text-sm text-gray-500 mt-6">
+            <a href="index.html" class="text-tf-primary hover:underline">← Back to Main Site</a>
+        </p>
     </div>
 
     <script>
         const API_LOGIN_URL = '/api/client/login';
         const form = document.getElementById('client-login-form');
         const errorMessage = document.getElementById('error-message');
+        const DASHBOARD_URL = 'client-dashboard.html';
 
         // Check if already logged in (optional, but good practice)
         if (localStorage.getItem('clientToken')) {
-            window.location.href = 'client-dashboard.html';
+            window.location.href = DASHBOARD_URL;
         }
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            errorMessage.textContent = 'Logging in...';
+            errorMessage.textContent = 'Authenticating...';
+            errorMessage.style.color = '#6366F1';
 
             const username = form.elements['username'].value;
             const password = form.elements['password'].value;
@@ -68,18 +130,27 @@
                     localStorage.setItem('clientName', result.planDetails.clientName || username);
                     localStorage.setItem('planDetails', JSON.stringify(result.planDetails));
                     
-                    window.location.href = 'client-dashboard.html'; // Redirect to new dashboard
+                    errorMessage.textContent = 'Login successful! Redirecting...';
+                    errorMessage.style.color = '#06B6D4';
+                    
+                    setTimeout(() => {
+                        window.location.href = DASHBOARD_URL; // Redirect to new dashboard
+                    }, 500);
+
                 } else if (response.status === 401) {
                     // AUTH FAILURE (Crucial Fix): Display the server's "Invalid username or password" message
                     errorMessage.textContent = result.message || 'Authentication failed. Please check credentials.';
+                    errorMessage.style.color = '#DC2626';
                 } else {
                     // Other server errors (400, 500)
                     errorMessage.textContent = result.message || 'An unexpected error occurred.';
+                    errorMessage.style.color = '#DC2626';
                 }
 
             } catch (error) {
                 console.error('Network error during login:', error);
                 errorMessage.textContent = 'Could not connect to the server.';
+                errorMessage.style.color = '#DC2626';
             }
         });
     </script>

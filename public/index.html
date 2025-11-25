@@ -10,12 +10,13 @@
             theme: {
                 extend: {
                     colors: {
-                        'primary-blue': '#1D4ED8', // Dark Blue
-                        'secondary-green': '#059669', // Dark Green
-                        'neutral-gray': '#F9FAFB', // Lightest gray for background
-                        'accent-yellow': '#FCD34D', 
+                        'tf-dark': '#0F172A', // Deep Blue-Gray Background
+                        'tf-primary': '#6366F1', // Indigo/Violet Primary Accent
+                        'tf-secondary': '#06B6D4', // Cyan Secondary Accent
+                        'tf-text': '#E2E8F0', // Light Text
+                        'tf-card': '#1E293B', // Darker Card Background
                         'whatsapp-green': '#25D366',
-                        'alert-dark': '#991B1B',
+                        'alert-dark': '#EF4444',
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
@@ -25,87 +26,92 @@
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
-        .feature-icon { color: #1D4ED8; }
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; background-color: #0F172A; }
         .input-focus:focus {
-            --tw-ring-color: #059669; /* secondary-green */
-            border-color: #059669;
+            --tw-ring-color: #6366F1; /* tf-primary */
+            border-color: #6366F1;
+        }
+        .text-gradient {
+            background-image: linear-gradient(to right, #6366F1, #06B6D4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
     </style>
 </head>
-<body class="bg-neutral-gray">
+<body class="bg-tf-dark text-tf-text">
 
-    <nav class="bg-white shadow-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
-            <div class="text-2xl font-bold text-gray-900">
-                <span class="text-primary-blue">AI</span> VERIFY
+    <nav class="bg-tf-dark shadow-xl sticky top-0 z-50 border-b border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div class="text-3xl font-extrabold text-tf-text">
+                <span class="text-tf-primary">AI</span> VERIFY
             </div>
             
-            <div class="space-x-4 flex items-center">
-                <a href="admin-login.html" class="text-[10px] text-gray-300 hover:text-gray-500 transition-colors duration-300" title="Admin Login">Admin</a>
+            <div class="space-x-6 flex items-center">
+                <a href="admin-login.html" class="text-xs text-gray-500 hover:text-gray-400 transition-colors duration-300" title="Admin Login">Admin Access</a>
 
-                <a href="#demoModal" class="bg-primary-blue text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition duration-300">Request Demo</a>
-                <a href="client-login.html" class="text-gray-700 hover:text-primary-blue font-semibold">Login</a>
+                <a href="#demoModal" class="bg-tf-primary text-white py-2 px-6 rounded-full font-semibold shadow-lg hover:bg-indigo-600 transition duration-300 transform hover:scale-105">Request Demo</a>
+                <a href="client-login.html" class="text-tf-text hover:text-tf-secondary font-semibold border-b-2 border-transparent hover:border-tf-secondary transition">Client Login</a>
             </div>
         </div>
     </nav>
     
-    <header id="bulk-hero" class="pt-16 pb-24 bg-white">
+    <header id="bulk-hero" class="pt-24 pb-32 bg-tf-dark">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h1 class="text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight mb-4 text-center">
-                Stop RTO. Start Scaling.
+            <h1 class="text-6xl lg:text-7xl font-extrabold leading-tight mb-6 text-center">
+                Stop RTO. <span class="text-gradient">Start Scaling.</span>
             </h1>
-            <p class="text-xl text-gray-600 mb-16 max-w-4xl mx-auto text-center">
+            <p class="text-xl text-gray-400 mb-20 max-w-4xl mx-auto text-center">
                 The **Smartest AI Address Platform** built to process 100% of your customer database, eliminate errors, and guarantee first-attempt delivery success.
             </p>
 
-            <div class="bg-neutral-gray p-8 md:p-12 rounded-2xl shadow-2xl border border-blue-100">
-                <h3 class="text-3xl font-bold text-gray-800 mb-8 text-center">Automated 3-Step Bulk Process</h3>
+            <div class="bg-tf-card p-8 md:p-16 rounded-3xl shadow-2xl border border-gray-700/50">
+                <h3 class="text-4xl font-bold text-tf-text mb-10 text-center">Automated 3-Stage Verification Process</h3>
 
-                <div class="grid md:grid-cols-3 gap-8 md:gap-12 relative">
+                <div class="grid md:grid-cols-3 gap-10 md:gap-16 relative">
                     
+                    <!-- Flow Arrows -->
                     <div class="absolute inset-x-1/2 top-1/2 hidden md:block" style="width: calc(100% - 300px); transform: translate(-50%, -50%);">
                         <div class="flex justify-between">
-                            <div class="w-1/2 h-1 bg-primary-blue/30 relative">
-                                <svg class="absolute right-0 top-1/2 transform -translate-y-1/2 text-primary-blue w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            <div class="w-1/2 h-1 bg-tf-primary/30 relative">
+                                <svg class="absolute right-0 top-1/2 transform -translate-y-1/2 text-tf-primary w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                             </div>
-                            <div class="w-1/2 h-1 bg-primary-blue/30 relative">
-                                <svg class="absolute right-0 top-1/2 transform -translate-y-1/2 text-primary-blue w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            <div class="w-1/2 h-1 bg-tf-primary/30 relative">
+                                <svg class="absolute right-0 top-1/2 transform -translate-y-1/2 text-tf-primary w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                             </div>
                         </div>
                     </div>
 
-                    <div class="flex flex-col items-center text-center p-4 relative z-10">
-                        <div class="bg-primary-blue text-white w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-xl border-4 border-white">
+                    <div class="flex flex-col items-center text-center p-6 bg-gray-900 rounded-xl relative z-10 shadow-lg border border-tf-primary/50">
+                        <div class="bg-tf-primary text-white w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-xl border-4 border-tf-card">
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                         </div>
-                        <h4 class="text-xl font-bold text-gray-900 mb-2">1. Upload CSV</h4>
-                        <p class="text-gray-600">Securely upload your raw address data via the client portal.</p>
+                        <h4 class="text-xl font-bold text-tf-text mb-2">1. Secure Upload</h4>
+                        <p class="text-gray-400">Securely upload your raw address data in bulk via the private client portal.</p>
                     </div>
 
-                    <div class="flex flex-col items-center text-center p-4 relative z-10">
-                        <div class="bg-secondary-green text-white w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-xl border-4 border-white">
+                    <div class="flex flex-col items-center text-center p-6 bg-gray-900 rounded-xl relative z-10 shadow-lg border border-tf-secondary/50">
+                        <div class="bg-tf-secondary text-white w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-xl border-4 border-tf-card">
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                         </div>
-                        <h4 class="text-xl font-bold text-gray-900 mb-2">2. AI Verification</h4>
-                        <p class="text-gray-600">The 5-Stage AI cleans, corrects PINs, and validates against official India Post data.</p>
+                        <h4 class="text-xl font-bold text-tf-text mb-2">2. AI Cleaning & Validation</h4>
+                        <p class="text-gray-400">The multi-stage AI cleans, normalizes, corrects errors, and validates against official data sources.</p>
                     </div>
 
-                    <div class="flex flex-col items-center text-center p-4 relative z-10">
-                        <div class="bg-accent-yellow text-gray-900 w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-xl border-4 border-white">
+                    <div class="flex flex-col items-center text-center p-6 bg-gray-900 rounded-xl relative z-10 shadow-lg border border-tf-text/50">
+                        <div class="bg-tf-text text-gray-900 w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-xl border-4 border-tf-card">
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         </div>
-                        <h4 class="text-xl font-bold text-gray-900 mb-2">3. Download Score</h4>
-                        <p class="text-gray-600">Instantly receive a new CSV with clean addresses and a risk score.</p>
+                        <h4 class="text-xl font-bold text-tf-text mb-2">3. Deliverability Score</h4>
+                        <p class="text-gray-400">Download the clean CSV output with a precise risk score to inform your dispatch decisions.</p>
                     </div>
 
                 </div>
                 
-                <div class="mt-12 pt-8 border-t border-gray-200 flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
-                    <a href="#demoModal" class="py-4 px-10 bg-primary-blue text-white font-extrabold text-lg rounded-xl shadow-lg hover:bg-blue-700 transition transform hover:scale-[1.05] focus:ring-4 focus:ring-primary-blue/50">
+                <div class="mt-16 pt-10 border-t border-gray-700 flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+                    <a href="#demoModal" class="py-4 px-12 bg-tf-primary text-white font-extrabold text-lg rounded-full shadow-xl hover:bg-indigo-600 transition transform hover:scale-[1.05] focus:ring-4 focus:ring-tf-primary/50">
                         Request Bulk Pricing & Demo
                     </a>
-                    <a href="single.html" class="py-4 px-10 bg-secondary-green text-white font-bold text-lg rounded-xl shadow-lg hover:bg-green-700 transition transform hover:scale-[1.05]">
+                    <a href="single.html" class="py-4 px-12 bg-tf-card border border-gray-600 text-tf-text font-bold text-lg rounded-full shadow-lg hover:bg-gray-800 transition transform hover:scale-[1.05]">
                         Try Single Check (Free)
                     </a>
                 </div>
@@ -113,119 +119,116 @@
         </div>
     </header>
 
-    <section id="whyus" class="py-20 bg-white border-t border-gray-100">
+    <section id="whyus" class="py-24 bg-tf-dark border-t border-gray-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">
-                Why Address Verification is Crucial for E-commerce
+            <h2 class="text-4xl sm:text-5xl font-extrabold text-tf-text mb-6">
+                Why Deliverability is Crucial
             </h2>
-            <p class="text-xl text-gray-600 mb-12 max-w-3xl mx-auto">
+            <p class="text-xl text-gray-400 mb-16 max-w-3xl mx-auto">
                 Incorrect addresses are the single largest operational cost for logistics businesses. Stop paying for failed deliveries.
             </p>
 
             <div class="grid md:grid-cols-3 gap-8">
-                <div class="bg-red-50 p-6 rounded-xl shadow-md border-t-4 border-alert-dark">
-                    <div class="text-4xl feature-icon mb-3 text-alert-dark">📦</div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Minimize RTO Losses</h3>
-                    <p class="text-gray-600">Failed deliveries (RTO) cost 2-3x the forward shipping cost. Our tool ensures address deliverability **before** dispatch, saving you direct loss and reverse logistics fees.</p>
+                <div class="bg-tf-card p-8 rounded-xl shadow-xl border-t-4 border-alert-dark transition hover:shadow-2xl hover:border-alert-dark/80">
+                    <div class="text-5xl mb-4 text-alert-dark">🚨</div>
+                    <h3 class="text-2xl font-bold text-tf-text mb-3">Minimize RTO Losses</h3>
+                    <p class="text-gray-400">Failed deliveries (RTO) cost 2-3x the forward shipping cost. Our tool ensures address deliverability **before** dispatch, saving you direct loss and reverse logistics fees.</p>
                 </div>
-                <div class="bg-yellow-50 p-6 rounded-xl shadow-md border-t-4 border-accent-yellow">
-                    <div class="text-4xl feature-icon mb-3 text-accent-yellow">📍</div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Eliminate Bad Addresses</h3>
-                    <p class="text-gray-600">Common errors like spelling mistakes, missing PINs, and incomplete landmarks are instantly cleaned and normalized, reducing friction at the last mile.</p>
+                <div class="bg-tf-card p-8 rounded-xl shadow-xl border-t-4 border-tf-secondary transition hover:shadow-2xl hover:border-tf-secondary/80">
+                    <div class="text-5xl mb-4 text-tf-secondary">🎯</div>
+                    <h3 class="text-2xl font-bold text-tf-text mb-3">Eliminate Bad Data</h3>
+                    <p class="text-gray-400">Common errors like spelling mistakes, missing PINs, and incomplete landmarks are instantly cleaned and normalized, reducing friction at the last mile.</p>
                 </div>
-                <div class="bg-green-50 p-6 rounded-xl shadow-md border-t-4 border-secondary-green">
-                    <div class="text-4xl feature-icon mb-3 text-secondary-green">✨</div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Boost Customer Experience</h3>
-                    <p class="text-gray-600">Accurate addresses mean faster, first-attempt deliveries, leading to higher customer satisfaction, fewer support tickets, and repeat business.</p>
+                <div class="bg-tf-card p-8 rounded-xl shadow-xl border-t-4 border-tf-primary transition hover:shadow-2xl hover:border-tf-primary/80">
+                    <div class="text-5xl mb-4 text-tf-primary">📈</div>
+                    <h3 class="text-2xl font-bold text-tf-text mb-3">Boost CX & Scaling</h3>
+                    <p class="text-gray-400">Accurate addresses mean faster, first-attempt deliveries, leading to higher customer satisfaction, fewer support tickets, and repeat business.</p>
                 </div>
             </div>
         </div>
     </section>
     
-    <section id="how-it-works-condensed" class="py-20 bg-neutral-gray">
+    <section id="how-it-works-condensed" class="py-24 bg-tf-dark border-t border-gray-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-10 text-center">
-                Deep Dive: The Advanced AI Process
+            <h2 class="text-4xl sm:text-5xl font-extrabold text-tf-text mb-12 text-center">
+                Deep Dive: The Multi-Stage AI Process
             </h2>
-            <p class="text-xl text-gray-600 mb-12 max-w-3xl mx-auto text-center">
-                Our system uses a proprietary, multi-stage engine combining Generative AI with official India Post data to guarantee the highest possible deliverability score.
-            </p>
             
-            <div class="grid md:grid-cols-3 gap-8 bg-white p-8 rounded-xl shadow-lg">
-                <div class="border-l-4 border-secondary-green pl-4">
-                    <strong class="block text-lg text-gray-900 mb-1">AI Cleaning & Grounding</strong>
-                    <p class="text-sm text-gray-600">The AI corrects spelling, standardizes format, and validates the PIN instantly against the official India Post API for ground truth on District and State.</p>
+            <div class="grid md:grid-cols-3 gap-8 bg-tf-card p-10 rounded-xl shadow-2xl border border-gray-700/50">
+                <div class="border-l-4 border-tf-secondary pl-6">
+                    <strong class="block text-xl text-tf-text mb-2">1. AI Cleaning & Grounding</strong>
+                    <p class="text-gray-400">The AI corrects spelling, standardizes format, and validates the PIN instantly against the official India Post API for ground truth on District and State.</p>
                 </div>
-                <div class="border-l-4 border-secondary-green pl-4">
-                    <strong class="block text-lg text-gray-900 mb-1">Locational Intelligence</strong>
-                    <p class="text-sm text-gray-600">Directional phrases ('near', 'opposite') are accurately re-attached, and the final address is checked against proprietary geo-spatial data for logical consistency.</p>
+                <div class="border-l-4 border-tf-primary pl-6">
+                    <strong class="block text-xl text-tf-text mb-2">2. Locational Intelligence</strong>
+                    <p class="text-gray-400">Directional phrases ('near', 'opposite') are accurately re-attached, and the final address is checked against proprietary geo-spatial data for logical consistency.</p>
                 </div>
-                <div class="border-l-4 border-secondary-green pl-4">
-                    <strong class="block text-lg text-gray-900 mb-1">Risk Management & Output</strong>
-                    <p class="text-sm text-gray-600">The output provides a final, standardized address and a clear **Deliverability Score** (Good, Medium, Bad) to inform your dispatch decision.</p>
+                <div class="border-l-4 border-tf-secondary pl-6">
+                    <strong class="block text-xl text-tf-text mb-2">3. Risk Management & Output</strong>
+                    <p class="text-gray-400">The output provides a final, standardized address and a clear **Deliverability Score** (Good, Medium, Bad) to inform your dispatch decision.</p>
                 </div>
             </div>
         </div>
     </section>
     
-    <footer class="bg-gray-800 text-white py-10">
+    <footer class="bg-gray-900 text-white py-12 border-t border-gray-700">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h3 class="text-2xl font-bold mb-4">Ready to reduce RTO by up to 30%?</h3>
-            <div class="flex justify-center space-x-4">
-                <a href="#demoModal" class="py-3 px-8 bg-accent-yellow text-gray-900 font-bold rounded-lg hover:bg-yellow-500 transition">
+            <h3 class="text-3xl font-bold mb-6 text-tf-text">Ready to reduce RTO by up to 30%?</h3>
+            <div class="flex justify-center space-x-6">
+                <a href="#demoModal" class="py-3 px-10 bg-tf-primary text-white font-bold rounded-full hover:bg-indigo-600 transition shadow-lg">
                     Request Demo Now
                 </a>
-                <a href="contact.html" class="py-3 px-8 bg-whatsapp-green text-white font-bold rounded-lg hover:bg-green-600 transition">
+                <a href="contact.html" class="py-3 px-10 bg-whatsapp-green text-white font-bold rounded-full hover:bg-green-600 transition shadow-lg">
                     Contact Sales
                 </a>
             </div>
             
-            <p class="mt-8 text-sm text-gray-400">
-                Developed by: <span class="font-semibold text-gray-300">Pankaj Singh Rawat</span>
+            <p class="mt-10 text-sm text-gray-500">
+                Developed by: <span class="font-semibold text-gray-400">Pankaj Singh Rawat</span>
             </p>
             
-            <p class="mt-1 text-sm text-gray-400">&copy; 2025 AI VERIFY. All rights reserved.</p>
+            <p class="mt-1 text-sm text-gray-500">&copy; 2025 AI VERIFY. All rights reserved.</p>
         </div>
     </footer>
 
 
     <div id="demoModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-[100]">
-        <div class="relative top-10 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
-            <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 class="text-xl font-bold text-primary-blue">Request a Bulk Demo</h3>
-                <button onclick="document.getElementById('demoModal').classList.add('hidden')" class="text-gray-500 hover:text-gray-800 text-2xl">
+        <div class="relative top-10 mx-auto p-5 border w-full max-w-md shadow-lg rounded-xl bg-tf-card border-gray-700/50">
+            <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-3">
+                <h3 class="text-xl font-bold text-tf-secondary">Request a Bulk Demo</h3>
+                <button onclick="document.getElementById('demoModal').classList.add('hidden')" class="text-gray-500 hover:text-gray-300 text-2xl">
                     &times;
                 </button>
             </div>
             
             <form id="demoForm" class="space-y-4">
-                <p class="text-sm text-gray-600">Fill in your details, and our sales team will contact you for a personalized demo setup.</p>
+                <p class="text-sm text-gray-400">Fill in your details, and our sales team will contact you for a personalized demo setup.</p>
                 <div>
-                    <label for="demo-clientName" class="block text-sm font-medium text-gray-700">Your Name</label>
-                    <input type="text" id="demo-clientName" required class="w-full p-2 border rounded-lg focus:ring-secondary-green focus:border-secondary-green input-focus">
+                    <label for="demo-clientName" class="block text-sm font-medium text-gray-300">Your Name</label>
+                    <input type="text" id="demo-clientName" required class="w-full p-3 border border-gray-700 rounded-lg focus:ring-tf-primary focus:border-tf-primary bg-gray-900 text-tf-text input-focus">
                 </div>
                 <div>
-                    <label for="demo-clientEmail" class="block text-sm font-medium text-gray-700">Your Email</label>
-                    <input type="email" id="demo-clientEmail" required class="w-full p-2 border rounded-lg focus:ring-secondary-green focus:border-secondary-green input-focus">
+                    <label for="demo-clientEmail" class="block text-sm font-medium text-gray-300">Your Email</label>
+                    <input type="email" id="demo-clientEmail" required class="w-full p-3 border border-gray-700 rounded-lg focus:ring-tf-primary focus:border-tf-primary bg-gray-900 text-tf-text input-focus">
                 </div>
                 <!-- ADDED Mobile Field for Consistency -->
                 <div>
-                    <label for="demo-clientMobile" class="block text-sm font-medium text-gray-700">Mobile Number</label>
+                    <label for="demo-clientMobile" class="block text-sm font-medium text-gray-300">Mobile Number</label>
                     <div class="flex">
-                        <span class="inline-flex items-center px-3 border border-r-0 border-gray-300 bg-gray-50 text-gray-500 rounded-l-lg">
+                        <span class="inline-flex items-center px-3 border border-r-0 border-gray-700 bg-gray-900 text-gray-500 rounded-l-lg">
                             +91
                         </span>
                         <input type="tel" id="demo-clientMobile" required 
                             pattern="[0-9]{10}" title="10 digit Indian Mobile Number"
                             placeholder="9876543210"
-                            class="w-full p-2 border rounded-r-lg focus:ring-secondary-green focus:border-secondary-green input-focus">
+                            class="w-full p-3 border border-gray-700 rounded-r-lg focus:ring-tf-primary focus:border-tf-primary bg-gray-900 text-tf-text input-focus">
                     </div>
                 </div>
                 <div>
-                    <label for="demo-messageText" class="block text-sm font-medium text-gray-700">Message / Requirement</label>
-                    <textarea id="demo-messageText" rows="3" required class="w-full p-2 border rounded-lg focus:ring-secondary-green focus:border-secondary-green resize-none input-focus">I am interested in a demo for bulk verification.</textarea>
+                    <label for="demo-messageText" class="block text-sm font-medium text-gray-300">Message / Requirement</label>
+                    <textarea id="demo-messageText" rows="3" required class="w-full p-3 border border-gray-700 rounded-lg focus:ring-tf-primary focus:border-tf-primary resize-none bg-gray-900 text-tf-text input-focus">I am interested in a demo for bulk verification.</textarea>
                 </div>
-                <button type="submit" id="sendDemoButton" class="w-full py-3 bg-secondary-green text-white font-bold rounded-lg hover:bg-green-700 transition">
+                <button type="submit" id="sendDemoButton" class="w-full py-3 bg-tf-secondary text-tf-dark font-bold rounded-lg shadow-md hover:bg-cyan-500 transition">
                     Submit Demo Request
                 </button>
                 <p id="demoMessageStatus" class="text-center text-sm font-semibold"></p>
@@ -288,7 +291,7 @@
                 const result = await response.json();
 
                 if (response.ok && result.status === "Success") {
-                    statusMessage.className = 'text-secondary-green mt-3';
+                    statusMessage.className = 'text-tf-secondary mt-3';
                     statusMessage.textContent = 'Demo request sent! We will contact you shortly.';
                     document.getElementById('demoForm').reset();
                     // Clear the custom mobile input field specifically

@@ -7,68 +7,90 @@
     <!-- Tailwind must be loaded to use the classes below -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script>
+        // Custom Tailwind config using the consistent 'tf-' palette
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'tf-dark': '#0F172A', // Deep Blue-Gray Background
+                        'tf-primary': '#6366F1', // Indigo/Violet Primary Accent
+                        'tf-secondary': '#06B6D4', // Cyan Secondary Accent
+                        'tf-text': '#E2E8F0', // Light Text
+                        'tf-card': '#1E293B', // Darker Card Background
+                        'tf-light': '#F1F5F9', // Very light gray for background
+                        'alert-dark': '#DC2626',
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
     <style>
         /* General Styles - Modernized Look (Inter is default font) */
-        body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; }
-        .dashboard-container { max-width: 1400px; margin: 30px auto; padding: 30px; background-color: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #e0e0e0; }
-        .header h1 { font-size: 2.25rem; font-weight: 800; color: #1D4ED8; }
+        body { font-family: 'Inter', sans-serif; background-color: #F1F5F9; }
+        .dashboard-container { max-width: 1400px; margin: 30px auto; padding: 35px; background-color: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB; }
+        .header h1 { font-size: 2.25rem; font-weight: 800; color: #6366F1; }
         
         .controls { display: flex; gap: 20px; align-items: center; }
-        .icon-btn { cursor: pointer; position: relative; font-size: 24px; color: #4B5563; transition: color 0.2s; }
-        .icon-btn:hover { color: #1D4ED8; }
-        .badge { position: absolute; top: -8px; right: -8px; background-color: #EF4444; color: white; border-radius: 50%; padding: 4px 8px; font-size: 11px; font-weight: 700; border: 2px solid white; }
-        .action-btn { background-color: #1D4ED8; color: white; padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.875rem; transition: background-color 0.2s, transform 0.1s; margin-right: 5px; }
-        .action-btn:hover { background-color: #2563eb; transform: translateY(-1px); }
+        .icon-btn { cursor: pointer; position: relative; font-size: 24px; color: #64748B; transition: color 0.2s; }
+        .icon-btn:hover { color: #6366F1; }
+        .badge { position: absolute; top: -8px; right: -8px; background-color: #DC2626; color: white; border-radius: 50%; padding: 4px 8px; font-size: 11px; font-weight: 700; border: 2px solid white; }
+        
+        /* Action Buttons */
+        .action-btn { background-color: #6366F1; color: white; padding: 10px 15px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: background-color 0.2s, transform 0.1s; margin-right: 5px; }
+        .action-btn:hover { background-color: #4F46E5; transform: translateY(-1px); }
         .action-btn.delete { background-color: #DC2626; }
         .action-btn.delete:hover { background-color: #B91C1C; }
+        .action-btn.modal-button { background-color: #06B6D4; } /* Cyan for modals/messages */
+        .action-btn.modal-button:hover { background-color: #0891B2; }
 
         /* Client Management */
         .management-header { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; margin-bottom: 20px; }
-        .management-header h2 { font-size: 1.8rem; font-weight: 700; color: #1f2937; border-left: 5px solid #1D4ED8; padding-left: 12px; }
-        .add-client-btn { background-color: #059669; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; }
-        .add-client-btn:hover { background-color: #047857; }
+        .management-header h2 { font-size: 1.8rem; font-weight: 700; color: #1f2937; border-left: 5px solid #06B6D4; padding-left: 12px; }
+        .add-client-btn { background-color: #06B6D4; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; }
+        .add-client-btn:hover { background-color: #0891B2; }
 
         /* Table Styling */
         .client-table { width: 100%; border-collapse: separate; border-spacing: 0; background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .client-table th, .client-table td { padding: 15px 20px; text-align: left; border-bottom: 1px solid #f3f4f6; }
-        .client-table th { background-color: #F9FAFB; color: #374151; font-weight: 700; text-transform: uppercase; font-size: 0.85rem; }
+        .client-table th { background-color: #F8FAFC; color: #374151; font-weight: 700; text-transform: uppercase; font-size: 0.85rem; }
         .client-table tbody tr:hover { background-color: #fcfcfd; }
         .client-table tbody tr:last-child td { border-bottom: none; }
 
-        .status-online-dot { color: #10B981; font-size: 10px; margin-right: 4px; }
+        .status-online-dot { color: #06B6D4; font-size: 10px; margin-right: 4px; }
         .status-offline-dot { color: #9CA3AF; font-size: 10px; margin-right: 4px; }
-        .status-online-text { color: #10B981; font-weight: 600; }
+        .status-online-text { color: #06B6D4; font-weight: 600; }
         .status-offline-text { color: #9CA3AF; font-size: 0.85rem; }
-        .status-enabled { background-color: #d1fae5; color: #10b981; padding: 4px 10px; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; }
-        .status-disabled { background-color: #fee2e2; color: #dc2626; padding: 4px 10px; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; }
+        .status-enabled { background-color: #DBF5FF; color: #06B6D4; padding: 4px 10px; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; }
+        .status-disabled { background-color: #fee2e2; color: #DC2626; padding: 4px 10px; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; }
 
         /* Modal Styles */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; display: none; }
-        .modal-content { background-color: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 550px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3); }
+        .modal-content { background-color: white; padding: 35px; border-radius: 12px; width: 90%; max-width: 550px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3); }
         .modal-close { float: right; font-size: 1.8rem; cursor: pointer; color: #6b7280; }
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #374151; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; transition: border-color 0.2s, box-shadow 0.2s; }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #1D4ED8; box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.2); }
-        .modal-button { background-color: #10B981; }
-        .modal-button:hover { background-color: #059669; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #6366F1; box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
+        
 
         /* Inbox Styling */
         #inbox-messages-container { max-height: 400px; overflow-y: auto; padding-right: 10px; }
         .message-card { border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: background-color 0.2s; border-left: 5px solid transparent; }
-        .message-card:hover { background-color: #f9fafb; border-left-color: #1D4ED8; }
-        .message-card.unread { background-color: #FFFBEB; border-left-color: #FCD34D; font-weight: 600; }
+        .message-card:hover { background-color: #f9fafb; border-left-color: #6366F1; }
+        .message-card.unread { background-color: #EEF2FF; border-left-color: #6366F1; font-weight: 600; } /* Light indigo background */
         
         .tab-btn { padding: 10px 15px; border-radius: 8px 8px 0 0; cursor: pointer; background-color: #f0f0f0; border: none; font-weight: 600; transition: background-color 0.2s; }
-        .tab-btn.active { background-color: white; border-bottom: 2px solid #1D4ED8; color: #1D4ED8; }
+        .tab-btn.active { background-color: white; border-bottom: 2px solid #6366F1; color: #6366F1; }
     </style>
 </head>
 <body>
 
     <div class="dashboard-container">
         <header class="header">
-            <h1>Admin Panel</h1>
+            <h1><span class="text-tf-secondary">AI Verify</span> Admin Panel</h1>
             <div class="controls">
                 <!-- Notification Icon (Counts all unread messages) -->
                 <div id="notification-icon" class="icon-btn" onclick="toggleInbox('messages')">
@@ -88,7 +110,7 @@
         <div id="inbox-modal" class="modal">
             <div class="modal-content">
                 <span class="modal-close" onclick="closeInbox()">&times;</span>
-                <h2 class="text-2xl font-bold mb-4" id="inbox-title">Admin Inbox</h2>
+                <h2 class="text-2xl font-bold mb-4 text-tf-primary" id="inbox-title">Admin Inbox</h2>
                 
                 <!-- Tab Navigation for Inbox Types -->
                 <div class="flex border-b border-gray-200 mb-4">
@@ -103,7 +125,7 @@
                 
                 <!-- Reply Form (Only used for Client Messages) -->
                 <div id="reply-form" class="mt-4" style="display: none;">
-                    <h3 class="font-semibold text-xl mb-3">Send Reply to <span id="reply-to-client" class="text-primary-blue"></span></h3>
+                    <h3 class="font-semibold text-xl mb-3">Send Reply to <span id="reply-to-client" class="text-tf-primary"></span></h3>
                     <div class="form-group">
                         <input type="text" id="reply-subject" placeholder="Subject (Optional)" required>
                     </div>
@@ -144,7 +166,7 @@
         <div id="update-client-modal" class="modal">
             <div class="modal-content">
                 <span class="modal-close" onclick="closeUpdateModal()">&times;</span>
-                <h2 class="text-2xl font-bold mb-4 text-primary-blue">Update Client</h2>
+                <h2 class="text-2xl font-bold mb-4 text-tf-primary">Update Client</h2>
                 <form id="update-client-form">
                     <input type="hidden" id="update-client-id">
                     <div class="form-group">
@@ -178,7 +200,7 @@
         <div id="add-client-modal" class="modal">
             <div class="modal-content">
                 <span class="modal-close" onclick="closeAddClientModal()">&times;</span>
-                <h2 class="text-2xl font-bold mb-4 text-primary-blue">Add New Client</h2>
+                <h2 class="text-2xl font-bold mb-4 text-tf-primary">Add New Client</h2>
                 <form id="add-client-form">
                     <div class="form-group">
                         <label for="add-username"><i class="fas fa-user mr-2"></i> Username</label>
@@ -514,7 +536,7 @@
             };
 
             statusMsg.textContent = 'Creating client...';
-            statusMsg.style.color = '#1D4ED8';
+            statusMsg.style.color = '#6366F1';
 
             try {
                 const response = await authFetch(`${API_BASE}/admin/client`, {
@@ -525,16 +547,16 @@
 
                 if (response.ok) {
                     statusMsg.textContent = 'Client created successfully!';
-                    statusMsg.style.color = '#10b981';
+                    statusMsg.style.color = '#06B6D4';
                     loadClients(); 
                     setTimeout(closeAddClientModal, 1500);
                 } else {
                     statusMsg.textContent = `Creation Failed: ${result.message}`;
-                    statusMsg.style.color = '#dc2626';
+                    statusMsg.style.color = '#DC2626';
                 }
             } catch (error) {
                 statusMsg.textContent = `Network Error: ${error.message}`;
-                statusMsg.style.color = '#dc2626';
+                statusMsg.style.color = '#DC2626';
             }
         });
 
@@ -582,7 +604,7 @@
             }
 
             statusMsg.textContent = 'Updating...';
-            statusMsg.style.color = '#1D4ED8';
+            statusMsg.style.color = '#6366F1';
 
             try {
                 const response = await authFetch(`${API_BASE}/admin/client`, {
@@ -593,16 +615,16 @@
 
                 if (response.ok) {
                     statusMsg.textContent = 'Client updated successfully!';
-                    statusMsg.style.color = '#10b981';
+                    statusMsg.style.color = '#06B6D4';
                     loadClients(); 
                     setTimeout(closeUpdateModal, 1500);
                 } else {
                     statusMsg.textContent = `Update Failed: ${result.message}`;
-                    statusMsg.style.color = '#dc2626';
+                    statusMsg.style.color = '#DC2626';
                 }
             } catch (error) {
                 statusMsg.textContent = `Network Error: ${error.message}`;
-                statusMsg.style.color = '#dc2626';
+                statusMsg.style.color = '#DC2626';
             }
         });
 
@@ -784,7 +806,7 @@
             
             const messageContent = `
                 <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg">
-                    <h3 class="text-xl font-bold mb-2 text-primary-blue">Client Message: ${subject}</h3>
+                    <h3 class="text-xl font-bold mb-2 text-tf-primary">Client Message: ${subject}</h3>
                     <p class="text-sm text-gray-600 mb-3">From: <strong>${clientUsername}</strong> | Date: ${new Date(timestamp).toLocaleString()}</p>
                     <div class="p-4 bg-gray-50 border rounded whitespace-pre-wrap">${body}</div>
                     <div class="mt-4 flex justify-end">
@@ -810,14 +832,14 @@
 
             const messageContent = `
                 <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg">
-                    <h3 class="text-xl font-bold mb-2 text-secondary-green">Demo/Support Request</h3>
+                    <h3 class="text-xl font-bold mb-2 text-tf-secondary">Demo/Support Request</h3>
                     <p class="text-sm text-gray-600">Name: <strong>${clientName || 'N/A'}</strong></p>
                     <p class="text-sm text-gray-600">Email: <strong>${clientEmail || 'N/A'}</strong></p>
                     <p class="text-sm text-gray-600 mb-3">Mobile: <strong>${clientMobile || 'N/A'}</strong> | Received: ${new Date(receivedAt).toLocaleString()}</p>
                     <div class="p-4 bg-gray-50 border rounded whitespace-pre-wrap">${messageText}</div>
                     <div class="mt-4 flex justify-end">
-                        <a href="mailto:${clientEmail}" target="_blank" class="action-btn modal-button mr-2 bg-primary-blue">Reply via Email</a>
-                        <a href="https://wa.me/91${clientMobile}" target="_blank" class="action-btn modal-button mr-2 bg-green-600 hover:bg-green-700">WhatsApp</a>
+                        <a href="mailto:${clientEmail}" target="_blank" class="action-btn modal-button mr-2 bg-tf-primary hover:bg-indigo-600">Reply via Email</a>
+                        <a href="https://wa.me/91${clientMobile}" target="_blank" class="action-btn modal-button mr-2 bg-whatsapp-green hover:bg-green-600">WhatsApp</a>
                         <button onclick="document.querySelector('#message-view-modal').remove()" class="action-btn delete">Close</button>
                     </div>
                 </div>
@@ -836,17 +858,17 @@
 
             if (!selectedClientId) {
                 statusMsg.textContent = 'Error: No client selected.';
-                statusMsg.style.color = '#dc2626';
+                statusMsg.style.color = '#DC2626';
                 return;
             }
             if (!body) {
                 statusMsg.textContent = 'Message body cannot be empty.';
-                statusMsg.style.color = '#dc2626';
+                statusMsg.style.color = '#DC2626';
                 return;
             }
 
             statusMsg.textContent = 'Sending...';
-            statusMsg.style.color = '#1D4ED8';
+            statusMsg.style.color = '#6366F1';
             
             try {
                 const response = await authFetch(`${API_BASE}/inbox/message`, {
@@ -862,18 +884,18 @@
 
                 if (response.ok) {
                     statusMsg.textContent = 'Reply sent successfully!';
-                    statusMsg.style.color = '#10b981';
+                    statusMsg.style.color = '#06B6D4';
                     document.getElementById('reply-subject').value = '';
                     document.getElementById('reply-body').value = '';
                     setTimeout(() => switchInboxTab('messages'), 100); 
                     setTimeout(closeInbox, 1500);
                 } else {
                     statusMsg.textContent = `Send Failed: ${result.message}`;
-                    statusMsg.style.color = '#dc2626';
+                    statusMsg.style.color = '#DC2626';
                 }
             } catch (error) {
                 statusMsg.textContent = `Network Error: ${error.message}`;
-                statusMsg.style.color = '#dc2626';
+                statusMsg.style.color = '#DC2626';
             }
         }
 
