@@ -5,30 +5,29 @@ const { connectToDatabase } = require('../db');
 const jwt = require('jsonwebtoken'); 
 const { ObjectId } = require('mongodb'); 
 
+// 🚨 FIX: Define the JWT_SECRET using the exact same fallback as the login file
+const JWT_SECRET = process.env.JWT_SECRET || 'your_default_secret_for_dev_only';
+
 // Get the message sender/receiver ID from the JWT payload
 function getUserId(req) { 
     const authHeader = req.headers.authorization || req.headers.Authorization;
     const token = authHeader?.split(' ')[1];
     
-    // 1. If token is missing, fail immediately.
     if (!token) return null; 
 
     try {
-        // 2. Verify the JWT
-        const payload = jwt.verify(token, process.env.JWT_SECRET); 
+        // Use the consistent JWT_SECRET variable for verification
+        const payload = jwt.verify(token, JWT_SECRET); 
         
-        // --- NOTE: Assuming JWT payload contains 'id' ---
-        
-        // Check if the ID is the known admin string
         if (payload.id === 'admin') {
             return 'admin';
         }
-        // For clients, return the client ID
+        
+        // Ensure the ID is always a string
         return payload.id.toString();
 
     } catch (err) { 
-        // 3. If token verification fails (expired, invalid signature), return null.
-        console.warn("JWT Verification Failed:", err.message);
+        console.warn("JWT Verification Failed in message.js:", err.message);
         return null; 
     } 
 } 
@@ -49,13 +48,12 @@ module.exports = async (req, res) => {
         return res.status(500).json({ status: "Error", message: "Database connection failed." }); 
     } 
 
-    // Consistent collection name for ALL authenticated messages 
     const messagesCollection = db.collection("messages"); 
     const userId = getUserId(req); 
 
     // --- POST: Send Message (Client to Admin / Admin to Client) --- 
     if (req.method === 'POST') { 
-        // 🚨 FIX: Using 401 Unauthorized instead of 403 Forbidden 
+        // 401 Unauthorized check (previously fixed)
         if (!userId) {
             return res.status(401).json({ status: "Error", message: "Authentication context missing. Please log in again." });
         }
@@ -71,7 +69,6 @@ module.exports = async (req, res) => {
             } 
         } 
 
-        // Extract payload
         const { subject, body: messageBody, recipientId } = body || {}; 
         
         if (!subject || !messageBody) { 
@@ -80,7 +77,7 @@ module.exports = async (req, res) => {
 
         const newMessage = { 
             senderId: userId, 
-            receiverId: recipientId || 'admin', // Default to admin
+            receiverId: recipientId || 'admin', 
             subject: subject, 
             body: messageBody, 
             isRead: false, 
@@ -97,9 +94,8 @@ module.exports = async (req, res) => {
 
     // --- GET: Retrieve Inbox --- 
     if (req.method === 'GET') { 
-        if (!userId) return res.status(401).json({ status: "Error", message: "Authentication required to view inbox." }); // Also changed to 401
+        if (!userId) return res.status(401).json({ status: "Error", message: "Authentication required to view inbox." }); 
         
-        // ... (rest of GET logic remains the same) ...
         try { 
             const messages = await messagesCollection.find({ $or: [ { senderId: userId }, { receiverId: userId } ] }) 
             .sort({ timestamp: -1 }) 
@@ -114,11 +110,10 @@ module.exports = async (req, res) => {
 
     // --- PUT: Mark as Read --- 
     if (req.method === 'PUT') { 
-        if (!userId) return res.status(401).json({ status: "Error", message: "Authentication required." }); // Also changed to 401
+        if (!userId) return res.status(401).json({ status: "Error", message: "Authentication required." }); 
         
         const messageId = req.query.messageId; 
         
-        // ... (rest of PUT logic remains the same) ...
         if (!messageId) return res.status(400).json({ status: "Error", message: "Message ID is required." }); 
         
         try { 

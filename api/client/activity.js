@@ -5,16 +5,21 @@ const { connectToDatabase } = require('../db');
 const jwt = require('jsonwebtoken'); 
 const { ObjectId } = require('mongodb');
 
+// 🚨 FIX: Define the JWT_SECRET using the exact same fallback as the login file
+const JWT_SECRET = process.env.JWT_SECRET || 'your_default_secret_for_dev_only';
+
 // Helper to get client ID from JWT
 function getClientId(req) {
     const authHeader = req.headers.authorization || req.headers.Authorization;
     const token = authHeader?.split(' ')[1];
     if (!token) return null;
     try {
-        const payload = jwt.verify(token, process.env.JWT_SECRET);
+        // Use the consistent JWT_SECRET variable for verification
+        const payload = jwt.verify(token, JWT_SECRET);
         // Assuming client IDs are stored as ObjectId strings
         return payload.id.toString(); 
     } catch (err) {
+        console.warn("JWT Verification Failed in activity.js:", err.message);
         return null;
     }
 }
@@ -31,6 +36,7 @@ module.exports = async (req, res) => {
     const clientId = getClientId(req);
 
     if (!clientId) {
+        // 401 Unauthorized status is crucial for the client-side script to force a logout
         return res.status(401).json({ status: "Error", message: "Authentication required." });
     }
 
