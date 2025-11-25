@@ -6,16 +6,17 @@
     <title>Client Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Custom Tailwind config for the professional look
+        // --- LIGHT THEME COLOR PALETTE (For consistency across all pages) ---
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'tf-dark': '#0F172A', // Deep Blue-Gray Background
+                        'tf-bg-light': '#F8FAFC', // Main Light Background
+                        'tf-card-light': '#FFFFFF', // White Card Background
+                        'tf-text-dark': '#1E293B', // Dark Text (Slate-800)
+                        
                         'tf-primary': '#6366F1', // Indigo/Violet Primary Accent
                         'tf-secondary': '#06B6D4', // Cyan Secondary Accent
-                        'tf-text': '#E2E8F0', // Light Text
-                        'tf-card': '#1E293B', // Darker Card Background
                         'alert-dark': '#DC2626',
                     },
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
@@ -24,42 +25,50 @@
         }
     </script>
     <style>
-        /* CSS to ensure dark mode consistency and good UI */
+        /* Shared Styles for Login Page - CONVERTED TO LIGHT THEME */
         .text-gradient {
             background-image: linear-gradient(to right, #6366F1, #06B6D4);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
+        /* LIGHT BODY BACKGROUND */
         body { 
             font-family: 'Inter', sans-serif; 
             display: flex; 
             justify-content: center; 
             align-items: center; 
             min-height: 100vh; 
-            background-color: #0F172A; /* tf-dark background */
+            background-color: #F8FAFC; /* tf-bg-light */
         }
         
+        /* LIGHT LOGIN CONTAINER */
         .login-container { 
-            background: #1E293B; /* tf-card background */
+            background: #FFFFFF; /* tf-card-light */
             padding: 45px; 
             border-radius: 16px; 
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5); 
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1); /* Lighter shadow */
             width: 100%; 
             max-width: 420px; 
             border-top: 5px solid #6366F1; /* Accent border */
         }
         
         .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #E2E8F0; /* tf-text */ }
+        /* DARK LABEL TEXT */
+        .form-group label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600; 
+            color: #1E293B; /* tf-text-dark */
+        }
         .form-group input { 
             width: 100%; 
             padding: 12px; 
-            border: 1px solid #334155; 
+            border: 1px solid #CBD5E1; /* Light gray border */
             border-radius: 8px; 
             box-sizing: border-box; 
-            background-color: #0F172A; /* tf-dark input background */
-            color: #E2E8F0; 
+            background-color: #FFFFFF; /* White input background */
+            color: #1E293B; /* Dark input text */
             transition: border-color 0.2s, box-shadow 0.2s;
         }
         .form-group input:focus {
@@ -70,15 +79,15 @@
         .btn-login { 
             width: 100%; 
             padding: 12px; 
-            background-color: #06B6D4; /* Secondary accent color */
-            color: #0F172A; 
+            background-color: #06B6D4; /* tf-secondary */
+            color: #FFFFFF; /* White text for contrast */
             border: none; 
             border-radius: 8px; 
             font-size: 1.1rem; 
             font-weight: 700;
             cursor: pointer; 
             transition: background-color 0.3s, transform 0.1s; 
-            box-shadow: 0 4px 10px rgba(6, 182, 212, 0.4);
+            box-shadow: 0 4px 10px rgba(6, 182, 212, 0.3);
         }
         .btn-login:hover { 
             background-color: #0891B2; 
@@ -90,7 +99,7 @@
 </head>
 <body>
     <div class="login-container">
-        <h1 class="text-3xl font-extrabold text-center mb-8">
+        <h1 class="text-3xl font-extrabold text-center mb-8 text-tf-text-dark">
             <span class="text-gradient">Client</span> Portal
         </h1>
         <form id="client-login-form">
@@ -105,7 +114,7 @@
             <button type="submit" class="btn-login">Secure Login</button>
             <p id="error-message"></p>
         </form>
-        <p class="text-center text-sm text-gray-400 mt-6">
+        <p class="text-center text-sm text-gray-500 mt-6">
             <a href="index.html" class="text-tf-primary hover:underline">← Back to Main Site</a>
         </p>
     </div>
