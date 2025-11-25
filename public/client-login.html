@@ -24,14 +24,13 @@
         }
     </script>
     <style>
-        /* ADDED TEXT GRADIENT STYLE FOR TITLE CONSISTENCY */
+        /* CSS to ensure dark mode consistency and good UI */
         .text-gradient {
             background-image: linear-gradient(to right, #6366F1, #06B6D4);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        /* UPDATED BODY TO MATCH DARK THEME */
         body { 
             font-family: 'Inter', sans-serif; 
             display: flex; 
@@ -41,28 +40,26 @@
             background-color: #0F172A; /* tf-dark background */
         }
         
-        /* UPDATED CONTAINER TO MATCH DARK THEME */
         .login-container { 
             background: #1E293B; /* tf-card background */
             padding: 45px; 
             border-radius: 16px; 
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5); /* Stronger shadow for dark mode */
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5); 
             width: 100%; 
             max-width: 420px; 
             border-top: 5px solid #6366F1; /* Accent border */
         }
         
         .form-group { margin-bottom: 20px; }
-        /* LABELS AND INPUTS ADJUSTED FOR DARK THEME */
         .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #E2E8F0; /* tf-text */ }
         .form-group input { 
             width: 100%; 
             padding: 12px; 
-            border: 1px solid #334155; /* Dark border */
+            border: 1px solid #334155; 
             border-radius: 8px; 
             box-sizing: border-box; 
             background-color: #0F172A; /* tf-dark input background */
-            color: #E2E8F0; /* tf-text input color */
+            color: #E2E8F0; 
             transition: border-color 0.2s, box-shadow 0.2s;
         }
         .form-group input:focus {
@@ -74,7 +71,7 @@
             width: 100%; 
             padding: 12px; 
             background-color: #06B6D4; /* Secondary accent color */
-            color: #0F172A; /* Dark text for high contrast */
+            color: #0F172A; 
             border: none; 
             border-radius: 8px; 
             font-size: 1.1rem; 
@@ -85,7 +82,7 @@
         }
         .btn-login:hover { 
             background-color: #0891B2; 
-            transform: translateY(-2px) scale(1.01); /* Enhanced hover effect */
+            transform: translateY(-2px) scale(1.01); 
         }
         
         #error-message { color: #DC2626; text-align: center; margin-top: 15px; font-weight: 500; }
@@ -144,8 +141,6 @@
                 if (response.ok && result.status === "Success") {
                     // SUCCESS: Store token and user details
                     localStorage.setItem('clientToken', result.token);
-                    
-                    // Store plan details and name for the dashboard
                     localStorage.setItem('clientName', result.planDetails.clientName || username);
                     localStorage.setItem('planDetails', JSON.stringify(result.planDetails));
                     
@@ -157,11 +152,9 @@
                     }, 500);
 
                 } else if (response.status === 401) {
-                    // AUTH FAILURE: Display the server's message
                     errorMessage.textContent = result.message || 'Authentication failed. Please check credentials.';
                     errorMessage.style.color = '#DC2626';
                 } else {
-                    // Other server errors (400, 500)
                     errorMessage.textContent = result.message || 'An unexpected error occurred.';
                     errorMessage.style.color = '#DC2626';
                 }
