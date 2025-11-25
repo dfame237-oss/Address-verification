@@ -73,30 +73,6 @@
         /* Inbox Styles */
         #client-inbox-list div { cursor: pointer; border-left: 5px solid transparent; }
         #client-inbox-list div:hover { border-left-color: #6366F1; background-color: #F0F4FF; }
-
-        /* 🔥 MESSAGE BOX POSITIONING FIX 🔥 */
-        .modal { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            background-color: rgba(0, 0, 0, 0.6); /* Dark overlay */
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            z-index: 1000; 
-            display: none; /* Hidden by default, shown by JS */
-        }
-        .modal-content {
-            background-color: white;
-            padding: 35px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 550px; /* Ensures it is centered and readable */
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            position: relative;
-        }
     </style>
 </head>
 <body>
@@ -104,6 +80,7 @@
         <header class="header">
             <h1 class="text-3xl font-bold text-gray-800">Welcome, <span id="client-name-display" class="text-tf-primary">Client</span></h1>
             <div class="controls">
+                <!-- Inbox Icon -->
                 <div id="inbox-icon" class="icon-btn" onclick="toggleInbox()">
                     <i class="fas fa-inbox"></i>
                     <span id="inbox-badge" class="badge" style="display: none;">0</span>
@@ -118,6 +95,7 @@
             <button class="tab-button" onclick="showTab('support', this)">Support/Messaging</button>
         </div>
 
+        <!-- TAB 1: Bulk Address Verification -->
         <div id="bulk-verification" class="tab-content">
             <header class="text-center mb-10">
                 <h2 class="text-4xl font-extrabold text-gray-900 mb-2">
@@ -169,9 +147,11 @@
 
         </div>
 
+        <!-- TAB 2: Profile & Plan Status (UPDATED UI) -->
         <div id="profile-plan" class="tab-content" style="display: none;">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Account Overview</h2>
             <div class="info-grid">
+                <!-- Profile Card -->
                 <div class="profile-card flex flex-col justify-between">
                     <h3 class="text-xl font-semibold text-tf-primary mb-4 flex items-center"><i class="fas fa-user-circle mr-2"></i> My Profile Details</h3>
                     <div class="space-y-3">
@@ -183,9 +163,11 @@
                     <button class="action-btn mt-6 w-full bg-tf-card text-tf-text border border-gray-600 hover:bg-gray-700" onclick="alert('TODO: Implement password change API')">Change Password</button>
                 </div>
 
+                <!-- Plan Status Card -->
                 <div class="plan-card">
                     <h3 class="text-xl font-semibold text-tf-secondary mb-4 flex items-center"><i class="fas fa-award mr-2"></i> Plan Status</h3>
                     <div class="space-y-3">
+                        <!-- Updated Plan Names -->
                         <div class="info-item"><p><strong>Current Plan:</strong> <span id="plan-name" class="font-bold"></span></p></div>
                         <div class="info-item"><p><strong>Status:</strong> <span id="account-status"></span></p></div>
                         <div class="info-item"><p><strong>Valid Until:</strong> <span id="validity-end"></span></p></div>
@@ -196,6 +178,7 @@
             </div>
         </div>
 
+        <!-- TAB 3: Support/Messaging -->
         <div id="support" class="tab-content" style="display: none;">
             <div class="info-grid">
                 <div class="p-8 border rounded-xl shadow-md bg-tf-light">
@@ -224,6 +207,7 @@
         </div>
     </div>
 
+    <!-- Inbox Modal (Shared Structure) -->
     <div id="inbox-modal" class="modal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeInbox()">&times;</span>
@@ -252,26 +236,34 @@
             window.location.href = LOGIN_PAGE;
         }
         
-        // --- CORE FUNCTIONS ---
+        // --- FIX: Updated Logout Function to Call Server ---
         async function logout() {
             try {
-                await authFetch(`${API_BASE}/client/logout`, { method: 'POST' });
+                await authFetch(`${API_BASE}/client/logout`, {
+                    method: 'POST',
+                });
+                console.log("Server logout status recorded successfully.");
             } catch (error) {
                 console.warn("Could not notify server of logout status, proceeding with local logout:", error);
             }
+
             localStorage.clear();
             window.location.href = LOGIN_PAGE;
         }
+        // --- END FIX ---
 
+        // --- AUTHENTICATED FETCH HELPER ---
         async function authFetch(url, options = {}) {
             const defaultHeaders = {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${AUTH_TOKEN}`,
             };
+
             const response = await fetch(url, {
                 ...options,
                 headers: { ...defaultHeaders, ...options.headers },
             });
+
             if (response.status === 403 || response.status === 401) {
                 logout();
                 throw new Error("Session expired. Please log in again.");
@@ -279,16 +271,21 @@
             return response;
         }
         
+        // --- HEARTBEAT FUNCTION ---
         async function sendHeartbeat() {
             if (!AUTH_TOKEN) return;
             try {
-                await authFetch(`${API_BASE}/client/activity`, { method: 'POST' });
+                await authFetch(`${API_BASE}/client/activity`, {
+                    method: 'POST',
+                });
             } catch (e) {
                 console.warn("Heartbeat failed (Session likely expired or network error).", e);
             }
         }
         
+        // --- MOCK PROFILE DATA FETCH ---
         async function fetchProfileData() {
+            // The profile details are sourced from the JWT payload cached in localStorage
             return {
                 username: planDetails.username || CLIENT_NAME,
                 email: planDetails.email || 'client@example.com', 
@@ -296,6 +293,7 @@
                 clientName: planDetails.clientName || CLIENT_NAME,
             };
         }
+
 
         // --- TAB NAVIGATION ---
         function showTab(tabId, button) {
@@ -310,29 +308,37 @@
             }
         }
 
-        // --- PROFILE & PLAN LOGIC (All original content retained) ---
-        async function loadProfileAndPlan() { 
+        // --- PROFILE & PLAN LOGIC ---
+        async function loadProfileAndPlan() {
             const profileData = await fetchProfileData();
+            
             document.getElementById('client-name-display').textContent = profileData.clientName;
+            
+            // Profile Details
             document.getElementById('profile-username').textContent = profileData.username;
             document.getElementById('profile-email').textContent = profileData.email;
             document.getElementById('profile-mobile').textContent = profileData.mobile;
             document.getElementById('bulk-code').textContent = planDetails.bulkAccessCode || 'N/A';
 
+            // Plan Details
             const statusEl = document.getElementById('account-status');
             const isActive = planDetails.isActive;
             const statusText = isActive ? 'Enabled' : 'Disabled';
+            
             statusEl.textContent = statusText;
             statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
 
+            // Handle Plan Name Display (show only the name part)
             const fullPlanName = planDetails.planName || 'Not Set';
             document.getElementById('plan-name').textContent = fullPlanName.split('_')[0]; 
+            
             document.getElementById('validity-end').textContent = new Date(planDetails.validityEnd).toLocaleDateString() || 'N/A';
             
             checkPlanValidity();
         }
 
-        function checkPlanValidity() { 
+        // --- PLAN VALIDATION LOGIC ---
+        function checkPlanValidity() {
             const token = localStorage.getItem('clientToken');
             const planDetailsString = localStorage.getItem('planDetails');
             const bulkContent = document.getElementById('bulkContent');
@@ -377,6 +383,7 @@
                 return false;
             }
         }
+
         function showAccessDenied(message) {
             const bulkContent = document.getElementById('bulkContent');
             const progressContainer = document.querySelector('#bulk-verification .progress-container');
@@ -387,35 +394,269 @@
             const errorBlock = document.createElement('div');
             errorBlock.className = 'space-y-6 mt-6';
             errorBlock.innerHTML = `
-                <div class="bg-red-50 p-8 rounded-xl border-l-4 border-alert-dark shadow-lg">
-                    <p class="font-bold text-xl text-alert-dark mb-3 flex items-center">
-                        🛑 Access Denied
-                    </p>
-                    <p class="text-base text-gray-700 mb-6">${message.replace(/\*\*/g, '<strong>')}</p>
-                </div>
-                <button onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(3)'))" class="block w-full py-3 bg-tf-secondary text-white text-center font-bold rounded-lg hover:bg-cyan-600 transition">
-                    Contact Support / Renew Plan
-                </button>
-                <a href="https://wa.me/9193246219" target="_blank" class="block w-full py-3 bg-whatsapp-green text-white text-center font-bold rounded-lg hover:bg-green-600">
-                    <span class="mr-2">🟢</span> WhatsApp Support
-                </a>
-            `;
+                <div class="bg-red-50 p-8 rounded-xl border-l-4 border-alert-dark shadow-lg">
+                    <p class="font-bold text-xl text-alert-dark mb-3 flex items-center">
+                        🛑 Access Denied
+                    </p>
+                    <p class="text-base text-gray-700 mb-6">${message.replace(/\*\*/g, '<strong>')}</p>
+                </div>
+                <button onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(3)'))" class="block w-full py-3 bg-tf-secondary text-white text-center font-bold rounded-lg hover:bg-cyan-600 transition">
+                    Contact Support / Renew Plan
+                </button>
+                <a href="https://wa.me/9193246219" target="_blank" class="block w-full py-3 bg-whatsapp-green text-white text-center font-bold rounded-lg hover:bg-green-600">
+                    <span class="mr-2">🟢</span> WhatsApp Support
+                </a>
+            `;
             const bulkVerificationDiv = document.getElementById('bulk-verification');
             if (bulkVerificationDiv.querySelector('.space-y-6.mt-6')) return;
             bulkVerificationDiv.appendChild(errorBlock);
         }
         
-        // --- BULK VERIFICATION LOGIC (All original content retained) ---
-        function updateStatusMessage(message, isError = false) { /* ... original function content ... */ }
-        function handleTemplateDownload() { /* ... original function content ... */ }
-        function parseCSV(text) { /* ... original function content ... */ }
-        async function fetchVerification(rawAddress, customerName) { /* ... original function content ... */ }
-        function createAndDownloadCSV(rows, filename) { /* ... original function content ... */ }
-        async function handleBulkVerification() { /* ... original function content ... */ }
-        function initBulkListeners() { /* ... original function content ... */ }
+        // --- BULK VERIFICATION LOGIC (functions were copied from conversation history, included for completeness) ---
+        function updateStatusMessage(message, isError = false) { 
+            const statusMessage = document.getElementById('status-message');
+            if (!statusMessage) return; 
+
+            statusMessage.textContent = message;
+            
+            statusMessage.classList.remove('text-red-700', 'bg-red-100', 'text-gray-600');
+            statusMessage.classList.add('p-2', 'rounded');
+
+            if (isError) {
+                statusMessage.classList.add('text-red-700', 'bg-red-100', 'font-bold');
+                statusMessage.classList.remove('text-gray-600');
+            } else {
+                statusMessage.classList.add('text-gray-600');
+                statusMessage.classList.remove('bg-red-100', 'font-bold');
+            }
+        }
+        function handleTemplateDownload() {
+            const templateHeaders = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS\n";
+            const templateData = 
+                "1,\"John Doe\",\"H.No. 123, Sector 40B, near bus stand, Chandigarh\"\n" +
+                "2,\"Jane Smith\",\"5th Floor, Alpha Tower, Mumbai 400001\"\n";
+                
+            const csvContent = templateHeaders + templateData;
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', 'address_verification_template.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        function parseCSV(text) {
+            const lines = text.split('\n'); 
+            if (lines.length < 2) return [];
+
+            const header = lines[0].split(',').map(h => h.trim().replace(/^\"|\"$/g, ''));
+            const data = [];
+            
+            const idIndex = header.indexOf('ORDER ID');
+            const nameIndex = header.indexOf('CUSTOMER NAME');
+            const addressIndex = header.indexOf('CUSTOMER RAW ADDRESS');
+
+            if (idIndex === -1 || nameIndex === -1 || addressIndex === -1) {
+                console.error("CSV header is missing one of the required columns.");
+                return [];
+            }
+
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim() === '') continue;
+                
+                const row = lines[i].match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g) || [];
+                
+                const cleanedRow = row.map(cell => cell.trim().replace(/^\"|\"$/g, '').replace(/\"\"/g, '\"'));
+
+                if (cleanedRow.length > Math.max(idIndex, nameIndex, addressIndex)) {
+                    data.push({
+                        'ORDER ID': cleanedRow[idIndex],
+                        'CUSTOMER NAME': cleanedRow[nameIndex],
+                        'CUSTOMER RAW ADDRESS': cleanedRow[addressIndex],
+                    });
+                }
+            }
+            return data;
+        }
+        async function fetchVerification(rawAddress, customerName) {
+            const payload = { address: rawAddress, customerName }; 
+            
+            const maxRetries = 3;
+            let lastError = null;
+            const clientToken = localStorage.getItem('clientToken'); 
+
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+                try {
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (clientToken) {
+                        headers['Authorization'] = `Bearer ${clientToken}`; 
+                    }
+
+                    const response = await fetch(API_ENDPOINT, {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorBody = await response.json();
+                        throw new Error(errorBody.error || `Server responded with status ${response.status}`);
+                    }
+                    
+                    return await response.json();
+
+                } catch (error) {
+                    lastError = error;
+                    console.error(`Verification API Attempt ${attempt + 1} failed:`, error);
+                    if (attempt < maxRetries - 1) {
+                        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+                    }
+                }
+            }
+            return { 
+                status: "Error", 
+                error: `Verification failed after ${maxRetries} attempts.`,
+                remarks: `Error: ${lastError ? lastError.message : 'Unknown Network Error'}`,
+                customerCleanName: customerName,
+                addressLine1: "API Error: See Remarks",
+                landmark: "",
+                state: "",
+                district: "",
+                pin: "",
+                addressQuality: "VERY BAD"
+            };
+        }
+        function createAndDownloadCSV(rows, filename) {
+            const header = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS,CLEAN NAME,CLEAN ADDRESS LINE 1,LANDMARK,STATE,DISTRICT,PIN,REMARKS,QUALITY\n";
+            const csvContent = header + rows.join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const downloadLink = document.getElementById('downloadLink');
+            downloadLink.href = URL.createObjectURL(blob);
+            downloadLink.classList.remove('hidden');
+        }
+        async function handleBulkVerification() {
+            if (!checkPlanValidity() || !isPlanValid) {
+                updateStatusMessage("Access denied. Plan is expired or disabled.", true);
+                return;
+            }
+
+            const fileInput = document.getElementById('csvFileInput');
+            const processButton = document.getElementById('processButton');
+            const progressBarFill = document.getElementById('progressBarFill');
+            const downloadLink = document.getElementById('downloadLink');
+
+            if (!fileInput.files.length) {
+                updateStatusMessage("Please select a CSV file first.", true);
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            processButton.disabled = true;
+            fileInput.disabled = true;
+            downloadLink.classList.add('hidden');
+            progressBarFill.style.width = '0%';
+            updateStatusMessage('Reading file...');
+            
+            reader.onload = async function(e) {
+                const text = e.target.result;
+                const addresses = parseCSV(text);
+                
+                if (addresses.length === 0) {
+                    updateStatusMessage("Error: No valid addresses found in CSV. Check format and required columns.", true);
+                    processButton.disabled = false;
+                    fileInput.disabled = false;
+                    return;
+                }
+
+                const totalAddresses = addresses.length;
+                let processedCount = 0;
+                const outputRows = [];
+
+                updateStatusMessage(`Starting verification of ${totalAddresses} addresses...`);
+
+                for (const row of addresses) {
+                    const orderId = row['ORDER ID'] || '';
+                    const customerName = row['CUSTOMER NAME'] || '';
+                    const rawAddress = row['CUSTOMER RAW ADDRESS'] || '';
+
+                    let verificationResult;
+
+                    if (!rawAddress || rawAddress.trim() === "") { 
+                        verificationResult = { status: "Skipped", remarks: "Missing raw address in CSV row.", addressQuality: "Poor", customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "" };
+                    } else {
+                        verificationResult = await fetchVerification(rawAddress, customerName);
+                    }
+
+                    const escapeAndQuote = (cell) => `\"${String(cell || '').replace(/\"/g, '\"\"')}\"`;
+
+                    const outputRow = [
+                        orderId,
+                        customerName,
+                        rawAddress,
+                        verificationResult.customerCleanName,
+                        verificationResult.addressLine1,
+                        verificationResult.landmark,
+                        verificationResult.state,
+                        verificationResult.district,
+                        verificationResult.pin,
+                        verificationResult.remarks,
+                        verificationResult.addressQuality
+                    ].map(escapeAndQuote).join(',');
+
+                    outputRows.push(outputRow);
+                    
+                    processedCount++;
+                    const progress = (processedCount / totalAddresses) * 100;
+                    progressBarFill.style.width = `${progress}%`;
+                    
+                    updateStatusMessage(`Processing... ${processedCount} of ${totalAddresses} addresses completed.`);
+                }
+
+                updateStatusMessage(`Processing complete! ${totalAddresses} addresses verified. Click 'Download Verified CSV'.`, false);
+                createAndDownloadCSV(outputRows, "verified_addresses.csv");
+                processButton.disabled = false;
+                fileInput.disabled = false;
+            };
+
+            reader.onerror = function() {
+                updateStatusMessage("Error reading file.", true);
+                processButton.disabled = false;
+                fileInput.disabled = false;
+            };
+
+            reader.readAsText(file);
+        }
+        function initBulkListeners() {
+             if (isPlanValid) {
+                const downloadTemplateButton = document.getElementById('downloadTemplateButton');
+                const csvFileInput = document.getElementById('csvFileInput');
+                const processButton = document.getElementById('processButton');
+
+                if (downloadTemplateButton) {
+                    downloadTemplateButton.addEventListener('click', handleTemplateDownload);
+                }
+
+                if (csvFileInput) {
+                    csvFileInput.addEventListener('change', () => {
+                        if (processButton) {
+                            processButton.disabled = !csvFileInput.files.length;
+                        }
+                    });
+                }
+
+                if (processButton) {
+                    processButton.addEventListener('click', handleBulkVerification);
+                }
+            }
+        }
+        // --- END BULK LOGIC ---
 
 
-        // --- MESSAGING / SUPPORT LOGIC (Fixes applied for message box and sending status) ---
+        // --- MESSAGING / SUPPORT LOGIC (FIXED) ---
         document.getElementById('support-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const subject = document.getElementById('support-subject').value;
@@ -471,9 +712,60 @@
             }
         });
 
-        // --- Inbox Functions (Messaging list and modal control) ---
-        async function loadInboxCounts() { /* ... original function content ... */ }
-        async function loadClientInbox() { /* ... original function content ... */ }
+        // --- Inbox Functions (Optimized and Consolidated) ---
+        async function loadInboxCounts() {
+            try {
+                const response = await authFetch(`${API_BASE}/inbox/message`);
+                const result = await response.json();
+                
+                if (result.status === "Success" && result.unreadCount > 0) {
+                    document.getElementById('inbox-badge').textContent = result.unreadCount;
+                    document.getElementById('inbox-badge').style.display = 'block';
+                } else {
+                    document.getElementById('inbox-badge').style.display = 'none';
+                }
+            } catch (e) {
+                console.error("Failed to load client inbox counts:", e);
+            }
+        }
+
+        async function loadClientInbox() {
+            const msgContainer = document.getElementById('client-inbox-list');
+            msgContainer.innerHTML = '<p class="text-center text-gray-500">Loading messages...</p>';
+            
+            try {
+                const response = await authFetch(`${API_BASE}/inbox/message`);
+                const result = await response.json();
+
+                if (result.status === "Success") {
+                    msgContainer.innerHTML = '';
+                    if (result.messages.length === 0) {
+                        msgContainer.innerHTML = '<p class="text-center text-gray-500">No messages in your inbox.</p>';
+                        return;
+                    }
+
+                    result.messages.forEach(msg => {
+                        const isUnread = !msg.isRead && msg.receiverId !== msg.senderId; 
+                        const cardClass = isUnread ? 'font-bold bg-indigo-50 border-tf-primary' : 'bg-white border-gray-200';
+                        const sender = msg.senderId === 'admin' ? 'Admin' : 'You';
+                        
+                        const messageHtml = `
+                            <div class="p-3 border rounded mb-2 ${cardClass}" 
+                                 onclick="viewClientMessage('${msg._id}', '${msg.subject}', '${msg.body}', ${isUnread}, '${msg.timestamp}')">
+                                <p class="text-sm text-gray-700">From: <strong>${sender}</strong></p>
+                                <p class="text-md">${msg.subject}</p>
+                                <small class="text-gray-500">${new Date(msg.timestamp).toLocaleString()}</small>
+                            </div>
+                        `;
+                        msgContainer.insertAdjacentHTML('beforeend', messageHtml);
+                    });
+                } else {
+                    msgContainer.innerHTML = `<p class="text-center text-red-500">Failed to load inbox: ${result.message}</p>`;
+                }
+            } catch (error) {
+                msgContainer.innerHTML = `<p class="text-center text-red-500">Network Error: ${error.message}</p>`;
+            }
+        }
 
         function toggleInbox() {
             document.getElementById('inbox-modal').style.display = 'flex';
