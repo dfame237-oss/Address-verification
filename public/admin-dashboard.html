@@ -8,17 +8,18 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     
     <script>
+        // Custom Tailwind config using the consistent 'tf-' palette
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
                         // 💜 Smart Locator/Teleforce Style Palette
-                        'tf-primary': '#5F3DC4', // Deep Violet/Purple
-                        'tf-secondary': '#A437C1', // Vibrant Magenta/Pink Accent
-                        'tf-dark': '#0F172A',
+                        'tf-primary': '#5F3DC4', // Deep Violet/Purple (New Primary)
+                        'tf-secondary': '#A437C1', // Vibrant Magenta/Pink Accent (New Secondary)
+                        'tf-dark': '#1f2937',
                         'tf-text': '#E2E8F0',
                         'tf-card': '#1E293B',
-                        'tf-light': '#F1FFfa', // Light background for management area
+                        'tf-light': '#F1FFfa',
                         'tf-bg-light': '#F8FAFC',
                         'alert-dark': '#DC2626',
                         'tf-primary-light': '#EFE7FF',
@@ -31,7 +32,7 @@
     </script>
 
     <style>
-        /* General Styles - Modernized Look */
+        /* General Styles - Forced Colors and Structure */
         body { font-family: 'Inter', sans-serif; background-color: #F1F5F9; }
         .dashboard-container { max-width: 1400px; margin: 30px auto; padding: 35px; background-color: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB; }
@@ -43,20 +44,20 @@
         .icon-btn:hover { color: #5F3DC4; }
         .badge { position: absolute; top: -8px; right: -8px; background-color: #DC2626; color: white; border-radius: 50%; padding: 4px 8px; font-size: 11px; font-weight: 700; border: 2px solid white; }
 
-        /* Tab Navigation - New Look */
+        /* Tab Navigation - Critical Style Overrides */
         .nav-tabs { display: flex; border-bottom: 2px solid #E5E7EB; margin-bottom: 30px; }
         .tab-button { padding: 12px 20px; cursor: pointer; border: none; background: none; font-weight: 600; color: #64748B; border-bottom: 2px solid transparent; transition: color 0.3s, border-bottom 0.3s; }
-        .tab-button.active { color: #5F3DC4; border-bottom: 2px solid #5F3DC4; } /* tf-primary */
+        .tab-button.active { color: #5F3DC4; border-bottom: 2px solid #5F3DC4; }
         .tab-content { padding: 15px 0; animation: fadeIn 0.5s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Action Buttons */
+        /* Action Buttons Overrides */
         .action-btn { background-color: #5F3DC4; color: white; padding: 8px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: background-color 0.2s, transform 0.1s; margin-right: 5px; }
         .action-btn:hover { background-color: #4d2e97; transform: translateY(-1px); }
         .action-btn.delete { background-color: #DC2626; }
         .action-btn.delete:hover { background-color: #B91C1C; }
-        .action-btn.modal-button { background-color: #A437C1; } /* tf-secondary */
-        .action-btn.modal-button:hover { background-color: #86259d; } /* tf-secondary dark */
+        .action-btn.modal-button { background-color: #A437C1; }
+        .action-btn.modal-button:hover { background-color: #86259d; }
         .add-client-btn { background-color: #A437C1; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; }
         .add-client-btn:hover { background-color: #86259d; }
 
@@ -64,18 +65,13 @@
         .client-table { width: 100%; border-collapse: separate; border-spacing: 0; background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .client-table th, .client-table td { padding: 15px 20px; text-align: left; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
         .client-table th { background-color: #F8FAFC; color: #374151; font-weight: 700; text-transform: uppercase; font-size: 0.85rem; }
-        .client-table tbody tr:hover { background-color: #fcfcfd; }
         .client-table tbody tr:last-child td { border-bottom: none; }
 
         /* Statuses */
-        .status-online-dot { color: #25D366; /* WhatsApp Green */ font-size: 10px; margin-right: 4px; }
-        .status-offline-dot { color: #9CA3AF; font-size: 10px; margin-right: 4px; }
-        .status-online-text { color: #25D366; font-weight: 600; }
-        .status-offline-text { color: #9CA3AF; font-size: 0.85rem; }
+        .status-online-dot { color: #25D366; font-size: 10px; margin-right: 4px; }
         .status-enabled { background-color: #EFE7FF; color: #5F3DC4; padding: 4px 10px; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; }
         .status-disabled { background-color: #fee2e2; color: #DC2626; padding: 4px 10px; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; }
         .plan-credit-display { font-size: 1.8rem; font-weight: 800; color: #5F3DC4; }
-
         /* Modal Styles */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; display: none; }
         .modal-content { background-color: white; padding: 35px; border-radius: 12px; width: 90%; max-width: 720px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
@@ -83,20 +79,13 @@
         .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #374151; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; transition: border-color 0.2s, box-shadow 0.2s; }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #5F3DC4; box-shadow: 0 0 0 2px rgba(95, 61, 196, 0.12); }
-        
-        /* Mobile Fixes */
         @media (max-width: 900px) {
-            .dashboard-container { padding: 15px; margin: 10px auto; border-radius: 8px; box-shadow: none; }
-            .header { flex-direction: column; align-items: flex-start; margin-bottom: 20px; }
-            .header h1 { font-size: 1.75rem; margin-bottom: 15px; }
-            .controls { width: 100%; justify-content: flex-end; }
             .client-table-wrapper { overflow-x: auto; width: 100%; }
             .client-table { min-width: 880px; }
-            .modal-content { width: 95%; margin: 20px; padding: 20px; }
         }
     </style>
 </head>
-<body>
+<body onload="loadClients(); loadInboxCounts();">
     <div class="dashboard-container">
         <header class="header">
             <h1><span class="text-tf-primary">Smart Locator</span> Admin Panel</h1>
@@ -125,7 +114,7 @@
                 </div>
                 <div class="bg-tf-primary-light p-6 rounded-xl border border-tf-primary/30">
                     <p class="text-gray-600 font-semibold mb-1">Clients Online Now</p>
-                    <div id="metric-online-clients" class="plan-credit-display text-green-600">0</div>
+                    <div id="metric-online-clients" class="plan-credit-display text-whatsapp-green">0</div>
                 </div>
                  <div class="bg-tf-primary-light p-6 rounded-xl border border-tf-primary/30">
                     <p class="text-gray-600 font-semibold mb-1">New Demo Requests</p>
@@ -181,7 +170,7 @@
                         </tr>
                     </thead>
                     <tbody id="client-list">
-                        <tr><td colspan="5" class="text-center text-gray-500 py-4">Select the Manage Clients tab to load data.</td></tr>
+                        <tr><td colspan="5" class="text-center text-gray-500 py-4">Click Refresh to load client data.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -412,9 +401,25 @@
         // --- Client management: load / render / delete / update / add / topup / clear session / toggle active ---
         async function loadClients() {
             const clientListBody = document.getElementById('client-list');
+            // Check if we are currently on the client list tab before trying to update the table body
+            if (document.getElementById('client-management').style.display !== 'block') {
+                // If not on the tab, just fetch the data silently for metrics
+                try {
+                    const response = await authFetch(`${API_ADMIN}?action=client`);
+                    const result = await response.json();
+                    if (result.status === "Success") {
+                        activeClients = result.data;
+                        updateOverviewMetrics(activeClients);
+                    }
+                } catch (e) {
+                    // Ignore silent fetch errors
+                }
+                return;
+            }
+
+            // Only update the table if we are on the Client Management tab
             clientListBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-4">Loading clients...</td></tr>';
             try {
-                // Fetch consolidated router for client list GET
                 const response = await authFetch(`${API_ADMIN}?action=client`);
                 const result = await response.json();
                 if (result.status === "Success") {
@@ -671,12 +676,13 @@
                 }
             }
 
-            status.textContent = 'Applying...'; status.style.color = '#5F3DC4';
+            status.textContent = 'Applying...'; status.style.color = '#6366F1';
             try {
+                // FIX 6: Use consolidated router for Topup POST
                 const resp = await authFetch(`${API_ADMIN}?action=topup`, { method: 'POST', body: JSON.stringify(payload) });
                 const json = await resp.json();
                 if (resp.ok && json.status === 'Success') {
-                    status.textContent = 'Top-up applied.'; status.style.color = '#A437C1';
+                    status.textContent = 'Top-up applied.'; status.style.color = '#06B6D4';
                     loadClients();
                     setTimeout(closeTopupModal, 1000);
                 } else {
@@ -691,6 +697,7 @@
         async function clearSession(clientId) {
             if (!confirm('Clear active session for this client? This will force them to log in again.')) return;
             try {
+                // FIX 7: Use consolidated router for Clear Session PUT
                 const resp = await authFetch(`${API_ADMIN}?action=client`, { method: 'PUT', body: JSON.stringify({ clientId, clearSession: true })});
                 const json = await resp.json();
                 if (resp.ok && json.status === 'Success') { showMessageModal('Session cleared.', 'success'); loadClients(); } 
@@ -701,6 +708,7 @@
         async function toggleActive(clientId, setActive) {
             if (!confirm(`${setActive ? 'Enable' : 'Disable'} this client?`)) return;
             try {
+                // FIX 8: Use consolidated router for Toggle Active PUT
                 const resp = await authFetch(`${API_ADMIN}?action=client`, { method: 'PUT', body: JSON.stringify({ clientId, isActive: setActive })});
                 const json = await resp.json();
                 if (resp.ok && json.status === 'Success') { showMessageModal('Updated.', 'success'); loadClients(); } 
@@ -708,11 +716,10 @@
             } catch (e) { showMessageModal(`Network error: ${e.message}`, 'error'); }
         }
 
-        // --- Inbox & messaging logic (simplified for completeness) ---
+        // --- Inbox & messaging logic ---
         async function loadInboxCounts() {
             let totalUnread = 0;
             try {
-                // Fetch admin-received messages from the Client Inbox system
                 const msgResponse = await authFetch(`${API_BASE}/inbox/message`);
                 const msgResult = await msgResponse.json();
                 if (msgResult.status === "Success") {
@@ -723,7 +730,6 @@
             } catch (e) { console.error("Failed to load client message counts:", e); }
 
             try {
-                // Fetch Demo Requests from the Support Message system
                 const supportResponse = await authFetch(`${API_ADMIN}?action=support`);
                 const supportResult = await supportResponse.json();
                 if (supportResult.status === "Success") {
@@ -753,8 +759,7 @@
                 loadInboxCounts();
                 switchInboxTab('support'); // Default to Demo Requests/Support
             } else if (tabId === 'admin-overview') {
-                 // Metrics updated in loadClients/loadInboxCounts, just ensure data is fresh
-                 loadClients(); 
+                 loadClients(); // Fetches data needed for metrics
             }
         }
 
@@ -774,7 +779,6 @@
         }
         
         // --- Dummy/Simplified Message Functions for UI Activation ---
-        // NOTE: These functions need the full message/inbox logic to work, but the UI calls are correct.
         function loadClientMessages() { 
             const msgContainer = document.getElementById('inbox-messages-container');
             msgContainer.innerHTML = `<p class="text-center text-gray-500 py-4">Loading client messages (requires full inbox logic).</p>`;
