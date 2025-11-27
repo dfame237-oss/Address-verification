@@ -11,22 +11,22 @@
             theme: {
                 extend: {
               
-                       colors: {
-                        'tf-bg-light': '#F8FAFC', // Main Light Background (Slate-50)
+                       colors: { [cite: 248]
+                        'tf-bg-light': '#F8FAFC', // Main Light Background (Slate-50) [cite: 248]
                         'tf-card-light': '#FFFFFF', // White Card Background
-                        'tf-text-dark': '#1E293B', // Dark Text (Slate-800)
+                        'tf-text-dark': '#1E293B', // Dark Text (Slate-800) [cite: 248, 249]
      
-                    'tf-primary': '#6366F1', // Indigo/Violet Primary Accent
-                        'tf-secondary': '#06B6D4', // Cyan Secondary Accent
+                    'tf-primary': '#6366F1', // Indigo/Violet Primary Accent [cite: 249]
+                        'tf-secondary': '#06B6D4', // Cyan Secondary Accent [cite: 249]
                         'tf-border': '#E2E8F0', // Light Border (Slate-200)
                   
-           'alert-dark': '#EF4444',
-                        'success-green': '#10B981',
+           'alert-dark': '#EF4444', [cite: 250]
+                        'success-green': '#10B981', [cite: 250]
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
  
-                    },
+                    }, [cite: 251]
                 }
             }
         }
@@ -35,35 +35,35 @@
         /* General Styles - Light Theme */
         body { 
             font-family: 
- 'Inter', sans-serif; 
+ 'Inter', sans-serif; [cite: 252]
             background-color: var(--tf-bg-light, #F8FAFC);
             color: var(--tf-text-dark, #1E293B); 
         }
         /* Custom gradient for titles if needed */
         .text-gradient {
-            background-image: linear-gradient(to right, #6366F1, #06B6D4);
+            background-image: linear-gradient(to right, #6366F1, #06B6D4); [cite: 252, 253]
  -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         /* Style for the pricing tiers list */
         .tier-card {
-            background-color: var(--tf-card-light, #FFFFFF);
+            background-color: var(--tf-card-light, #FFFFFF); [cite: 253, 254]
  border: 1px solid var(--tf-border, #E2E8F0);
         }
         .tier-list {
-            list-style: none;
+            list-style: none; [cite: 255]
  padding: 0;
             margin: 0;
         }
         .tier-list li {
-            padding: 10px 0;
+            padding: 10px 0; [cite: 256]
  border-bottom: 1px dashed #E2E8F0;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: center; [cite: 257]
  }
         .tier-list li:last-child {
-            border-bottom: none;
+            border-bottom: none; [cite: 258]
  }
     </style>
 </head>
@@ -76,11 +76,10 @@
             </div>
             <div class="space-x-6 flex items-center">
       
-           <a href="admin-login.html" class="text-xs text-gray-500 hover:text-gray-600 transition-colors duration-300" title="Admin Login">Admin Access</a>
+           <a href="admin-login.html" class="text-xs text-gray-500 hover:text-gray-600 transition-colors duration-300" title="Admin Login">Admin Access</a> [cite: 259]
                 <a href="pricing.html" class="text-tf-secondary hover:text-tf-secondary font-semibold border-b-2 border-tf-secondary transition">Pricing</a>
                 <a href="index.html#demoModal" class="bg-tf-primary text-white py-2 px-6 rounded-full font-semibold shadow-lg hover:bg-indigo-600 transition">Request Demo</a>
-                <a href="client-login.html" class="text-tf-text-dark hover:text-tf-secondary font-semibold border-b-2 border-transparent hover:border-tf-secondary transition">Client Login</a>
-      
+                <a href="client-login.html" class="text-tf-text-dark hover:text-tf-secondary font-semibold border-b-2 border-transparent hover:border-tf-secondary transition">Client Login</a> [cite: 260]
        </div>
         </div>
     </header>
@@ -89,10 +88,10 @@
         <div class="max-w-7xl mx-auto text-center">
             <h1 class="text-5xl font-extrabold mb-4 text-tf-text-dark">
                 Transparent Pricing.
- <span class="text-gradient">Incredible Value.</span>
+ <span class="text-gradient">Incredible Value.</span> [cite: 261]
             </h1>
             <p class="text-xl text-gray-600 mb-12">
-                Choose the plan that fits your growth.
+                Choose the plan that fits your growth. [cite: 261, 262]
  **Save up to 40%** with annual billing!
             </p>
 
@@ -100,12 +99,12 @@
                 <div class="bg-tf-card-light p-1 rounded-full flex space-x-2 shadow-inner border border-tf-border">
                     <button id="monthly-toggle" data-duration="1" class="px-6 py-2 rounded-full font-semibold bg-tf-primary text-white shadow-lg transition">
                         
- Billed Monthly
+ Billed Monthly [cite: 263]
                     </button>
                     <button id="yearly-toggle" data-duration="12" class="px-6 py-2 rounded-full font-semibold text-gray-700 hover:bg-tf-border transition duration-300">
                         Billed Yearly <span class="text-tf-secondary ml-2">(Save 40%!)</span>
                     
- </button>
+ </button> [cite: 264]
                 </div>
             </div>
 
@@ -114,67 +113,67 @@
             </div>
             
            
-  <p class="text-sm text-gray-500 mt-12">* All prices shown are final and **include 18% GST**.</p>
+  <p class="text-sm text-gray-500 mt-12">* All prices shown are final and **include 18% GST**.</p> [cite: 265]
         </div>
     </main>
     
     <script>
-        // --- PLAN & PRICING DATA MODEL (Same as in Admin Dashboard - Updated with Credits) ---
+        // --- PLAN & PRICING DATA MODEL (Updated with Credits) ---
         const PLANS = [
             { name: 'Growth Starter', basePrice: 1000, credits: '10,000', features: ['AI Address Cleaning', 'API Access', 'Client Dashboard', 'Standard Support'], color: '#6366F1' },
     
-         { name: 'Business Pro', basePrice: 2000, credits: '25,000', features: ['All Starter Features', 'Locational Intelligence', 'Dedicated File Storage', 'Priority Support'], color: '#06B6D4' },
-            { name: 'Enterprise Max', basePrice: 5000, credits: 'Unlimited', features: ['All Pro Features', 'Dedicated Account Manager', 'Custom API Integration', '24/7/365 Phone Support'], color: '#10B981' },
+         { name: 'Business Pro', basePrice: 2000, credits: '25,000', features: ['All Starter Features', 'Locational Intelligence', 'Dedicated File Storage', 'Priority Support'], color: '#06B6D4' }, [cite: 266]
+            { name: 'Enterprise Max', basePrice: 5000, credits: 'Unlimited', features: ['All Pro Features', 'Dedicated Account Manager', 'Custom API Integration', '24/7/365 Phone Support'], color: '#10B981' }, [cite: 266]
         ];
         // Define all available durations/discounts for the toggle and detailed view
-        const DURATIONS = [
-            { months: 1, label: "Monthly", discount: 0, showInDetail: true },
-            { months: 3, label: "3 Months", discount: 0.20, showInDetail: true },
+        const DURATIONS = [ [cite: 267]
+            { months: 1, label: "Monthly", discount: 0, showInDetail: true }, [cite: 267]
+            { months: 3, label: "3 Months", discount: 0.20, showInDetail: true }, [cite: 267]
             { months: 6, label: "6 Months", discount: 0.30, showInDetail: false }, // Only show Monthly/Yearly toggle by default, put 3 & 6 in the 
- detail table
-            { months: 12, label: "1 Year", discount: 0.40, showInDetail: true },
+ detail table [cite: 268]
+            { months: 12, label: "1 Year", discount: 0.40, showInDetail: true }, [cite: 268]
         ];
-        // --- CORE PRICE CALCULATION FUNCTION ---
+        // --- CORE PRICE CALCULATION FUNCTION --- [cite: 269]
         function calculatePrice(basePrice, months, discount) {
-            const monthlyTotal = basePrice * months;
+            const monthlyTotal = basePrice * months; [cite: 269, 270]
             const discountedTotal = monthlyTotal * (1 - discount);
             // Apply 18% GST (1.18 multiplier) and round to the nearest whole rupee
-            return Math.round(discountedTotal * 1.18);
+            return Math.round(discountedTotal * 1.18); [cite: 270, 271]
         }
 
-        let activeDuration = 1;
+        let activeDuration = 1; [cite: 271, 272]
         // Default to 1 Month
 
         // --- UI RENDERING LOGIC ---
         function formatPrice(price, durationMonths) {
             const durationText = durationMonths === 1 ?
- '/mo' : '';
-            return `<span class="text-4xl lg:text-5xl font-extrabold text-tf-text-dark">₹${price.toLocaleString('en-IN')}</span> <span class="text-gray-500">${durationText}</span>`;
+ '/mo' : ''; [cite: 273]
+            return `<span class="text-4xl lg:text-5xl font-extrabold text-tf-text-dark">₹${price.toLocaleString('en-IN')}</span> <span class="text-gray-500">${durationText}</span>`; [cite: 274]
         }
 
         function togglePricingView(months) {
-            activeDuration = months;
+            activeDuration = months; [cite: 274, 275]
             // Update toggle buttons
-            const monthlyBtn = document.getElementById('monthly-toggle');
+            const monthlyBtn = document.getElementById('monthly-toggle'); [cite: 275, 276]
             const yearlyBtn = document.getElementById('yearly-toggle');
             
             if (months === 1) {
-                monthlyBtn.classList.add('bg-tf-primary', 'text-white');
+                monthlyBtn.classList.add('bg-tf-primary', 'text-white'); [cite: 276, 277]
                 monthlyBtn.classList.remove('bg-tf-card-light', 'text-gray-700');
                 yearlyBtn.classList.remove('bg-tf-primary', 'text-white');
                 yearlyBtn.classList.add('bg-tf-card-light', 'text-gray-700');
             } else if (months === 12) {
-                yearlyBtn.classList.add('bg-tf-primary', 'text-white');
+                yearlyBtn.classList.add('bg-tf-primary', 'text-white'); [cite: 278]
                 yearlyBtn.classList.remove('bg-tf-card-light', 'text-gray-700');
                 monthlyBtn.classList.remove('bg-tf-primary', 'text-white');
                 monthlyBtn.classList.add('bg-tf-card-light', 'text-gray-700');
             }
 
-            generatePricingCards();
+            generatePricingCards(); [cite: 279]
         }
 
         function generatePricingCards() {
-            const grid = document.getElementById('pricing-grid');
+            const grid = document.getElementById('pricing-grid'); [cite: 279, 280]
             grid.innerHTML = ''; // Clear existing cards
 
             PLANS.forEach(plan => {
@@ -183,78 +182,78 @@
 
                 const finalPrice = calculatePrice(plan.basePrice, duration.months, duration.discount);
                 const isPopular 
- = plan.name === 'Business Pro'; // Highlight a plan
+ = plan.name === 'Business Pro'; // Highlight a plan [cite: 281]
 
                 // Build the list of prices for detailed view
                 const detailList = DURATIONS.map(d => {
                     const price = calculatePrice(plan.basePrice, d.months, d.discount);
                     const saved 
- = d.discount > 0 ? (plan.basePrice * d.months * d.discount).toLocaleString('en-IN') : null;
+ = d.discount > 0 ? (plan.basePrice * d.months * d.discount).toLocaleString('en-IN') : null; [cite: 282]
 
                     return `
                         <li class="font-semibold ${d.months === activeDuration ? 'bg-tf-border/50 rounded-md px-2' : ''}">
                             <span>${d.label}:</span>
       
-                           <span class="flex flex-col items-end">
+                           <span class="flex flex-col items-end"> [cite: 283]
                                 <span>₹${price.toLocaleString('en-IN')}</span>
                                 ${saved ?
- `<span class="text-xs text-alert-dark font-normal">Save ₹${saved}</span>` : ''}
+ `<span class="text-xs text-alert-dark font-normal">Save ₹${saved}</span>` : ''} [cite: 284]
                             </span>
                         </li>
                     `;
- }).join('');
+ }).join(''); [cite: 285]
 
 
                 const cardHtml = `
                     <div class="tier-card p-8 rounded-xl shadow-xl border-t-4 ${isPopular ? 'border-tf-secondary transform scale-[1.03] shadow-2xl z-10' : 'border-tf-primary'} transition duration-300">
                         ${isPopular ?
- '<p class="absolute top-0 right-0 -mt-3 mr-4 px-3 py-1 bg-tf-secondary text-white text-xs font-bold uppercase rounded-full">Most Popular</p>' : ''}
+ '<p class="absolute top-0 right-0 -mt-3 mr-4 px-3 py-1 bg-tf-secondary text-white text-xs font-bold uppercase rounded-full">Most Popular</p>' : ''} [cite: 286]
                         
                         <h2 class="text-3xl font-bold mb-2" style="color: ${isPopular ? plan.color : '#6366F1'};">${plan.name}</h2>
                         <p class="text-gray-500 mb-6">Billed 
- ${duration.label}</p>
+ ${duration.label}</p> [cite: 287]
                         
                         <div class="text-center mb-6">
                             ${formatPrice(finalPrice, duration.months)}
                      
-                       ${duration.months > 1 ?
- `<p class="text-sm text-success-green mt-1">~ ₹${(finalPrice / duration.months).toFixed(0)} / mo</p>` : ''}
+                       ${duration.months > 1 ? [cite: 288]
+ `<p class="text-sm text-success-green mt-1">~ ₹${(finalPrice / duration.months).toFixed(0)} / mo</p>` : ''} [cite: 289]
                         </div>
 
                         <p class="text-sm font-semibold text-tf-text-dark mb-4">What you get:</p>
                         <ul class="text-left space-y-3 mb-8">
          
-                           <li class="flex items-center text-tf-text-dark">
+                           <li class="flex items-center text-tf-text-dark"> [cite: 290]
                                 <i class="fas fa-check-circle mr-3 text-success-green"></i> 
                                 ${plan.credits} Credits
         
-                     </li>
+                     </li> [cite: 291]
                             ${plan.features.map(f => `
                                 <li class="flex items-start text-gray-700">
                
-                      <i class="fas fa-check-circle mr-3 mt-1 text-tf-primary text-xs flex-shrink-0"></i>
+                      <i class="fas fa-check-circle mr-3 mt-1 text-tf-primary text-xs flex-shrink-0"></i> [cite: 292]
                                     ${f}
                                 </li>
     
-                            `).join('')}
+                            `).join('')} [cite: 293]
                         </ul>
 
                         <a href="client-login.html" class="block w-full bg-tf-secondary text-white py-3 rounded-lg font-semibold shadow-lg hover:bg-cyan-600 transition duration-300">
                 
-              Choose ${plan.name}
+              Choose ${plan.name} [cite: 294]
                         </a>
                         
                         <div class="mt-8 border-t border-tf-border pt-4">
            
-                          <h4 class="text-md font-bold mb-3 text-left text-gray-700">All Billing Options:</h4>
+                          <h4 class="text-md font-bold mb-3 text-left text-gray-700">All Billing Options:</h4> [cite: 295]
                             <ul class="tier-list text-left text-sm text-gray-700">
                                 ${detailList}
             
-                </ul>
+                </ul> [cite: 296]
                         </div>
                     </div>
                 `;
-            grid.insertAdjacentHTML('beforeend', cardHtml);
+            grid.insertAdjacentHTML('beforeend', cardHtml); [cite: 297]
             });
         }
 
@@ -264,3 +263,12 @@
             activeDuration = 1; 
 
             document.getElementById('monthly-toggle').addEventListener('click', () => togglePricingView(1));
+            document.getElementById('yearly-toggle').addEventListener('click', () => togglePricingView(12));
+         
+    
+            // Render the initial monthly view
+            togglePricingView(1); [cite: 298]
+        });
+ </script> [cite: 299]
+</body>
+</html>

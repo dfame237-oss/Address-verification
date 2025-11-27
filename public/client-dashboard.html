@@ -209,7 +209,7 @@
         @media (max-width: 768px) {
             .dashboard-container { 
                 padding: 15px;
- margin: 10px auto; 
+ margin: 10px auto;
                 width: 95%; 
                 box-shadow: none; 
             }
@@ -366,7 +366,8 @@
         </div>
 
  
-       <div id="support" class="tab-content" style="display: none;">
+      
+        <div id="support" class="tab-content" style="display: none;">
             <div class="p-8 border rounded-xl shadow-md bg-tf-light space-y-6 max-w-lg mx-auto">
                 <h2 class="text-2xl font-bold mb-4 flex items-center text-tf-primary">
                     <i class="fas fa-headset mr-3"></i> Contact Support
@@ -433,12 +434,13 @@
             window.location.href = LOGIN_PAGE;
         }
         
-        // --- LOGOUT FUNCTION (Modified for Server Notification - Request 4) ---
+        // --- LOGOUT FUNCTION (UPDATED for Server Notification) ---
         async function logout() {
             const tokenToNotify = localStorage.getItem('clientToken');
             try {
                 if (tokenToNotify) {
-                    await fetch(`${API_BASE}/client/logout`, { // New logout endpoint to notify server
+                    // Send notification to server to clear session/single-login token
+                    await fetch(`${API_BASE}/client/logout`, { 
                         method: 'POST',
                         headers: {
          
@@ -517,7 +519,7 @@
         }
 
 
-        // --- TAB NAVIGATION ---
+        // --- TAB NAVIGATION (FIXED) ---
         function showTab(tabId, button) {
             document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -525,11 +527,12 @@
             document.getElementById(tabId).style.display = 'block';
             button.classList.add('active');
 
-            if (tabId === 'support') {
-                // No action needed;
- contact links are static.
+            if (tabId === 'bulk-verification') {
+                 checkPlanValidity(); // CRITICAL FIX: Ensure validity is checked when returning to bulk tab
             } else if (tabId === 'profile-plan') {
                  loadProfileAndPlan();
+            } else if (tabId === 'support') {
+                // No action needed; contact links are static.
             }
         }
 

@@ -19,7 +19,7 @@
   
                         'tf-text': '#E2E8F0', // Light Text
                         'tf-card': '#1E293B', // Darker Card Background
-                        'tf-light': '#F1F5F9', // Very light gray for 
+                        'tf-light': '#F1F5F9', // Very light gray for
               
            'alert-dark': '#DC2626',
                     },
@@ -387,7 +387,7 @@ class="form-group">
         let activeClients = [];
         let selectedClientId = null; 
         let selectedClientUsername = null;
- let currentInboxTab = 'messages'; 
+ let currentInboxTab = 'messages';
         const ONLINE_THRESHOLD_MS = 300000; // 5 minutes in milliseconds - Defines "Online" status
 
         // Check auth status on load
@@ -400,7 +400,7 @@ class="form-group">
  window.location.href = 'admin-login.html';
         }
         
-        // --- UI GENERATION ---
+        // --- UI GENERATION (UPDATED for Credits) ---
         function generatePlanOptions() {
             const options = [];
  PLANS.forEach(plan => {
@@ -445,7 +445,6 @@ class="form-group">
         // --- CORE FUNCTION TO CALCULATE AND SET VALIDITY DATE (Corrected) ---
         function updateValidityDate(planValue, dateInputId) {
             if (!planValue) return;
- // Extract the duration (in months) from the plan value string
             // Value format: PlanName_Price_DurationMonths_Month_Credits
             const parts = planValue.split('_');
  // The number of months is the 3rd part (index 2)
@@ -488,7 +487,7 @@ class="form-group">
  throw new Error("Session expired. Please log in again.");
             }
             return response;
- }
+        }
 
         // --- CLIENT MANAGEMENT LOGIC ---
         async function loadClients() {
@@ -503,7 +502,7 @@ class="form-group">
  renderClients(activeClients);
                 } else {
                     clientListBody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500 py-4">Failed to load clients: ${result.message}</td></tr>`;
- }
+                }
 
             } catch (error) {
                 console.error('Error loading clients:', error);
@@ -533,7 +532,7 @@ class="form-group">
 
         function renderClients(clients) {
             const clientListBody = document.getElementById('client-list');
- clientListBody.innerHTML = ''; 
+ clientListBody.innerHTML = '';
 
             if (clients.length === 0) {
                 clientListBody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-4">No clients found.</td></tr>';
@@ -892,10 +891,10 @@ class="form-group">
                     });
                 } else {
                     msgContainer.innerHTML = `<p class="text-center text-red-500 py-4">Failed to load client inbox: ${result.message}</p>`;
- }
+                }
             } catch (error) {
                 msgContainer.innerHTML = `<p class="text-center text-red-500 py-4">Network Error: ${error.message}</p>`;
- }
+            }
         }
 
         async function loadSupportMessages() {
@@ -935,10 +934,10 @@ class="form-group">
                     });
                 } else {
                     msgContainer.innerHTML = `<p class="text-center text-red-500 py-4">Failed to load requests: ${result.message}</p>`;
- }
+                }
             } catch (error) {
                 msgContainer.innerHTML = `<p class="text-center text-red-500 py-4">Network Error: ${error.message}</p>`;
- }
+            }
         }
 
         function viewClientMessage(messageId, subject, body, senderId, clientUsername, isUnread, timestamp) {
@@ -1050,16 +1049,16 @@ mb-3">From: <strong>${clientUsername}</strong> |
             }
         }
 
-        // --- INITIALIZATION ---
+        // --- INITIALIZATION (FIXED) ---
         window.onload = () => {
             populatePlanDropdowns();
- loadClients();
+            loadClients(); // Initial load
             loadInboxCounts();
             // Reload clients every 30 seconds to update 'Last Active' status
             setInterval(loadClients, 30000);
- // Check inbox counts every 60 seconds
+            // Check inbox counts every 60 seconds
             setInterval(loadInboxCounts, 60000);
- };
+        };
     </script>
 </body>
 </html>
