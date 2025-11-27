@@ -1,156 +1,105 @@
-/* -----------------------------------------
-   GLOBAL PAGE STYLES
-   ----------------------------------------- */
+/* ---------- Global ---------- */
+:root {
+  --desktop-max-width: 1280px;
+  --card-padding-desktop: 28px;
+  --compact-gap: 12px;
+}
 
+/* Basic page */
 body {
-    font-family: Inter, Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #F8FAFC;
+  font-family: Inter, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #F8FAFC;
+  color: #1E293B;
 }
 
-/* Container used in older simple pages (single/bulk selection) */
-.container {
-    background: #ffffff;
-    padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-    text-align: center;
-    width: 90%;
-    max-width: 600px;
-    margin: auto;
+/* Max width helper used by HTML */
+.max-w-7xl { max-width: calc(100% - 48px); margin: 0 auto; }
+
+/* Utility */
+.text-center { text-align: center; }
+
+/* Simple card/box */
+.card, .box, .bg-tf-card-light {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 6px 22px rgba(2,6,23,0.06);
 }
 
-/* Headings */
-h1, h2, h3 {
-    color: #1E293B; /* matches tf-text-dark */
+/* Inputs (non-tailwind fallback) */
+input[type=text], input[type=password], input[type=email], input[type=tel], textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e6e9ee;
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-size: 14px;
 }
 
-/* -----------------------------------------
-   BUTTON STYLES
-   ----------------------------------------- */
-
-.button {
-    text-decoration: none;
-    padding: 15px 30px;
-    border-radius: 8px;
-    font-size: 1.1em;
-    font-weight: 600;
-    transition: 0.25s ease;
-    display: inline-block;
+input:focus, textarea:focus {
+  outline: none;
+  border-color: #6366F1;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
 }
 
-.button.primary {
-    background-color: #28a745;
-    color: white;
-    border: 2px solid #218838;
+/* Buttons for non-tailwind flows */
+.button, .btn-primary {
+  display: inline-block;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
 }
 
-.button.primary:hover {
-    background-color: #218838;
-    transform: translateY(-2px);
+/* Desktop-first tweaks */
+@media (min-width: 1024px) {
+  .max-w-7xl { max-width: var(--desktop-max-width); }
+  .card, .box, .bg-tf-card-light { padding: var(--card-padding-desktop); border-radius: 12px; }
+
+  /* HERO desktop grid */
+  .hero-desktop-grid { display: grid; grid-template-columns: 1fr 360px; gap: 32px; align-items: start; }
+
+  /* Sidebar layout */
+  .desktop-sidebar-layout { display: grid; grid-template-columns: 260px 1fr; gap: 24px; }
+  .sidebar { position: sticky; top: 20px; height: calc(100vh - 48px); overflow: auto; padding: 16px; }
+
+  /* Denser layout spacing */
+  .compact { gap: var(--compact-gap); }
 }
 
-.button.secondary {
-    background-color: #ffc107;
-    color: #333;
-    border: 2px solid #e0a800;
+/* Tooltip util for desktop hover/focus */
+.tooltip { position: relative; cursor: help; }
+.tooltip:hover::after, .tooltip:focus::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #111827;
+  color: #fff;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 60;
 }
 
-.button.secondary:hover {
-    background-color: #e0a800;
-    transform: translateY(-2px);
+/* Table helpers */
+.table-fixed-header { overflow: auto; max-height: 60vh; }
+.table-fixed-header table thead th { position: sticky; top: 0; background: white; z-index: 10; }
+
+/* Small responsive tweaks */
+@media (max-width: 640px) {
+  .hero-desktop-grid { display: block; }
+  .desktop-sidebar-layout { display: block; }
+  .sidebar { display: none; }
 }
 
-/* Small info text */
-.note {
-    margin-top: 30px;
-    color: #6c757d;
-    font-size: 0.9em;
-}
-
-/* -----------------------------------------
-   FORM INPUTS (for non-Tailwind pages)
-   ----------------------------------------- */
-
-input[type=text],
-input[type=number],
-input[type=email],
-input[type=tel],
-textarea {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    margin-top: 4px;
-    font-size: 1em;
-    box-sizing: border-box;
-}
-
-input:focus,
-textarea:focus {
-    border-color: #6366F1;        /* tf-primary */
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
-}
-
-/* Buttons used outside Tailwind */
-.btn-primary {
-    background: #6366F1;
-    color: #fff;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-weight: 700;
-    border: none;
-    cursor: pointer;
-    transition: 0.2s ease;
-}
-
-.btn-primary:hover {
-    background: #4F46E5;
-}
-
-/* -----------------------------------------
-   SIMPLE PAGE LAYOUT HELPERS
-   ----------------------------------------- */
-
-/* Center vertical */
-.center-page {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-}
-
-/* Box layout for small input pages */
-.box {
-    background: white;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    width: 100%;
-    max-width: 450px;
-}
-
-/* Tables (if needed for future UI) */
-table {
-    border-collapse: collapse;
-    width: 100%;
-}
-
-table th, table td {
-    border: 1px solid #e2e8f0;
-    padding: 8px 10px;
-}
-
-table th {
-    background: #F1F5F9;
-}
-
-/* -----------------------------------------
-   UTILITIES (Optional)
-   ----------------------------------------- */
-
-.text-center { text-align:center; }
-.mt-20 { margin-top:20px; }
-.mt-30 { margin-top:30px; }
+/* Minor spacing utilities used in pages */
+.mt-1 { margin-top: .25rem; }
+.mb-2 { margin-bottom: .5rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-6 { margin-bottom: 1.5rem; }
+.p-3 { padding: .75rem; }

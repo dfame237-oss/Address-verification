@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>AI Address Verification Platform - Teleforce</title>
 
   <!-- Tailwind -->
@@ -20,204 +20,258 @@
             'whatsapp-green': '#25D366',
             'alert-dark': '#EF4444'
           },
-          fontFamily: {
-            sans: ['Inter', 'sans-serif']
-          }
+          fontFamily: { sans: ['Inter', 'sans-serif'] }
         }
       }
     }
   </script>
 
+  <link rel="stylesheet" href="style.css">
   <style>
-    body { background:#F8FAFC; font-family:Inter,sans-serif; }
-    .input-focus:focus { border-color:#6366F1; --tw-ring-color:#6366F1; }
-    .text-gradient {
-      background-image: linear-gradient(to right, #6366F1, #06B6D4);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+    .input-focus:focus { border-color: #6366F1; --tw-ring-color: #6366F1; }
+    .text-gradient { background-image: linear-gradient(to right,#6366F1,#06B6D4); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
   </style>
 </head>
+<body class="bg-tf-bg-light text-tf-text-dark">
 
-<body class="text-tf-text-dark">
-
-  <!-- NAVBAR -->
-  <nav class="bg-white shadow-md border-b sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-
-      <div class="text-3xl font-extrabold">
-        <span class="text-tf-primary">AI</span> VERIFY
+  <!-- NAV -->
+  <nav class="bg-tf-card-light shadow sticky top-0 z-50 border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <div class="text-2xl font-extrabold"><span class="text-tf-primary">AI</span> VERIFY</div>
+        <span class="hidden lg:inline text-sm text-gray-500">Address Verification • Bulk & Single</span>
       </div>
-
-      <div class="flex gap-6 items-center">
-        <a href="admin-login.html" class="text-xs text-gray-500 hover:text-gray-700">Admin</a>
-
-        <a href="pricing.html" class="font-semibold hover:text-tf-secondary">Pricing</a>
-
-        <a href="#demoModal" class="bg-tf-primary text-white py-2 px-6 rounded-full shadow hover:bg-indigo-600 transition">
-          Request Demo
-        </a>
-
-        <a href="client-login.html" class="font-semibold hover:text-tf-secondary">Client Login</a>
+      <div class="flex items-center gap-4">
+        <a href="admin-login.html" class="text-sm text-gray-600 hover:text-gray-800">Admin</a>
+        <a href="pricing.html" class="text-sm font-semibold hover:text-tf-secondary">Pricing</a>
+        <a href="#demoModal" class="hidden sm:inline-block bg-tf-primary text-white py-2 px-4 rounded-full shadow hover:bg-indigo-600">Request Demo</a>
+        <a href="client-login.html" class="text-sm font-semibold hover:text-tf-secondary">Client Login</a>
       </div>
-
     </div>
   </nav>
 
-  <!-- HERO -->
-  <header class="pt-24 pb-28 text-center bg-tf-bg-light">
-    <div class="max-w-6xl mx-auto px-6">
+  <!-- MAIN (desktop-sidebar-layout) -->
+  <main class="max-w-7xl mx-auto px-6 py-10 desktop-sidebar-layout">
 
-      <h1 class="text-6xl font-extrabold mb-6">
-        Stop RTO. <span class="text-gradient">Start Scaling.</span>
-      </h1>
-
-      <p class="text-xl text-gray-600 mb-14 max-w-3xl mx-auto">
-        The <strong>Smartest AI Address Platform</strong> built to process 100% of your customer database and guarantee first-attempt delivery success.
-      </p>
-
-      <!-- PROCESS CARDS -->
-      <div class="bg-white border shadow-xl rounded-3xl p-10">
-
-        <h2 class="text-4xl font-extrabold mb-10">3-Stage Verification Process</h2>
-
-        <div class="grid md:grid-cols-3 gap-10">
-
-          <!-- STEP 1 -->
-          <div class="text-center p-6 bg-gray-50 rounded-xl shadow border border-tf-primary/40">
-            <div class="w-16 h-16 rounded-full bg-tf-primary text-white flex items-center justify-center mx-auto mb-4 shadow-lg">
-              ⬆️
-            </div>
-            <h3 class="text-xl font-bold mb-2">1. Secure Upload</h3>
-            <p class="text-gray-600">Upload your raw address data in bulk through a secure client portal.</p>
-          </div>
-
-          <!-- STEP 2 -->
-          <div class="text-center p-6 bg-gray-50 rounded-xl shadow border border-tf-secondary/40">
-            <div class="w-16 h-16 rounded-full bg-tf-secondary text-white flex items-center justify-center mx-auto mb-4 shadow-lg">
-              ⚙️
-            </div>
-            <h3 class="text-xl font-bold mb-2">2. AI Cleaning</h3>
-            <p class="text-gray-600">Our AI auto-corrects, cleans, normalizes and validates against official sources.</p>
-          </div>
-
-          <!-- STEP 3 -->
-          <div class="text-center p-6 bg-gray-50 rounded-xl shadow border border-gray-300/60">
-            <div class="w-16 h-16 rounded-full bg-tf-text-dark text-white flex items-center justify-center mx-auto mb-4 shadow-lg">
-              📊
-            </div>
-            <h3 class="text-xl font-bold mb-2">3. Deliverability Score</h3>
-            <p class="text-gray-600">Get standardized addresses + risk score for dispatch accuracy.</p>
-          </div>
-
+    <!-- SIDEBAR (desktop only, sticky) -->
+    <aside class="sidebar hidden lg:block">
+      <div class="mb-6">
+        <h4 class="text-lg font-bold mb-2">Quick Actions</h4>
+        <div class="space-y-3">
+          <button id="openUploadBtn" class="w-full py-2 px-3 rounded bg-tf-secondary font-medium hover:bg-cyan-500">Upload CSV</button>
+          <a href="single.html" class="w-full inline-block text-center py-2 px-3 border rounded bg-white hover:bg-gray-50">Single Check</a>
+          <a href="client-dashboard.html" class="w-full inline-block text-center py-2 px-3 border rounded bg-white hover:bg-gray-50">Client Dashboard</a>
         </div>
-
-        <div class="mt-12 flex flex-col sm:flex-row justify-center gap-6">
-          <a href="#demoModal" class="py-4 px-10 bg-tf-primary text-white rounded-full font-bold shadow hover:bg-indigo-600 transition">
-            Request Demo
-          </a>
-          <a href="single.html" class="py-4 px-10 bg-white border rounded-full font-bold shadow hover:bg-gray-200 transition">
-            Try Single Check
-          </a>
-        </div>
-
       </div>
-    </div>
-  </header>
 
-  <!-- WHY US -->
-  <section class="py-24 bg-tf-bg-light border-t">
-    <div class="max-w-7xl mx-auto px-6">
-
-      <h2 class="text-5xl font-extrabold text-center mb-4">Why Deliverability Matters</h2>
-      <p class="text-xl text-gray-600 text-center mb-14 max-w-3xl mx-auto">
-        Incorrect addresses are the #1 cause of RTO losses. Fix them before dispatch.
-      </p>
-
-      <div class="grid md:grid-cols-3 gap-10">
-
-        <div class="bg-white p-8 rounded-xl shadow border-t-4 border-alert-dark">
-          <div class="text-5xl mb-4">🚨</div>
-          <h3 class="text-2xl font-bold mb-2">Reduce RTO Losses</h3>
-          <p class="text-gray-600">RTO shipments cost 2–3× more. We ensure address correctness before dispatch.</p>
+      <div class="mb-6">
+        <h5 class="font-semibold text-sm text-gray-600">Plan</h5>
+        <div class="mt-2 p-3 bg-white rounded shadow">
+          <div class="text-sm font-bold">Business — 25,000 checks</div>
+          <div class="text-xs text-gray-500 mt-1">Remaining: <strong>18,450</strong></div>
         </div>
-
-        <div class="bg-white p-8 rounded-xl shadow border-t-4 border-tf-secondary">
-          <div class="text-5xl mb-4">🎯</div>
-          <h3 class="text-2xl font-bold mb-2">Eliminate Bad Data</h3>
-          <p class="text-gray-600">Fix spelling, missing PIN codes, incorrect landmarks, and incomplete addresses.</p>
-        </div>
-
-        <div class="bg-white p-8 rounded-xl shadow border-t-4 border-tf-primary">
-          <div class="text-5xl mb-4">📈</div>
-          <h3 class="text-2xl font-bold mb-2">Improve Deliverability</h3>
-          <p class="text-gray-600">More first-attempt deliveries = higher satisfaction + fewer support escalations.</p>
-        </div>
-
       </div>
-    </div>
-  </section>
+
+      <div>
+        <h5 class="font-semibold text-sm text-gray-600">Support</h5>
+        <div class="mt-2 p-3 bg-white rounded shadow text-sm">
+          <div>📞 +91 98765 43210</div>
+          <div class="mt-1 text-xs text-gray-500">Mon — Fri, 10:00 — 18:00</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <section>
+      <!-- HERO: desktop grid to show quick panel on large screens -->
+      <header class="mb-10">
+        <div class="hero-desktop-grid items-start gap-10">
+          <!-- Left: marketing -->
+          <div>
+            <h1 class="text-5xl lg:text-6xl font-extrabold leading-tight mb-4">
+              Stop RTO. <span class="text-gradient">Start Scaling.</span>
+            </h1>
+            <p class="text-lg text-gray-600 mb-6 max-w-3xl">
+              The <strong>Smartest AI Address Platform</strong> built to process 100% of your customer database, eliminate errors, and guarantee first-attempt delivery success.
+            </p>
+
+            <div class="flex flex-wrap gap-4">
+              <a href="#demoModal" class="py-3 px-5 bg-tf-primary text-white rounded-full font-semibold shadow hover:bg-indigo-600">Request Demo</a>
+              <a href="single.html" class="py-3 px-5 bg-white border rounded-full font-semibold shadow hover:bg-gray-100">Try Single Check</a>
+            </div>
+          </div>
+
+          <!-- Right: quick upload panel (desktop only) -->
+          <aside class="hidden lg:block">
+            <div id="desktopUpload" class="bg-white p-6 rounded-xl shadow w-80">
+              <h4 class="font-bold mb-3">Quick Bulk Upload</h4>
+              <div id="uploadArea" class="border border-dashed p-4 rounded text-center cursor-pointer">
+                <p class="text-sm text-gray-600 mb-3">Drag & drop CSV here or click to browse</p>
+                <input type="file" id="csvInput" accept=".csv" class="hidden" />
+                <button id="browseBtn" class="py-2 px-4 bg-tf-secondary rounded font-medium hover:bg-cyan-500">Choose CSV</button>
+                <div id="uploadPreview" class="mt-3 text-xs text-gray-500"></div>
+              </div>
+              <div class="mt-4 text-xs text-gray-500">Max: 10MB. CSV columns: name,address,pin</div>
+            </div>
+          </aside>
+        </div>
+      </header>
+
+      <!-- PROCESS CARDS: denser on desktop -->
+      <section class="mb-10">
+        <div class="bg-tf-card-light p-6 lg:p-10 rounded-2xl shadow">
+          <h2 class="text-2xl lg:text-3xl font-bold mb-6">Automated 3-Stage Verification Process</h2>
+          <div class="grid gap-6 md:grid-cols-3">
+            <div class="p-5 bg-gray-50 rounded-lg border border-tf-primary/30">
+              <div class="w-12 h-12 rounded-full bg-tf-primary text-white flex items-center justify-center mb-3">1</div>
+              <h4 class="font-semibold mb-2">Secure Upload</h4>
+              <p class="text-sm text-gray-600">Securely upload bulk address data via the client portal.</p>
+            </div>
+            <div class="p-5 bg-gray-50 rounded-lg border border-tf-secondary/30">
+              <div class="w-12 h-12 rounded-full bg-tf-secondary text-white flex items-center justify-center mb-3">2</div>
+              <h4 class="font-semibold mb-2">AI Cleaning & Validation</h4>
+              <p class="text-sm text-gray-600">AI cleans, normalizes and validates against official sources.</p>
+            </div>
+            <div class="p-5 bg-gray-50 rounded-lg border border-gray-300/60">
+              <div class="w-12 h-12 rounded-full bg-tf-text-dark text-white flex items-center justify-center mb-3">3</div>
+              <h4 class="font-semibold mb-2">Deliverability Score</h4>
+              <p class="text-sm text-gray-600">Download clean CSV with deliverability score per record.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- WHY US -->
+      <section class="mb-12">
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="bg-white p-6 rounded-lg shadow border-t-4 border-alert-dark">
+            <div class="text-4xl mb-2">🚨</div>
+            <h5 class="font-bold mb-2">Minimize RTO Losses</h5>
+            <p class="text-sm text-gray-600">RTO costs 2–3× more. Validate addresses before dispatch.</p>
+          </div>
+          <div class="bg-white p-6 rounded-lg shadow border-t-4 border-tf-secondary">
+            <div class="text-4xl mb-2">🎯</div>
+            <h5 class="font-bold mb-2">Eliminate Bad Data</h5>
+            <p class="text-sm text-gray-600">Auto-correct spelling, missing PINs and landmarks.</p>
+          </div>
+          <div class="bg-white p-6 rounded-lg shadow border-t-4 border-tf-primary">
+            <div class="text-4xl mb-2">📈</div>
+            <h5 class="font-bold mb-2">Boost CX</h5>
+            <p class="text-sm text-gray-600">Higher first-attempt delivery rates & fewer tickets.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <section class="text-center py-6">
+        <a href="#demoModal" class="py-3 px-6 bg-tf-primary text-white rounded-full font-bold shadow hover:bg-indigo-600">Request Demo</a>
+        <a href="contact.html" class="py-3 px-6 ml-4 bg-whatsapp-green text-white rounded-full font-bold shadow hover:bg-green-600">Contact Sales</a>
+      </section>
+    </section>
+  </main>
 
   <!-- FOOTER -->
-  <footer class="py-12 bg-gray-100 border-t">
-    <div class="text-center max-w-4xl mx-auto">
-
-      <h3 class="text-3xl font-bold mb-6">Ready to reduce RTO by 30%?</h3>
-
-      <div class="flex justify-center gap-6 mb-6">
-        <a href="#demoModal" class="py-3 px-10 bg-tf-primary text-white rounded-full font-bold shadow hover:bg-indigo-600">
-          Request Demo
-        </a>
-        <a href="contact.html" class="py-3 px-10 bg-whatsapp-green text-white rounded-full font-bold shadow hover:bg-green-600">
-          Contact Sales
-        </a>
-      </div>
-
-      <p class="text-sm text-gray-500">Developed by: <strong>Pankaj Singh Rawat</strong></p>
-      <p class="text-sm text-gray-500">&copy; 2025 AI VERIFY. All rights reserved.</p>
+  <footer class="bg-gray-100 border-t py-8 mt-8">
+    <div class="max-w-7xl mx-auto px-6 text-center text-sm text-gray-600">
+      <div>Developed by: <strong>Pankaj Singh Rawat</strong></div>
+      <div class="mt-1">&copy; 2025 AI VERIFY. All rights reserved.</div>
     </div>
   </footer>
 
   <!-- DEMO MODAL -->
-  <div id="demoModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center px-4 z-50">
-    <div class="bg-white p-6 rounded-xl max-w-md w-full shadow-xl">
-      <div class="flex justify-between items-center border-b pb-3 mb-3">
-        <h3 class="text-xl font-bold">Request a Demo</h3>
-        <button onclick="closeModal()" class="text-2xl">&times;</button>
+  <div id="demoModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-lg font-bold">Request a Bulk Demo</h3>
+        <button id="demoClose" aria-label="Close">&times;</button>
       </div>
-
-      <form id="demoForm" class="space-y-4">
-        <input type="text" id="demoName" placeholder="Your Name" required class="w-full p-3 border rounded input-focus">
-        <input type="email" id="demoEmail" placeholder="Your Email" required class="w-full p-3 border rounded input-focus">
-        <input type="tel" id="demoPhone" placeholder="Mobile Number" required class="w-full p-3 border rounded input-focus">
-
-        <textarea id="demoMessage" class="w-full p-3 border rounded input-focus" rows="3">
-I am interested in a demo for bulk verification.
-        </textarea>
-
-        <button type="submit" id="demoSubmit" class="w-full bg-tf-secondary py-3 rounded font-bold hover:bg-cyan-500">
-          Submit Request
-        </button>
-
-        <p id="demoStatus" class="text-center text-sm font-semibold"></p>
+      <form id="demoForm" class="space-y-3">
+        <input id="demo-clientName" type="text" required placeholder="Your name" class="w-full p-3 border rounded input-focus" />
+        <input id="demo-clientEmail" type="email" required placeholder="Email" class="w-full p-3 border rounded input-focus" />
+        <div class="flex">
+          <span class="inline-flex items-center px-3 border border-r-0 rounded-l text-gray-500">+91</span>
+          <input id="demo-clientMobile" type="tel" pattern="[0-9]{10}" placeholder="9876543210" required class="w-full p-3 border rounded-r input-focus" />
+        </div>
+        <textarea id="demo-messageText" rows="3" class="w-full p-3 border rounded input-focus">I am interested in a demo for bulk verification.</textarea>
+        <button id="sendDemoButton" type="submit" class="w-full py-3 bg-tf-secondary font-bold rounded">Submit Demo Request</button>
+        <p id="demoMessageStatus" class="text-center text-sm font-semibold"></p>
       </form>
     </div>
   </div>
 
   <script>
-    const modal = document.getElementById("demoModal");
+    // Modal open/close
+    const demoModal = document.getElementById('demoModal');
+    document.querySelectorAll('a[href="#demoModal"]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); demoModal.classList.remove('hidden'); }));
+    document.getElementById('demoClose').addEventListener('click', () => demoModal.classList.add('hidden'));
 
-    function closeModal() {
-      modal.classList.add("hidden");
+    // Demo form submit (calls API)
+    const API_SUPPORT_ENDPOINT = '/api/support/message';
+    document.getElementById('demoForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('sendDemoButton');
+      const status = document.getElementById('demoMessageStatus');
+      btn.disabled = true; btn.textContent = 'Sending...'; status.textContent = '';
+
+      const payload = {
+        clientName: document.getElementById('demo-clientName').value.trim(),
+        clientEmail: document.getElementById('demo-clientEmail').value.trim(),
+        clientMobile: document.getElementById('demo-clientMobile').value.trim(),
+        messageText: document.getElementById('demo-messageText').value.trim(),
+      };
+
+      try {
+        const res = await fetch(API_SUPPORT_ENDPOINT, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (res.ok && json.status === 'Success') {
+          status.className = 'text-center text-sm font-semibold text-tf-secondary'; status.textContent = 'Demo request sent! We will contact you shortly.';
+          document.getElementById('demoForm').reset();
+          setTimeout(()=> demoModal.classList.add('hidden'), 1400);
+        } else {
+          status.className = 'text-center text-sm font-semibold text-alert-dark'; status.textContent = json.message || 'Failed to send request.';
+        }
+      } catch (err) {
+        console.error(err); status.className = 'text-center text-sm font-semibold text-alert-dark'; status.textContent = 'Network error.';
+      } finally {
+        btn.disabled = false; btn.textContent = 'Submit Demo Request';
+      }
+    });
+
+    // Desktop CSV upload drag/drop and browse
+    const uploadArea = document.getElementById('uploadArea');
+    const csvInput = document.getElementById('csvInput');
+    const browseBtn = document.getElementById('browseBtn');
+    const uploadPreview = document.getElementById('uploadPreview');
+
+    if (uploadArea) {
+      uploadArea.addEventListener('click', () => csvInput.click());
+      uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('ring-4','ring-tf-primary/30'); });
+      ['dragleave','drop'].forEach(ev => uploadArea.addEventListener(ev, () => uploadArea.classList.remove('ring-4','ring-tf-primary/30')));
+      uploadArea.addEventListener('drop', e => {
+        e.preventDefault();
+        const files = (e.dataTransfer && e.dataTransfer.files) ? e.dataTransfer.files : [];
+        handleFiles(files);
+      });
+      csvInput.addEventListener('change', () => handleFiles(csvInput.files));
+      browseBtn.addEventListener('click', () => csvInput.click());
     }
 
-    document.querySelectorAll('a[href="#demoModal"]').forEach(btn => {
-      btn.addEventListener("click", e => {
-        e.preventDefault();
-        modal.classList.remove("hidden");
-      });
+    function handleFiles(files) {
+      if (!files || !files.length) return;
+      const f = files[0];
+      uploadPreview.innerHTML = `<div class="font-medium">${f.name}</div><div class="text-xs text-gray-500">${Math.round(f.size/1024)} KB</div>`;
+      // TODO: replace with actual upload logic to your API
+    }
+
+    // Keyboard shortcuts for desktop users
+    window.addEventListener('keydown', (e) => {
+      // Ctrl+D opens demo modal (desktop)
+      if (e.ctrlKey && e.key.toLowerCase() === 'd') { e.preventDefault(); demoModal.classList.remove('hidden'); }
+      // Ctrl+U focuses upload (desktop)
+      if (e.ctrlKey && e.key.toLowerCase() === 'u') { e.preventDefault(); if (uploadArea) uploadArea.focus(); }
     });
   </script>
-
 </body>
 </html>
