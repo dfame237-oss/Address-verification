@@ -75,7 +75,7 @@
         #client-inbox-list div:hover { border-left-color: #6366F1; background-color: #F0F4FF; }
         
         /* FIX 1: Fixed positioning for Inbox Icon, separated from header flow */
-        #inbox-fixed-container { /* Renamed container for the fixed icon */
+        #inbox-fixed-container {
             position: fixed; 
             top: 20px;
             right: 20px;
@@ -86,6 +86,21 @@
             padding: 10px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             cursor: pointer;
+        }
+
+        /* FIX: Modal positioning to center correctly over the viewport */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000; /* Ensure it's above everything */
+            display: none; 
         }
 
         /* FIX 2: Mobile Responsiveness */
@@ -554,7 +569,7 @@
 
                 } catch (error) {
                     lastError = error;
-                    // Check if error is related to authentication context missing from authFetch itself
+                    // CRITICAL FIX: If authFetch threw the session error, stop all retries and pass the error up immediately.
                     if (error.message.includes("Session expired")) throw error; 
                     
                     console.error(`Verification API Attempt ${attempt + 1} failed:`, error);
