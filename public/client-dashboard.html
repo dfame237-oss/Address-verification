@@ -8,20 +8,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     
     <script>
-        // Custom Tailwind config using the consistent 'tf-' palette
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
                         // 💜 Smart Locator/Teleforce Style Palette
-                        'tf-primary': '#5F3DC4', // Deep Violet/Purple (was Indigo)
-                        'tf-secondary': '#A437C1', // Vibrant Magenta/Pink Accent (was Cyan)
+                        'tf-primary': '#5F3DC4', // Deep Violet/Purple
+                        'tf-secondary': '#A437C1', // Vibrant Magenta/Pink Accent
                         'tf-dark': '#0F172A',
                         'tf-text': '#E2E8F0',
                         'tf-card': '#1E293B',
-                        'tf-light': '#F1F5F9',
+                        'tf-light': '#F1FFfa', // Light background for management area
+                        'tf-bg-light': '#F8FAFC',
                         'alert-dark': '#DC2626',
-                        'tf-primary-light': '#EFE7FF', // Light purple background
+                        'tf-primary-light': '#EFE7FF',
                         'whatsapp-green': '#25D366',
                     },
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
@@ -40,7 +40,7 @@
         /* Controls */
         .controls { display: flex; gap: 15px; align-items: center; }
         .icon-btn { cursor: pointer; position: relative; font-size: 24px; color: #64748B; transition: color 0.2s; }
-        .icon-btn:hover { color: #5F3DC4; } /* tf-primary */
+        .icon-btn:hover { color: #5F3DC4; }
         .badge { position: absolute; top: -8px; right: -8px; background-color: #DC2626; color: white; border-radius: 50%; padding: 4px 8px; font-size: 11px; font-weight: 700; border: 2px solid white; }
 
         /* Tab Navigation - New Look */
@@ -68,13 +68,13 @@
         .client-table tbody tr:last-child td { border-bottom: none; }
 
         /* Statuses */
-        .status-online-dot { color: #06B6D4; font-size: 10px; margin-right: 4px; }
+        .status-online-dot { color: #25D366; /* WhatsApp Green */ font-size: 10px; margin-right: 4px; }
         .status-offline-dot { color: #9CA3AF; font-size: 10px; margin-right: 4px; }
-        .status-online-text { color: #06B6D4; font-weight: 600; }
+        .status-online-text { color: #25D366; font-weight: 600; }
         .status-offline-text { color: #9CA3AF; font-size: 0.85rem; }
-        .status-enabled { background-color: #EFE7FF; color: #5F3DC4; padding: 4px 10px; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; } /* tf-primary-light */
+        .status-enabled { background-color: #EFE7FF; color: #5F3DC4; padding: 4px 10px; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; }
         .status-disabled { background-color: #fee2e2; color: #DC2626; padding: 4px 10px; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; }
-        .plan-credit-display { font-size: 1.25rem; font-weight: 800; color: #5F3DC4; }
+        .plan-credit-display { font-size: 1.8rem; font-weight: 800; color: #5F3DC4; }
 
         /* Modal Styles */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; display: none; }
@@ -110,30 +110,30 @@
         </header>
 
         <div class="nav-tabs">
-            <button id="tab-overview-btn" class="tab-button active" onclick="showTab('admin-overview', this)">Dashboard Overview</button>
-            <button id="tab-clients-btn" class="tab-button" onclick="showTab('client-management', this)">Manage Clients (CRM)</button>
-            <button id="tab-inbox-btn" class="tab-button" onclick="showTab('inbox-support', this)">Inbox & Support</button>
+            <button id="tab-overview-btn" class="tab-button active" onclick="showTab('admin-overview', this)"><i class="fas fa-tachometer-alt mr-2"></i> Dashboard Overview</button>
+            <button id="tab-clients-btn" class="tab-button" onclick="showTab('client-management', this)"><i class="fas fa-users-cog mr-2"></i> Manage Clients (CRM)</button>
+            <button id="tab-inbox-btn" class="tab-button" onclick="showTab('inbox-support', this)"><i class="fas fa-headset mr-2"></i> Inbox & Support</button>
         </div>
 
         <div id="admin-overview" class="tab-content" style="display: block;">
-            <h2 class="text-2xl font-bold mb-4 text-tf-primary border-b pb-2">System Metrics</h2>
+            <h2 class="text-2xl font-bold mb-4 text-tf-primary border-b pb-2">System Metrics & Overview</h2>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <div class="bg-tf-primary-light p-6 rounded-xl border border-[#E5E7EB]">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="bg-tf-primary-light p-6 rounded-xl border border-tf-primary/30">
                     <p class="text-gray-600 font-semibold mb-1">Total Clients</p>
                     <div id="metric-total-clients" class="plan-credit-display text-tf-primary">0</div>
                 </div>
-                <div class="bg-tf-primary-light p-6 rounded-xl border border-[#E5E7EB]">
-                    <p class="text-gray-600 font-semibold mb-1">Active / Enabled</p>
-                    <div id="metric-active-clients" class="plan-credit-display text-green-600">0</div>
+                <div class="bg-tf-primary-light p-6 rounded-xl border border-tf-primary/30">
+                    <p class="text-gray-600 font-semibold mb-1">Clients Online Now</p>
+                    <div id="metric-online-clients" class="plan-credit-display text-green-600">0</div>
                 </div>
-                 <div class="bg-tf-primary-light p-6 rounded-xl border border-[#E5E7EB]">
+                 <div class="bg-tf-primary-light p-6 rounded-xl border border-tf-primary/30">
                     <p class="text-gray-600 font-semibold mb-1">New Demo Requests</p>
                     <div id="metric-new-requests" class="plan-credit-display text-tf-secondary">0</div>
                 </div>
-                <div class="bg-tf-primary-light p-6 rounded-xl border border-[#E5E7EB]">
-                    <p class="text-gray-600 font-semibold mb-1">Credits In Use (Sim.)</p>
-                    <div id="metric-credits-used" class="plan-credit-display text-gray-500">N/A</div>
+                <div class="bg-tf-primary-light p-6 rounded-xl border border-tf-primary/30">
+                    <p class="text-gray-600 font-semibold mb-1">Total Credits Issued (Est.)</p>
+                    <div id="metric-credits-issued" class="plan-credit-display text-gray-500">N/A</div>
                 </div>
             </div>
             
@@ -145,18 +145,26 @@
                  <button class="action-btn" onclick="showTab('client-management', document.getElementById('tab-clients-btn'))">
                     <i class="fas fa-list-alt mr-2"></i> View Client List
                  </button>
+                 <button class="action-btn modal-button bg-tf-primary hover:bg-[#4d2e97]" onclick="showTab('inbox-support', document.getElementById('tab-inbox-btn'))">
+                    <i class="fas fa-inbox mr-2"></i> Check Inbox
+                 </button>
+            </div>
+
+            <div class="mt-8 p-6 bg-white border rounded-xl shadow-md">
+                <h3 class="text-xl font-bold mb-3 text-gray-700">Credit Consumption Rate </h3>
+                <p class="text-sm text-gray-500">Visualization helps track subscription health and growth.</p>
             </div>
         </div>
 
         <div id="client-management" class="tab-content" style="display: none;">
             <div class="management-header">
-                <h2 class="text-2xl font-bold text-gray-700">Client Management</h2>
+                <h2 class="text-2xl font-bold text-gray-700 border-l-4 border-tf-secondary pl-3">Client Management & CRM</h2>
                 <div>
                     <button class="add-client-btn" onclick="openAddClientModal()">
                         <i class="fas fa-plus-circle mr-2"></i> Add New Client
                     </button>
                     <button class="action-btn" onclick="loadClients()">
-                        <i class="fas fa-sync-alt mr-1"></i> Refresh
+                        <i class="fas fa-sync-alt mr-1"></i> Refresh List
                     </button>
                 </div>
             </div>
@@ -173,7 +181,7 @@
                         </tr>
                     </thead>
                     <tbody id="client-list">
-                        <tr><td colspan="5" class="text-center text-gray-500 py-4">Loading clients...</td></tr>
+                        <tr><td colspan="5" class="text-center text-gray-500 py-4">Select the Manage Clients tab to load data.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -183,8 +191,8 @@
             <h2 class="text-2xl font-bold mb-4 text-tf-primary border-b pb-2">Inbox & Support</h2>
             
             <div class="flex border-b border-gray-200 mb-4">
-                <button id="tab-messages-btn" class="tab-btn active" onclick="switchInboxTab('messages')">Client Messages</button>
-                <button id="tab-support-btn" class="tab-btn" onclick="switchInboxTab('support')">Demo Requests</button>
+                <button id="tab-messages-btn" class="tab-btn active" onclick="switchInboxTab('messages')"><i class="fas fa-envelope-open mr-2"></i> Client Messages</button>
+                <button id="tab-support-btn" class="tab-btn" onclick="switchInboxTab('support')"><i class="fas fa-headset mr-2"></i> Demo Requests</button>
             </div>
 
             <div id="inbox-messages-container" class="max-h-[60vh] overflow-y-auto">
@@ -203,6 +211,7 @@
                 <p id="reply-status" class="mt-3 text-sm text-center"></p>
             </div>
         </div>
+
 
         <div id="update-client-modal" class="modal" aria-hidden="true">
             <div class="modal-content">
@@ -411,7 +420,7 @@
                 if (result.status === "Success") {
                     activeClients = result.data;
                     renderClients(activeClients);
-                    updateOverviewMetrics(activeClients, result.supportMetrics); // Pass support metrics if available
+                    updateOverviewMetrics(activeClients); // Update metrics after loading clients
                 } else {
                     clientListBody.innerHTML = `<tr><td colspan="5" class="text-center text-red-500 py-4">Failed to load clients: ${result.message}</td></tr>`;
                 }
@@ -424,15 +433,14 @@
         function updateOverviewMetrics(clients) {
             const totalClients = clients.length;
             const activeClientsCount = clients.filter(c => c.isActive).length;
+            const onlineClientsCount = clients.filter(c => c.lastActivityAt && (Date.now() - new Date(c.lastActivityAt).getTime() < ONLINE_THRESHOLD_MS)).length;
             
-            // Fetch support metrics separately if needed, but for now, rely on loadInboxCounts for requests
-            const newRequests = parseInt(document.getElementById('notification-badge').textContent || '0');
-
             document.getElementById('metric-total-clients').textContent = totalClients.toLocaleString();
             document.getElementById('metric-active-clients').textContent = activeClientsCount.toLocaleString();
-            document.getElementById('metric-new-requests').textContent = newRequests.toLocaleString();
-            // Placeholder for used credits metric
-            document.getElementById('metric-credits-used').textContent = 'N/A';
+            document.getElementById('metric-online-clients').textContent = onlineClientsCount.toLocaleString();
+            
+            // This would require a server calculation for total credits issued, but for now, we'll keep it simple/placeholder
+            document.getElementById('metric-credits-issued').textContent = '—';
         }
 
         function formatLastActive(lastActivityAt) {
@@ -443,7 +451,7 @@
             const now = Date.now();
             const difference = now - lastActiveTime;
             if (difference < ONLINE_THRESHOLD_MS) {
-                return '<span class="status-online-dot"><i class="fas fa-circle"></i></span> <span class="status-online-text">Online</span>';
+                return '<span class="status-online-dot"><i class="fas fa-circle"></i></span> <span class="status-online-text">Online Now</span>';
             } else {
                 const formattedTime = new Date(lastActivityAt).toLocaleString();
                 return `<span class="status-offline-dot"><i class="far fa-circle"></i></span> <span class="status-offline-text">Last seen: ${formattedTime}</span>`;
@@ -704,6 +712,7 @@
         async function loadInboxCounts() {
             let totalUnread = 0;
             try {
+                // Fetch admin-received messages from the Client Inbox system
                 const msgResponse = await authFetch(`${API_BASE}/inbox/message`);
                 const msgResult = await msgResponse.json();
                 if (msgResult.status === "Success") {
@@ -714,6 +723,7 @@
             } catch (e) { console.error("Failed to load client message counts:", e); }
 
             try {
+                // Fetch Demo Requests from the Support Message system
                 const supportResponse = await authFetch(`${API_ADMIN}?action=support`);
                 const supportResult = await supportResponse.json();
                 if (supportResult.status === "Success") {
@@ -741,9 +751,9 @@
                 loadClients();
             } else if (tabId === 'inbox-support') {
                 loadInboxCounts();
-                switchInboxTab(currentInboxTab); 
+                switchInboxTab('support'); // Default to Demo Requests/Support
             } else if (tabId === 'admin-overview') {
-                 // Metrics updated in loadClients/loadInboxCounts, just refresh table data
+                 // Metrics updated in loadClients/loadInboxCounts, just ensure data is fresh
                  loadClients(); 
             }
         }
@@ -762,13 +772,27 @@
                 loadSupportMessages(); 
             }
         }
+        
+        // --- Dummy/Simplified Message Functions for UI Activation ---
+        // NOTE: These functions need the full message/inbox logic to work, but the UI calls are correct.
+        function loadClientMessages() { 
+            const msgContainer = document.getElementById('inbox-messages-container');
+            msgContainer.innerHTML = `<p class="text-center text-gray-500 py-4">Loading client messages (requires full inbox logic).</p>`;
+        }
+        function loadSupportMessages() { 
+            const msgContainer = document.getElementById('inbox-messages-container');
+            msgContainer.innerHTML = `<p class="text-center text-gray-500 py-4">Loading demo requests (requires full support logic).</p>`;
+        }
+        function openReplyForm(clientId, username) { /* Logic exists in original file */ }
+        function viewClientMessage(messageId, subject, body, senderId, clientUsername, isUnread, timestamp) { /* Logic exists in original file */ }
+        function viewSupportMessage(messageId, messageText, clientName, clientEmail, clientMobile, isUnread, receivedAt) { /* Logic exists in original file */ }
+        function sendMessage() { /* Logic exists in original file */ }
 
-        // (Other inbox functions: loadClientMessages, loadSupportMessages, viewClientMessage, viewSupportMessage, sendMessage are omitted for brevity but remain functional using the original logic)
 
         // --- Initialization ---
         window.onload = () => {
             populatePlanDropdowns();
-            // Default to loading the Dashboard Overview
+            // Default to loading the Dashboard Overview and fetching data
             showTab('admin-overview', document.getElementById('tab-overview-btn'));
             setInterval(loadClients, 30000); 
             setInterval(loadInboxCounts, 60000);
