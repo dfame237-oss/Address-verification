@@ -103,9 +103,11 @@
 
         // Helper to show status
         function setStatus(text, type = 'error') {
+            // safety: always set text first
             errorMessage.textContent = text || '';
+
+            // toggle 'success' class only (avoid removing empty tokens)
             if (type === 'success') {
-                errorMessage.classList.remove(''); // noop placeholder
                 errorMessage.classList.add('success');
             } else {
                 errorMessage.classList.remove('success');
