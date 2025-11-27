@@ -155,14 +155,16 @@
                 <h1 class="text-3xl font-bold text-gray-800">Welcome, <span id="client-name-display" class="text-tf-primary">Client</span></h1>
                 <div class="text-sm text-gray-500 mt-1">Manage your address verifications and 
         plan here.</div>
-            </div>
+        
+    </div>
 
             <div class="controls">
                 <div class="text-sm text-gray-600 mr-4">
                     <div>Remaining Credits</div>
                     <div id="remaining-credits" class="font-bold text-xl text-alert-dark">N/A</div>
                 </div>
-                <button onclick="logout()" class="action-btn logout">Logout</button>
+   
+            <button onclick="logout()" class="action-btn logout">Logout</button>
             </div>
         </header>
 
@@ -172,7 +174,8 @@
         </div>
 
         
-        <div class="nav-tabs">
+        <div 
+class="nav-tabs">
             <button id="bulk-tab-btn" class="tab-button active" onclick="showTab('bulk-verification', this)">Bulk Address Verification</button>
             <button class="tab-button" onclick="showTab('profile-plan', this)">Profile & Plan Status</button>
             <button class="tab-button" onclick="showTab('support', this)">Support/Messaging</button>
@@ -180,48 +183,57 @@
 
         <div id="bulk-verification" class="tab-content">
             <header class="text-center mb-10">
-                <h2 class="text-4xl font-extrabold text-gray-900 mb-2">
+                
+<h2 class="text-4xl font-extrabold text-gray-900 mb-2">
                     <span class="text-tf-secondary">Bulk Address</span> Verification
                 </h2>
                 <p class="text-lg text-gray-500 mt-2">Upload a CSV file for high-volume cleaning and verification.</p>
             </header>
 
       
-            <div id="bulkContent" class="space-y-8">
+            
+<div id="bulkContent" class="space-y-8">
                 <div class="bg-tf-light p-8 rounded-xl border-l-4 border-tf-primary shadow-lg">
                     <p class="font-bold text-xl text-tf-primary mb-3 flex items-center">
                         <i class="fas fa-download mr-3"></i> 1. Download Template
-                    </p>
+                    
+</p>
                     <p class="text-sm text-gray-600 mb-4">Use this template to ensure your CSV file has the required columns: <code class="bg-gray-200 px-1 rounded font-mono">ORDER ID</code>, <code class="bg-gray-200 px-1 rounded font-mono">CUSTOMER NAME</code>, <code class="bg-gray-200 px-1 rounded font-mono">CUSTOMER RAW ADDRESS</code>.</p>
                     <button id="downloadTemplateButton" class="w-full py-3 bg-tf-primary text-white font-semibold rounded-lg hover:bg-indigo-600 transition duration-200 focus:outline-none focus:ring-4 focus:ring-tf-primary focus:ring-opacity-50">
-                        Download Verification Template (CSV)
+             
+           Download Verification Template (CSV)
                     </button>
                 </div>
 
                 <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-lg text-center">
                     <p 
-                    class="font-bold text-xl text-gray-800 mb-4 flex items-center justify-center">
+      
+               class="font-bold text-xl text-gray-800 mb-4 flex items-center justify-center">
                         <i class="fas fa-upload mr-3 text-tf-secondary"></i> 2. Upload Your CSV File
                     </p>
-                    <input type="file" id="csvFileInput" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-tf-secondary/10 file:text-tf-secondary hover:file:bg-tf-secondary/20 transition cursor-pointer">
+                    <input type="file" id="csvFileInput" accept=".csv" class="block w-full text-sm 
+text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-tf-secondary/10 file:text-tf-secondary hover:file:bg-tf-secondary/20 transition cursor-pointer">
                     <p class="text-xs text-gray-500 mt-2">Maximum 1000 rows recommended for stability.</p>
                 </div>
 
                 <button id="processButton" class="w-full py-4 bg-tf-secondary text-white font-bold text-lg rounded-lg shadow-xl transition duration-200 transform hover:scale-[1.005] focus:outline-none focus:ring-4 focus:ring-tf-secondary focus:ring-opacity-50" disabled>
-                    Start Verification
+          
+           Start Verification
                 </button>
             </div>
 
             <div class="progress-container mt-12 p-8 bg-tf-light rounded-xl border border-gray-300 shadow-inner">
                 <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Verification Status</h3>
-                <p id="status-message" class="font-semibold text-gray-600 mb-4 transition duration-300">Ready to upload.</p>
+                <p id="status-message" 
+class="font-semibold text-gray-600 mb-4 transition duration-300">Ready to upload.</p>
 
         
                 <div class="progress-bar w-full bg-gray-300 rounded-full h-3">
                     <div class="progress-fill h-3 bg-tf-secondary rounded-full transition-all duration-500 ease-in-out" id="progressBarFill" style="width: 0%;"></div>
                 </div>
 
-                <a id="downloadLink" class="hidden mt-6 w-full py-3 bg-tf-primary text-white font-bold text-center rounded-lg shadow-xl transition duration-200 transform hover:scale-[1.01] focus:outline-none focus:ring-4 focus:ring-tf-primary focus:ring-opacity-50" href="#" download="verified_addresses.csv">
+                <a id="downloadLink" class="hidden 
+mt-6 w-full py-3 bg-tf-primary text-white font-bold text-center rounded-lg shadow-xl transition duration-200 transform hover:scale-[1.01] focus:outline-none focus:ring-4 focus:ring-tf-primary focus:ring-opacity-50" href="#" download="verified_addresses.csv">
                     <i class="fas fa-download mr-2"></i> Download Verified CSV
                 </a>
             </div>
@@ -229,35 +241,42 @@
             <p id="access-denied-message" class="hidden mt-6 text-center text-red-700 font-bold"></p>
         </div>
 
+  
         <div id="profile-plan" class="tab-content" 
         style="display:none;">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Account Overview</h2>
             <div class="info-grid">
                 <div class="profile-card flex flex-col justify-between">
                     <h3 class="text-xl font-semibold text-tf-primary mb-4 flex items-center"><i class="fas fa-user-circle mr-2"></i> My Profile Details</h3>
+ 
                   
                     <div class="space-y-3">
                         <div class="info-item"><p><strong>Username:</strong> <span id="profile-username"></span></p></div>
                         <div class="info-item"><p><strong>Email:</strong> <span id="profile-email"></span></p></div>
-                        <div class="info-item"><p><strong>Mobile:</strong> <span id="profile-mobile"></span></p></div>
+        
+                 <div class="info-item"><p><strong>Mobile:</strong> <span id="profile-mobile"></span></p></div>
                         <div class="info-item"><p><strong>Access Code:</strong> <span id="bulk-code"></span></p></div>
                     </div>
-                    <button class="action-btn mt-6 w-full bg-tf-card text-tf-text border border-gray-600 hover:bg-gray-700" onclick="alert('TODO: Implement password change API')">Change Password</button>
+                    <button class="action-btn mt-6 w-full bg-tf-card text-tf-text border border-gray-600 hover:bg-gray-700" onclick="alert('TODO: Implement password change 
+API')">Change Password</button>
                 </div>
 
                 <div class="plan-card">
  
                     <h3 class="text-xl font-semibold text-tf-secondary mb-4 flex items-center"><i class="fas fa-award mr-2"></i> Plan Status</h3>
                     <div class="space-y-3">
-                        <div class="info-item"><p><strong>Current Plan:</strong> <span id="plan-name" class="font-bold"></span></p></div>
+             
+           <div class="info-item"><p><strong>Current Plan:</strong> <span id="plan-name" class="font-bold"></span></p></div>
                     
                         <div class="info-item"><p><strong>Status:</strong> <span id="account-status"></span></p></div>
                         <div class="info-item"><p><strong>Valid Until:</strong> <span id="validity-end"></span></p></div>
-                        <div class="info-item"><p><strong>Remaining Credits:</strong> <span id="remaining-credits" class="font-bold text-alert-dark">N/A</span></p></div>
+         
+               <div class="info-item"><p><strong>Remaining Credits:</strong> <span id="remaining-credits" class="font-bold text-alert-dark">N/A</span></p></div>
                     </div>
                
                     <button class="action-btn mt-6 w-full bg-tf-secondary hover:bg-cyan-600" onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(3)'))">Contact for Renewal</button>
-                </div>
+              
+   </div>
             </div>
         </div>
 
@@ -265,11 +284,12 @@
             <div class="p-8 border rounded-xl shadow-md bg-tf-light space-y-6 max-w-lg mx-auto">
        
                 <h2 class="text-2xl font-bold mb-4 flex items-center text-tf-primary">
-                    <i class="fas fa-headset mr-3"></i> Contact Support
+                  
+   <i class="fas fa-headset mr-3"></i> Contact Support
                 </h2>
 
                 <p class="text-gray-600">Need help with plan renewal, technical issues, or credits?
-        Contact our dedicated support team instantly.</p>
+ Contact our dedicated support team instantly.</p>
 
                 <a href="https://wa.me/9193246219" target="_blank" class="block w-full py-4 bg-whatsapp-green text-white font-bold rounded-lg shadow-lg hover:bg-green-600 transition transform hover:scale-[1.005] flex items-center justify-center">
                     <i class="fab fa-whatsapp text-xl mr-3"></i> WhatsApp Support (+91 9193246219)
@@ -283,7 +303,8 @@
         </div>
     </div>
 
-    <div id="inbox-modal" class="modal">
+   
+ <div id="inbox-modal" class="modal">
       
         <div class="modal-content w-full max-w-lg rounded-xl shadow-2xl p-6 bg-white relative">
             <span class="modal-close absolute right-4 top-4 text-2xl cursor-pointer" onclick="closeInbox()">&times;</span>
@@ -291,14 +312,16 @@
                 <i class="fas fa-envelope-open-text mr-3"></i> Client Inbox
             </h2>
 
-            <div id="client-inbox-list" class="mt-4 max-h-96 overflow-y-auto space-y-3">
+     
+           <div id="client-inbox-list" class="mt-4 max-h-96 overflow-y-auto space-y-3">
    
                 <p class="text-center text-gray-500 mt-5">Loading messages...</p>
             </div>
 
             <div id="full-message-detail" class="mt-6 pt-4" style="display:none;">
                 <h3 id="full-message-subject" class="font-bold text-xl mb-1"></h3>
-                <small id="full-message-date" class="text-gray-500 block mb-4"></small>
+                <small 
+id="full-message-date" class="text-gray-500 block mb-4"></small>
                
                 <div id="full-message-body" class="p-4 border rounded bg-gray-50 whitespace-pre-wrap text-gray-700 max-h-40 overflow-y-auto"></div>
             </div>
@@ -307,9 +330,10 @@
 
     <div id="force-logout-modal" class="modal">
         <div class="modal-content">
-            <h3 class="text-xl font-bold text-gray-800 mb-2">Another device is logged in</h3>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Another device 
+is logged in</h3>
             <p class="text-gray-700">It looks like your account is currently active on another device.
-        You can force-logout that session and continue here, or cancel to remain logged out.</p>
+You can force-logout that session and continue here, or cancel to remain logged out.</p>
 
             <div class="modal-actions">
                 <button id="forceCancelBtn" class="py-2 px-4 bg-gray-200 rounded-lg" onclick="closeForceModal()">Cancel</button>
@@ -322,37 +346,39 @@
     <script>
         // --- CONSTANTS AND STATE ---
         const API_BASE = '/api';
-        const API_CLIENT = `${API_BASE}/client`;
+// FIX 1: Update API_CLIENT to use the consolidated router path
+        const API_CLIENT = `${API_BASE}/client/index`;
         const API_ENDPOINT = "/api/verify-single-address"; // used by bulk logic
         const LOGIN_PAGE = "client-login.html";
-        // planDetails may be present in localStorage (from login)
+// planDetails may be present in localStorage (from login)
         let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
-        const CLIENT_NAME = localStorage.getItem('clientName') || planDetails.clientName || planDetails.username || 'Client';
+const CLIENT_NAME = localStorage.getItem('clientName') || planDetails.clientName || planDetails.username || 'Client';
         let isPlanValid = true;
-        // --- AUTH check: if not logged in, redirect ---
+// --- AUTH check: if not logged in, redirect ---
         const initialToken = localStorage.getItem('clientToken');
-        if (!initialToken) {
+if (!initialToken) {
             window.location.href = LOGIN_PAGE;
-        }
+}
 
         // --- HEARTBEAT FUNCTION (MISSING FUNCTION ADDED) ---
         async function sendHeartbeat() {
             const currentToken = localStorage.getItem('clientToken');
-            if (!currentToken) return; // Cannot send heartbeat if token is missing
+if (!currentToken) return; // Cannot send heartbeat if token is missing
             try {
-                // Use the dedicated activity API, which should now correctly validate the token
-                await authFetch(`${API_CLIENT}?action=activity`, { method: 'POST' }); 
-            } catch (e) {
+                // Use the consolidated router path with action parameter
+                await authFetch(`${API_CLIENT}?action=activity`, { method: 'POST' });
+} catch (e) {
                 // authFetch will handle 401/403 and redirect/logout
                 console.warn("Heartbeat failed, session may be invalid:", e);
-            }
+}
         }
 
         // --- LOGOUT (notify server) ---
         async function logout() {
             const tokenToNotify = localStorage.getItem('clientToken');
-            try {
+try {
                 if (tokenToNotify) {
+                    // Use the consolidated router path with action parameter
                     await fetch(`${API_CLIENT}?action=logout`, {
                         method: 'POST',
                         headers: {
@@ -360,49 +386,50 @@
                             'Content-Type': 'application/json'
                         }
                     });
-                }
+}
             } catch (error) {
                 console.warn("Could not notify server of logout:", error);
-            } finally {
+} finally {
                 localStorage.clear();
-                window.location.href = LOGIN_PAGE;
+window.location.href = LOGIN_PAGE;
             }
         }
 
         // --- authFetch: keeps behavior for other calls (auto-logout on 401/403) ---
         async function authFetch(url, options = {}) {
             const currentToken = localStorage.getItem('clientToken');
-            if (!currentToken) {
+if (!currentToken) {
                 localStorage.clear();
-                window.location.href = LOGIN_PAGE;
+window.location.href = LOGIN_PAGE;
                 throw new Error("Session expired. Please log in again.");
-            }
+}
 
             const defaultHeaders = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` };
-            const resp = await fetch(url, { ...options, headers: { ...defaultHeaders, ...(options.headers || {}) } });
-            if (resp.status === 401 || resp.status === 403) {
+const resp = await fetch(url, { ...options, headers: { ...defaultHeaders, ...(options.headers || {}) } });
+if (resp.status === 401 || resp.status === 403) {
                 // attempt to read server message for debugging
                 let debugText = '';
-                try { debugText = await resp.text(); } catch(e){}
+try { debugText = await resp.text(); } catch(e){}
                 console.warn('authFetch got 401/403 from', url, 'server message:', debugText);
-                localStorage.clear();
+localStorage.clear();
                 window.location.href = LOGIN_PAGE;
                 throw new Error("Session expired. Please log in again.");
-            }
+}
             return resp;
-        }
+}
 
         // --- Profile fetch using the new profile action (handles 401 specially) ---
         async function fetchProfileData() {
             // Use a direct fetch so we can inspect 401 response and show a force-logout option
             const currentToken = localStorage.getItem('clientToken');
-            if (!currentToken) {
+if (!currentToken) {
                 localStorage.clear();
-                window.location.href = LOGIN_PAGE;
+window.location.href = LOGIN_PAGE;
                 return;
             }
 
             try {
+                // Use the consolidated router path with action parameter
                 const resp = await fetch(`${API_CLIENT}?action=profile`, {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${currentToken}`, 'Content-Type': 'application/json' }
@@ -411,289 +438,295 @@
                 if (resp.status === 401) {
                     // Could be token expired or session invalidated by another device
                     let bodyText = '';
-                    try { bodyText = await resp.text(); } catch(e){}
+try { bodyText = await resp.text(); } catch(e){}
                     console.warn('Profile fetch 401:', bodyText);
-                    // If server says "Session invalidated" offer force-logout
+// If server says "Session invalidated" offer force-logout
                     if (bodyText && bodyText.toLowerCase().includes('session invalidated')) {
                         // show force logout modal
                         openForceModal();
-                        return;
+return;
                     }
 
                     // otherwise fallback to local
                     updateUIFromLocalPlan();
-                    return;
+return;
                 }
 
                 const json = await resp.json().catch(()=>null);
-                if (!resp.ok || !json || json.status === 'Error') {
+if (!resp.ok || !json || json.status === 'Error') {
                     console.warn('Profile fetch failed', resp.status, json);
-                    updateUIFromLocalPlan();
+updateUIFromLocalPlan();
                     return;
                 }
 
                 const pd = json.planDetails ||
-                {};
+{};
                 planDetails = Object.assign({}, planDetails, pd);
                 localStorage.setItem('planDetails', JSON.stringify(planDetails));
 
                 const rc = pd.remainingCredits;
                 document.getElementById('remaining-credits').textContent = rc === 'Unlimited' ?
-                'Unlimited' : (rc == null ? 'N/A' : Number(rc).toLocaleString());
+'Unlimited' : (rc == null ? 'N/A' : Number(rc).toLocaleString());
                 document.getElementById('client-name-display').textContent = pd.clientName || CLIENT_NAME;
                 document.getElementById('profile-username').textContent = pd.clientName || CLIENT_NAME;
-                document.getElementById('profile-email').textContent = planDetails.email || '—';
+document.getElementById('profile-email').textContent = planDetails.email || '—';
                 document.getElementById('profile-mobile').textContent = planDetails.mobile || '—';
                 document.getElementById('bulk-code').textContent = planDetails.bulkAccessCode || 'N/A';
-                document.getElementById('plan-name').textContent = (planDetails.planName || 'Not Set').split('_')[0];
+document.getElementById('plan-name').textContent = (planDetails.planName || 'Not Set').split('_')[0];
                 document.getElementById('validity-end').textContent = planDetails.validityEnd ? new Date(planDetails.validityEnd).toLocaleDateString() : 'N/A';
 
                 const statusEl = document.getElementById('account-status');
-                const isActive = (typeof planDetails.isActive === 'undefined') ? true : planDetails.isActive;
+const isActive = (typeof planDetails.isActive === 'undefined') ? true : planDetails.isActive;
                 statusEl.textContent = isActive ? 'Enabled' : 'Disabled';
-                statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
+statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
 
                 // re-evaluate plan validity
                 checkPlanValidity();
-            } catch (e) {
+} catch (e) {
                 console.error('fetchProfileData error:', e);
-                updateUIFromLocalPlan();
+updateUIFromLocalPlan();
             }
         }
 
         function updateUIFromLocalPlan() {
             // Fallback if server call fails — use cached local planDetails
             const rc = planDetails.remainingCredits ??
-            'N/A';
+'N/A';
             document.getElementById('remaining-credits').textContent = rc === 'Unlimited' ? 'Unlimited' : (rc === 'N/A' ? 'N/A' : Number(rc).toLocaleString());
             document.getElementById('client-name-display').textContent = CLIENT_NAME;
-            document.getElementById('profile-username').textContent = planDetails.username || CLIENT_NAME;
+document.getElementById('profile-username').textContent = planDetails.username || CLIENT_NAME;
             document.getElementById('profile-email').textContent = planDetails.email || '—';
             document.getElementById('profile-mobile').textContent = planDetails.mobile || '—';
             document.getElementById('bulk-code').textContent = planDetails.bulkAccessCode || 'N/A';
-            document.getElementById('plan-name').textContent = (planDetails.planName || 'Not Set').split('_')[0];
+document.getElementById('plan-name').textContent = (planDetails.planName || 'Not Set').split('_')[0];
             document.getElementById('validity-end').textContent = planDetails.validityEnd ? new Date(planDetails.validityEnd).toLocaleDateString() : 'N/A';
 
             const statusEl = document.getElementById('account-status');
-            const isActive = (typeof planDetails.isActive === 'undefined') ? true : planDetails.isActive;
+const isActive = (typeof planDetails.isActive === 'undefined') ? true : planDetails.isActive;
             statusEl.textContent = isActive ? 'Enabled' : 'Disabled';
-            statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
+statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
         }
 
         // --- TAB NAVIGATION ---
         function showTab(tabId, button) {
             document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             document.getElementById(tabId).style.display = 'block';
             if (button) button.classList.add('active');
 
             if (tabId === 'bulk-verification') {
                 checkPlanValidity();
-            } else if (tabId === 'profile-plan') {
+} else if (tabId === 'profile-plan') {
                 fetchProfileData();
-            }
+}
         }
 
         // --- PLAN VALIDITY CHECK (keeps your original messaging) ---
         function checkPlanValidity() {
             const token = localStorage.getItem('clientToken');
-            const planDetailsString = localStorage.getItem('planDetails');
+const planDetailsString = localStorage.getItem('planDetails');
 
             if (!token) {
                 showAccessDenied("Please log in to access Bulk Address Verification.");
-                isPlanValid = false;
+isPlanValid = false;
                 return false;
             }
 
             try {
                 const validityEnd = planDetails.validityEnd ?
-                new Date(planDetails.validityEnd) : null;
+new Date(planDetails.validityEnd) : null;
                 const now = new Date();
 
                 if (planDetails.isActive === false) {
                     showAccessDenied("Your account has been **disabled** by the administrator. Please contact support.");
-                    isPlanValid = false;
+isPlanValid = false;
                     return false;
                 }
 
                 if (validityEnd && validityEnd < now) {
                     showAccessDenied(`Your bulk plan expired on **${validityEnd.toLocaleDateString()}**. Please contact support to renew.`);
-                    isPlanValid = false;
+isPlanValid = false;
                     return false;
                 }
 
                 // OK
                 document.getElementById('bulkContent').classList.remove('hidden');
-                isPlanValid = true;
+isPlanValid = true;
                 return true;
 
             } catch (e) {
                 console.error("Error parsing plan details:", e);
-                showAccessDenied("Client authentication data is corrupted. Please log in again.");
+showAccessDenied("Client authentication data is corrupted. Please log in again.");
                 setTimeout(() => { localStorage.clear(); window.location.href = LOGIN_PAGE; }, 1500);
-                isPlanValid = false;
+isPlanValid = false;
                 return false;
             }
         }
 
         function showAccessDenied(message) {
             const bulkContent = document.getElementById('bulkContent');
-            const progressContainer = document.querySelector('#bulk-verification .progress-container');
+const progressContainer = document.querySelector('#bulk-verification .progress-container');
             if (bulkContent) bulkContent.classList.add('hidden');
             if (progressContainer) progressContainer.classList.add('hidden');
 
             const existing = document.querySelector('#bulk-verification .access-denied-block');
             if (existing) return;
-            const errorBlock = document.createElement('div');
+const errorBlock = document.createElement('div');
             errorBlock.className = 'access-denied-block space-y-6 mt-6';
             errorBlock.innerHTML = `
                 <div class="bg-red-50 p-8 rounded-xl border-l-4 border-alert-dark shadow-lg">
                     <p class="font-bold text-xl text-alert-dark mb-3 flex items-center">🛑 Access Denied</p>
                     <p class="text-base text-gray-700 mb-6">${message.replace(/\*\*/g, '<strong>')}</p>
-                </div>
+               
+ </div>
                 <a href="tel:+919193246219" class="block w-full py-3 bg-tf-secondary text-white text-center font-bold rounded-lg hover:bg-cyan-600 transition">Call Support / Renew Plan</a>
                 <a href="https://wa.me/9193246219" target="_blank" class="block w-full py-3 bg-whatsapp-green text-white text-center font-bold rounded-lg hover:bg-green-600">🟢 WhatsApp Support</a>
             `;
-            document.getElementById('bulk-verification').appendChild(errorBlock);
+document.getElementById('bulk-verification').appendChild(errorBlock);
         }
 
         // --- INBOX FUNCTIONS ---
         async function loadInboxCounts() {
             try {
                 const response = await authFetch(`${API_BASE}/inbox/message`);
-                const result = await response.json();
+const result = await response.json();
                 if (result.status === "Success" && result.unreadCount > 0) {
                     const badge = document.getElementById('inbox-badge');
-                    badge.textContent = result.unreadCount;
+badge.textContent = result.unreadCount;
                     badge.style.display = 'block';
                 } else {
                     document.getElementById('inbox-badge').style.display = 'none';
-                }
+}
             } catch (e) {
                 console.error("Failed to load client inbox counts:", e);
-            }
+}
         }
 
         async function loadClientInbox() {
             const msgContainer = document.getElementById('client-inbox-list');
-            const detailView = document.getElementById('full-message-detail');
+const detailView = document.getElementById('full-message-detail');
             msgContainer.innerHTML = '<p class="text-center text-gray-500 mt-5">Loading messages...</p>';
             detailView.style.display = 'none';
-            try {
+try {
                 const response = await authFetch(`${API_BASE}/inbox/message`);
-                const result = await response.json();
+const result = await response.json();
                 if (result.status === "Success") {
                     msgContainer.innerHTML = '';
-                    if (!result.messages || result.messages.length === 0) {
+if (!result.messages || result.messages.length === 0) {
                         msgContainer.innerHTML = '<p class="text-center text-gray-500 mt-5">No messages in your inbox.</p>';
-                        return;
+return;
                     }
                     result.messages.forEach(msg => {
                         const isUnread = !msg.isRead && msg.senderId === 'admin';
                         const cardClass = isUnread ? 'unread' : '';
-                        const icon = isUnread ? 'fa-envelope' : 'fa-envelope-open';
+               
+          const icon = isUnread ? 'fa-envelope' : 'fa-envelope-open';
                         const sender = msg.senderId === 'admin' ? 'Admin' : 'You';
 
                         const messageHtml = `
-                            <div id="msg-${msg._id}" class="msg-card ${cardClass}" onclick="viewClientMessage('${msg._id}', ${JSON.stringify(msg.subject)}, ${JSON.stringify(msg.body)}, ${isUnread}, '${msg.timestamp}')">
+                        
+     <div id="msg-${msg._id}" class="msg-card ${cardClass}" onclick="viewClientMessage('${msg._id}', ${JSON.stringify(msg.subject)}, ${JSON.stringify(msg.body)}, ${isUnread}, '${msg.timestamp}')">
                                 <i class="fas ${icon} msg-icon"></i>
                                 <div class="flex-grow">
-                                    <p class="text-md truncate">${msg.subject || '(No Subject)'}</p>
+                    
+                 <p class="text-md truncate">${msg.subject || '(No Subject)'}</p>
                                     <small class="text-gray-500 block">From: ${sender} • ${new Date(msg.timestamp).toLocaleDateString()}</small>
                                 </div>
-                            </div>
+     
+                       </div>
                         `;
-                        msgContainer.insertAdjacentHTML('beforeend', messageHtml);
+msgContainer.insertAdjacentHTML('beforeend', messageHtml);
                     });
                 } else {
                     msgContainer.innerHTML = `<p class="text-center text-red-500 mt-5">Failed to load inbox: ${result.message}</p>`;
-                }
+}
             } catch (error) {
                 msgContainer.innerHTML = `<p class="text-center text-red-500 mt-5">Network Error: ${error.message}</p>`;
-            }
+}
         }
 
         function toggleInbox() {
             document.getElementById('inbox-modal').style.display = 'flex';
-            loadClientInbox();
+loadClientInbox();
         }
 
         function closeInbox() {
             document.getElementById('inbox-modal').style.display = 'none';
-            loadInboxCounts();
+loadInboxCounts();
         }
 
         function viewClientMessage(messageId, subject, body, isUnread, timestamp) {
             const detailView = document.getElementById('full-message-detail');
-            document.getElementById('full-message-subject').textContent = subject;
+document.getElementById('full-message-subject').textContent = subject;
             document.getElementById('full-message-body').textContent = body;
             document.getElementById('full-message-date').textContent = new Date(timestamp).toLocaleString();
             detailView.style.display = 'block';
-            if (isUnread) {
+if (isUnread) {
                 authFetch(`${API_BASE}/inbox/message?messageId=${messageId}`, { method: 'PUT' }).catch(()=>{});
-                const card = document.getElementById(`msg-${messageId}`);
+const card = document.getElementById(`msg-${messageId}`);
                 if (card) {
                     card.classList.remove('unread');
-                    const iconEl = card.querySelector('.msg-icon');
+const iconEl = card.querySelector('.msg-icon');
                     if (iconEl) iconEl.classList.replace('fa-envelope', 'fa-envelope-open');
                 }
                 setTimeout(loadInboxCounts, 500);
-            }
+}
         }
 
         // --- FORCE-LOGOUT UI / helpers ---
         function openForceModal() {
             document.getElementById('force-logout-modal').style.display = 'flex';
-        }
+}
         function closeForceModal() {
             document.getElementById('force-logout-modal').style.display = 'none';
-        }
+}
 
         function getTokenPayload() {
             const token = localStorage.getItem('clientToken');
-            if (!token) return null;
+if (!token) return null;
             try {
                 const payload = JSON.parse(atob(token.split('.')[1]));
-                return payload;
+return payload;
             } catch (e) {
                 return null;
-            }
+}
         }
 
         async function forceLogoutOtherDevice() {
             // Use the clientId from token payload (or planDetails) to request server to clear active session
             const payload = getTokenPayload();
-            const clientId = payload && payload.clientId ? payload.clientId : (planDetails.id || planDetails.clientId);
-            if (!clientId) {
+const clientId = payload && payload.clientId ? payload.clientId : (planDetails.id || planDetails.clientId);
+if (!clientId) {
                 alert('Cannot determine clientId. Please log in again.');
-                closeForceModal();
+closeForceModal();
                 localStorage.clear();
                 window.location.href = LOGIN_PAGE;
                 return;
             }
 
             try {
+                // Use the consolidated router path with action parameter
                 const resp = await fetch(`${API_CLIENT}?action=force-logout`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ clientId })
                 });
-                const json = await resp.json().catch(()=>null);
+const json = await resp.json().catch(()=>null);
                 if (resp.ok && json && json.status === 'Success') {
                     // Force-success: clear local token and redirect to login so they can login fresh
                     closeForceModal();
-                    localStorage.removeItem('clientToken');
+localStorage.removeItem('clientToken');
                     // small pause so user sees confirmation
                     alert('Other device logged out. Please log in again here.');
-                    window.location.href = LOGIN_PAGE;
+window.location.href = LOGIN_PAGE;
                 } else {
                     console.warn('force-logout failed', resp.status, json);
-                    alert('Could not force logout other device. Contact support.');
+alert('Could not force logout other device. Contact support.');
                     closeForceModal();
                 }
             } catch (e) {
                 console.error('forceLogoutOtherDevice error', e);
-                alert('Network error. Try again or contact support.');
+alert('Network error. Try again or contact support.');
                 closeForceModal();
             }
         }
@@ -703,20 +736,22 @@
             // Start by reading profile/credits from server (authoritative)
             fetchProfileData().then(()=> {
                 // Initialize bulk listeners AFTER profile load
-                if (typeof initBulkListeners === 'function') {
+       
+          if (typeof initBulkListeners === 'function') {
                     initBulkListeners();
                 } else {
                     console.error("Bulk listeners function not found. Make sure bulk_verification_logic.js is loaded.");
                 }
-            }).catch((e)=> {
+   
+           }).catch((e)=> {
                 console.error('Error during profile init:', e);
                 if (typeof initBulkListeners === 'function') initBulkListeners();
             });
-            loadInboxCounts();
+loadInboxCounts();
 
             // Periodic heartbeats & inbox refresh
             setInterval(sendHeartbeat, 60000);
-            setInterval(loadInboxCounts, 60000);
+setInterval(loadInboxCounts, 60000);
             // Show default tab
             showTab('bulk-verification', document.getElementById('bulk-tab-btn'));
         };

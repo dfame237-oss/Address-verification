@@ -371,7 +371,7 @@ module.exports = async (req, res) => {
                 remarks.push('Address verified and formatted successfully.'); 
             }
 
-            // Build final response (kept original keys)
+            // Build final response
             const finalResponse = {
                 status: "Success",
                 customerRawName: customerName,

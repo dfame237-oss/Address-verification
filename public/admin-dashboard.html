@@ -114,7 +114,6 @@
             </div>
         </header>
 
-        <!-- Inbox Modal -->
         <div id="inbox-modal" class="modal" aria-hidden="true">
             <div class="modal-content">
                 <span class="modal-close" onclick="closeInbox()">&times;</span>
@@ -143,7 +142,6 @@
             </div>
         </div>
 
-        <!-- Client management header -->
         <div class="management-header">
             <h2>Client Management</h2>
             <div>
@@ -154,7 +152,6 @@
             </div>
         </div>
 
-        <!-- Client table -->
         <div class="client-table-wrapper">
             <table class="client-table">
                 <thead>
@@ -173,7 +170,6 @@
             </table>
         </div>
 
-        <!-- Update Client Modal -->
         <div id="update-client-modal" class="modal" aria-hidden="true">
             <div class="modal-content">
                 <span class="modal-close" onclick="closeUpdateModal()">&times;</span>
@@ -205,7 +201,6 @@
             </div>
         </div>
 
-        <!-- Add Client Modal -->
         <div id="add-client-modal" class="modal" aria-hidden="true">
             <div class="modal-content">
                 <span class="modal-close" onclick="closeAddClientModal()">&times;</span>
@@ -249,7 +244,6 @@
             </div>
         </div>
 
-        <!-- Top-up Modal -->
         <div id="topup-modal" class="modal" aria-hidden="true">
             <div class="modal-content">
                 <span class="modal-close" onclick="closeTopupModal()">&times;</span>
@@ -294,6 +288,8 @@
 
         // --- CONSTANTS AND STATE ---
         const API_BASE = '/api';
+        // FIX 1: Corrected API path for consolidated router
+        const API_ADMIN = `${API_BASE}/admin/index`; 
         const AUTH_TOKEN = localStorage.getItem('adminToken');
         const ADMIN_ID = 'admin';
         let activeClients = [];
@@ -376,7 +372,8 @@
             const clientListBody = document.getElementById('client-list');
             clientListBody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-4">Loading clients...</td></tr>';
             try {
-                const response = await authFetch(`${API_BASE}/admin/client`);
+                // FIX 2: Use consolidated router for client list GET
+                const response = await authFetch(`${API_ADMIN}?action=client`);
                 const result = await response.json();
                 if (result.status === "Success") {
                     activeClients = result.data;
@@ -448,7 +445,8 @@
             const shouldDelete = await showConfirmModal("Are you sure you want to permanently delete this client?");
             if (!shouldDelete) return;
             try {
-                const response = await authFetch(`${API_BASE}/admin/client?clientId=${clientId}`, { method: 'DELETE' });
+                // FIX 3: Use consolidated router for DELETE
+                const response = await authFetch(`${API_ADMIN}?action=client&clientId=${clientId}`, { method: 'DELETE' });
                 const result = await response.json();
                 if (response.ok && result.status === 'Success') {
                     showMessageModal('Client deleted successfully.', 'success');
@@ -519,7 +517,8 @@
             statusMsg.textContent = 'Creating client...';
             statusMsg.style.color = '#6366F1';
             try {
-                const response = await authFetch(`${API_BASE}/admin/client`, { method: 'POST', body: JSON.stringify(newClientData) });
+                // FIX 4: Use consolidated router for POST (Add Client)
+                const response = await authFetch(`${API_ADMIN}?action=client`, { method: 'POST', body: JSON.stringify(newClientData) });
                 const result = await response.json();
                 if (response.ok && result.status === 'Success') {
                     statusMsg.textContent = 'Client created successfully!';
@@ -569,7 +568,8 @@
             statusMsg.textContent = 'Updating...';
             statusMsg.style.color = '#6366F1';
             try {
-                const response = await authFetch(`${API_BASE}/admin/client`, { method: 'PUT', body: JSON.stringify({...updateData, clientId}) });
+                // FIX 5: Use consolidated router for PUT (Update Client)
+                const response = await authFetch(`${API_ADMIN}?action=client`, { method: 'PUT', body: JSON.stringify({...updateData, clientId}) });
                 const result = await response.json();
                 if (response.ok && result.status === 'Success') {
                     statusMsg.textContent = 'Client updated successfully!';
@@ -621,7 +621,8 @@
 
             status.textContent = 'Applying...'; status.style.color = '#6366F1';
             try {
-                const resp = await authFetch(`${API_BASE}/admin/topup`, { method: 'POST', body: JSON.stringify(payload) });
+                // FIX 6: Use consolidated router for Topup POST
+                const resp = await authFetch(`${API_ADMIN}?action=topup`, { method: 'POST', body: JSON.stringify(payload) });
                 const json = await resp.json();
                 if (resp.ok && json.status === 'Success') {
                     status.textContent = 'Top-up applied.'; status.style.color = '#06B6D4';
@@ -639,7 +640,8 @@
         async function clearSession(clientId) {
             if (!confirm('Clear active session for this client? This will force them to log in again.')) return;
             try {
-                const resp = await authFetch(`${API_BASE}/admin/client`, { method: 'PUT', body: JSON.stringify({ clientId, clearSession: true })});
+                // FIX 7: Use consolidated router for Clear Session PUT
+                const resp = await authFetch(`${API_ADMIN}?action=client`, { method: 'PUT', body: JSON.stringify({ clientId, clearSession: true })});
                 const json = await resp.json();
                 if (resp.ok && json.status === 'Success') { showMessageModal('Session cleared.', 'success'); loadClients(); } 
                 else showMessageModal(`Failed to clear session: ${json.message || 'Unknown'}`, 'error');
@@ -649,7 +651,8 @@
         async function toggleActive(clientId, setActive) {
             if (!confirm(`${setActive ? 'Enable' : 'Disable'} this client?`)) return;
             try {
-                const resp = await authFetch(`${API_BASE}/admin/client`, { method: 'PUT', body: JSON.stringify({ clientId, isActive: setActive })});
+                // FIX 8: Use consolidated router for Toggle Active PUT
+                const resp = await authFetch(`${API_ADMIN}?action=client`, { method: 'PUT', body: JSON.stringify({ clientId, isActive: setActive })});
                 const json = await resp.json();
                 if (resp.ok && json.status === 'Success') { showMessageModal('Updated.', 'success'); loadClients(); } 
                 else showMessageModal(`Failed: ${json.message || 'Unknown'}`, 'error');
@@ -660,6 +663,7 @@
         async function loadInboxCounts() {
             let totalUnread = 0;
             try {
+                // FIX 9: Use consolidated router path for message counts
                 const msgResponse = await authFetch(`${API_BASE}/inbox/message`);
                 const msgResult = await msgResponse.json();
                 if (msgResult.status === "Success") {
@@ -670,7 +674,8 @@
             } catch (e) { console.error("Failed to load client message counts:", e); }
 
             try {
-                const supportResponse = await authFetch(`${API_BASE}/admin/support`);
+                // FIX 10: Use consolidated router path for support counts
+                const supportResponse = await authFetch(`${API_ADMIN}?action=support`);
                 const supportResult = await supportResponse.json();
                 if (supportResult.status === "Success") totalUnread += supportResult.unreadCount || 0;
             } catch (e) { console.error("Failed to load support message counts:", e); }
@@ -721,6 +726,7 @@
             const msgContainer = document.getElementById('inbox-messages-container');
             msgContainer.innerHTML = '<p class="text-center text-gray-500 py-4">Loading client messages...</p>';
             try {
+                // FIX 11: Use consolidated router path for message loading (inbox/message is still a dedicated function)
                 const response = await authFetch(`${API_BASE}/inbox/message`);
                 const result = await response.json();
                 if (result.status === "Success") {
@@ -751,7 +757,8 @@
             const msgContainer = document.getElementById('inbox-messages-container');
             msgContainer.innerHTML = '<p class="text-center text-gray-500 py-4">Loading demo requests...</p>';
             try {
-                const response = await authFetch(`${API_BASE}/admin/support`);
+                // FIX 12: Use consolidated router path for support loading
+                const response = await authFetch(`${API_ADMIN}?action=support`);
                 const result = await response.json();
                 if (result.status === "Success") {
                     const supportMessages = result.messages || [];
@@ -824,6 +831,7 @@
             if (!body) { statusMsg.textContent = 'Message body cannot be empty.'; statusMsg.style.color = '#DC2626'; return; }
             statusMsg.textContent = 'Sending...'; statusMsg.style.color = '#6366F1';
             try {
+                // FIX 13: Use correct path for message POST (still dedicated inbox/message function)
                 const response = await authFetch(`${API_BASE}/inbox/message`, {
                     method: 'POST',
                     body: JSON.stringify({ subject, body, recipientId: selectedClientId, senderId: ADMIN_ID })

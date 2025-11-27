@@ -1,158 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Client Login</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body { background:#F8FAFC; font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial; }
-    .card { max-width:420px; margin:48px auto; background:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(2,6,23,0.08); padding:28px; border-top:6px solid #6366F1; }
-    .btn { width:100%; padding:12px; border-radius:10px; font-weight:700; }
-  </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Client Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background:#F8FAFC; font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial; }
+    .card { max-width:420px; margin:48px auto; background:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(2,6,23,0.08); padding:28px; border-top:6px solid #6366F1; }
+    .btn { width:100%; padding:12px; border-radius:10px; font-weight:700; }
+  </style>
 </head>
 <body>
-  <main class="card">
-    <div class="flex items-center gap-3 mb-4">
-      <div style="width:44px;height:44px;background:linear-gradient(135deg,#6366F1,#06B6D4);border-radius:8px;"></div>
-      <div>
-        <h1 class="text-xl font-extrabold">Client Portal</h1>
-        <p class="text-sm text-gray-500">Sign in to access address verification</p>
-      </div>
-    </div>
+  <main class="card">
+    <div class="flex items-center gap-3 mb-4">
+      <div style="width:44px;height:44px;background:linear-gradient(135deg,#6366F1,#06B6D4);border-radius:8px;"></div>
+      <div>
+        <h1 class="text-xl font-extrabold">Client Portal</h1>
+        <p class="text-sm text-gray-500">Sign in to access address verification</p>
+      </div>
+    </div>
 
-    <form id="loginForm" class="space-y-4" autocomplete="on" novalidate>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Username</label>
-        <input id="username" type="text" required class="mt-1 block w-full rounded-md border-gray-200 shadow-sm p-3" />
-      </div>
+    <form id="loginForm" class="space-y-4" autocomplete="on" novalidate>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Username</label>
+        <input id="username" type="text" required class="mt-1 block w-full rounded-md border-gray-200 shadow-sm p-3" />
+      </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Password</label>
-        <input id="password" type="password" required class="mt-1 block w-full rounded-md border-gray-200 shadow-sm p-3" />
-      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Password</label>
+        <input id="password" type="password" required class="mt-1 block w-full rounded-md border-gray-200 shadow-sm p-3" />
+      </div>
 
-      <button id="loginBtn" type="submit" class="btn bg-cyan-500 text-white hover:bg-cyan-600">Secure Login</button>
+      <button type="submit" id="loginBtn" class="btn bg-cyan-500 text-white hover:bg-cyan-600">Secure Login</button>
 
-      <p id="status" class="text-center text-sm mt-2 text-gray-600"></p>
+      <p id="status" class="text-center text-sm mt-2 text-gray-600"></p>
 
-      <div id="forceArea" class="mt-3 hidden">
-        <div class="bg-red-50 border border-red-100 p-3 rounded-md text-center">
-          <p class="font-semibold text-red-700">User already logged in on another device.</p>
-          <p class="text-xs text-gray-600 mt-1">If this is you, log the other device out and continue here.</p>
-          <div class="mt-3">
-            <button id="forceBtn" type="button" class="btn bg-red-600 text-white hover:bg-red-700">Logout other device & login here</button>
-          </div>
-        </div>
-      </div>
+      <div id="forceArea" class="mt-3 hidden">
+        <div class="bg-red-50 border border-red-100 p-3 rounded-md text-center">
+          <p class="font-semibold text-red-700">User already logged in on another device.</p>
+          <p class="text-xs text-gray-600 mt-1">If this is you, log the other device out and continue here.</p>
+          <div class="mt-3">
+            <button id="forceBtn" type="button" class="btn bg-red-600 text-white hover:bg-red-700">Logout other device & login here</button>
+          </div>
+        </div>
+      </div>
 
-      <div class="mt-4 text-center">
-        <a href="index.html" class="text-xs text-indigo-600 hover:underline">← Back to main site</a>
-      </div>
-    </form>
-  </main>
+      <div class="mt-4 text-center">
+        <a href="index.html" class="text-xs text-indigo-600 hover:underline">← Back to main site</a>
+      </div>
+    </form>
+  </main>
 
-  <script>
-    const API_LOGIN = '/api/client?action=login';
-    const DASHBOARD = 'client-dashboard.html';
-    const loginForm = document.getElementById('loginForm');
-    const loginBtn = document.getElementById('loginBtn');
-    const statusEl = document.getElementById('status');
-    const forceArea = document.getElementById('forceArea');
-    const forceBtn = document.getElementById('forceBtn');
+  <script>
+    // FIX: Update the endpoint to point to the consolidated client router with the 'login' action
+    const API_LOGIN = '/api/client/index?action=login';
+    const DASHBOARD = 'client-dashboard.html';
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const statusEl = document.getElementById('status');
+    const forceArea = document.getElementById('forceArea');
+    const forceBtn = document.getElementById('forceBtn');
 
-    let lastActionToken = null;
-    let lastClientId = null;
-    let lastCredentials = null;
+    let lastActionToken = null;
+    let lastClientId = null;
+    let lastCredentials = null;
 
-    function setStatus(msg = '', type = '') {
-      statusEl.textContent = msg;
-      statusEl.className = `text-center text-sm mt-2 ${type === 'error' ? 'text-red-600' : type === 'ok' ? 'text-cyan-600' : 'text-gray-600'}`;
-    }
+    function setStatus(msg = '', type = '') {
+      statusEl.textContent = msg;
+      statusEl.className = `text-center text-sm mt-2 ${type === 'error' ? 'text-red-600' : type === 'ok' ? 'text-cyan-600' : 'text-gray-600'}`;
+    }
 
-    function setButtonsDisabled(state) {
-      loginBtn.disabled = state;
-      if (state) loginBtn.classList.add('opacity-70', 'cursor-not-allowed'); else loginBtn.classList.remove('opacity-70', 'cursor-not-allowed');
-    }
+    function setButtonsDisabled(state) {
+      loginBtn.disabled = state;
+      if (state) loginBtn.classList.add('opacity-70', 'cursor-not-allowed'); else loginBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+    }
 
-    async function fetchJSON(url, data) {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      const text = await res.text();
-      try { return { ok: res.ok, status: res.status, json: text ? JSON.parse(text) : null }; }
-      catch (e) { return { ok: res.ok, status: res.status, text }; }
-    }
+    async function fetchJSON(url, data) {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const text = await res.text();
+      try { return { ok: res.ok, status: res.status, json: text ? JSON.parse(text) : null }; }
+      catch (e) { return { ok: res.ok, status: res.status, text }; }
+    }
 
-    async function attemptLogin({ username, password, force = false, actionToken = null }) {
-      setButtonsDisabled(true); setStatus('Authenticating...', 'ok');
+    async function attemptLogin({ username, password, force = false, actionToken = null }) {
+      setButtonsDisabled(true); setStatus('Authenticating...', 'ok');
 
-      try {
-        const payload = { username, password };
-        if (force) payload.force = true;
-        if (actionToken) payload.actionToken = actionToken;
+      try {
+        const payload = { username, password };
+        if (force) payload.force = true;
+        if (actionToken) payload.actionToken = actionToken;
 
-        const r = await fetchJSON(API_LOGIN, payload);
-        if (!r.ok && !r.json) { console.error('Non-JSON response', r.text); setStatus('Server error. Contact support.', 'error'); setButtonsDisabled(false); return null; }
-        const j = r.json;
+        const r = await fetchJSON(API_LOGIN, payload);
+        if (!r.ok && !r.json) { console.error('Non-JSON response', r.text); setStatus('Server error. Contact support.', 'error'); setButtonsDisabled(false); return null; }
+        const j = r.json;
 
-        if (r.ok && j && j.alreadyLoggedIn) {
-          lastActionToken = j.actionToken || null;
-          lastClientId = j.clientId || null;
-          lastCredentials = { username, password };
-          forceArea.classList.remove('hidden');
-          setStatus('User already logged in on another device.', 'error');
-          setButtonsDisabled(false);
-          return j;
-        }
+        if (r.ok && j && j.alreadyLoggedIn) {
+          lastActionToken = j.actionToken || null;
+          lastClientId = j.clientId || null;
+          lastCredentials = { username, password };
+          forceArea.classList.remove('hidden');
+          setStatus('User already logged in on another device.', 'error');
+          setButtonsDisabled(false);
+          return j;
+        }
 
-        if (r.ok && j && (j.status === 'Success' || j.status === 'OK')) {
-          if (j.token) localStorage.setItem('clientToken', j.token);
-          if (j.planDetails) localStorage.setItem('planDetails', JSON.stringify(j.planDetails));
-          localStorage.setItem('clientName', (j.planDetails && j.planDetails.clientName) || username);
-          setStatus('Login successful — redirecting...', 'ok');
-          setTimeout(()=> window.location.href = DASHBOARD, 400);
-          return j;
-        }
+        if (r.ok && j && (j.status === 'Success' || j.status === 'OK')) {
+          if (j.token) localStorage.setItem('clientToken', j.token);
+          if (j.planDetails) localStorage.setItem('planDetails', JSON.stringify(j.planDetails));
+          localStorage.setItem('clientName', (j.planDetails && j.planDetails.clientName) || username);
+          setStatus('Login successful — redirecting...', 'ok');
+          setTimeout(()=> window.location.href = DASHBOARD, 400);
+          return j;
+        }
 
-        const msg = (j && (j.message || j.error)) || `Login failed (status ${r.status})`;
-        setStatus(msg, 'error');
-        setButtonsDisabled(false);
-        return j;
-      } catch (err) {
-        console.error('Login error', err);
-        setStatus('Network error. Check connection.', 'error');
-        setButtonsDisabled(false);
-        return null;
-      }
-    }
+        const msg = (j && (j.message || j.error)) || `Login failed (status ${r.status})`;
+        setStatus(msg, 'error');
+        setButtonsDisabled(false);
+        return j;
+      } catch (err) {
+        console.error('Login error', err);
+        setStatus('Network error. Check connection.', 'error');
+        setButtonsDisabled(false);
+        return null;
+      }
+    }
 
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      forceArea.classList.add('hidden');
-      lastActionToken = null; lastCredentials = null; lastClientId = null;
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      forceArea.classList.add('hidden');
+      lastActionToken = null; lastCredentials = null; lastClientId = null;
 
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value;
-      if (!username || !password) { setStatus('Enter username and password.', 'error'); return; }
-      await attemptLogin({ username, password });
-    });
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      if (!username || !password) { setStatus('Enter username and password.', 'error'); return; }
+      await attemptLogin({ username, password });
+    });
 
-    forceBtn.addEventListener('click', async () => {
-      setStatus('Logging out other device and finishing login...', 'ok');
-      if (!lastCredentials) { setStatus('Missing credentials. Enter them and try again.', 'error'); return; }
-      if (lastActionToken) {
-        await attemptLogin({ username: lastCredentials.username, password: lastCredentials.password, force: true, actionToken: lastActionToken });
-        return;
-      }
-      await attemptLogin({ username: lastCredentials.username, password: lastCredentials.password, force: true });
-    });
+    forceBtn.addEventListener('click', async () => {
+      setStatus('Logging out other device and finishing login...', 'ok');
+      if (!lastCredentials) { setStatus('Missing credentials. Enter them and try again.', 'error'); return; }
+      if (lastActionToken) {
+        await attemptLogin({ username: lastCredentials.username, password: lastCredentials.password, force: true, actionToken: lastActionToken });
+        return;
+      }
+      await attemptLogin({ username: lastCredentials.username, password: lastCredentials.password, force: true });
+    });
 
-    if (localStorage.getItem('clientToken')) {
-      try { window.location.href = DASHBOARD; } catch(e) {}
-    }
-  </script>
+    if (localStorage.getItem('clientToken')) {
+      try { window.location.href = DASHBOARD; } catch(e) {}
+    }
+  </script>
 </body>
 </html>
