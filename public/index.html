@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Address Verification Platform - Teleforce</title>
+    <title>Smart Locator - AI Address Verification Platform</title>
 
     <link rel="stylesheet" href="style.css"> 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -19,8 +19,8 @@
                         'tf-bg-light': '#F8FAFC', 
                         'tf-card-light': '#FFFFFF',
                         'tf-text-dark': '#1E293B',
-                        'tf-primary': '#6366F1', // Indigo 500
-                        'tf-secondary': '#06B6D4', // Cyan 500
+                        'tf-primary': '#4F46E5', // Updated Indigo/Primary for stronger branding
+                        'tf-secondary': '#06B6D4', // Cyan
                         'whatsapp-green': '#25D366',
                         'alert-dark': '#EF4444',
                         'tf-primary-light': '#E0E7FF',
@@ -39,11 +39,12 @@
     <style>
         body { scroll-behavior: smooth; }
         .input-focus:focus {
-            border-color: #6366F1; 
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.4);
+            border-color: #4F46E5; 
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.4);
         }
         .text-gradient {
-            background-image: linear-gradient(to right, #6366F1, #06B6D4);
+            /* Updated gradient for stronger visual appeal */
+            background-image: linear-gradient(to right, #4F46E5, #06B6D4); 
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -52,9 +53,28 @@
             background-image: radial-gradient(#E5E7EB 1px, transparent 1px);
             background-size: 20px 20px;
         }
-        /* Style for Accordion active state */
         .accordion-header[aria-expanded="true"] .chevron {
             transform: rotate(180deg);
+        }
+        /* Advanced Button Hover Effect */
+        .btn-primary-adv {
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.5), 0 4px 6px -2px rgba(79, 70, 229, 0.05);
+        }
+        .btn-primary-adv::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.15);
+            transition: transform 0.3s ease-out;
+            transform: skewX(-20deg);
+        }
+        .btn-primary-adv:hover::after {
+            transform: translate(200%, 0) skewX(-20deg);
         }
     </style>
 </head>
@@ -63,8 +83,8 @@
     <nav class="bg-tf-card-light shadow-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
 
-            <a href="index.html" class="text-2xl font-extrabold text-tf-text-dark flex items-center">
-                <span class="text-gradient text-3xl mr-1">T</span>eleforce <span class="text-sm font-normal text-tf-primary ml-1">AI VERIFY</span>
+            <a href="index.html" class="text-3xl font-extrabold text-tf-text-dark flex items-center">
+                <span class="text-gradient">Smart Locator</span>
             </a>
 
             <div class="flex gap-4 sm:gap-6 items-center">
@@ -72,8 +92,8 @@
                 <a href="pricing.html" class="hidden sm:inline font-medium text-gray-600 hover:text-tf-secondary transition">Pricing</a>
                 <a href="client-login.html" class="font-medium text-tf-primary hover:text-indigo-600 transition">Client Login</a>
 
-                <a href="contact.html" class="bg-tf-primary text-white py-2 px-4 sm:px-6 rounded-lg font-bold shadow-lg shadow-tf-primary/30 hover:bg-indigo-600 transition transform hover:scale-105">
-                    Request Demo
+                <a href="contact.html" class="btn-primary-adv bg-tf-primary text-white py-2 px-4 sm:px-6 rounded-lg font-bold transition transform hover:scale-105">
+                    Request Demo (Bulk)
                 </a>
             </div>
         </div>
@@ -82,8 +102,8 @@
     <header id="hero" class="pt-20 pb-32 text-center hero-background">
         <div class="max-w-6xl mx-auto px-6">
 
-            <p class="text-sm font-semibold text-tf-primary mb-3 uppercase tracking-wider">
-                Built for E-commerce & Logistics
+            <p class="text-sm font-semibold text-tf-secondary mb-3 uppercase tracking-wider">
+                Powered by Gemini AI and Official India Post Data
             </p>
             <h1 class="text-5xl md:text-6xl font-extrabold mb-6 leading-tight">
                 Stop RTO. <span class="text-gradient">Guarantee First-Attempt Delivery.</span>
@@ -94,8 +114,8 @@
             </p>
 
             <div class="flex flex-col sm:flex-row justify-center gap-4 mb-20">
-                <a href="contact.html" class="py-3 px-8 bg-tf-primary text-white rounded-lg font-extrabold shadow-xl shadow-tf-primary/40 hover:bg-indigo-600 transition transform hover:-translate-y-0.5">
-                    Get Started & Pricing →
+                <a href="contact.html" class="btn-primary-adv py-3 px-8 bg-tf-primary text-white rounded-lg font-extrabold transition transform hover:-translate-y-0.5">
+                    Request Demo for Bulk Verification →
                 </a>
                 <a href="single.html" class="py-3 px-8 bg-tf-card-light border border-gray-300 text-tf-text-dark rounded-lg font-bold shadow-lg hover:bg-gray-100 transition">
                     <i class="fas fa-search mr-2"></i> Try Single Check (Free)
@@ -122,7 +142,7 @@
                             <i class="fas fa-brain"></i>
                         </div>
                         <h3 class="text-xl font-bold mb-2">2. AI Cleaning & Validation</h3>
-                        <p class="text-gray-600">Gemini AI corrects errors, adds missing data, and verifies against **India Post** records.</p>
+                        <p class="text-gray-600">**Gemini AI** corrects errors and verifies against **India Post** records.</p>
                     </div>
 
                     <div class="text-center p-6 rounded-xl border-t-4 border-tf-text-dark/80 hover:shadow-xl transition duration-300">
@@ -152,79 +172,42 @@
             </div>
         </div>
     </section>
-
-
-    <section id="features" class="py-24 bg-tf-bg-light">
+    
+    <section class="py-24 bg-tf-primary-light">
         <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center max-w-3xl mx-auto mb-16">
-                <h2 class="text-4xl font-extrabold text-tf-text-dark mb-4">Under the Hood: Our Verification Engine</h2>
+            <div class="text-center max-w-4xl mx-auto mb-16">
+                <h2 class="text-4xl font-extrabold text-tf-text-dark mb-4">The True Cost of RTO: How Much Can You Save?</h2>
                 <p class="text-lg text-gray-600">
-                    We combine the best of advanced Large Language Models (LLMs) with ground truth data for unprecedented accuracy.
+                    Industry RTO rates due to bad addresses average **5-8%**. Smart Locator turns that loss into profit.
                 </p>
             </div>
-
-            <div class="grid md:grid-cols-2 gap-10">
-                
-                <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-tf-primary">
-                    <div class="flex items-center mb-3">
-                        <i class="fas fa-magic text-3xl text-tf-primary mr-3"></i>
-                        <h3 class="text-2xl font-bold">Intelligent Error Correction</h3>
+            
+            <div class="grid md:grid-cols-2 gap-10 items-center">
+                <div class="space-y-6">
+                    <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-tf-primary">
+                        <strong class="text-3xl font-extrabold text-tf-primary block">30%</strong>
+                        <p class="text-gray-600 mt-1">Reduction in **Address-Related RTO** for most clients within 90 days.</p>
                     </div>
-                    <p class="text-gray-600 mb-3">
-                        Our Gemini AI model automatically fixes phonetic errors ("Nager" -> "Nagar"), spelling mistakes, and common abbreviations (e.g., converting "rd" to "Road").
-                    </p>
-                    <ul class="text-sm text-gray-700 list-disc list-inside space-y-1">
-                        <li>Standardizes input formats.</li>
-                        <li>Removes filler/meaningless words.</li>
-                        <li>Extracts H.no./Flat No. accurately.</li>
-                    </ul>
+                    <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-tf-secondary">
+                        <strong class="text-3xl font-extrabold text-tf-secondary block">₹120+</strong>
+                        <p class="text-gray-600 mt-1">Average **Cost Savings per Order** by eliminating forward, reverse, and processing fees.</p>
+                    </div>
+                    <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-alert-dark">
+                        <strong class="text-3xl font-extrabold text-alert-dark block">8X ROI</strong>
+                        <p class="text-gray-600 mt-1">Estimated **Return on Investment** on address verification fees for high-volume sellers.</p>
+                    </div>
                 </div>
 
-                <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-tf-secondary">
-                    <div class="flex items-center mb-3">
-                        <i class="fas fa-database text-3xl text-tf-secondary mr-3"></i>
-                        <h3 class="text-2xl font-bold">India Post PIN Validation</h3>
-                    </div>
-                    <p class="text-gray-600 mb-3">
-                        Every address is cross-referenced with official postal data to ensure the PIN, Post Office, Tehsil, and District are correct and verified.
+                <div class="p-8 bg-tf-card-light rounded-2xl shadow-2xl">
+                    <h3 class="text-2xl font-bold text-tf-text-dark mb-4">Your Profit is in the Data.</h3>
+                    <p class="text-gray-700 mb-4">
+                        A single failed delivery costs you not just the shipping fees, but also the staff time, inventory holding cost, and loss of customer trust. By verifying addresses at the point of entry, you **convert losses into successful deliveries**.
                     </p>
-                    <ul class="text-sm text-gray-700 list-disc list-inside space-y-1">
-                        <li>Corrects invalid or wrong PIN codes.</li>
-                        <li>Guarantees official geographical mappings.</li>
-                        <li>Reduces dependence on vague city names.</li>
-                    </ul>
+                    <a href="contact.html" class="inline-flex items-center text-tf-primary font-bold hover:text-indigo-600 transition">
+                        Calculate Your Potential Savings <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                    
                 </div>
-
-                <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-alert-dark">
-                    <div class="flex items-center mb-3">
-                        <i class="fas fa-road text-3xl text-alert-dark mr-3"></i>
-                        <h3 class="text-2xl font-bold">Location Suitability Analysis</h3>
-                    </div>
-                    <p class="text-gray-600 mb-3">
-                        We provide an actionable score (Prime, Tier 1/2, Remote/Difficult) so your logistics team can flag high-risk orders *before* dispatch.
-                    </p>
-                    <ul class="text-sm text-gray-700 list-disc list-inside space-y-1">
-                        <li>Prioritize orders based on ease of delivery.</li>
-                        <li>Dynamically select couriers.</li>
-                        <li>Automated COD/Prepaid risk assessment.</li>
-                    </ul>
-                </div>
-
-                <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-gray-500">
-                    <div class="flex items-center mb-3">
-                        <i class="fas fa-thumbtack text-3xl text-gray-500 mr-3"></i>
-                        <h3 class="text-2xl font-bold">Standardized Shipping Output</h3>
-                    </div>
-                    <p class="text-gray-600 mb-3">
-                        Receive a clean, formatted address string, ready for generating shipping labels on platforms like ShipRocket or Delhivery.
-                    </p>
-                    <ul class="text-sm text-gray-700 list-disc list-inside space-y-1">
-                        <li>Clean Name (removed symbols/extra spaces).</li>
-                        <li>Landmark with directional prefix (Near, Opp.).</li>
-                        <li>Single, shipping-ready address line.</li>
-                    </ul>
-                </div>
-
             </div>
         </div>
     </section>
@@ -232,7 +215,7 @@
     <section id="whyus" class="py-24 bg-tf-card-light border-t">
         <div class="max-w-7xl mx-auto px-6 text-center">
 
-            <h2 class="text-4xl md:text-5xl font-extrabold mb-4">The Real Cost of Messy Data</h2>
+            <h2 class="text-4xl md:text-5xl font-extrabold mb-4">Why Deliverability Matters</h2>
             <p class="text-xl text-gray-600 text-center mb-16 max-w-3xl mx-auto">
                 Stop treating RTO as an unavoidable cost. Turn un-deliverable addresses into guaranteed successful shipments.
             </p>
@@ -265,6 +248,53 @@
     <hr class="border-gray-300">
 
 
+    <section id="features" class="py-24 bg-tf-bg-light">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-4xl font-extrabold text-tf-text-dark mb-4">Under the Hood: Our AI-Powered Engine</h2>
+                <p class="text-lg text-gray-600">
+                    We combine the best of advanced Large Language Models (LLMs) with ground truth data for unprecedented accuracy.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-10">
+                
+                <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-tf-primary">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-magic text-3xl text-tf-primary mr-3"></i>
+                        <h3 class="text-2xl font-bold">Intelligent Error Correction</h3>
+                    </div>
+                    <p class="text-gray-600 mb-3">
+                        Our **Gemini AI** model automatically fixes phonetic errors ("Nager" -> "Nagar"), spelling mistakes, and common abbreviations.
+                    </p>
+                    <ul class="text-sm text-gray-700 list-disc list-inside space-y-1">
+                        <li>Standardizes input formats.</li>
+                        <li>Removes filler/meaningless words.</li>
+                        <li>Extracts H.no./Flat No. accurately.</li>
+                    </ul>
+                </div>
+
+                <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-tf-secondary">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-database text-3xl text-tf-secondary mr-3"></i>
+                        <h3 class="text-2xl font-bold">Official India Post Validation</h3>
+                    </div>
+                    <p class="text-gray-600 mb-3">
+                        Every address is cross-referenced with **India Post** data to ensure the PIN, Post Office, Tehsil, and District are correct and verified.
+                    </p>
+                    <ul class="text-sm text-gray-700 list-disc list-inside space-y-1">
+                        <li>Corrects invalid or wrong PIN codes.</li>
+                        <li>Guarantees official geographical mappings.</li>
+                        <li>Reduces dependence on vague city names.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="border-gray-300">
+
+
     <section class="py-24 bg-tf-bg-light">
         <div class="max-w-4xl mx-auto px-6">
             <h2 class="text-4xl font-extrabold text-center text-tf-text-dark mb-12">Frequently Asked Questions</h2>
@@ -274,12 +304,12 @@
                 <div class="bg-tf-card-light p-4 rounded-xl shadow-lg border border-gray-200">
                     <button class="accordion-header w-full text-left font-bold text-lg text-tf-text-dark py-2 flex justify-between items-center" 
                             aria-expanded="false" aria-controls="content-1" onclick="toggleAccordion('content-1', this)">
-                        How does the AI handle phonetic spellings and common typos?
+                        How does the full address verification workflow function?
                         <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300 chevron"></i>
                     </button>
                     <div id="content-1" class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
                         <p class="pt-2 pb-4 text-gray-600 border-t border-gray-100 mt-2">
-                            Our system uses Google's Gemini LLM, which is trained to recognize common Indian language phonetic errors (e.g., 'Nager' vs. 'Nagar', 'Rd' vs. 'Road') and applies the standard English correction, ensuring the output is clean and accurate for logistics systems.
+                            The workflow uses a multi-step process: 1) **AI Parsing**: Gemini automatically **corrects spelling mistakes**, standardizes abbreviations, and **correctly identifies** crucial components like House No. and Street. 2) **PIN Validation**: The system uses **India Post** API to confirm the PIN code, correcting it if necessary, and fetching the official District and State data. 3) **Scoring**: A final **Location Suitability Score** (e.g., Prime, Remote) is **provided**. 4) **Remarks**: Detailed **remarks for discrepancy** (e.g., "Wrong PIN corrected") guide your logistics team.
                         </p>
                     </div>
                 </div>
@@ -287,12 +317,12 @@
                 <div class="bg-tf-card-light p-4 rounded-xl shadow-lg border border-gray-200">
                     <button class="accordion-header w-full text-left font-bold text-lg text-tf-text-dark py-2 flex justify-between items-center" 
                             aria-expanded="false" aria-controls="content-2" onclick="toggleAccordion('content-2', this)">
-                        What happens if the address has the wrong PIN code?
+                        What specific RTO costs does Smart Locator help me save?
                         <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300 chevron"></i>
                     </button>
                     <div id="content-2" class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
                         <p class="pt-2 pb-4 text-gray-600 border-t border-gray-100 mt-2">
-                            The system first uses the PIN provided (if any) to query the India Post API. If the PIN is incorrect or missing, the AI uses the extracted address components (District, State, Locality) to find the correct 6-digit PIN and cross-verify it before providing the final output. Critical warnings are flagged in the remarks section.
+                            You save on three main areas: **Forward Logistics Cost** (the first shipping fee), **Reverse Logistics Cost** (the fee to ship the package back), and **Soft Costs** (staff time processing the return, inventory holding, and customer service escalation). By ensuring first-attempt delivery success, these costs are eliminated.
                         </p>
                     </div>
                 </div>
@@ -300,12 +330,12 @@
                 <div class="bg-tf-card-light p-4 rounded-xl shadow-lg border border-gray-200">
                     <button class="accordion-header w-full text-left font-bold text-lg text-tf-text-dark py-2 flex justify-between items-center" 
                             aria-expanded="false" aria-controls="content-3" onclick="toggleAccordion('content-3', this)">
-                        How accurate is the Location Suitability Score?
+                        How is your solution better than standard PIN code APIs?
                         <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300 chevron"></i>
                     </button>
                     <div id="content-3" class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
                         <p class="pt-2 pb-4 text-gray-600 border-t border-gray-100 mt-2">
-                            The score is highly reliable. It categorizes the location (Prime Location, Tier 1 & 2 Cities, Remote/Difficult Location) based on the official Post Office/District data and known courier service levels in those regions. This predictive score is designed specifically to minimize RTO due to difficult access.
+                            Standard APIs only check if a PIN exists. Our system, combining **Gemini AI and India Post data**, can *correct* missing or wrong data. If an address says 'H-10, Pune, 400001' but the actual address is 'H-10, Mumbai, 400001', the AI will correct the geographical inconsistency and flag the issue. We provide corrected data, not just an error message.
                         </p>
                     </div>
                 </div>
@@ -320,8 +350,8 @@
             <h3 class="text-4xl font-extrabold mb-6">Stop RTO Headaches. Start Your Free Trial Today.</h3>
 
             <div class="flex flex-col sm:flex-row justify-center gap-6">
-                <a href="contact.html" class="py-3 px-10 bg-tf-secondary text-white rounded-lg font-bold shadow-xl hover:bg-cyan-500 transition transform hover:-translate-y-0.5">
-                    Request Demo & Pricing
+                <a href="contact.html" class="btn-primary-adv py-3 px-10 bg-tf-secondary text-white rounded-lg font-bold transition transform hover:-translate-y-0.5">
+                    Request Demo for Bulk Verification
                 </a>
                 <a href="contact.html" class="py-3 px-10 bg-whatsapp-green text-white rounded-lg font-bold shadow-xl hover:bg-green-600 transition">
                     <i class="fab fa-whatsapp mr-2"></i> Contact Support
@@ -337,7 +367,7 @@
                 <a href="privacy.html" class="hover:text-tf-primary">Privacy Policy</a>
                 <a href="terms.html" class="hover:text-tf-primary">Terms of Service</a>
             </div>
-            <p class="text-sm text-gray-500">Powered by **Gemini 2.0 Flash** and India Post. &copy; 2025 AI VERIFY. All rights reserved.</p>
+            <p class="text-sm text-gray-500">Powered by **Gemini AI** and **India Post**. &copy; 2025 Smart Locator. All rights reserved.</p>
         </div>
     </footer>
     
@@ -374,10 +404,9 @@
         // Initial setup to ensure max-height is correctly calculated
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.accordion-content').forEach(content => {
-                // Initially set max-height to 0, but read the scrollHeight for future transitions
                 content.style.maxHeight = '0';
             });
         });
     </script>
 </body>
-</html>
+</htm
