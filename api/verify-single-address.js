@@ -260,7 +260,7 @@ module.exports = async (req, res) => {
                 // Atomically decrement remainingCredits if it's > 0
                 const reserveResult = await clients.findOneAndUpdate(
                     { _id: client._id, remainingCredits: { $gt: 0 } },
-                    // FIX: Ensure the object literal syntax for $set and $inc is correct (single line is safer)
+                    // CRITICAL FIX: Ensure the object literal is on a single line to avoid SyntaxError
                     { $inc: { remainingCredits: -1 }, $set: { lastActivityAt: new Date() } },
                     { returnDocument: 'after' }
                 ); 

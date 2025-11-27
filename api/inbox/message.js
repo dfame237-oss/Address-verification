@@ -20,7 +20,6 @@ function getUserId(req) {
         const payload = jwt.verify(token, JWT_SECRET); 
         
         // FIX: Check for 'clientId' (for clients) OR 'id' (common for admin/other users).
-        // The Admin token likely uses payload.id or payload.role.
         let userId = payload.clientId || payload.id;
         
         // Handle explicit admin identity if present in the token (e.g., role: 'admin' or userId/clientId is 'admin')
@@ -30,7 +29,6 @@ function getUserId(req) {
         
         // Ensure the ID is always a string and is not null/undefined
         if (!userId) {
-            // This is the source of the "Payload missing clientId property" error for Admins
             console.warn("JWT Verification Failed: Payload missing required ID property (clientId or id).");
             return null;
         }
