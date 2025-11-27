@@ -1,7 +1,9 @@
 // api/support/message.js
 // Handles unauthenticated public inquiries (from contact.html).
 
-const { connectToDatabase } = require('../db');
+// 🛠️ FIX: Corrected path from '../db' to '../../utils/db' 
+// to properly locate db.js within the /utils folder (up two levels from /api/support/).
+const { connectToDatabase } = require('../../utils/db');
 
 module.exports = async (req, res) => {
     // CORS Headers
@@ -20,8 +22,8 @@ module.exports = async (req, res) => {
     // Ensure JSON body is parsed
     let body = req.body;
     if (typeof body === 'string') {
-        try { body = JSON.parse(body); } catch (e) { /* ignore */ }
-    }
+        try { body = JSON.parse(body); } catch (e) { /* ignore */ }
+    }
 
     try {
         const { clientName, clientEmail, clientMobile, messageText } = body;
@@ -30,7 +32,9 @@ module.exports = async (req, res) => {
             return res.status(400).json({ status: "Error", message: "Name, Email, and Requirement are required." });
         }
 
+        // 🛑 CRITICAL STEP: The database connection happens here.
         const { db } = await connectToDatabase();
+        
         // Use a new collection for unauthenticated support messages
         const supportCollection = db.collection("supportMessages"); 
 
@@ -49,6 +53,7 @@ module.exports = async (req, res) => {
 
     } catch (e) {
         console.error("Support Message Server Error:", e);
+        // Ensure all catch blocks return a consistent JSON response (fixes the non-JSON 500 issue)
         return res.status(500).json({ status: "Error", message: `Internal Server Error: ${e.message}` });
     }
 };
