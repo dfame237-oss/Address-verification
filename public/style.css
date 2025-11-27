@@ -1,47 +1,47 @@
+/* -----------------------------------------
+   GLOBAL PAGE STYLES
+   ----------------------------------------- */
+
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f7f6;
+    font-family: Inter, Arial, sans-serif;
     margin: 0;
     padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
+    background-color: #F8FAFC;
 }
 
+/* Container used in older simple pages (single/bulk selection) */
 .container {
     background: #ffffff;
     padding: 40px;
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
     text-align: center;
     width: 90%;
     max-width: 600px;
+    margin: auto;
 }
 
-h1 {
-    color: #007bff;
-    margin-bottom: 10px;
+/* Headings */
+h1, h2, h3 {
+    color: #1E293B; /* matches tf-text-dark */
 }
 
-.options-container {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    margin-top: 30px;
-}
+/* -----------------------------------------
+   BUTTON STYLES
+   ----------------------------------------- */
 
 .button {
     text-decoration: none;
     padding: 15px 30px;
     border-radius: 8px;
     font-size: 1.1em;
-    font-weight: bold;
-    transition: background-color 0.3s, transform 0.2s;
+    font-weight: 600;
+    transition: 0.25s ease;
+    display: inline-block;
 }
 
 .button.primary {
-    background-color: #28a745; /* Green for single */
+    background-color: #28a745;
     color: white;
     border: 2px solid #218838;
 }
@@ -52,7 +52,7 @@ h1 {
 }
 
 .button.secondary {
-    background-color: #ffc107; /* Yellow for bulk */
+    background-color: #ffc107;
     color: #333;
     border: 2px solid #e0a800;
 }
@@ -62,10 +62,95 @@ h1 {
     transform: translateY(-2px);
 }
 
+/* Small info text */
 .note {
     margin-top: 30px;
     color: #6c757d;
     font-size: 0.9em;
 }
 
-/* Page specific layouts (e.g., for single.html/bulk.html) will be added later */
+/* -----------------------------------------
+   FORM INPUTS (for non-Tailwind pages)
+   ----------------------------------------- */
+
+input[type=text],
+input[type=number],
+input[type=email],
+input[type=tel],
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    margin-top: 4px;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+
+input:focus,
+textarea:focus {
+    border-color: #6366F1;        /* tf-primary */
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+}
+
+/* Buttons used outside Tailwind */
+.btn-primary {
+    background: #6366F1;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.btn-primary:hover {
+    background: #4F46E5;
+}
+
+/* -----------------------------------------
+   SIMPLE PAGE LAYOUT HELPERS
+   ----------------------------------------- */
+
+/* Center vertical */
+.center-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Box layout for small input pages */
+.box {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    width: 100%;
+    max-width: 450px;
+}
+
+/* Tables (if needed for future UI) */
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+table th, table td {
+    border: 1px solid #e2e8f0;
+    padding: 8px 10px;
+}
+
+table th {
+    background: #F1F5F9;
+}
+
+/* -----------------------------------------
+   UTILITIES (Optional)
+   ----------------------------------------- */
+
+.text-center { text-align:center; }
+.mt-20 { margin-top:20px; }
+.mt-30 { margin-top:30px; }
