@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact & Plan Purchase - AI VERIFY</title>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -11,8 +12,8 @@
             theme: {
                 extend: {
                     colors: {
-                        'tf-primary': '#6366F1', // Indigo/Violet Primary Accent
-                        'tf-secondary': '#06B6D4', // Cyan Secondary Accent
+                        'tf-primary': '#6366F1', 
+                        'tf-secondary': '#06B6D4', 
                         'neutral-gray': '#F9FAFB', 
                         'whatsapp-green': '#25D366',
                         'alert-dark': '#DC2626', 
@@ -28,6 +29,7 @@
             transition: border-color 0.2s, box-shadow 0.2s;
         }
         .input-focus:focus {
+            /* Ensures brand consistent focus style (Cyan) */
             border-color: #06B6D4;
             box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.4); 
             outline: none;
@@ -112,7 +114,6 @@
     </div>
     
     <script>
-        // Endpoint for submitting the contact form data to your admin panel
         const API_SUPPORT_ENDPOINT = "/api/support/message";
 
         document.getElementById('contactForm').addEventListener('submit', async function(event) {
@@ -133,7 +134,7 @@
                 messageText: document.getElementById('messageText').value,
             };
 
-            // Basic client-side validation
+            // Client-side validation for 10-digit mobile number
             if (clientMobile.length !== 10 || !/^\d{10}$/.test(clientMobile)) {
                  statusMessage.className = 'text-alert-dark mt-3';
                  statusMessage.textContent = 'Please enter a valid 10-digit mobile number.';
@@ -143,7 +144,6 @@
             }
 
             try {
-                // Assuming this API endpoint is set up to receive and log the message data
                 const response = await fetch(API_SUPPORT_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
