@@ -1,15 +1,26 @@
 /* -----------------------------------------
-   GLOBAL PAGE STYLES
-   ----------------------------------------- */
+    GLOBAL PAGE STYLES
+    ----------------------------------------- 
+    NOTE: Most modern styling is handled by Tailwind classes in the HTML. 
+    This file provides critical input resets and layout fallbacks.
+*/
 
 body {
     font-family: Inter, Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #F8FAFC;
 }
 
-/* Container used in older simple pages (single/bulk selection) */
+h1, h2, h3 {
+    /* Set a default dark color for non-Tailwind-styled elements */
+    color: #1E293B; 
+}
+
+/* -----------------------------------------
+    FALLBACK LAYOUT HELPERS 
+    (Keep only if used for non-Tailwind pages like login/admin)
+    ----------------------------------------- */
+
 .container {
     background: #ffffff;
     padding: 40px;
@@ -21,100 +32,6 @@ body {
     margin: auto;
 }
 
-/* Headings */
-h1, h2, h3 {
-    color: #1E293B; /* matches tf-text-dark */
-}
-
-/* -----------------------------------------
-   BUTTON STYLES
-   ----------------------------------------- */
-
-.button {
-    text-decoration: none;
-    padding: 15px 30px;
-    border-radius: 8px;
-    font-size: 1.1em;
-    font-weight: 600;
-    transition: 0.25s ease;
-    display: inline-block;
-}
-
-.button.primary {
-    background-color: #28a745;
-    color: white;
-    border: 2px solid #218838;
-}
-
-.button.primary:hover {
-    background-color: #218838;
-    transform: translateY(-2px);
-}
-
-.button.secondary {
-    background-color: #ffc107;
-    color: #333;
-    border: 2px solid #e0a800;
-}
-
-.button.secondary:hover {
-    background-color: #e0a800;
-    transform: translateY(-2px);
-}
-
-/* Small info text */
-.note {
-    margin-top: 30px;
-    color: #6c757d;
-    font-size: 0.9em;
-}
-
-/* -----------------------------------------
-   FORM INPUTS (for non-Tailwind pages)
-   ----------------------------------------- */
-
-input[type=text],
-input[type=number],
-input[type=email],
-input[type=tel],
-textarea {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    margin-top: 4px;
-    font-size: 1em;
-    box-sizing: border-box;
-}
-
-input:focus,
-textarea:focus {
-    border-color: #6366F1;        /* tf-primary */
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
-}
-
-/* Buttons used outside Tailwind */
-.btn-primary {
-    background: #6366F1;
-    color: #fff;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-weight: 700;
-    border: none;
-    cursor: pointer;
-    transition: 0.2s ease;
-}
-
-.btn-primary:hover {
-    background: #4F46E5;
-}
-
-/* -----------------------------------------
-   SIMPLE PAGE LAYOUT HELPERS
-   ----------------------------------------- */
-
-/* Center vertical */
 .center-page {
     display: flex;
     justify-content: center;
@@ -122,7 +39,6 @@ textarea:focus {
     min-height: 100vh;
 }
 
-/* Box layout for small input pages */
 .box {
     background: white;
     padding: 30px;
@@ -132,25 +48,58 @@ textarea:focus {
     max-width: 450px;
 }
 
-/* Tables (if needed for future UI) */
+.note {
+    margin-top: 30px;
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+/* -----------------------------------------
+    FORM INPUT STYLES (CRUCIAL FOR CONSISTENCY)
+    ----------------------------------------- */
+
+input[type=text],
+input[type=number],
+input[type=email],
+input[type=tel],
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db; /* Tailwind gray-300 */
+    border-radius: 8px;
+    margin-top: 4px;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+
+input:focus,
+textarea:focus {
+    /* Primary Brand Color Focus Effect */
+    border-color: #6366F1; /* tf-primary (Indigo) */
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.4); /* Custom shadow based on tf-primary */
+}
+
+/* -----------------------------------------
+    TABLE STYLES (Good fallback)
+    ----------------------------------------- */
+
 table {
     border-collapse: collapse;
     width: 100%;
 }
 
 table th, table td {
-    border: 1px solid #e2e8f0;
+    border: 1px solid #e2e8f0; /* Tailwind gray-200 */
     padding: 8px 10px;
 }
 
 table th {
-    background: #F1F5F9;
+    background: #F1F5F9; /* Tailwind gray-100 */
 }
 
 /* -----------------------------------------
-   UTILITIES (Optional)
-   ----------------------------------------- */
+    UTILITIES
+    ----------------------------------------- */
 
 .text-center { text-align:center; }
-.mt-20 { margin-top:20px; }
-.mt-30 { margin-top:30px; }
