@@ -6,7 +6,8 @@ const jwt = require('jsonwebtoken');
 const { randomUUID } = require('crypto');
 const { ObjectId } = require('mongodb');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'change_this_secret';
+// FIX: Standardize JWT_SECRET fallback to match all other server files.
+const JWT_SECRET = process.env.JWT_SECRET || 'replace_with_env_jwt_secret';
 const ACTION_TOKEN_SECRET =
   process.env.ACTION_TOKEN_SECRET ||
   (process.env.JWT_SECRET ? (process.env.JWT_SECRET + '_action') : 'change_action_secret');
