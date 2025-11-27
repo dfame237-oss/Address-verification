@@ -32,7 +32,7 @@
     </script>
 
     <style>
-        /* General Styles - Modernized Look (Inter is default font) */
+        /* General Styles - Forced Colors and Structure */
         body { font-family: 'Inter', sans-serif; background-color: #F1F5F9; }
         .dashboard-container { max-width: 1400px; margin: 30px auto; padding: 35px; background-color: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB; }
@@ -40,7 +40,7 @@
 
         /* Controls */
         .controls { display: flex; gap: 15px; align-items: center; }
-        /* 🟣 CUSTOM INBOX ICON STYLE (Like the image provided) */
+        /* 🟣 CUSTOM INBOX ICON STYLE */
         #notification-icon {
             cursor: pointer; position: relative; 
             font-size: 20px; 
@@ -97,7 +97,7 @@
         }
     </style>
 </head>
-<body onload="loadClients(); loadInboxCounts();">
+<body>
     <div class="dashboard-container">
         <header class="header">
             <h1><span class="text-tf-primary">Smart Locator</span> Admin Panel</h1>
@@ -352,10 +352,49 @@
             window.location.href = 'admin-login.html';
         }
 
-        // --- UI / Plan helpers (Omitted for brevity) ---
-        function generatePlanOptions() { /* ... */ return ''; } // Placeholder for full plan logic
-        function populatePlanDropdowns() { /* ... */ } // Placeholder for full plan logic
-        function updateValidityDate(planValue, dateInputId) { /* ... */ } // Placeholder for full plan logic
+        // --- UI / Plan helpers ---
+        function generatePlanOptions() {
+            const options = [];
+            PLANS.forEach(plan => {
+                DURATIONS.forEach(duration => {
+                    const finalPrice = calculatePrice(plan.basePrice, duration.months, duration.discount);
+                    const value = `${plan.name}_${finalPrice}_${duration.months}_Month_${plan.credits}`;
+                    const label = `${plan.name} (${plan.credits} Credits) - ₹${finalPrice} (${duration.label}${duration.discount > 0 ? ` - ${duration.discount*100}% OFF` : ''})`;
+                    options.push(`<option value="${value}">${label}</option>`);
+                });
+            });
+            return options.join('');
+        }
+
+        function populatePlanDropdowns() {
+            const optionsHtml = generatePlanOptions();
+            document.getElementById('add-plan').innerHTML = optionsHtml;
+            document.getElementById('update-plan').innerHTML = optionsHtml;
+
+            document.getElementById('add-plan').addEventListener('change', (e) => updateValidityDate(e.target.value, 'add-validity'));
+            document.getElementById('update-plan').addEventListener('change', (e) => updateValidityDate(e.target.value, 'update-validity'));
+
+            const defaultAddPlanValue = document.getElementById('add-plan').value;
+            if (defaultAddPlanValue) updateValidityDate(defaultAddPlanValue, 'add-validity');
+        }
+
+        // Calculate and set validity date based on plan value (e.g., Plan_1180_1_Month_10,000)
+        function updateValidityDate(planValue, dateInputId) {
+            if (!planValue) return;
+            const parts = planValue.split('_');
+            const durationMonths = parseInt(parts[2], 10);
+            if (isNaN(durationMonths) || durationMonths === 0) return;
+
+            const dateInput = document.getElementById(dateInputId);
+            const now = new Date();
+            const expirationDate = new Date(now.getFullYear(), now.getMonth() + durationMonths, now.getDate());
+            if (expirationDate.getDate() !== now.getDate()) expirationDate.setDate(0);
+
+            const year = expirationDate.getFullYear();
+            const month = String(expirationDate.getMonth() + 1).padStart(2, '0');
+            const day = String(expirationDate.getDate()).padStart(2, '0');
+            dateInput.value = `${year}-${month}-${day}`;
+        }
 
         // --- Auth fetch wrapper for admin ---
         async function authFetch(url, options = {}) {
@@ -370,45 +409,42 @@
             }
             return response;
         }
-        
+
         // --- Client management: load / render / delete / update / add / topup / clear session / toggle active ---
         async function loadClients() {
             const clientListBody = document.getElementById('client-list');
             
             // 1. Silent fetch for data needed for metrics and background updates
-            if (document.getElementById('client-management').style.display !== 'block' && document.getElementById('admin-overview').style.display !== 'block') {
-                 // If neither tab is visible, skip loading entirely (shouldn't happen on load but handles background timer issues)
-                 return;
+            if (document.getElementById('client-management').style.display !== 'block') {
+                 // If not on the CRM tab, just fetch the data silently for metrics
+                try {
+                    const response = await authFetch(`${API_ADMIN}?action=client`);
+                    const result = await response.json();
+                    if (result.status === "Success") {
+                        activeClients = result.data;
+                        updateOverviewMetrics(activeClients);
+                    }
+                } catch (e) {
+                    // Ignore silent fetch errors
+                }
+                return;
             }
 
-            // If we are on the CRM tab, show loading and fetch data
-            if (document.getElementById('client-management').style.display === 'block') {
-                clientListBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-4">Loading clients...</td></tr>';
-            }
-
+            // 2. Only update the table if we are on the Client Management tab
+            clientListBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-4">Loading clients...</td></tr>';
             try {
                 const response = await authFetch(`${API_ADMIN}?action=client`);
                 const result = await response.json();
                 if (result.status === "Success") {
                     activeClients = result.data;
-                    
-                    // Only render table if we are on the CRM tab
-                    if (document.getElementById('client-management').style.display === 'block') {
-                        renderClients(activeClients);
-                    }
-                    updateOverviewMetrics(activeClients); // Always update metrics regardless of which tab is active
+                    renderClients(activeClients);
+                    updateOverviewMetrics(activeClients); // Update metrics after loading clients
                 } else {
-                     // Only show error on the table if the CRM tab is active
-                    if (document.getElementById('client-management').style.display === 'block') {
-                        clientListBody.innerHTML = `<tr><td colspan="5" class="text-center text-red-500 py-4">Failed to load clients: ${result.message}</td></tr>`;
-                    }
+                    clientListBody.innerHTML = `<tr><td colspan="5" class="text-center text-red-500 py-4">Failed to load clients: ${result.message}</td></tr>`;
                 }
             } catch (error) {
                 console.error('Error loading clients:', error);
-                 // Only show network error on the table if the CRM tab is active
-                if (document.getElementById('client-management').style.display === 'block') {
-                    clientListBody.innerHTML = `<tr><td colspan="5" class="text-center text-red-500 py-4">Network Error: ${error.message}</td></tr>`;
-                }
+                clientListBody.innerHTML = `<tr><td colspan="5" class="text-center text-red-500 py-4">Network Error: ${error.message}</td></tr>`;
             }
         }
 
@@ -422,12 +458,12 @@
             const activeEl = document.getElementById('metric-active-clients');
             const onlineEl = document.getElementById('metric-online-clients');
             const issuedEl = document.getElementById('metric-credits-issued');
-            const reqEl = document.getElementById('metric-new-requests');
+            // const reqEl = document.getElementById('metric-new-requests'); // Handled by loadInboxCounts
 
             if (totalEl) totalEl.textContent = totalClients.toLocaleString();
             if (activeEl) activeEl.textContent = activeClientsCount.toLocaleString();
             if (onlineEl) onlineEl.textContent = onlineClientsCount.toLocaleString();
-            if (issuedEl) issuedEl.textContent = '—'; // Placeholder for complex calc
+            if (issuedEl) issuedEl.textContent = '—'; 
             
             // We run loadInboxCounts separately to update the reqEl.
         }
@@ -502,7 +538,7 @@
             }
         }
 
-        // --- Confirm & Message modal utilities (simplified to show usage) ---
+        // --- Confirm & Message modal utilities ---
         let confirmResolve;
         function showConfirmModal(message) {
             return new Promise(resolve => {
@@ -766,7 +802,6 @@
             }
         }
         
-        // --- Dummy/Simplified Message Functions for UI Activation ---
         async function loadClientMessages() { 
             const msgContainer = document.getElementById('inbox-messages-container');
             msgContainer.innerHTML = '<p class="text-center text-gray-500 py-4">Loading client messages...</p>';
@@ -785,7 +820,7 @@
                         const isUnread = !msg.isRead;
                         const clientName = activeClients.find(c => c._id === msg.senderId)?.username || 'Unknown Client';
                         const messageHtml = `
-                             <div class="message-card ${isUnread ? 'unread' : ''}" onclick="viewClientMessage('${msg._id}', '${(msg.subject||'').replace(/'/g,"\\'")}', \`${(msg.body||'').replace(/`/g,'\\`')}\`, '${msg.senderId}', '${clientName}', ${isUnread}, '${msg.timestamp}')">
+                             <div class="message-card p-4 border border-gray-200 rounded-lg ${isUnread ? 'unread bg-tf-primary-light' : 'bg-white'}" onclick="viewClientMessage('${msg._id}', '${(msg.subject||'').replace(/'/g,"\\'")}', \`${(msg.body||'').replace(/`/g,'\\`')}\`, '${msg.senderId}', '${clientName}', ${isUnread}, '${msg.timestamp}')">
                                  <p class="text-sm text-gray-700">From: <strong>${clientName}</strong> (${isUnread ? 'NEW' : 'Read'})</p>
                                  <p class="text-md font-bold">${msg.subject || '(No Subject)'}</p>
                                  <small class="text-gray-500">${new Date(msg.timestamp).toLocaleString()}</small>
@@ -819,7 +854,7 @@
                         const isUnread = !msg.isRead;
                         const senderInfo = `${msg.clientName || 'N/A'} (${msg.clientEmail || 'N/A'})`;
                         const messageHtml = `
-                            <div class="message-card ${isUnread ? 'unread' : ''}" onclick="viewSupportMessage('${msg._id}', \`${(msg.messageText||'').replace(/`/g,'\\`')}\', '${(msg.clientName||'').replace(/'/g,"\\'")}', '${(msg.clientEmail||'').replace(/'/g,"\\'")}', '${(msg.clientMobile||'').replace(/'/g,"\\'")}', ${isUnread}, '${msg.receivedAt}')">
+                            <div class="message-card ${isUnread ? 'unread bg-tf-primary-light' : 'bg-white'}" onclick="viewSupportMessage('${msg._id}', \`${(msg.messageText||'').replace(/`/g,'\\`')}\', '${(msg.clientName||'').replace(/'/g,"\\'")}', '${(msg.clientEmail||'').replace(/'/g,"\\'")}', '${(msg.clientMobile||'').replace(/'/g,"\\'")}', ${isUnread}, '${msg.receivedAt}')">
                                 <p class="text-sm text-gray-700">From: <strong>${senderInfo}</strong> (${isUnread ? 'NEW' : 'Read'})</p>
                                 <p class="text-md font-bold">Inquiry: ${String(msg.messageText||'').substring(0,50)}...</p>
                                 <small class="text-gray-500">${new Date(msg.receivedAt).toLocaleString()}</small>
