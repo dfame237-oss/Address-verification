@@ -1,6 +1,8 @@
 // public/script.js
 
-const API_ENDPOINT = "https://address-verification-app.vercel.app/api/verify-single-address";
+// 🚨 FIX: Use the new, unauthenticated API endpoint
+const API_ENDPOINT = "/api/public-single-address"; 
+// Note: We are using '/api/public-single-address' now, instead of the authenticated one.
 
 document.addEventListener('DOMContentLoaded', () => {
     const verifyButton = document.getElementById('verifyButton');
@@ -8,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
         verifyButton.addEventListener('click', handleSingleVerification);
     }
     
+    // Note: If this page is your homepage, ensure bulk buttons are hidden or point to client-dashboard.
+    // The bulk logic below is simple, non-authenticated logic meant for a basic demo.
     const downloadTemplateButton = document.getElementById('downloadTemplateButton');
     const csvFileInput = document.getElementById('csvFileInput');
     const processButton = document.getElementById('processButton');
@@ -26,7 +30,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (processButton) {
-        processButton.addEventListener('click', handleBulkVerification);
+        // If this button is on the public page, you should redirect the user to login first.
+        processButton.addEventListener('click', () => {
+            alert("Bulk verification requires a client login. Redirecting...");
+            window.location.href = 'client-login.html'; // Adjust this path if needed
+        });
     }
 });
 
@@ -46,6 +54,7 @@ async function handleSingleVerification() {
     resultsContainer.style.display = 'none';
 
     try {
+        // This fetch is now unauthenticated, relying on the new public endpoint
         const response = await fetch(API_ENDPOINT, {
             method: 'POST',
             headers: {
@@ -62,10 +71,9 @@ async function handleSingleVerification() {
             result = await response.json();
         } catch (e) {
             console.error("Non-JSON API response. Status:", response.status);
-            alert(`Verification Failed: Received a server error (${response.status}) from the Vercel API. Check Vercel logs.`);
+            alert(`Verification Failed: Received a server error (${response.status}).`);
             return;
         }
-
 
         if (response.ok && result.status === "Success") {
             displayResults(result);
@@ -76,7 +84,7 @@ async function handleSingleVerification() {
 
     } catch (e) {
         console.error("Fetch Error:", e);
-        alert("A network error occurred. Check the console for details. (Possible Vercel CORS/Domain issue)");
+        alert("A network error occurred. Check the console for details.");
     } finally {
         document.getElementById('verifyButton').disabled = false;
         loadingMessage.style.display = 'none';
@@ -120,7 +128,12 @@ function handleTemplateDownload() {
     document.body.removeChild(link);
 }
 
+// NOTE: This fetchVerification function is likely unused on the public page, 
+// but is kept here for completeness if you use a simplified bulk form. 
+// If your bulk button redirects to login, this is irrelevant.
 async function fetchVerification(address, name) {
+    // This function should ideally point to the AUTHENTICATED endpoint if used, 
+    // but here we keep it simple for a public page context.
     try {
         const response = await fetch(API_ENDPOINT, {
             method: 'POST',
@@ -142,22 +155,12 @@ async function fetchVerification(address, name) {
             };
         }
 
+        // Logic here needs to be re-assessed based on whether public bulk is allowed.
+        // Given your intent, this public file should NOT handle bulk.
+        // We will assume the bulk button redirects users to the authenticated dashboard.
         
-        if (response.ok && result.status === "Success") {
-            return result;
-        } else {
-            return {
-                status: "Error",
-                customerCleanName: name,
-                addressLine1: "API Error",
-                landmark: "",
-                state: "",
-                district: "",
-                pin: "",
-                remarks: `API Failed: ${result.error || result.remarks || 'Unknown Server Error.'}`,
-                addressQuality: "BAD"
-            };
-        }
+        return result; 
+        
     } catch (e) {
         console.error("Bulk Fetch Error:", e);
         return {
@@ -174,123 +177,13 @@ async function fetchVerification(address, name) {
     }
 }
 
-function createAndDownloadCSV(dataArray, filename) {
-    const csvContent = dataArray.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    
-    const downloadLink = document.getElementById('downloadLink');
-    downloadLink.setAttribute('href', url);
-    downloadLink.setAttribute('download', filename);
-    downloadLink.style.display = 'block';
-}
-
+// Simplified bulk handler for public page (redirects to login)
 async function handleBulkVerification() {
     const fileInput = document.getElementById('csvFileInput');
-    const file = fileInput.files[0];
-    if (!file) {
+    if (fileInput.files.length) {
+        alert("Bulk verification requires client login. Redirecting...");
+        window.location.href = 'client-login.html';
+    } else {
         alert("Please select a CSV file.");
-        return;
     }
-
-    const processButton = document.getElementById('processButton');
-    const statusMessage = document.getElementById('status-message');
-    const progressBarFill = document.getElementById('progressBarFill');
-    const downloadLink = document.getElementById('downloadLink');
-
-    processButton.disabled = true;
-    fileInput.disabled = true;
-    downloadLink.style.display = 'none';
-    progressBarFill.style.width = '0%';
-    statusMessage.textContent = "Parsing CSV...";
-
-    const reader = new FileReader();
-    reader.onload = async function(event) {
-        const text = event.target.result;
-        let lines = text.split('\n').filter(line => line.trim() !== '');
-
-        if (lines.length <= 1) {
-            alert("CSV file is empty or contains only headers.");
-            processButton.disabled = false;
-            fileInput.disabled = false;
-            return;
-        }
-
-        const headers = lines[0].split(',').map(h => h.trim().toUpperCase());
-        
-        if (headers.length < 3 || headers[2] !== 'CUSTOMER RAW ADDRESS') {
-            alert("Error: CSV must contain 'ORDER ID', 'CUSTOMER NAME', and 'CUSTOMER RAW ADDRESS' in the first three columns.");
-            processButton.disabled = false;
-            fileInput.disabled = false;
-            return;
-        }
-
-        const outputData = [
-            "ORDER ID", "CUSTOMER NAME", "RAW ADDRESS", 
-            "CLEAN NAME", "ADDRESS LINE 1", "LANDMARK", 
-            "STATE", "DISTRICT", "PIN", "REMARK", "ADDRESS QUALITY"
-        ].join(',');
-        let processedCount = 0;
-        const totalAddresses = lines.length - 1;
-        const outputRows = [outputData];
-
-        for (let i = 1; i < lines.length; i++) {
-            const row = lines[i].split(',');
-            const orderId = row[0] || 'N/A';
-            const customerName = row[1] || '';
-            const rawAddress = row[2] || '';
-            
-            let verificationResult;
-            
-            if (rawAddress.trim() === "") {
-                verificationResult = {
-                    status: "Skipped",
-                    customerCleanName: customerName,
-                    addressLine1: "",
-                    landmark: "",
-                    state: "",
-                    district: "",
-                    pin: "",
-                    remarks: "Skipped: Address is empty.",
-                    addressQuality: "BAD"
-                };
-            } else {
-                verificationResult = await fetchVerification(rawAddress, customerName);
-            }
-
-            const outputRow = [
-                orderId,
-                customerName,
-                rawAddress,
-                verificationResult.customerCleanName || '',
-                verificationResult.addressLine1 || '',
-                verificationResult.landmark || '',
-                verificationResult.state || '',
-                verificationResult.district || '',
-                verificationResult.pin || '',
-                verificationResult.remarks || '',
-                verificationResult.addressQuality || ''
-            ].map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',');
-
-            outputRows.push(outputRow);
-            
-            processedCount++;
-            const progress = (processedCount / totalAddresses) * 100;
-            progressBarFill.style.width = `${progress}%`;
-            statusMessage.textContent = `Processing... ${processedCount} of ${totalAddresses} addresses completed.`;
-        }
-
-        statusMessage.textContent = `Processing complete! ${totalAddresses} addresses verified.`;
-        createAndDownloadCSV(outputRows, "verified_addresses.csv");
-        processButton.disabled = false;
-        fileInput.disabled = false;
-    };
-
-    reader.onerror = function() {
-        alert("Error reading file.");
-        processButton.disabled = false;
-        fileInput.disabled = false;
-    };
-
-    reader.readAsText(file);
 }

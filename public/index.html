@@ -1,386 +1,408 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Address Verification Platform - Teleforce</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-       
-                         // --- UPDATED LIGHT THEME COLORS ---
-                        'tf-bg-light': '#F8FAFC', // Main Light Background (Slate-50)
-                        'tf-card-light': '#FFFFFF', // White Card Background
-                  
-                        'tf-text-dark': '#1E293B', // Dark Text (Slate-800)
-                        // --- ACCENT COLORS (REMAIN THE SAME) ---
-                        'tf-primary': '#6366F1', // Indigo/Violet Primary Accent
-                        'tf-secondary': '#06B6D4', // Cyan Secondary 
-                        'whatsapp-green': '#25D366',
-                        'alert-dark': '#EF4444',
-                    },
-                    fontFamily: {
-         
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                }
-            }
-        }
-    </script>
-    <style>
-        /* Updated body style for light background */
-    
-        body { 
-            font-family: 'Inter', sans-serif;
-            scroll-behavior: smooth; 
-            background-color: #F8FAFC; 
-        }
-        .input-focus:focus {
-            --tw-ring-color: #6366F1;
-            /* tf-primary */
-            border-color: #6366F1;
-        }
-        .text-gradient {
-            /* Gradient remains for visual appeal */
-            background-image: linear-gradient(to right, #6366F1, #06B6D4);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Single Address Verification</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#1D4ED8', // Dark Blue
+                        'secondary-green': '#059669', // Dark Green
+                        'neutral-gray': '#F9FAFB', // Lightest gray for background
+                        
+                        // Success/Good Colors
+                        'success-light': '#D1FAE5', // Green-100
+                        'success-dark': '#065F46', // Green-800
+                        
+                        // Alert/Bad Colors (Critical Error)
+                        'alert-light': '#FEE2E2', // Red-100
+                        'alert-dark': '#991B1B', // Red-800
+                        
+                        // Warning/Medium Colors (for Quality Score)
+                        'warning-light': '#FEF3C7', // Yellow-100 (Renamed from yellow-100)
+                        'warning-dark': '#92400E', // Yellow-800 (Renamed from yellow-800)
+                        
+                        // Neutral Copy Feedback
+                        'copy-neutral-border': '#D1D5DB', // Gray-300
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .remarks-block {
+            transition: all 0.3s ease;
+        }
+        .result-block {
+            position: relative;
+        }
+        /* Style for the copy button */
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem; /* text-xs */
+            line-height: 1rem;
+            background-color: transparent;
+            color: #4B5563; /* Gray-600 */
+            border: 1px solid var(--copy-neutral-border); /* Use Tailwind color */
+            border-radius: 0.375rem; /* rounded-md */
+            transition: all 0.15s;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .copy-btn:hover {
+            background-color: #F3F4F6; /* Gray-50 */
+            color: #1F2937; /* Gray-800 */
+        }
+        .result-content {
+            padding-right: 3.5rem;
+        }
+    </style>
 </head>
-<body class="bg-tf-bg-light text-tf-text-dark">
+<body class="bg-neutral-gray min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-2xl bg-white p-8 sm:p-10 rounded-xl shadow-2xl">
 
-    <nav class="bg-tf-card-light shadow-xl sticky top-0 z-50 border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <div class="text-3xl font-extrabold text-tf-text-dark">
-                <span class="text-tf-primary">AI</span> VERIFY
-            </div>
-            
-     
-            <div class="space-x-6 flex items-center">
-                <a href="admin-login.html" class="text-xs text-gray-500 hover:text-gray-600 transition-colors duration-300" title="Admin Login">Admin Access</a>
+        <a href="index.html" class="text-primary-blue hover:text-blue-700 font-medium mb-6 inline-flex items-center transition duration-150">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Back to Home
+        </a>
 
-                <a href="pricing.html" class="text-tf-text-dark hover:text-tf-secondary font-semibold border-b-2 border-transparent hover:border-tf-secondary transition">
-                    Pricing
-                </a>
-     
-                
-                <a href="#" id="requestDemoNav" class="bg-tf-primary text-white py-2 px-6 rounded-full font-semibold shadow-lg hover:bg-indigo-600 transition duration-300 transform hover:scale-105">Request Demo</a>
-                
-                <a href="client-login.html" class="text-tf-text-dark hover:text-tf-secondary font-semibold border-b-2 border-transparent hover:border-tf-secondary transition">Client Login</a>
-            </div>
-      
-        </div>
-    </nav>
-    
-    <header id="bulk-hero" class="pt-24 pb-32 bg-tf-bg-light">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h1 class="text-6xl lg:text-7xl font-extrabold leading-tight mb-6 text-center text-tf-text-dark">
-                Stop RTO.
-                <span class="text-gradient">Start Scaling.</span>
-            </h1>
-            <p class="text-xl text-gray-600 mb-20 max-w-4xl mx-auto text-center">
-                The **Smartest AI Address Platform** built to process 100% of your customer database, eliminate errors, and guarantee first-attempt delivery success.
-            </p>
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-gray-900 mb-2">
+                <span class="text-primary-blue">Single Address</span> Verification (Free)
+            </h1>
+            <p class="text-gray-500">Enter a single address and name for real-time cleaning and validation.</p>
+        </header>
+        
+        <div class="space-y-6">
+            <div>
+                <label for="customerName" class="block text-sm font-medium text-gray-700 mb-1">Customer Name (Optional)</label>
+                <input type="text" id="customerName" placeholder="e.g., Pankaj Rawat" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue transition duration-150">
+            </div>
 
-            <div class="bg-tf-card-light p-8 md:p-16 rounded-3xl shadow-2xl border border-gray-300">
-                <h3 class="text-4xl font-bold text-tf-text-dark mb-10 text-center">Automated 3-Stage Verification Process</h3>
+            <div>
+                <label for="rawAddress" class="block text-sm font-medium text-gray-700 mb-1">Raw Address to Verify</label>
+                <textarea id="rawAddress" rows="4" placeholder="e.g., H.No. 123, Sector 40B, near bus stand, Chandigarh" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue resize-none transition duration-150"></textarea>
+            </div>
 
-                <div class="grid md:grid-cols-3 gap-10 md:gap-16 relative">
-                    
-                
-                    <div class="absolute inset-x-1/2 top-1/2 hidden md:block" style="width: calc(100% - 300px); transform: translate(-50%, -50%);">
-                        <div class="flex justify-between">
-                            <div class="w-1/2 h-1 bg-tf-primary/30 relative">
-                          
-                                <svg class="absolute right-0 top-1/2 transform -translate-y-1/2 text-tf-primary w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                            </div>
-                            <div class="w-1/2 h-1 bg-tf-primary/30 relative">
-           
-                                <svg class="absolute right-0 top-1/2 transform -translate-y-1/2 text-tf-primary w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                            </div>
-                        </div>
-    
-                    </div>
+            <button id="verifyButton" class="w-full py-3 bg-secondary-green text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition duration-200 transform hover:scale-[1.01] focus:outline-none focus:ring-4 focus:ring-secondary-green focus:ring-opacity-50">
+                Verify Address
+            </button>
+            
+            <div id="loading-message" class="hidden text-center text-primary-blue font-semibold py-3 border border-blue-200 bg-blue-50 rounded-lg">
+                Verifying address using AI...
+            </div>
+        </div>
 
-                    <div class="flex flex-col items-center text-center p-6 bg-gray-50 rounded-xl relative z-10 shadow-lg border border-tf-primary/50">
-                        <div class="bg-tf-primary text-white w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-xl border-4 border-tf-card-light">
-                
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                        </div>
-                        <h4 class="text-xl font-bold text-tf-text-dark mb-2">1.
-                            Secure Upload</h4>
-                        <p class="text-gray-500">Securely upload your raw address data in bulk via the private client portal.</p>
-                    </div>
+        <div id="resultsContainer" class="hidden mt-10">
+            <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Verification Results</h3>
+            <div class="space-y-4">
+                
+                <div class="result-block bg-success-light p-4 rounded-lg border border-green-300 shadow-sm">
+                    <button class="copy-btn" data-target="out-name" title="Copy Clean Name">Copy</button>
+                    <div class="result-content">
+                        <strong class="text-success-dark block mb-1">Clean Name:</strong> 
+                        <span id="out-name" class="text-gray-700"></span>
+                    </div>
+                </div>
 
-                    <div class="flex flex-col items-center text-center p-6 bg-gray-50 rounded-xl relative z-10 shadow-lg border border-tf-secondary/50">
-          
-                        <div class="bg-tf-secondary text-white w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-xl border-4 border-tf-card-light">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                        </div>
-       
-                        <h4 class="text-xl font-bold text-tf-text-dark mb-2">2.
-                            AI Cleaning & Validation</h4>
-                        <p class="text-gray-500">The multi-stage AI cleans, normalizes, corrects errors, and validates against official data sources.</p>
-                    </div>
+                <div class="result-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                    <button class="copy-btn" data-target="out-address" title="Copy Clean Address Line 1">Copy</button>
+                    <div class="result-content">
+                        <strong class="text-gray-600 block mb-1">Clean Address Line 1:</strong> 
+                        <span id="out-address" class="text-gray-800 font-medium"></span>
+                    </div>
+                </div>
+                
+                <div class="result-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                    <button class="copy-btn" data-target="out-landmark" title="Copy Landmark">Copy</button>
+                    <div class="result-content">
+                        <strong class="text-gray-600 block mb-1">Landmark (with Prefix):</strong> 
+                        <span id="out-landmark" class="text-gray-800 font-medium"></span>
+                    </div>
+                </div>
 
-                    <div class="flex flex-col items-center text-center p-6 bg-gray-50 rounded-xl relative z-10 shadow-lg border border-gray-400/50">
-        
-                        <div class="bg-tf-text-dark text-white w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-xl border-4 border-tf-card-light">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    
-                        </div>
-                        <h4 class="text-xl font-bold text-tf-text-dark mb-2">3.
-                            Deliverability Score</h4>
-                        <p class="text-gray-500">Download the clean CSV output with a precise risk score to inform your dispatch decisions.</p>
-                    </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="result-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <button class="copy-btn" data-target="out-district" title="Copy District">Copy</button>
+                        <div class="result-content">
+                            <strong class="text-gray-600 block mb-1">District:</strong> 
+                            <span id="out-district" class="text-gray-800"></span>
+                        </div>
+                    </div>
+                    <div class="result-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <button class="copy-btn" data-target="out-state" title="Copy State">Copy</button>
+                        <div class="result-content">
+                            <strong class="text-gray-600 block mb-1">State:</strong> 
+                            <span id="out-state" class="text-gray-800"></span>
+                        </div>
+                    </div>
+                    <div class="result-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <button class="copy-btn" data-target="out-pin" title="Copy PIN">Copy</button>
+                        <div class="result-content">
+                            <strong class="text-gray-600 block mb-1">PIN:</strong> 
+                            <span id="out-pin" class="text-gray-800 font-bold"></span>
+                        </div>
+                    </div>
+                    <div class="result-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <strong class="text-gray-600 block mb-1">Country:</strong> 
+                        <span class="text-gray-800 font-bold">INDIA</span>
+                    </div>
+                    
+                    <div id="quality-block" class="result-block col-span-2 p-4 rounded-lg shadow-md flex items-center justify-between transition-colors duration-300 mt-4">
+                        <strong class="text-lg flex items-center">
+                            <span id="quality-icon" class="text-2xl mr-3"></span> Address Quality:
+                        </strong> 
+                        <span id="out-quality" class="text-xl font-extrabold"></span>
+                    </div>
+                    </div>
+                
+                <div id="remarks-block" class="result-block remarks-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                    <strong class="text-gray-600 block mb-1">Remarks:</strong> 
+                    <span id="out-remarks" class="text-gray-800 italic"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 🚨 FIX: Point to the new unauthenticated endpoint. You must ensure this endpoint exists 
+        // and has credit/auth checks removed on the server.
+        const API_ENDPOINT = "/api/public-single-address";
+        const REMARKS_ALERT_PREFIX = "CRITICAL_ALERT:";
 
-                </div>
-                
-        
-                <div class="mt-16 pt-10 border-t border-gray-300 flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
-                    <a href="#" id="requestDemoCTA" class="py-4 px-12 bg-tf-primary text-white font-extrabold text-lg rounded-full shadow-xl hover:bg-indigo-600 transition transform hover:scale-[1.05] focus:ring-4 focus:ring-tf-primary/50">
-                        Request Bulk Pricing & Demo
-                  
-                    </a>
-                    <a href="single.html" class="py-4 px-12 bg-tf-card-light border border-gray-300 text-tf-text-dark font-bold text-lg rounded-full shadow-lg hover:bg-gray-100 transition transform hover:scale-[1.05]">
-                        Try Single Check (Free)
-                    </a>
-                
-                </div>
-            </div>
-        </div>
-    </header>
+        document.addEventListener('DOMContentLoaded', () => {
+            const verifyButton = document.getElementById('verifyButton');
+            if (verifyButton) {
+                verifyButton.addEventListener('click', handleSingleVerification);
+            }
+            
+            // Add event listener for all copy buttons
+            document.querySelectorAll('.copy-btn').forEach(button => {
+                button.setAttribute('data-original-text', 'Copy'); 
+                button.addEventListener('click', (event) => {
+                    const targetId = event.currentTarget.getAttribute('data-target');
+                    copyToClipboard(targetId, event.currentTarget);
+                });
+            });
+        });
 
-    <section id="whyus" class="py-24 bg-tf-bg-light border-t border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 class="text-4xl sm:text-5xl font-extrabold text-tf-text-dark mb-6">
-                Why Deliverability is Crucial
-            </h2>
-     
-            <p class="text-xl text-gray-600 mb-16 max-w-3xl mx-auto">
-                Incorrect addresses are the single largest operational cost for logistics businesses.
-                Stop paying for failed deliveries.
-            </p>
+        // Copy function
+        function copyToClipboard(elementId, button) {
+            const element = document.getElementById(elementId);
+            const textToCopy = element ? element.textContent.trim() : '';
 
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="bg-tf-card-light p-8 rounded-xl shadow-xl border-t-4 border-alert-dark transition hover:shadow-2xl hover:border-alert-dark/80">
-                    <div class="text-5xl mb-4 text-alert-dark">
-                        <i class="fas fa-undo-alt"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-tf-text-dark mb-3">Minimize RTO Losses</h3>
-      
-                    <p class="text-gray-600">Failed deliveries (RTO) cost 2-3x the forward shipping cost.
-                        Our tool ensures address deliverability **before** dispatch, saving you direct loss and reverse logistics fees.</p>
-                </div>
-                <div class="bg-tf-card-light p-8 rounded-xl shadow-xl border-t-4 border-tf-secondary transition hover:shadow-2xl hover:border-tf-secondary/80">
-                    <div class="text-5xl mb-4 text-tf-secondary">
-                        <i class="fas fa-eraser"></i>
-                    </div>
-                    <h3 class="text-2xl 
-                        font-bold text-tf-text-dark mb-3">Eliminate Bad Data</h3>
-                    <p class="text-gray-600">Common errors like spelling mistakes, missing PINs, and incomplete landmarks are instantly cleaned and normalized, reducing friction at the last mile.</p>
-                </div>
-                <div class="bg-tf-card-light p-8 rounded-xl shadow-xl border-t-4 border-tf-primary transition hover:shadow-2xl hover:border-tf-primary/80">
-              
-                    <div class="text-5xl mb-4 text-tf-primary">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-tf-text-dark mb-3">Boost CX & Scaling</h3>
-                    <p class="text-gray-600">Accurate addresses mean faster, first-attempt deliveries, leading to higher customer satisfaction, fewer support tickets, and repeat business.</p>
-                </div>
-           
-            </div>
-        </div>
-    </section>
-    
-    <section id="how-it-works-condensed" class="py-24 bg-tf-bg-light border-t border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-4xl sm:text-5xl font-extrabold text-tf-text-dark mb-12 text-center">
-                Deep Dive: The Multi-Stage AI Process
-            </h2>
-          
-            <div class="grid md:grid-cols-3 gap-8 bg-tf-card-light p-10 rounded-xl shadow-2xl border border-gray-300">
-                <div class="border-l-4 border-tf-secondary pl-6">
-                    <strong class="block text-xl text-tf-text-dark mb-2">1.
-                        AI Cleaning & Grounding</strong>
-                    <p class="text-gray-600">The AI corrects spelling, standardizes format, and validates the PIN instantly against the official India Post API for ground truth on District and State.</p>
-                </div>
-                <div class="border-l-4 border-tf-primary pl-6">
-                  
-                    <strong class="block text-xl text-tf-text-dark mb-2">2. Locational Intelligence</strong>
-                    <p class="text-gray-600">Directional phrases ('near', 'opposite') are accurately re-attached, and the final address is checked against proprietary geo-spatial data for logical consistency.</p>
-                </div>
-                <div class="border-l-4 border-tf-secondary pl-6">
-                 
-                    <strong class="block text-xl text-tf-text-dark mb-2">3. Risk Management & Output</strong>
-                    <p class="text-gray-600">The output provides a final, standardized address and a clear **Deliverability Score** (Good, Medium, Bad) to inform your dispatch decision.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-    
-    <footer 
-class="bg-gray-100 text-tf-text-dark py-12 border-t border-gray-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h3 class="text-3xl font-bold mb-6 text-tf-text-dark">Ready to reduce RTO by up to 30%?</h3>
-            <div class="flex justify-center space-x-6">
-                <a href="#" id="requestDemoFooter" class="py-3 px-10 bg-tf-primary text-white font-bold rounded-full hover:bg-indigo-600 transition shadow-lg">
-                  
-                    Request Demo Now
-                </a>
-                <a href="contact.html" class="py-3 px-10 bg-whatsapp-green text-white font-bold rounded-full hover:bg-green-600 transition shadow-lg">
-                    Contact Sales
-                </a>
-            </div>
-     
-            
-            <p class="mt-10 text-sm text-gray-500">
-                Developed by: <span class="font-semibold text-gray-700">Pankaj Singh Rawat</span>
-            </p>
-            
-            <p class="mt-1 text-sm text-gray-500">&copy;
-                2025 AI VERIFY. All rights reserved.</p>
-        </div>
-    </footer>
+            if (textToCopy === 'N/A' || textToCopy === 'No specific remarks.' || textToCopy === '' || textToCopy === 'INDIA') {
+                flashButton(button, 'No Data', 1000, 'bg-warning-light text-warning-dark border-yellow-300');
+                return;
+            }
 
-    <div id="demoModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-[100]">
-        <div class="relative top-10 mx-auto p-5 border w-full max-w-md shadow-lg rounded-xl bg-tf-card-light border-gray-300">
-            <div class="flex justify-between items-center mb-6 border-b border-gray-300 pb-3">
-                <h3 class="text-xl font-bold text-tf-secondary text-tf-text-dark">Request a Bulk Demo</h3>
-        
-                <button id="closeDemoModal" class="text-gray-500 hover:text-gray-700 text-2xl">
-                    &times;
-                </button>
-            </div>
-            
-            <form id="demoForm" class="space-y-4">
-                <p class="text-sm text-gray-600">Fill in your details, and our sales team will contact you for a personalized demo setup.</p>
-                <div>
-             
-                    <label for="demo-clientName" class="block text-sm font-medium text-tf-text-dark">Your Name</label>
-                    <input type="text" id="demo-clientName" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-tf-primary focus:border-tf-primary bg-tf-bg-light text-tf-text-dark input-focus">
-                </div>
-                <div>
-                    <label for="demo-clientEmail" 
-class="block text-sm font-medium text-tf-text-dark">Your Email</label>
-                    <input type="email" id="demo-clientEmail" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-tf-primary focus:border-tf-primary bg-tf-bg-light text-tf-text-dark input-focus">
-                </div>
-                <div>
-                    <label for="demo-clientMobile" class="block text-sm font-medium text-tf-text-dark">Mobile Number</label>
-     
-                    <div class="flex">
-                        <span class="inline-flex items-center px-3 border border-r-0 border-gray-300 bg-tf-bg-light text-gray-500 rounded-l-lg">
-                            +91
-                       
-                        </span>
-                        <input type="tel" id="demo-clientMobile" required 
-                            pattern="[0-9]{10}" title="10 digit Indian Mobile Number"
-                            placeholder="9876543210"
-          
-                            class="w-full p-3 border border-gray-300 rounded-r-lg focus:ring-tf-primary focus:border-tf-primary bg-tf-bg-light text-tf-text-dark input-focus">
-                    </div>
-                </div>
-                <div>
-                    <label 
-for="demo-messageText" class="block text-sm font-medium text-tf-text-dark">Message / Requirement</label>
-                    <textarea id="demo-messageText" rows="3" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-tf-primary focus:border-tf-primary resize-none bg-tf-bg-light text-tf-text-dark input-focus">I am interested in a demo for bulk verification.</textarea>
-                </div>
-                <button type="submit" id="sendDemoButton" class="w-full py-3 bg-tf-secondary text-tf-text-dark font-bold rounded-lg shadow-md hover:bg-cyan-500 transition">
-         
-                    Submit Demo Request
-                </button>
-                <p id="demoMessageStatus" class="text-center text-sm font-semibold"></p>
-            </form>
-        </div>
-    </div>
-    
-    <script>
-        // Changed absolute URL to relative path for better deployment stability
- 
-        const API_SUPPORT_ENDPOINT = "/api/support/message";
-        const demoModal = document.getElementById('demoModal');
-        
-        // --- MODAL HANDLING ---
-        function openDemoModal(e) {
-            e.preventDefault();
-            demoModal.classList.remove('hidden');
-        }
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                flashButton(button, 'Copied!', 1500, 'bg-success-light text-success-dark border-green-300');
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                flashButton(button, 'Error', 1500, 'bg-alert-light text-alert-dark border-red-300');
+            });
+        }
+        
+        // Utility function to temporarily change button text and style
+        function flashButton(button, newText, duration, flashClasses) {
+            const originalText = button.getAttribute('data-original-text');
+            const originalClassName = button.className; 
+            
+            button.className = 'copy-btn ' + flashClasses + ' border';
+            button.textContent = newText;
 
-        // Attach modal open handlers
-        document.getElementById('requestDemoNav').addEventListener('click', openDemoModal);
-        document.getElementById('requestDemoCTA').addEventListener('click', openDemoModal);
-        document.getElementById('requestDemoFooter').addEventListener('click', openDemoModal);
-        document.getElementById('closeDemoModal').addEventListener('click', (e) => {
-            e.preventDefault();
-            demoModal.classList.add('hidden');
-        });
-        
+            setTimeout(() => {
+                button.textContent = originalText;
+                // A safer way to restore to the base class structure
+                button.className = 'copy-btn';
+            }, duration);
+        }
 
-        // Function to handle the form submission
-        document.getElementById('demoForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
+        function showMessage(elementId, text, isError = false) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = text;
+                if (isError) {
+                    element.classList.remove('bg-blue-50', 'text-primary-blue', 'border-blue-200');
+                    element.classList.add('bg-alert-light', 'text-alert-dark', 'border-red-300');
+                } else {
+                    element.classList.remove('bg-alert-light', 'text-alert-dark', 'border-red-300');
+                    element.classList.add('bg-blue-50', 'text-primary-blue', 'border-blue-200');
+                }
+            }
+        }
 
-            const button = document.getElementById('sendDemoButton');
-            const statusMessage = document.getElementById('demoMessageStatus');
-            
-            button.disabled = true;
-            button.textContent = 'Sending...';
- 
-            statusMessage.textContent = '';
+        async function fetchVerification(rawAddress, customerName) {
+            const payload = { address: rawAddress, customerName }; 
+            const maxRetries = 3;
+            let lastError = null;
 
-            const clientMobile = document.getElementById('demo-clientMobile').value.trim();
-            
-            // Basic client-side validation
-            if (clientMobile.length !== 10 || !/^\d{10}$/.test(clientMobile)) {
-                statusMessage.className = 'text-alert-dark mt-3';
-        
-                statusMessage.textContent = 'Please enter a valid 10-digit mobile number.';
-                button.disabled = false;
-                button.textContent = 'Submit Demo Request';
-                return;
-            }
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+                try {
+                    // Uses simple fetch, which is correct for unauthenticated public endpoint
+                    const response = await fetch(API_ENDPOINT, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorBody = await response.json().catch(() => ({}));
+                        throw new Error(errorBody.error || `Server responded with status ${response.status}`);
+                    }
+                    
+                    return await response.json();
 
-            const messageData = {
-   
-                clientName: document.getElementById('demo-clientName').value,
-                clientEmail: document.getElementById('demo-clientEmail').value,
-                clientMobile: clientMobile, 
-                messageText: document.getElementById('demo-messageText').value,
-            };
-            try {
-                const response = await fetch(API_SUPPORT_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(messageData)
-            
-                });
+                } catch (error) {
+                    lastError = error;
+                    console.error(`Verification API Attempt ${attempt + 1} failed:`, error);
+                    if (attempt < maxRetries - 1) {
+                        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+                    }
+                }
+            }
 
-                const result = await response.json();
-                if (response.ok && result.status === "Success") {
-                    statusMessage.className = 'text-tf-secondary mt-3';
-                    statusMessage.textContent = 'Demo request sent! We will contact you shortly.';
-                    document.getElementById('demoForm').reset();
-                    document.getElementById('demo-clientMobile').value = '';
-                    setTimeout(() => demoModal.classList.add('hidden'), 2000);
-                } else {
-                    statusMessage.className = 'text-alert-dark mt-3';
-                    statusMessage.textContent = `Error: ${result.message || 'Failed to send request.'}`;
-                }
-            } catch (e) {
-                statusMessage.className = 'text-alert-dark mt-3';
-                statusMessage.textContent = 'Network error occurred.';
-                console.error("Demo Form Submission Error:", e);
-            } finally {
-                setTimeout(() => { 
-                    button.disabled = false;
-                    button.textContent = 'Submit Demo Request';
-                }, 2000);
-            }
-        });
-    </script>
+            return { 
+                status: "Error", 
+                error: `Verification failed after ${maxRetries} attempts.`,
+                remarks: `Error during verification: ${lastError ? lastError.message : 'Unknown Network Error'}`
+            };
+        }
+
+        function applyRemarksStyle(remarks) {
+            const remarksBlock = document.getElementById('remarks-block');
+            const remarksSpan = document.getElementById('out-remarks');
+            
+            // Common classes for reset
+            const resetClasses = ['bg-white', 'border-gray-200', 'text-gray-800', 'italic', 'font-bold', 'border-4', 'bg-alert-light', 'border-red-300', 'text-alert-dark'];
+
+            // Remove all specific classes before applying new ones
+            remarksBlock.classList.remove(...resetClasses);
+            remarksSpan.classList.remove('italic', 'font-bold', 'text-alert-dark');
+
+            // Set the raw remarks text
+            const cleanRemarks = remarks.replace(new RegExp(REMARKS_ALERT_PREFIX, 'g'), '').trim() || 'No specific remarks.';
+            remarksSpan.textContent = cleanRemarks;
+
+            // Default Style
+            remarksBlock.classList.add('bg-white', 'border', 'border-gray-200', 'shadow-sm');
+            remarksSpan.classList.add('italic', 'text-gray-800');
+
+
+            // Check for Alert
+            const isAlert = remarks.includes(REMARKS_ALERT_PREFIX);
+
+            if (isAlert) {
+                remarksBlock.classList.add('bg-alert-light', 'border-4', 'border-red-300', 'shadow-lg');
+                remarksSpan.classList.add('font-bold', 'text-alert-dark');
+                remarksBlock.classList.remove('bg-white', 'border-gray-200', 'shadow-sm'); // Remove default classes
+                remarksSpan.classList.remove('italic');
+            }
+        }
+
+        function updateQualityScoreUI(quality) {
+            const qualityBlock = document.getElementById('quality-block');
+            const qualityText = document.getElementById('out-quality');
+            const qualityIcon = document.getElementById('quality-icon');
+            
+            let colorClasses = '';
+            let icon = '';
+
+            // Clean previous classes
+            qualityBlock.className = 'result-block col-span-2 p-4 rounded-lg shadow-md flex items-center justify-between transition-colors duration-300 mt-4';
+            qualityText.className = 'text-xl font-extrabold';
+            
+            qualityText.textContent = quality;
+
+            if (quality.includes('Very Good') || quality.includes('Good')) {
+                colorClasses = 'bg-success-light border border-secondary-green text-secondary-green';
+                icon = '✅';
+            } else if (quality.includes('Medium') || quality.includes('Partial')) {
+                colorClasses = 'bg-warning-light border border-warning-dark text-warning-dark';
+                icon = '⚠️';
+            } else if (quality.includes('Bad') || quality.includes('Unverified')) {
+                colorClasses = 'bg-alert-light border border-alert-dark text-alert-dark';
+                icon = '❌';
+            } else {
+                 // Default/N/A state
+                colorClasses = 'bg-gray-100 border border-gray-300 text-gray-500';
+                icon = '❓';
+            }
+
+            qualityBlock.classList.add(...colorClasses.split(' '));
+            qualityIcon.textContent = icon;
+            // Removed: The line adding text color via style as Tailwind classes are now used directly.
+        }
+
+
+        async function handleSingleVerification() {
+            const rawAddress = document.getElementById('rawAddress').value;
+            const customerName = document.getElementById('customerName').value;
+            const loadingMessage = document.getElementById('loading-message');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const verifyButton = document.getElementById('verifyButton');
+
+            if (rawAddress.trim() === "") {
+                showMessage('loading-message', 'Please enter a raw address to verify.', true);
+                loadingMessage.classList.remove('hidden');
+                resultsContainer.classList.add('hidden');
+                return;
+            }
+
+            // Show loading state
+            loadingMessage.classList.remove('hidden');
+            resultsContainer.classList.add('hidden');
+            verifyButton.disabled = true;
+            verifyButton.textContent = 'Verifying...';
+
+            try {
+                showMessage('loading-message', 'Verifying address using AI...');
+                const verificationResult = await fetchVerification(rawAddress, customerName);
+
+                if (verificationResult.status === "Error") {
+                    showMessage('loading-message', `Verification Error: ${verificationResult.error || 'Unknown Error'}`, true);
+                    return;
+                }
+
+                // Hide loading message and show results
+                loadingMessage.classList.add('hidden');
+                resultsContainer.classList.remove('hidden');
+
+                // Populate results
+                document.getElementById('out-name').textContent = verificationResult.customerCleanName || 'N/A';
+                document.getElementById('out-address').textContent = verificationResult.addressLine1 || 'N/A';
+                document.getElementById('out-landmark').textContent = verificationResult.landmark || 'N/A';
+                document.getElementById('out-district').textContent = verificationResult.district || 'N/A';
+                document.getElementById('out-state').textContent = verificationResult.state || 'N/A';
+                document.getElementById('out-pin').textContent = verificationResult.pin || 'N/A';
+                
+                const qualityScore = verificationResult.addressQuality || 'N/A';
+                
+                // UI UPDATES
+                updateQualityScoreUI(qualityScore); 
+                applyRemarksStyle(verificationResult.remarks || '');
+                
+            } catch (e) {
+                showMessage('loading-message', `An unexpected error occurred: ${e.message}`, true);
+                loadingMessage.classList.remove('hidden'); 
+                resultsContainer.classList.add('hidden');
+            } finally {
+                verifyButton.disabled = false;
+                verifyButton.textContent = 'Verify Address';
+            }
+        }
+    </script>
 </body>
 </html>
