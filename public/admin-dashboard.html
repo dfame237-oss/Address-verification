@@ -144,7 +144,7 @@
         }
     </style>
 </head>
-<body>
+<body onload="populatePlanDropdowns(); loadClients(); loadInboxCounts(); showTab('admin-overview', document.getElementById('tab-overview-btn'));">
     <div class="dashboard-container">
         <header class="header">
             <h1><span class="text-tf-primary">Smart Locator</span> Admin Panel</h1>
@@ -175,7 +175,7 @@
                     <p class="text-gray-600 font-semibold mb-1">Clients Online Now</p>
                     <div id="metric-online-clients" class="plan-credit-display text-whatsapp-green">0</div>
                 </div>
-                <div class="bg-tf-primary-light p-6 rounded-xl border border-tf-primary/30">
+                 <div class="bg-tf-primary-light p-6 rounded-xl border border-tf-primary/30">
                     <p class="text-gray-600 font-semibold mb-1">New Demo Requests</p>
                     <div id="metric-new-requests" class="plan-credit-display text-tf-secondary">0</div>
                 </div>
@@ -499,6 +499,7 @@
             const activeClientsCount = clients.filter(c => c.isActive).length;
             const onlineClientsCount = clients.filter(c => c.lastActivityAt && (Date.now() - new Date(c.lastActivityAt).getTime() < ONLINE_THRESHOLD_MS)).length;
             
+            // 🛑 FIX: Check if metric elements exist before setting textContent (Prevents null crash)
             const totalEl = document.getElementById('metric-total-clients');
             const activeEl = document.getElementById('metric-active-clients');
             const onlineEl = document.getElementById('metric-online-clients');
@@ -785,11 +786,9 @@
             }
         }
         
-        // FIX: Separated view function logic to avoid the 'Cannot read properties of null (reading style)' error
         function viewClientMessage(messageId, subject, body, senderId, clientUsername, isUnread, timestamp) {
-            // Mark as read immediately (client message uses inbox API)
             if (isUnread) authFetch(`${API_BASE}/inbox/message?messageId=${messageId}`, { method: 'PUT' }).catch(()=>{});
-            setTimeout(loadClientMessages, 200); // Refresh list
+            setTimeout(loadClientMessages, 200); 
             
             const messageContent = `
                 <div id="message-view-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[1001]">
@@ -804,13 +803,12 @@
                 </div>
             `;
             document.body.insertAdjacentHTML('beforeend', messageContent);
-            openReplyForm(senderId, clientUsername); // Open reply form in the background
+            openReplyForm(senderId, clientUsername); 
         }
 
         function viewSupportMessage(messageId, messageText, clientName, clientEmail, clientMobile, isUnread, receivedAt) {
-            // Mark as read immediately (support request uses admin API)
             if (isUnread) authFetch(`${API_ADMIN}?action=support&messageId=${messageId}`, { method: 'PUT' }).catch(()=>{});
-            setTimeout(loadSupportMessages, 200); // Refresh list
+            setTimeout(loadSupportMessages, 200);
             
             const messageContent = `
                 <div id="message-view-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[1001]">
@@ -833,7 +831,7 @@
 
         function openReplyForm(clientId, username) {
             selectedClientId = clientId; selectedClientUsername = username;
-            // The modal is already open, just switch the content
+            document.getElementById('inbox-modal').style.display = 'flex';
             document.getElementById('inbox-title').textContent = `Send Reply`;
             document.getElementById('reply-to-client').textContent = username;
             document.getElementById('reply-form').style.display = 'block';
@@ -843,16 +841,9 @@
             document.getElementById('reply-status').textContent = '';
         }
         
-        async function sendMessage() { /* ... */ } // Logic omitted for brevity
-        async function deleteClient(clientId) { /* ... */ } // Logic omitted for brevity
-        async function clearSession(clientId) { /* ... */ } // Logic omitted for brevity
-        async function toggleActive(clientId, setActive) { /* ... */ } // Logic omitted for brevity
-        async function confirmTopup() { /* ... */ } // Logic omitted for brevity
-        function openUpdateModal(clientId) { /* ... */ } // Logic omitted for brevity
-        function closeUpdateModal() { /* ... */ } // Logic omitted for brevity
-        function openAddClientModal() { /* ... */ } // Logic omitted for brevity
-        function closeAddClientModal() { /* ... */ } // Logic omitted for brevity
-        
+        async function sendMessage() { /* ... */ } 
+        // ... (Other CRUD/utility functions are omitted for brevity in the final output, but should be in your file) ...
+
         async function deleteMessage(messageId, type) {
             let endpoint;
             let confirmMessage;
@@ -869,7 +860,7 @@
             if (!shouldDelete) return;
 
             try {
-                // FIX: Use DELETE method for deletion, addressing 405 error
+                // FIX: Ensure DELETE method is used for deletion, addressing 405 error
                 const response = await authFetch(endpoint, { method: 'DELETE' }); 
                 const result = await response.json().catch(() => ({ message: "Delete failed (non-JSON response)." }));
 
