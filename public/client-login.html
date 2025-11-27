@@ -10,13 +10,15 @@
         tailwind.config = {
             theme: {
                 extend: {
+             
                     colors: {
                         'tf-bg-light': '#F8FAFC', // Main Light Background
                         'tf-card-light': '#FFFFFF', // White Card Background
                         'tf-text-dark': '#1E293B', // Dark Text (Slate-800)
-                        
+     
                         'tf-primary': '#6366F1', // Indigo/Violet Primary Accent
                         'tf-secondary': '#06B6D4', // Cyan Secondary Accent
+                       
                         'alert-dark': '#DC2626',
                     },
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
@@ -34,41 +36,45 @@
 
         /* LIGHT BODY BACKGROUND */
         body { 
-            font-family: 'Inter', sans-serif; 
+            font-family: 'Inter', sans-serif;
             display: flex; 
             justify-content: center; 
             align-items: center; 
             min-height: 100vh; 
-            background-color: #F8FAFC; /* tf-bg-light */
+            background-color: #F8FAFC;
+            /* tf-bg-light */
         }
         
         /* LIGHT LOGIN CONTAINER */
         .login-container { 
-            background: #FFFFFF; /* tf-card-light */
+            background: #FFFFFF;
+            /* tf-card-light */
             padding: 45px; 
-            border-radius: 16px; 
+            border-radius: 16px;
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1); /* Lighter shadow */
-            width: 100%; 
+            width: 100%;
             max-width: 420px; 
             border-top: 5px solid #6366F1; /* Accent border */
         }
         
-        .form-group { margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px;
+        }
         /* DARK LABEL TEXT */
         .form-group label { 
-            display: block; 
+            display: block;
             margin-bottom: 8px; 
             font-weight: 600; 
             color: #1E293B; /* tf-text-dark */
         }
         .form-group input { 
-            width: 100%; 
+            width: 100%;
             padding: 12px; 
             border: 1px solid #CBD5E1; /* Light gray border */
-            border-radius: 8px; 
+            border-radius: 8px;
             box-sizing: border-box; 
             background-color: #FFFFFF; /* White input background */
-            color: #1E293B; /* Dark input text */
+            color: #1E293B;
+            /* Dark input text */
             transition: border-color 0.2s, box-shadow 0.2s;
         }
         .form-group input:focus {
@@ -77,24 +83,26 @@
         }
         
         .btn-login { 
-            width: 100%; 
+            width: 100%;
             padding: 12px; 
             background-color: #06B6D4; /* tf-secondary */
-            color: #FFFFFF; /* White text for contrast */
-            border: none; 
+            color: #FFFFFF;
+            /* White text for contrast */
+            border: none;
             border-radius: 8px; 
             font-size: 1.1rem; 
             font-weight: 700;
             cursor: pointer; 
-            transition: background-color 0.3s, transform 0.1s; 
+            transition: background-color 0.3s, transform 0.1s;
             box-shadow: 0 4px 10px rgba(6, 182, 212, 0.3);
         }
         .btn-login:hover { 
-            background-color: #0891B2; 
+            background-color: #0891B2;
             transform: translateY(-2px) scale(1.01); 
         }
         
-        #error-message { color: #DC2626; text-align: center; margin-top: 15px; font-weight: 500; }
+        #error-message { color: #DC2626;
+            text-align: center; margin-top: 15px; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -105,6 +113,7 @@
         <form id="client-login-form">
             <div class="form-group">
                 <label for="username">Username</label>
+           
                 <input type="text" id="username" name="username" required>
             </div>
             <div class="form-group">
@@ -112,6 +121,7 @@
                 <input type="password" id="password" name="password" required>
             </div>
             <button type="submit" class="btn-login">Secure Login</button>
+  
             <p id="error-message"></p>
         </form>
         <p class="text-center text-sm text-gray-500 mt-6">
@@ -124,7 +134,6 @@
         const form = document.getElementById('client-login-form');
         const errorMessage = document.getElementById('error-message');
         const DASHBOARD_URL = 'client-dashboard.html';
-
         // Check if already logged in (optional, but good practice)
         if (localStorage.getItem('clientToken')) {
             window.location.href = DASHBOARD_URL;
@@ -139,10 +148,12 @@
             const password = form.elements['password'].value;
 
             try {
+     
                 const response = await fetch(API_LOGIN_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
+               
                 });
 
                 const result = await response.json();
@@ -150,21 +161,22 @@
                 if (response.ok && result.status === "Success") {
                     // SUCCESS: Store token and user details
                     localStorage.setItem('clientToken', result.token);
+          
                     localStorage.setItem('clientName', result.planDetails.clientName || username);
                     localStorage.setItem('planDetails', JSON.stringify(result.planDetails));
-                    
                     errorMessage.textContent = 'Login successful! Redirecting...';
                     errorMessage.style.color = '#06B6D4';
                     
                     setTimeout(() => {
                         window.location.href = DASHBOARD_URL; // Redirect to new dashboard
                     }, 500);
-
                 } else if (response.status === 401) {
-                    errorMessage.textContent = result.message || 'Authentication failed. Please check credentials.';
+                    errorMessage.textContent = result.message ||
+                        'Authentication failed. Please check credentials.';
                     errorMessage.style.color = '#DC2626';
                 } else {
-                    errorMessage.textContent = result.message || 'An unexpected error occurred.';
+                    errorMessage.textContent = result.message ||
+                        'An unexpected error occurred.';
                     errorMessage.style.color = '#DC2626';
                 }
 

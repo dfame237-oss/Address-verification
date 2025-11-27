@@ -1,4 +1,4 @@
-// api/db.js (updated with correct DB_NAME)
+// api/db.js (FINALIZED)
 // Safe MongoDB connection helper for Vercel Serverless.
 
 const { MongoClient } = require('mongodb');
@@ -10,8 +10,9 @@ if (!MONGO_URI) {
   console.error("❌ ERROR: MONGO_URI is missing. Set it in Vercel Environment Variables.");
 }
 
-// Database name (UPDATED to match your Atlas setup: sample_mflix)
-const DB_NAME = "sample_mflix";
+// CRITICAL FIX: The database name must match your application's actual database.
+// FIX: Confirmed the correct database name from the Atlas screenshot.
+const DB_NAME = "sample_mflix"; // <--- This is the correct database name for your current setup!
 
 // Global cache to reuse connections across function calls
 let cachedClient = global._cachedMongoClient;

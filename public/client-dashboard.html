@@ -15,7 +15,7 @@
                     colors: {
                         'tf-dark': '#0F172A', // Deep Blue-Gray Background
                         'tf-primary': '#6366F1', // Indigo/Violet Primary Accent
-                        'tf-secondary': '#06B6D4', 
+                        'tf-secondary': '#06B6D4', // Cyan Secondary Accent
                         'tf-text': '#E2E8F0', // Light Text
                         'tf-card': '#1E293B', // Darker Card Background
                         'tf-light': '#F1F5F9', // Very light gray for background
@@ -31,86 +31,51 @@
     </script>
     <style>
         /* Shared Dashboard Styles - Updated for Teleforce feel */
-        body { font-family: 
-'Inter', sans-serif; background-color: #F1F5F9; }
-        .dashboard-container { max-width: 1200px; margin: 30px auto;
-padding: 35px; background-color: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1);
-}
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px;
-border-bottom: 1px solid #E5E7EB; }
-        .header h1 { font-weight: 700;
-}
+        body { font-family: 'Inter', sans-serif; background-color: #F1F5F9; }
+        .dashboard-container { max-width: 1200px; margin: 30px auto; padding: 35px; background-color: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB; }
+        .header h1 { font-weight: 700; }
         
-        .nav-tabs { display: flex;
-border-bottom: 2px solid #E5E7EB; margin-bottom: 30px; }
-        .tab-button { padding: 12px 20px;
-cursor: pointer; border: none; background: none; font-weight: 600; color: #64748B; border-bottom: 2px solid transparent; transition: color 0.3s, border-bottom 0.3s;
-}
-        .tab-button.active { color: #6366F1; border-bottom: 2px solid #6366F1;
-}
-        .tab-content { padding: 15px 0; animation: fadeIn 0.5s;
-}
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1;
-} }
+        .nav-tabs { display: flex; border-bottom: 2px solid #E5E7EB; margin-bottom: 30px; }
+        .tab-button { padding: 12px 20px; cursor: pointer; border: none; background: none; font-weight: 600; color: #64748B; border-bottom: 2px solid transparent; transition: color 0.3s, border-bottom 0.3s; }
+        .tab-button.active { color: #6366F1; border-bottom: 2px solid #6366F1; }
+        .tab-content { padding: 15px 0; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .controls { display: flex; gap: 20px; align-items: center;
-}
-        .icon-btn { cursor: pointer; position: relative; font-size: 24px; color: #64748B;
-transition: color 0.2s; }
-        .icon-btn:hover { color: #6366F1;
-}
-        .badge { position: absolute; top: -5px; right: -5px; background-color: #EF4444; color: white;
-border-radius: 50%; padding: 3px 7px; font-size: 11px; }
+        .controls { display: flex; gap: 20px; align-items: center; }
+        .icon-btn { cursor: pointer; position: relative; font-size: 24px; color: #64748B; transition: color 0.2s; }
+        .icon-btn:hover { color: #6366F1; }
+        .badge { position: absolute; top: -5px; right: -5px; background-color: #EF4444; color: white; border-radius: 50%; padding: 3px 7px; font-size: 11px; }
         
         /* Profile & Plan Cards */
-        .info-grid { display: grid;
-grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
-        .profile-card, .plan-card { background-color: #F8FAFC;
-padding: 30px; border-radius: 12px; border: 1px solid #E2E8F0; transition: box-shadow 0.2s;
-}
-        .profile-card:hover, .plan-card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-}
-        .info-item strong { color: #1E293B; margin-right: 8px; font-weight: 600;
-}
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        .profile-card, .plan-card { background-color: #F8FAFC; padding: 30px; border-radius: 12px; border: 1px solid #E2E8F0; transition: box-shadow 0.2s; }
+        .profile-card:hover, .plan-card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        .info-item strong { color: #1E293B; margin-right: 8px; font-weight: 600; }
 
-        .plan-status-badge { display: inline-block; padding: 6px 14px; border-radius: 9999px; font-size: 0.85rem;
-font-weight: 700; }
-        .status-enabled { background-color: #DBF5FF; color: #06B6D4;
-} /* Cyan background */
-        .status-disabled { background-color: #FEE2E2; color: #DC2626;
-}
+        .plan-status-badge { display: inline-block; padding: 6px 14px; border-radius: 9999px; font-size: 0.85rem; font-weight: 700; }
+        .status-enabled { background-color: #DBF5FF; color: #06B6D4; } /* Cyan background */
+        .status-disabled { background-color: #FEE2E2; color: #DC2626; }
         
-        .action-btn { background-color: #6366F1;
-color: white; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: background-color 0.2s, transform 0.1s;
-}
-        .action-btn:hover { background-color: #4F46E5; transform: translateY(-1px);
-}
-        .action-btn.logout { background-color: #DC2626;
-}
-        .action-btn.logout:hover { background-color: #B91C1C;
-}
+        .action-btn { background-color: #6366F1; color: white; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: background-color 0.2s, transform 0.1s; }
+        .action-btn:hover { background-color: #4F46E5; transform: translateY(-1px); }
+        .action-btn.logout { background-color: #DC2626; }
+        .action-btn.logout:hover { background-color: #B91C1C; }
         
         /* Bulk Specific Styles */
-        .progress-container { margin-top: 2.5rem;
-padding: 1.5rem; background-color: #E2E8F0; border-radius: 10px; border: 1px solid #CBD5E1; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
-}
-        .progress-fill { background-color: #06B6D4; /* tf-secondary */ height: 0.75rem; border-radius: 9999px;
-transition: all 0.5s ease-in-out; }
+        .progress-container { margin-top: 2.5rem; padding: 1.5rem; background-color: #E2E8F0; border-radius: 10px; border: 1px solid #CBD5E1; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
+        .progress-fill { background-color: #06B6D4; /* tf-secondary */ height: 0.75rem; border-radius: 9999px; transition: all 0.5s ease-in-out; }
         
         /* Support/Messaging Forms */
-        .form-group label { display: block;
-margin-bottom: 6px; font-weight: 600; color: #1E293B; }
-        .form-group input, .form-group textarea { width: 100%;
-padding: 10px; border: 1px solid #CBD5E1; border-radius: 6px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #1E293B; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #CBD5E1; border-radius: 6px; }
         
         /* Inbox Styles */
-        #client-inbox-list div { cursor: pointer;
-border-left: 5px solid transparent; }
-        #client-inbox-list div:hover { border-left-color: #6366F1; background-color: #F0F4FF;
-}
+        #client-inbox-list div { cursor: pointer; border-left: 5px solid transparent; }
+        #client-inbox-list div:hover { border-left-color: #6366F1; background-color: #F0F4FF; }
         
-        /* FIX for Issue 2: Fixed positioning for Inbox Icon, separated from header flow */
-        #inbox-icon {
+        /* FIX 1: Fixed positioning for Inbox Icon, separated from header flow */
+        #inbox-fixed-container { /* Renamed container for the fixed icon */
             position: fixed; 
             top: 20px;
             right: 20px;
@@ -120,33 +85,30 @@ border-left: 5px solid transparent; }
             border-radius: 50%;
             padding: 10px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
         }
 
-        /* FIX for Issue 3: Mobile Responsiveness */
+        /* FIX 2: Mobile Responsiveness */
         @media (max-width: 768px) {
-            /* 1. Dashboard Container: Reduce width and padding */
             .dashboard-container { 
                 padding: 15px; 
                 margin: 10px auto; 
                 width: 95%; 
                 box-shadow: none; 
             }
-
-            /* 2. Header & Controls: Stack vertically or center */
             .header {
                 flex-direction: column; 
                 align-items: flex-start;
                 margin-bottom: 20px;
             }
             .header h1 {
+                font-size: 1.75rem;
                 margin-bottom: 10px;
             }
             .controls {
                 width: 100%;
                 justify-content: flex-end;
             }
-
-            /* 3. Navigation Tabs: Allow overflow/wrap */
             .nav-tabs {
                 overflow-x: auto; 
                 flex-wrap: nowrap;
@@ -158,15 +120,12 @@ border-left: 5px solid transparent; }
                 padding: 10px 15px;
                 font-size: 0.9rem;
             }
-
-            /* 4. Info Grid: Stack cards vertically */
             .info-grid {
                 grid-template-columns: 1fr; 
                 gap: 20px; 
             }
-            
-            /* 5. Fixed Inbox Icon Adjustment for Mobile (Bottom Right) */
-            #inbox-icon {
+            /* Fixed Inbox Icon Adjustment for Mobile (Pin to bottom-right corner) */
+            #inbox-fixed-container {
                 top: auto; 
                 bottom: 15px; 
                 right: 15px;
@@ -184,8 +143,8 @@ border-left: 5px solid transparent; }
             </div>
         </header>
 
-        <div id="inbox-icon" class="icon-btn" onclick="toggleInbox()">
-            <i class="fas fa-inbox"></i>
+        <div id="inbox-fixed-container" onclick="toggleInbox()">
+            <i class="fas fa-inbox icon-btn"></i>
             <span id="inbox-badge" class="badge" style="display: none;">0</span>
         </div>
 
@@ -202,7 +161,7 @@ border-left: 5px solid transparent; }
                 </h2>
                 <p class="text-lg text-gray-500 mt-2">Upload a CSV file for high-volume cleaning and verification.</p>
             </header>
-       
+            
             <div id="bulkContent" class="space-y-8">
                 
                 <div class="bg-tf-light p-8 rounded-xl border-l-4 border-tf-primary shadow-lg">
@@ -210,23 +169,19 @@ border-left: 5px solid transparent; }
                         <i class="fas fa-download mr-3"></i>
                         1. Download Template
                     </p>
-                    <p class="text-sm text-gray-600 mb-4">Use this template to ensure your CSV file has the required columns: <code class="bg-gray-200 px-1 rounded font-mono">ORDER ID</code>, <code class="bg-gray-200 px-1 
-rounded font-mono">CUSTOMER NAME</code>, <code class="bg-gray-200 px-1 rounded font-mono">CUSTOMER RAW ADDRESS</code>.</p>
+                    <p class="text-sm text-gray-600 mb-4">Use this template to ensure your CSV file has the required columns: <code class="bg-gray-200 px-1 rounded font-mono">ORDER ID</code>, <code class="bg-gray-200 px-1 rounded font-mono">CUSTOMER NAME</code>, <code class="bg-gray-200 px-1 rounded font-mono">CUSTOMER RAW ADDRESS</code>.</p>
                     <button id="downloadTemplateButton" class="w-full py-3 bg-tf-primary text-white font-semibold rounded-lg hover:bg-indigo-600 transition duration-200 focus:outline-none focus:ring-4 focus:ring-tf-primary focus:ring-opacity-50">
                         Download Verification Template (CSV)
                     </button>
-          
                 </div>
 
                 <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-lg text-center">
                     <p class="font-bold text-xl text-gray-800 mb-4 flex items-center justify-center">
                         <i class="fas fa-upload mr-3 text-tf-secondary"></i>
-                
                         2. Upload Your CSV File
                     </p>
                     <input type="file" id="csvFileInput" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-tf-secondary/10 file:text-tf-secondary hover:file:bg-tf-secondary/20 transition cursor-pointer">
                     <p class="text-xs text-gray-500 mt-2">Maximum 1000 rows recommended for stability.</p>
- 
                 </div>
 
                 <button id="processButton" class="w-full py-4 bg-tf-secondary text-white font-bold text-lg rounded-lg shadow-xl transition duration-200 transform hover:scale-[1.005] focus:outline-none focus:ring-4 focus:ring-tf-secondary focus:ring-opacity-50" disabled>
@@ -234,17 +189,14 @@ rounded font-mono">CUSTOMER NAME</code>, <code class="bg-gray-200 px-1 rounded f
                 </button>
             </div>
 
-  
             <div class="progress-container mt-12 p-8 bg-tf-light rounded-xl border border-gray-300 shadow-inner">
                 <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Verification Status</h3>
                 <p id="status-message" class="font-semibold text-gray-600 mb-4 transition duration-300">Ready to upload.</p>
                 <div class="progress-bar w-full bg-gray-300 rounded-full h-3">
-              
                     <div class="progress-fill h-3 bg-tf-secondary rounded-full transition-all duration-500 ease-in-out" id="progressBarFill" style="width: 0%;"></div>
                 </div>
                 
                 <a id="downloadLink" class="hidden mt-6 w-full py-3 bg-tf-primary text-white font-bold text-center rounded-lg shadow-xl transition duration-200 transform hover:scale-[1.01] focus:outline-none focus:ring-4 focus:ring-tf-primary focus:ring-opacity-50" href="#" download="verified_addresses.csv">
-               
                     <i class="fas fa-download mr-2"></i> Download Verified CSV
                 </a>
             </div>
@@ -254,68 +206,55 @@ rounded font-mono">CUSTOMER NAME</code>, <code class="bg-gray-200 px-1 rounded f
         </div>
 
         <div id="profile-plan" class="tab-content" style="display: none;">
-      
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Account Overview</h2>
             <div class="info-grid">
                 <div class="profile-card flex flex-col justify-between">
                     <h3 class="text-xl font-semibold text-tf-primary mb-4 flex items-center"><i class="fas fa-user-circle mr-2"></i> My Profile Details</h3>
-     
                     <div class="space-y-3">
                         <div class="info-item"><p><strong>Username:</strong> <span id="profile-username"></span></p></div>
                         <div class="info-item"><p><strong>Email:</strong> <span id="profile-email"></span></p></div>
                         <div class="info-item"><p><strong>Mobile:</strong> <span id="profile-mobile"></span></p></div>
-   
                         <div class="info-item"><p><strong>Access Code:</strong> <span id="bulk-code"></span></p></div>
                     </div>
                     <button class="action-btn mt-6 w-full bg-tf-card text-tf-text border border-gray-600 hover:bg-gray-700" onclick="alert('TODO: Implement password change API')">Change Password</button>
                 </div>
 
-     
                 <div class="plan-card">
                     <h3 class="text-xl font-semibold text-tf-secondary mb-4 flex items-center"><i class="fas fa-award mr-2"></i> Plan Status</h3>
                     <div class="space-y-3">
-                
                         <div class="info-item"><p><strong>Current Plan:</strong> <span id="plan-name" class="font-bold"></span></p></div>
                         <div class="info-item"><p><strong>Status:</strong> <span id="account-status"></span></p></div>
                         <div class="info-item"><p><strong>Valid Until:</strong> <span id="validity-end"></span></p></div>
-    
                         <div class="info-item"><p><strong>Remaining Credits:</strong> <span id="remaining-credits" class="font-bold text-alert-dark">N/A</span></p></div>
                     </div>
                     <button class="action-btn mt-6 w-full bg-tf-secondary hover:bg-cyan-600" onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(3)'))">Contact for Renewal</button>
                 </div>
-        
             </div>
         </div>
 
         <div id="support" class="tab-content" style="display: none;">
             <div class="info-grid">
                 <div class="p-8 border rounded-xl shadow-md bg-tf-light">
-                    <h2 class="text-xl font-semibold mb-4 flex items-center"><i class="fas fa-paper-plane mr-3 text-tf-primary"></i> 
-Send a Message to Admin</h2>
+                    <h2 class="text-xl font-semibold mb-4 flex items-center"><i class="fas fa-paper-plane mr-3 text-tf-primary"></i> Send a Message to Admin</h2>
                     <form id="support-form" class="space-y-4">
                         <div class="form-group">
                             <label for="support-subject">Subject</label>
-                    
                             <input type="text" id="support-subject" placeholder="Plan Renewal Inquiry / Technical Issue" required>
                         </div>
                         <div class="form-group">
                             <label for="support-body">Message</label>
-     
                             <textarea id="support-body" rows="6" placeholder="Your detailed message or support request" required></textarea>
                         </div>
                         <button type="submit" class="action-btn w-full py-3">Send Support Message</button>
-              
                         <p id="support-status" class="mt-2 text-sm text-center font-semibold"></p>
                     </form>
                 </div>
                 
                 <div class="p-8 border rounded-xl shadow-md bg-white">
-            
-                        <h2 class="text-xl font-semibold mb-4 flex items-center"><i class="fas fa-inbox mr-3 text-tf-secondary"></i> My Inbox History</h2>
+                    <h2 class="text-xl font-semibold mb-4 flex items-center"><i class="fas fa-inbox mr-3 text-tf-secondary"></i> My Inbox History</h2>
                     <div id="client-inbox-list" class="mt-4 max-h-96 overflow-y-auto space-y-3">
                          <p class="text-center text-gray-500">Loading messages...</p>
                     </div>
-       
                 </div>
             </div>
         </div>
@@ -325,8 +264,7 @@ Send a Message to Admin</h2>
         <div class="modal-content">
             <span class="modal-close" onclick="closeInbox()">&times;</span>
             <h2 class="text-2xl font-bold mb-3 text-tf-primary">Message Details</h2>
-            
-<p id="full-message-subject" class="font-bold text-lg text-tf-primary"></p>
+            <p id="full-message-subject" class="font-bold text-lg text-tf-primary"></p>
             <small id="full-message-date" class="text-gray-500 block mb-3"></small>
             <div id="full-message-body" class="p-4 border rounded bg-gray-50 whitespace-pre-wrap text-gray-700"></div>
         </div>
@@ -344,6 +282,7 @@ Send a Message to Admin</h2>
         const CLIENT_ID = planDetails.id || null; 
         const CLIENT_NAME = localStorage.getItem('clientName') || planDetails.username;
         let isPlanValid = true;
+        
         // --- AUTH CHECK ---
         if (!AUTH_TOKEN) {
             window.location.href = LOGIN_PAGE;
@@ -354,8 +293,7 @@ Send a Message to Admin</h2>
             try {
                 await authFetch(`${API_BASE}/client/logout`, {
                     method: 'POST',
-            
-            });
+                });
                 console.log("Server logout status recorded successfully.");
             } catch (error) {
                 console.warn("Could not notify server of logout status, proceeding with local logout:", error);
@@ -371,13 +309,13 @@ Send a Message to Admin</h2>
             const defaultHeaders = {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${AUTH_TOKEN}`,
-           
             };
 
             const response = await fetch(url, {
                 ...options,
                 headers: { ...defaultHeaders, ...options.headers },
             });
+
             if (response.status === 403 || response.status === 401) {
                 logout();
                 throw new Error("Session expired. Please log in again.");
@@ -401,14 +339,10 @@ Send a Message to Admin</h2>
         async function fetchProfileData() {
             // The profile details are sourced from the JWT payload cached in localStorage
             return {
-                username: planDetails.username ||
-CLIENT_NAME,
-                email: planDetails.email ||
-'client@example.com', 
-                mobile: planDetails.mobile ||
-'+91-9988776655', 
-                clientName: planDetails.clientName ||
-CLIENT_NAME,
+                username: planDetails.username || CLIENT_NAME,
+                email: planDetails.email || 'client@example.com', 
+                mobile: planDetails.mobile || '+91-9988776655', 
+                clientName: planDetails.clientName || CLIENT_NAME,
             };
         }
 
@@ -429,6 +363,7 @@ CLIENT_NAME,
         // --- PROFILE & PLAN LOGIC ---
         async function loadProfileAndPlan() {
             const profileData = await fetchProfileData();
+            
             document.getElementById('client-name-display').textContent = profileData.clientName;
             
             // Profile Details
@@ -436,24 +371,21 @@ CLIENT_NAME,
             document.getElementById('profile-email').textContent = profileData.email;
             document.getElementById('profile-mobile').textContent = profileData.mobile;
             document.getElementById('bulk-code').textContent = planDetails.bulkAccessCode || 'N/A';
+
             // Plan Details
             const statusEl = document.getElementById('account-status');
             const isActive = planDetails.isActive;
             const statusText = isActive ? 'Enabled' : 'Disabled';
             
             statusEl.textContent = statusText;
-            statusEl.className = `plan-status-badge ${isActive ?
-'status-enabled' : 'status-disabled'}`;
+            statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
 
             // Handle Plan Name Display (show only the name part)
-            const fullPlanName = planDetails.planName ||
-'Not Set';
+            const fullPlanName = planDetails.planName || 'Not Set';
             document.getElementById('plan-name').textContent = fullPlanName.split('_')[0]; 
             
             document.getElementById('validity-end').textContent = new Date(planDetails.validityEnd).toLocaleDateString() || 'N/A';
             
-            document.getElementById('remaining-credits').textContent = planDetails.remainingCredits ? planDetails.remainingCredits.toLocaleString() : 'N/A';
-
             checkPlanValidity();
         }
 
@@ -514,20 +446,19 @@ CLIENT_NAME,
             const errorBlock = document.createElement('div');
             errorBlock.className = 'space-y-6 mt-6';
             errorBlock.innerHTML = `
-                <div class="bg-red-50 p-8 rounded-xl border-l-4 border-alert-dark shadow-lg">
-                    <p class="font-bold text-xl text-alert-dark mb-3 flex items-center">
-                        🛑 Access Denied
-                    </p>
-                    <p class="text-base text-gray-700 mb-6">${message.replace(/\*\*/g, '<strong>')}</p>
-                </div>
-                <button onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(3)'))" class="block w-full py-3 bg-tf-secondary text-white text-center font-bold rounded-lg hover:bg-cyan-600 transition">
-  
-                  Contact Support / Renew Plan
-                </button>
-                <a href="https://wa.me/9193246219" target="_blank" class="block w-full py-3 bg-whatsapp-green text-white text-center font-bold rounded-lg hover:bg-green-600">
-                    <span class="mr-2">🟢</span> WhatsApp Support
-                </a>
-            `;
+                <div class="bg-red-50 p-8 rounded-xl border-l-4 border-alert-dark shadow-lg">
+                    <p class="font-bold text-xl text-alert-dark mb-3 flex items-center">
+                        🛑 Access Denied
+                    </p>
+                    <p class="text-base text-gray-700 mb-6">${message.replace(/\*\*/g, '<strong>')}</p>
+                </div>
+                <button onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(3)'))" class="block w-full py-3 bg-tf-secondary text-white text-center font-bold rounded-lg hover:bg-cyan-600 transition">
+                    Contact Support / Renew Plan
+                </button>
+                <a href="https://wa.me/9193246219" target="_blank" class="block w-full py-3 bg-whatsapp-green text-white text-center font-bold rounded-lg hover:bg-green-600">
+                    <span class="mr-2">🟢</span> WhatsApp Support
+                </a>
+            `;
             const bulkVerificationDiv = document.getElementById('bulk-verification');
             if (bulkVerificationDiv.querySelector('.space-y-6.mt-6')) return;
             bulkVerificationDiv.appendChild(errorBlock);
@@ -542,6 +473,7 @@ CLIENT_NAME,
             
             statusMessage.classList.remove('text-red-700', 'bg-red-100', 'text-gray-600');
             statusMessage.classList.add('p-2', 'rounded');
+
             if (isError) {
                 statusMessage.classList.add('text-red-700', 'bg-red-100', 'font-bold');
                 statusMessage.classList.remove('text-gray-600');
@@ -553,9 +485,9 @@ CLIENT_NAME,
         function handleTemplateDownload() {
             const templateHeaders = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS\n";
             const templateData = 
-                "1,\"John Doe\",\"H.No.
-123, Sector 40B, near bus stand, Chandigarh\"\n" +
+                "1,\"John Doe\",\"H.No. 123, Sector 40B, near bus stand, Chandigarh\"\n" +
                 "2,\"Jane Smith\",\"5th Floor, Alpha Tower, Mumbai 400001\"\n";
+                
             const csvContent = templateHeaders + templateData;
             
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -572,9 +504,11 @@ CLIENT_NAME,
 
             const header = lines[0].split(',').map(h => h.trim().replace(/^\"|\"$/g, ''));
             const data = [];
+            
             const idIndex = header.indexOf('ORDER ID');
             const nameIndex = header.indexOf('CUSTOMER NAME');
             const addressIndex = header.indexOf('CUSTOMER RAW ADDRESS');
+
             if (idIndex === -1 || nameIndex === -1 || addressIndex === -1) {
                 console.error("CSV header is missing one of the required columns.");
                 return [];
@@ -582,14 +516,15 @@ CLIENT_NAME,
 
             for (let i = 1; i < lines.length; i++) {
                 if (lines[i].trim() === '') continue;
+                
                 const row = lines[i].match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g) || [];
                 
                 const cleanedRow = row.map(cell => cell.trim().replace(/^\"|\"$/g, '').replace(/\"\"/g, '\"'));
+
                 if (cleanedRow.length > Math.max(idIndex, nameIndex, addressIndex)) {
                     data.push({
                         'ORDER ID': cleanedRow[idIndex],
                         'CUSTOMER NAME': cleanedRow[nameIndex],
-                      
                         'CUSTOMER RAW ADDRESS': cleanedRow[addressIndex],
                     });
                 }
@@ -597,29 +532,32 @@ CLIENT_NAME,
             return data;
         }
         async function fetchVerification(rawAddress, customerName) {
-            const payload = { address: rawAddress, customerName };
+            const payload = { address: rawAddress, customerName }; 
+            
             const maxRetries = 3;
             let lastError = null;
-            const clientToken = localStorage.getItem('clientToken');
+            const clientToken = localStorage.getItem('clientToken'); 
+
             for (let attempt = 0; attempt < maxRetries; attempt++) {
                 try {
                     const headers = { 'Content-Type': 'application/json' };
                     if (clientToken) {
-                        headers['Authorization'] = `Bearer ${clientToken}`;
+                        headers['Authorization'] = `Bearer ${clientToken}`; 
                     }
 
                     const response = await fetch(API_ENDPOINT, {
                         method: 'POST',
                         headers: headers,
-                        body: 
-JSON.stringify(payload)
+                        body: JSON.stringify(payload)
                     });
+                    
                     if (!response.ok) {
                         const errorBody = await response.json();
                         throw new Error(errorBody.error || `Server responded with status ${response.status}`);
                     }
                     
                     return await response.json();
+
                 } catch (error) {
                     lastError = error;
                     console.error(`Verification API Attempt ${attempt + 1} failed:`, error);
@@ -631,14 +569,12 @@ JSON.stringify(payload)
             return { 
                 status: "Error", 
                 error: `Verification failed after ${maxRetries} attempts.`,
-                remarks: `Error: ${lastError 
-? lastError.message : 'Unknown Network Error'}`,
+                remarks: `Error: ${lastError ? lastError.message : 'Unknown Network Error'}`,
                 customerCleanName: customerName,
                 addressLine1: "API Error: See Remarks",
                 landmark: "",
                 state: "",
                 district: "",
-       
                 pin: "",
                 addressQuality: "VERY BAD"
             };
@@ -662,6 +598,7 @@ JSON.stringify(payload)
             const processButton = document.getElementById('processButton');
             const progressBarFill = document.getElementById('progressBarFill');
             const downloadLink = document.getElementById('downloadLink');
+
             if (!fileInput.files.length) {
                 updateStatusMessage("Please select a CSV file first.", true);
                 return;
@@ -675,6 +612,7 @@ JSON.stringify(payload)
             downloadLink.classList.add('hidden');
             progressBarFill.style.width = '0%';
             updateStatusMessage('Reading file...');
+            
             reader.onload = async function(e) {
                 const text = e.target.result;
                 const addresses = parseCSV(text);
@@ -691,13 +629,14 @@ JSON.stringify(payload)
                 const outputRows = [];
 
                 updateStatusMessage(`Starting verification of ${totalAddresses} addresses...`);
+
                 for (const row of addresses) {
-                    const orderId = row['ORDER ID'] ||
-'';
+                    const orderId = row['ORDER ID'] || '';
                     const customerName = row['CUSTOMER NAME'] || '';
                     const rawAddress = row['CUSTOMER RAW ADDRESS'] || '';
 
                     let verificationResult;
+
                     if (!rawAddress || rawAddress.trim() === "") { 
                         verificationResult = { status: "Skipped", remarks: "Missing raw address in CSV row.", addressQuality: "Poor", customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "" };
                     } else {
@@ -709,26 +648,23 @@ JSON.stringify(payload)
                     const outputRow = [
                         orderId,
                         customerName,
- 
                         rawAddress,
                         verificationResult.customerCleanName,
                         verificationResult.addressLine1,
                         verificationResult.landmark,
-     
                         verificationResult.state,
                         verificationResult.district,
                         verificationResult.pin,
                         verificationResult.remarks,
-         
                         verificationResult.addressQuality
                     ].map(escapeAndQuote).join(',');
 
                     outputRows.push(outputRow);
                     
                     processedCount++;
-     
                     const progress = (processedCount / totalAddresses) * 100;
                     progressBarFill.style.width = `${progress}%`;
+                    
                     updateStatusMessage(`Processing... ${processedCount} of ${totalAddresses} addresses completed.`);
                 }
 
@@ -760,7 +696,6 @@ JSON.stringify(payload)
                     csvFileInput.addEventListener('change', () => {
                         if (processButton) {
                             processButton.disabled = !csvFileInput.files.length;
-   
                         }
                     });
                 }
@@ -777,15 +712,13 @@ JSON.stringify(payload)
         document.getElementById('support-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const subject = document.getElementById('support-subject').value;
-            const 
-body = document.getElementById('support-body').value;
+            const body = document.getElementById('support-body').value;
             const statusMsg = document.getElementById('support-status');
 
             const clientId = planDetails.id || null;
             if (!clientId) {
                 statusMsg.textContent = 'Error: Authentication context missing. Please log in again.';
                 statusMsg.style.color = '#dc2626';
-         
                 return;
             }
 
@@ -793,50 +726,44 @@ body = document.getElementById('support-body').value;
                 statusMsg.textContent = 'Message body cannot be empty.';
                 statusMsg.style.color = '#dc2626';
                 return;
-           
             }
 
             statusMsg.textContent = 'Sending...';
-            statusMsg.style.color = '#6366F1';
-            // Use tf-primary color
+            statusMsg.style.color = '#6366F1'; // Use tf-primary color
             
             try {
-                // FIX: This correctly uses authFetch, which attaches the token
                 const response = await authFetch(`${API_BASE}/inbox/message`, {
                     method: 'POST',
                     body: JSON.stringify({
-         
                         subject,
                         body,
                         recipientId: 'admin', 
                         senderId: clientId, 
-         
                     }),
                 });
+                
                 // Read response body regardless of status, as the server sends JSON errors
-                const result = await response.json();
+                const result = await response.json(); 
+                
                 if (response.ok && result.status === "Success") {
-                    statusMsg.textContent = 'Message sent successfully!
-Admin will reply soon.';
+                    statusMsg.textContent = 'Message sent successfully! Admin will reply soon.';
                     statusMsg.style.color = '#06B6D4'; // Use tf-secondary color
                     document.getElementById('support-subject').value = '';
                     document.getElementById('support-body').value = '';
                     loadClientInbox(); 
                 } else {
                     // FIX: Ensure we display the message property, falling back to a known error
-                    statusMsg.textContent = `Send Failed: ${result.message ||
-'Unknown API Error. Check console.'}`; 
+                    statusMsg.textContent = `Send Failed: ${result.message || 'Unknown API Error. Check console.'}`; 
                     statusMsg.style.color = '#DC2626'; // Use alert-dark color
                 }
             } catch (error) {
                 // Network error, connection issue, or JSON parse failure
-                statusMsg.textContent = `Network Error.
-Check console for details.`;
+                statusMsg.textContent = `Network Error. Check console for details.`;
                 console.error("Messaging Fetch Error:", error);
-                statusMsg.style.color = '#DC2626';
-                // Use alert-dark color
+                statusMsg.style.color = '#DC2626'; // Use alert-dark color
             }
         });
+
         // --- Inbox Functions (Optimized and Consolidated) ---
         async function loadInboxCounts() {
             try {
@@ -872,15 +799,12 @@ Check console for details.`;
                     result.messages.forEach(msg => {
                         const isUnread = !msg.isRead && msg.receiverId !== msg.senderId; 
                         const cardClass = isUnread ? 'font-bold bg-indigo-50 border-tf-primary' : 'bg-white border-gray-200';
-           
                         const sender = msg.senderId === 'admin' ? 'Admin' : 'You';
                         
                         const messageHtml = `
-                           
                             <div class="p-3 border rounded mb-2 ${cardClass}" 
-                                 onclick="viewClientMessage('${msg._id}', '${msg.subject}', \`${msg.body.replace(/`/g, '\\`')}\`, ${isUnread}, '${msg.timestamp}')">
+                                 onclick="viewClientMessage('${msg._id}', '${msg.subject}', '${msg.body}', ${isUnread}, '${msg.timestamp}')">
                                 <p class="text-sm text-gray-700">From: <strong>${sender}</strong></p>
-                     
                                 <p class="text-md">${msg.subject}</p>
                                 <small class="text-gray-500">${new Date(msg.timestamp).toLocaleString()}</small>
                             </div>
@@ -925,7 +849,7 @@ Check console for details.`;
             initBulkListeners();
             
             // Heartbeat call every 60 seconds (60000ms) to update server timestamp
-            setInterval(sendHeartbeat, 60000);
+            setInterval(sendHeartbeat, 60000); 
             setInterval(loadInboxCounts, 60000); 
             showTab('bulk-verification', document.getElementById('bulk-tab-btn'));
         };

@@ -6,15 +6,18 @@
     <title>Contact & Plan Purchase - AI VERIFY</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
+        // FIX: Updated to use the consistent 'tf-' color palette
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'primary-blue': '#1D4ED8',
-                        'secondary-green': '#059669',
+      
+                        'tf-primary': '#6366F1', // Indigo/Violet Primary Accent (Replaced primary-blue)
+                        'tf-secondary': '#06B6D4', // Cyan Secondary Accent (Replaced secondary-green)
                         'neutral-gray': '#F9FAFB', // Using a lighter gray for background
+                        
                         'whatsapp-green': '#25D366',
-                        'alert-dark': '#991B1B',
+                        'alert-dark': '#DC2626', // Consistent error color
                     },
                     fontFamily: { sans: ['Inter', 'sans-serif'], },
                 }
@@ -24,8 +27,8 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         .input-focus:focus {
-            --tw-ring-color: #059669; /* secondary-green */
-            border-color: #059669;
+            --tw-ring-color: #06B6D4; /* FIX: Changed to tf-secondary (Cyan) */
+            border-color: #06B6D4;
         }
     </style>
 </head>
@@ -33,22 +36,22 @@
     
     <div class="w-full max-w-xl bg-white p-8 sm:p-10 rounded-xl shadow-2xl">
 
-        <a href="index.html" class="text-primary-blue hover:text-blue-700 font-medium mb-6 inline-flex items-center transition duration-150">
+        <a href="index.html" class="text-tf-primary hover:text-indigo-700 font-medium mb-6 inline-flex items-center transition duration-150">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             Back to Home
         </a>
 
         <header class="text-center mb-10">
             <h1 class="text-3xl font-extrabold text-gray-900 mb-2">
-                <span class="text-secondary-green">Let's Get Started</span>
+                <span class="text-tf-secondary">Let's Get Started</span>
             </h1>
             <p class="text-lg text-gray-600 mt-2">Choose the best way to contact us about your bulk plan requirements.</p>
         </header>
         
         <div class="space-y-8">
             
-            <div class="p-6 bg-green-50 border-l-4 border-secondary-green rounded-xl shadow-inner">
-                <h3 class="font-bold text-xl text-secondary-green mb-3 flex items-center">
+            <div class="p-6 bg-cyan-50 border-l-4 border-tf-secondary rounded-xl shadow-inner">
+                <h3 class="font-bold text-xl text-tf-secondary mb-3 flex items-center">
                     <span class="text-2xl mr-2">📞</span> Immediate Assistance
                 </h3>
                 <a href="https://wa.me/9193246219" target="_blank" class="block w-full text-center py-3 px-6 bg-whatsapp-green text-white font-bold rounded-lg shadow-lg transition hover:bg-green-600 mb-3">
@@ -58,7 +61,7 @@
             </div>
 
             <div class="p-6 border border-gray-300 rounded-xl shadow-lg bg-white">
-                <h3 class="font-bold text-xl text-primary-blue mb-5">Or Send a Direct Plan Inquiry</h3>
+                <h3 class="font-bold text-xl text-tf-primary mb-5">Or Send a Direct Plan Inquiry</h3>
                 <form id="contactForm" class="space-y-4">
                     <div>
                         <label for="clientName" class="block text-sm font-medium text-gray-700">Your Name</label>
@@ -79,15 +82,14 @@
                             <input type="tel" id="clientMobile" required 
                                 pattern="[0-9]{10}" title="10 digit Indian Mobile Number"
                                 placeholder="9876543210"
-                                class="w-full p-3 border border-gray-300 rounded-r-lg input-focus focus:ring-1 focus:border-secondary-green">
-                        </div>
+                                class="w-full p-3 border border-gray-300 rounded-r-lg input-focus focus:ring-1 focus:border-tf-secondary"> </div>
                     </div>
                     <div>
                         <label for="messageText" class="block text-sm font-medium text-gray-700">Your Requirement (e.g., "Need plan for 5,000 checks" or "Requesting a demo")</label>
                         <textarea id="messageText" rows="4" required class="w-full p-3 border border-gray-300 rounded-lg input-focus focus:ring-1 resize-none"></textarea>
                     </div>
                     
-                    <button type="submit" id="sendMessageButton" class="w-full py-3 bg-primary-blue text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition transform hover:scale-[1.005]">
+                    <button type="submit" id="sendMessageButton" class="w-full py-3 bg-tf-primary text-white font-bold rounded-lg shadow-md hover:bg-indigo-700 transition transform hover:scale-[1.005]">
                         Submit Inquiry
                     </button>
                     <p id="messageStatus" class="text-center text-sm font-semibold pt-2"></p>
@@ -140,9 +142,10 @@
                 const result = await response.json();
 
                 if (response.ok && result.status === "Success") {
-                    statusMessage.className = 'text-secondary-green mt-3';
+                    // FIX: Updated color class to use tf-secondary (Cyan)
+                    statusMessage.className = 'text-tf-secondary mt-3';
                     statusMessage.textContent = 'Inquiry submitted! We will contact you via email or phone shortly.';
-                    document.getElementById('contactForm').reset(); 
+                    document.getElementById('contactForm').reset();
                 } else {
                     statusMessage.className = 'text-alert-dark mt-3';
                     statusMessage.textContent = `Error: ${result.message || 'Failed to submit inquiry.'}`;
