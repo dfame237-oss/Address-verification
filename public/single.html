@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Single Address Verification</title>
     
-    <link rel="stylesheet" href="style.css"> 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="style.css"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Custom colors matching your overall palette (tf-primary is indigo)
+        // Custom colors matching your overall palette (tf-primary is indigo)
         tailwind.config = {
             theme: {
                 extend: {
@@ -75,7 +75,7 @@
             <div class="p-4 bg-blue-50/50 border border-blue-100 rounded-lg text-sm text-gray-700 font-medium">
                 <i class="fas fa-info-circle mr-2 text-primary-blue"></i> No Login Required. This is a free demonstration.
             </div>
-            
+            
             <div>
                 <label for="customerName" class="block text-sm font-medium text-gray-700 mb-1">Customer Name (Optional)</label>
                 <input type="text" id="customerName" placeholder="e.g., Pankaj Rawat" class="form-input w-full p-3 border border-gray-300 rounded-lg shadow-sm">
@@ -111,16 +111,16 @@
                     <button class="copy-btn" data-target="out-address" title="Copy Clean Address Line 1"><i class="far fa-copy"></i> Copy</button>
                     <div class="result-content">
                         <strong class="text-gray-600 block mb-1 flex items-center"><i class="fas fa-location-arrow mr-2"></i> Clean Address Line 1:</strong> 
-                        <span id="out-address" class="text-gray-800 font-medium"></span>
                     </div>
+                    <span id="out-address" class="text-gray-800 font-medium"></span>
                 </div>
                 
                 <div class="result-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                     <button class="copy-btn" data-target="out-landmark" title="Copy Landmark"><i class="far fa-copy"></i> Copy</button>
                     <div class="result-content">
                         <strong class="text-gray-600 block mb-1 flex items-center"><i class="fas fa-flag-checkered mr-2"></i> Landmark (with Prefix):</strong> 
-                        <span id="out-landmark" class="text-gray-800 font-medium"></span>
                     </div>
+                    <span id="out-landmark" class="text-gray-800 font-medium"></span>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -128,22 +128,22 @@
                         <button class="copy-btn" data-target="out-district" title="Copy District"><i class="far fa-copy"></i> Copy</button>
                         <div class="result-content">
                             <strong class="text-gray-600 block mb-1">District:</strong> 
-                            <span id="out-district" class="text-gray-800"></span>
                         </div>
+                        <span id="out-district" class="text-gray-800"></span>
                     </div>
                     <div class="result-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                         <button class="copy-btn" data-target="out-state" title="Copy State"><i class="far fa-copy"></i> Copy</button>
                         <div class="result-content">
                             <strong class="text-gray-600 block mb-1">State:</strong> 
-                            <span id="out-state" class="text-gray-800"></span>
                         </div>
+                        <span id="out-state" class="text-gray-800"></span>
                     </div>
                     <div class="result-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                         <button class="copy-btn" data-target="out-pin" title="Copy PIN"><i class="far fa-copy"></i> Copy</button>
                         <div class="result-content">
                             <strong class="text-gray-600 block mb-1">PIN:</strong> 
-                            <span id="out-pin" class="text-gray-800 font-bold"></span>
                         </div>
+                        <span id="out-pin" class="text-gray-800 font-bold"></span>
                     </div>
                     <div class="result-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                         <strong class="text-gray-600 block mb-1">Country:</strong> 
