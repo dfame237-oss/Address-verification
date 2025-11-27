@@ -1,173 +1,854 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <script>
-        // Custom Tailwind config using the consistent 'tf-' palette
+        // Custom Tailwind config using the consistent 'tf-' palette (kept)
         tailwind.config = {
             theme: {
                 extend: {
-          
-
-           colors: {
-                        'tf-dark': '#0F172A', // Deep Blue-Gray Background
-                        'tf-primary': '#6366F1', // Indigo/Violet Primary Accent
-                        'tf-secondary': '#06B6D4', // Cyan Secondary Accent
- 
- 
-                        'tf-text': '#E2E8F0', // Light Text
-                        'tf-card': '#1E293B', // Darker Card Background
-                        'tf-light': '#F1F5F9', // Very light gray for
-            
-  
-           'alert-dark': '#DC2626',
+                    colors: {
+                        'tf-dark': '#0F172A',
+                        'tf-primary': '#6366F1',
+                        'tf-secondary': '#06B6D4',
+                        'tf-text': '#E2E8F0',
+                        'tf-card': '#1E293B',
+                        'tf-light': '#F1F5F9',
+                        'alert-dark': '#DC2626',
                     },
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                 }
             }
         }
     </script>
- 
-   
-<style>
-// ... [Lines 514 - 581 unchanged]
 
+    <style>
+        /* General Styles - Modernized Look (Inter is default font) */
+        body { font-family: 'Inter', sans-serif; background-color: #F1F5F9; }
+        .dashboard-container { max-width: 1400px; margin: 30px auto; padding: 35px; background-color: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB; }
+        .header h1 { font-size: 2.25rem; font-weight: 800; color: #6366F1; }
+
+        .controls { display: flex; gap: 20px; align-items: center; }
+        .icon-btn { cursor: pointer; position: relative; font-size: 24px; color: #64748B; transition: color 0.2s; }
+        .icon-btn:hover { color: #6366F1; }
+        .badge { position: absolute; top: -8px; right: -8px; background-color: #DC2626; color: white; border-radius: 50%; padding: 4px 8px; font-size: 11px; font-weight: 700; border: 2px solid white; }
+
+        /* Action Buttons */
+        .action-btn { background-color: #6366F1; color: white; padding: 10px 15px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: background-color 0.2s, transform 0.1s; margin-right: 5px; }
+        .action-btn:hover { background-color: #4F46E5; transform: translateY(-1px); }
+        .action-btn.delete { background-color: #DC2626; }
+        .action-btn.delete:hover { background-color: #B91C1C; }
+        .action-btn.modal-button { background-color: #06B6D4; }
+        .action-btn.modal-button:hover { background-color: #0891B2; }
+
+        /* Client Management */
+        .management-header { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; margin-bottom: 20px; }
+        .management-header h2 { font-size: 1.8rem; font-weight: 700; color: #1f2937; border-left: 5px solid #06B6D4; padding-left: 12px; }
+        .add-client-btn { background-color: #06B6D4; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; }
+        .add-client-btn:hover { background-color: #0891B2; }
+
+        /* Table Styling */
+        .client-table { width: 100%; border-collapse: separate; border-spacing: 0; background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .client-table th, .client-table td { padding: 15px 20px; text-align: left; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+        .client-table th { background-color: #F8FAFC; color: #374151; font-weight: 700; text-transform: uppercase; font-size: 0.85rem; }
+        .client-table tbody tr:hover { background-color: #fcfcfd; }
+        .client-table tbody tr:last-child td { border-bottom: none; }
+
+        .status-online-dot { color: #06B6D4; font-size: 10px; margin-right: 4px; }
+        .status-offline-dot { color: #9CA3AF; font-size: 10px; margin-right: 4px; }
+        .status-online-text { color: #06B6D4; font-weight: 600; }
+        .status-offline-text { color: #9CA3AF; font-size: 0.85rem; }
+        .status-enabled { background-color: #DBF5FF; color: #06B6D4; padding: 4px 10px; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; }
+        .status-disabled { background-color: #fee2e2; color: #DC2626; padding: 4px 10px; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; }
+
+        /* Modal Styles */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; display: none; }
+        .modal-content { background-color: white; padding: 35px; border-radius: 12px; width: 90%; max-width: 720px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        .modal-close { float: right; font-size: 1.8rem; cursor: pointer; color: #6b7280; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #374151; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; transition: border-color 0.2s, box-shadow 0.2s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #6366F1; box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.12); }
+
+        /* Inbox Styling */
+        #inbox-messages-container { max-height: 400px; overflow-y: auto; padding-right: 10px; }
+        .message-card { border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: background-color 0.2s; border-left: 5px solid transparent; }
+        .message-card:hover { background-color: #f9fafb; border-left-color: #6366F1; }
+        .message-card.unread { background-color: #EEF2FF; border-left-color: #6366F1; font-weight: 600; }
+        .tab-btn { padding: 10px 15px; border-radius: 8px 8px 0 0; cursor: pointer; background-color: #f0f0f0; border: none; font-weight: 600; transition: background-color 0.2s; }
+        .tab-btn.active { background-color: white; border-bottom: 2px solid #6366F1; color: #6366F1; }
+
+        /* --- MOBILE RESPONSIVENESS FIXES --- */
+        @media (max-width: 900px) {
+            .dashboard-container { padding: 15px; margin: 10px auto; border-radius: 8px; box-shadow: none; }
+            .header { flex-direction: column; align-items: flex-start; margin-bottom: 20px; }
+            .header h1 { font-size: 1.75rem; margin-bottom: 15px; }
+            .controls { width: 100%; justify-content: flex-end; }
+            .management-header { flex-direction: column; align-items: flex-start; }
+            .management-header h2 { margin-bottom: 15px; }
+            .client-table-wrapper { overflow-x: auto; width: 100%; }
+            .client-table { min-width: 880px; }
+            .modal-content { width: 95%; margin: 20px; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="header">
+            <h1><span class="text-tf-secondary">AI Verify</span> Admin Panel</h1>
+            <div class="controls">
+                <div id="notification-icon" class="icon-btn" title="Notifications" onclick="toggleInbox('messages')">
+                    <i class="fas fa-bell"></i>
+                    <span id="notification-badge" class="badge" style="display: none;">0</span>
+                </div>
+                <div id="inbox-icon" class="icon-btn" title="Inbox" onclick="toggleInbox('messages')">
+                    <i class="fas fa-inbox"></i>
+                    <span id="inbox-badge" class="badge" style="display: none;">0</span>
+                </div>
+                <button onclick="logout()" class="action-btn delete">Logout</button>
+            </div>
         </header>
 
-        <div id="inbox-modal" class="modal">
-// ... [Lines 582 - 601 unchanged]
+        <!-- Inbox Modal -->
+        <div id="inbox-modal" class="modal" aria-hidden="true">
+            <div class="modal-content">
+                <span class="modal-close" onclick="closeInbox()">&times;</span>
+                <h2 class="text-2xl font-bold mb-4 text-tf-primary" id="inbox-title">Admin Inbox</h2>
 
+                <div class="flex border-b border-gray-200 mb-4">
+                    <button id="tab-messages-btn" class="tab-btn active" onclick="switchInboxTab('messages')">Client Messages</button>
+                    <button id="tab-support-btn" class="tab-btn" onclick="switchInboxTab('support')">Demo Requests</button>
+                </div>
+
+                <div id="inbox-messages-container">
+                    <p class="text-center text-gray-500">Loading messages...</p>
+                </div>
+
+                <div id="reply-form" class="mt-4" style="display: none;">
+                    <h3 class="font-semibold text-xl mb-3">Send Reply to <span id="reply-to-client" class="text-tf-primary"></span></h3>
+                    <div class="form-group">
+                        <input type="text" id="reply-subject" placeholder="Subject (Optional)">
+                    </div>
+                    <div class="form-group">
+                        <textarea id="reply-body" rows="3" placeholder="Your reply message"></textarea>
+                    </div>
+                    <button class="action-btn modal-button w-full" onclick="sendMessage()">Send Reply</button>
+                    <p id="reply-status" class="mt-3 text-sm text-center"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Client management header -->
+        <div class="management-header">
+            <h2>Client Management</h2>
+            <div>
+                <button class="add-client-btn" onclick="openAddClientModal()">
+                    <i class="fas fa-plus-circle mr-2"></i> Add New Client
+                </button>
+                <button class="action-btn" onclick="loadClients()">Refresh</button>
+            </div>
+        </div>
+
+        <!-- Client table -->
+        <div class="client-table-wrapper">
+            <table class="client-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Name / Email / Mobile</th>
+                        <th>Plan / Validity / Credits</th>
+                        <th>Status</th>
+                        <th>Last Active</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="client-list">
+                    <tr><td colspan="6" class="text-center text-gray-500 py-4">Loading clients...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Update Client Modal -->
+        <div id="update-client-modal" class="modal" aria-hidden="true">
+            <div class="modal-content">
+                <span class="modal-close" onclick="closeUpdateModal()">&times;</span>
+                <h2 class="text-2xl font-bold mb-4 text-tf-primary">Update Client</h2>
+                <form id="update-client-form">
+                    <input type="hidden" id="update-client-id">
+                    <div class="form-group">
+                        <label for="update-plan"><i class="fas fa-tag mr-2"></i> Plan Name, Price & Credits</label>
+                        <select id="update-plan" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="update-validity"><i class="fas fa-calendar-alt mr-2"></i> Validity End Date</label>
+                        <input type="date" id="update-validity" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="update-password"><i class="fas fa-key mr-2"></i> New Password (leave blank to keep current)</label>
+                        <input type="password" id="update-password">
+                    </div>
+                    <div class="form-group">
+                        <label for="update-status"><i class="fas fa-toggle-on mr-2"></i> Account Status</label>
+                        <select id="update-status" required>
+                            <option value="true">Enabled</option>
+                            <option value="false">Disabled</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="action-btn modal-button w-full">Apply Changes</button>
+                    <p id="update-status-msg" class="mt-3 text-sm text-center"></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Add Client Modal -->
+        <div id="add-client-modal" class="modal" aria-hidden="true">
+            <div class="modal-content">
+                <span class="modal-close" onclick="closeAddClientModal()">&times;</span>
+                <h2 class="text-2xl font-bold mb-4 text-tf-primary">Add New Client</h2>
+                <form id="add-client-form">
+                    <div class="form-group">
+                        <label for="add-username"><i class="fas fa-user mr-2"></i> Username</label>
+                        <input type="text" id="add-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="add-password"><i class="fas fa-lock mr-2"></i> Password</label>
+                        <input type="password" id="add-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="add-clientName"><i class="fas fa-id-card mr-2"></i> Client Name</label>
+                        <input type="text" id="add-clientName">
+                    </div>
+                    <div class="form-group">
+                        <label for="add-email"><i class="fas fa-envelope mr-2"></i> Email</label>
+                        <input type="email" id="add-email">
+                    </div>
+                    <div class="form-group">
+                        <label for="add-mobile"><i class="fas fa-phone mr-2"></i> Mobile</label>
+                        <input type="tel" id="add-mobile">
+                    </div>
+                    <div class="form-group">
+                        <label for="add-plan"><i class="fas fa-tag mr-2"></i> Plan Name, Price & Credits</label>
+                        <select id="add-plan" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="add-validity"><i class="fas fa-calendar-alt mr-2"></i> Validity End Date</label>
+                        <input type="date" id="add-validity" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="add-initial-credits"><i class="fas fa-coins mr-2"></i> Initial Credits (optional override)</label>
+                        <input type="text" id="add-initial-credits" placeholder="e.g., 10000 or Unlimited">
+                    </div>
+                    <button type="submit" class="action-btn modal-button w-full">Create Client</button>
+                    <p id="add-status-msg" class="mt-3 text-sm text-center"></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Top-up Modal -->
+        <div id="topup-modal" class="modal" aria-hidden="true">
+            <div class="modal-content">
+                <span class="modal-close" onclick="closeTopupModal()">&times;</span>
+                <h2 class="text-2xl font-bold mb-4 text-tf-primary">Top-up / Set Credits</h2>
+                <div class="form-group">
+                    <label for="topup-action">Action</label>
+                    <select id="topup-action">
+                        <option value="add">Add credits</option>
+                        <option value="set">Set credits / Unlimited</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="topup-value">Value (number for add, number or 'Unlimited' for set)</label>
+                    <input type="text" id="topup-value" placeholder="e.g., 10000 or Unlimited">
+                </div>
+                <div class="form-group">
+                    <button class="action-btn modal-button w-full" onclick="confirmTopup()">Apply</button>
+                </div>
+                <p id="topup-status" class="text-center text-sm"></p>
+            </div>
+        </div>
     </div>
 
     <script>
-        // --- PLAN & PRICING DATA MODEL (Assuming this is sourced 
- from a separate file: pubic pricing data js.txt) ---
+        // --- PLAN & PRICING DATA MODEL (source: pubic pricing data js) ---
         const PLANS = [
             { name: 'Growth Starter', basePrice: 1000, credits: '10,000' },
             { name: 'Business Pro', basePrice: 2000, credits: '25,000' },
-          
-  { name: 'Enterprise Max', basePrice: 5000, credits: 'Unlimited' },
+            { name: 'Enterprise Max', basePrice: 5000, credits: 'Unlimited' },
         ];
-const DURATIONS = [
+        const DURATIONS = [
             { months: 1, label: "1 Month", discount: 0 },
             { months: 3, label: "3 Months", discount: 0.20 },
             { months: 6, label: "6 Months", discount: 0.30 },
             { months: 12, label: "1 Year", discount: 0.40 },
         ];
-function calculatePrice(basePrice, months, discount) {
+        function calculatePrice(basePrice, months, discount) {
             const monthlyTotal = basePrice * months;
-const discountedTotal = monthlyTotal * (1 - discount);
-            return Math.round(discountedTotal * 1.18);
-// 18% GST
+            const discountedTotal = monthlyTotal * (1 - discount);
+            return Math.round(discountedTotal * 1.18); // 18% GST
         }
-        
-        // --- CONSTANTS AND UTILS ---
-        const API_BASE = '/api';
-const AUTH_TOKEN = localStorage.getItem('adminToken');
-        const ADMIN_ID = 'admin'; 
-        let activeClients = [];
-        let selectedClientId = null; 
-        let selectedClientUsername = null;
-let currentInboxTab = 'messages';
-        const ONLINE_THRESHOLD_MS = 300000; // 5 minutes in milliseconds - Defines "Online" status
 
-        // Check auth status on load
+        // --- CONSTANTS AND STATE ---
+        const API_BASE = '/api';
+        const AUTH_TOKEN = localStorage.getItem('adminToken');
+        const ADMIN_ID = 'admin';
+        let activeClients = [];
+        let selectedClientId = null;
+        let selectedClientUsername = null;
+        let topupTargetClientId = null;
+        let currentInboxTab = 'messages';
+        const ONLINE_THRESHOLD_MS = 300000;
+
+        // Redirect if no admin token
         if (!AUTH_TOKEN) {
             window.location.href = 'admin-login.html';
-}
-        
+        }
+
         function logout() {
             localStorage.removeItem('adminToken');
-window.location.href = 'admin-login.html';
+            window.location.href = 'admin-login.html';
         }
-        
-        // --- UI GENERATION (UPDATED for Credits) ---
+
+        // --- UI / Plan helpers ---
         function generatePlanOptions() {
             const options = [];
-PLANS.forEach(plan => {
+            PLANS.forEach(plan => {
                 DURATIONS.forEach(duration => {
                     const finalPrice = calculatePrice(plan.basePrice, duration.months, duration.discount);
-                    
-                    // Format: PlanName_Price_DurationMonths_Month_Credits (e.g., Growth Starter_1180_1_Month_10,000)
-          
-
-           const value = `${plan.name}_${finalPrice}_${duration.months}_Month_${plan.credits}`; 
-                    const label = `${plan.name} (${plan.credits} Crs) - ₹${finalPrice} (${duration.label}${duration.discount > 0 ? ` - ${duration.discount*100}% OFF` : ''})`;
-                    
+                    const value = `${plan.name}_${finalPrice}_${duration.months}_Month_${plan.credits}`;
+                    const label = `${plan.name} (${plan.credits} Credits) - ₹${finalPrice} (${duration.label}${duration.discount > 0 ? ` - ${duration.discount*100}% OFF` : ''})`;
                     options.push(`<option value="${value}">${label}</option>`);
-       
-   
-       });
+                });
             });
-return options.join('');
+            return options.join('');
         }
-        
+
         function populatePlanDropdowns() {
-// ... [Lines 615 - 617 unchanged]
-                updateValidityDate(e.target.value, 'update-validity');
-            });
-// Auto-set the date for the default selected plan on load
+            const optionsHtml = generatePlanOptions();
+            document.getElementById('add-plan').innerHTML = optionsHtml;
+            document.getElementById('update-plan').innerHTML = optionsHtml;
+
+            document.getElementById('add-plan').addEventListener('change', (e) => updateValidityDate(e.target.value, 'add-validity'));
+            document.getElementById('update-plan').addEventListener('change', (e) => updateValidityDate(e.target.value, 'update-validity'));
+
             const defaultAddPlanValue = document.getElementById('add-plan').value;
-if (defaultAddPlanValue) updateValidityDate(defaultAddPlanValue, 'add-validity');
+            if (defaultAddPlanValue) updateValidityDate(defaultAddPlanValue, 'add-validity');
         }
 
-        // --- CORE FUNCTION TO CALCULATE AND SET VALIDITY DATE (Corrected) ---
-// ... [Lines 620 - 641 unchanged]
+        // Calculate and set validity date based on plan value (e.g., Plan_1180_1_Month_10,000)
+        function updateValidityDate(planValue, dateInputId) {
+            if (!planValue) return;
+            const parts = planValue.split('_');
+            const durationMonths = parseInt(parts[2], 10);
+            if (isNaN(durationMonths) || durationMonths === 0) return;
+
+            const dateInput = document.getElementById(dateInputId);
+            const now = new Date();
+            const expirationDate = new Date(now.getFullYear(), now.getMonth() + durationMonths, now.getDate());
+            if (expirationDate.getDate() !== now.getDate()) expirationDate.setDate(0);
+
+            const year = expirationDate.getFullYear();
+            const month = String(expirationDate.getMonth() + 1).padStart(2, '0');
+            const day = String(expirationDate.getDate()).padStart(2, '0');
+            dateInput.value = `${year}-${month}-${day}`;
         }
 
+        // --- Auth fetch wrapper for admin ---
+        async function authFetch(url, options = {}) {
+            const defaultHeaders = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${AUTH_TOKEN}`,
+            };
+            const response = await fetch(url, { ...options, headers: { ...defaultHeaders, ...options.headers }});
+            if (response.status === 401 || response.status === 403) {
+                logout();
+                throw new Error('Session expired');
+            }
+            return response;
+        }
+
+        // --- Client management: load / render / delete / update / add / topup / clear session / toggle active ---
+        async function loadClients() {
+            const clientListBody = document.getElementById('client-list');
+            clientListBody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-4">Loading clients...</td></tr>';
+            try {
+                const response = await authFetch(`${API_BASE}/admin/client`);
+                const result = await response.json();
+                if (result.status === "Success") {
+                    activeClients = result.data;
+                    renderClients(activeClients);
+                } else {
+                    clientListBody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500 py-4">Failed to load clients: ${result.message}</td></tr>`;
+                }
+            } catch (error) {
+                console.error('Error loading clients:', error);
+                clientListBody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500 py-4">Network Error: ${error.message}</td></tr>`;
+            }
+        }
+
+        function formatLastActive(lastActivityAt) {
+            if (!lastActivityAt) {
+                return '<span class="status-offline-dot"><i class="far fa-circle"></i></span> <span class="status-offline-text">Never Logged In</span>';
+            }
+            const lastActiveTime = new Date(lastActivityAt).getTime();
+            const now = Date.now();
+            const difference = now - lastActiveTime;
+            if (difference < ONLINE_THRESHOLD_MS) {
+                return '<span class="status-online-dot"><i class="fas fa-circle"></i></span> <span class="status-online-text">Online</span>';
+            } else {
+                const formattedTime = new Date(lastActivityAt).toLocaleString();
+                return `<span class="status-offline-dot"><i class="far fa-circle"></i></span> <span class="status-offline-text">Last seen: ${formattedTime}</span>`;
+            }
+        }
 
         function renderClients(clients) {
             const clientListBody = document.getElementById('client-list');
-clientListBody.innerHTML = '';
+            clientListBody.innerHTML = '';
+            if (!clients || clients.length === 0) {
+                clientListBody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-4">No clients found.</td></tr>';
+                return;
+            }
 
-            if (clients.length === 0) {
-// ... [Lines 643 - 644 unchanged]
-                    ? `<span class="status-enabled">Enabled</span>` 
-                    : `<span class="status-disabled">Disabled</span>`;
- 
-
-                
+            clients.forEach(client => {
+                const isActive = client.isActive;
+                const statusBadge = isActive ? `<span class="status-enabled">Enabled</span>` : `<span class="status-disabled">Disabled</span>`;
                 const onlineStatusHtml = formatLastActive(client.lastActivityAt);
-                
-                // Extract plan name and credits from the full planName string
-                // Format: PlanName_Price_DurationMonths_Month_Credits
-     
-           const planParts = client.planName ? client.planName.split('_') : ['N/A', 'N/A', 'N/A', 'N/A', 'N/A'];
+
+                const planParts = client.planName ? client.planName.split('_') : ['N/A','N/A','N/A','N/A','N/A'];
                 const planDisplay = planParts[0];
-                const creditsDisplay = planParts[4] || 'N/A';
- 
-                
+                const creditsDisplay = planParts[4] || client.initialCredits || 'N/A';
+                const remainingDisplay = client.remainingCredits == null ? '—' : (client.remainingCredits === 'Unlimited' ? 'Unlimited' : Number(client.remainingCredits).toLocaleString());
+
                 const row = `
-  
-                  <tr class="transition duration-150 ease-in-out hover:bg-gray-50">
+                    <tr class="transition duration-150 ease-in-out hover:bg-gray-50">
                         <td class="font-semibold text-gray-900">${client.username}</td>
-              
-   
-                        <td>${client.clientName ||
-'N/A'}<br><span class="text-sm text-gray-500">${client.email || 'N/A'}</span></td>
-                        <td>${planDisplay}<br><span class="text-xs font-semibold text-tf-secondary">${creditsDisplay} Credits</span><br><span class="text-sm text-gray-500">${new Date(client.validityEnd).toLocaleDateString()}</span></td>
+                        <td>${client.clientName || 'N/A'}<br><span class="text-sm text-gray-500">${client.email || 'N/A'} • ${client.mobile || '—'}</span></td>
+                        <td>${planDisplay}<br><span class="text-xs font-semibold text-tf-secondary">${creditsDisplay} Credits</span><br><span class="text-sm text-gray-500">Valid: ${client.validityEnd ? new Date(client.validityEnd).toLocaleDateString() : '—'}</span><br><span class="text-sm text-gray-600">Remaining: <strong>${remainingDisplay}</strong></span></td>
                         <td>${statusBadge}</td>
-                 
-                <td class="text-sm font-medium flex items-center">${onlineStatusHtml}</td>
-    
-   
+                        <td class="text-sm font-medium flex items-center">${onlineStatusHtml}</td>
                         <td>
-                            <button class="action-btn" onclick="openUpdateModal('${client._id}')"><i class="fas fa-edit"></i> Edit</button>
-                         
-    <button class="action-btn delete" onclick="deleteClient('${client._id}')"><i class="fas fa-trash-alt"></i> Remove</button>
-     
-           
-                            <button class="action-btn modal-button" onclick="openReplyForm('${client._id}', '${client.username}')"><i class="fas fa-reply"></i> Message</button>
+                            <button class="action-btn" onclick="openUpdateModal('${client._id}')"><i class="fas fa-edit mr-1"></i> Edit</button>
+                            <button class="action-btn delete" onclick="deleteClient('${client._id}')"><i class="fas fa-trash-alt mr-1"></i> Remove</button>
+                            <button class="action-btn modal-button" onclick="openReplyForm('${client._id}', '${client.username || ''}')"><i class="fas fa-reply mr-1"></i> Message</button>
+                            <button class="action-btn" onclick="openTopupModal('${client._id}')"><i class="fas fa-coins mr-1"></i> Top-up</button>
+                            <button class="action-btn modal-button" onclick="clearSession('${client._id}')"><i class="fas fa-sign-out-alt mr-1"></i> Clear Session</button>
+                            <button class="action-btn" onclick="toggleActive('${client._id}', ${client.isActive ? 'false' : 'true'})">${client.isActive ? 'Disable' : 'Enable'}</button>
                         </td>
-                
-     </tr>
-         
-       `;
- clientListBody.insertAdjacentHTML('beforeend', row);
+                    </tr>
+                `;
+                clientListBody.insertAdjacentHTML('beforeend', row);
             });
-}
-// ... [Lines 652 - 757 unchanged]
+        }
+
+        async function deleteClient(clientId) {
+            const shouldDelete = await showConfirmModal("Are you sure you want to permanently delete this client?");
+            if (!shouldDelete) return;
+            try {
+                const response = await authFetch(`${API_BASE}/admin/client?clientId=${clientId}`, { method: 'DELETE' });
+                const result = await response.json();
+                if (response.ok && result.status === 'Success') {
+                    showMessageModal('Client deleted successfully.', 'success');
+                    loadClients();
+                } else {
+                    showMessageModal(`Deletion failed: ${result.message || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                showMessageModal(`Network error: ${error.message}`, 'error');
+            }
+        }
+
+        // --- Confirm & Message modal utilities ---
+        let confirmResolve;
+        function showConfirmModal(message) {
+            return new Promise(resolve => {
+                confirmResolve = resolve;
+                const modalHtml = `
+                    <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[1001]">
+                        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm">
+                            <p class="text-lg font-semibold text-gray-800 mb-6">${message}</p>
+                            <div class="flex justify-end space-x-3">
+                                <button id="confirm-no" class="py-2 px-4 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition">Cancel</button>
+                                <button id="confirm-yes" class="py-2 px-4 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                document.getElementById('confirm-yes').onclick = () => { document.getElementById('confirm-modal').remove(); confirmResolve(true); };
+                document.getElementById('confirm-no').onclick = () => { document.getElementById('confirm-modal').remove(); confirmResolve(false); };
+            });
+        }
+
+        function showMessageModal(message, type) {
+            const bgColor = type === 'success' ? 'bg-green-600' : 'bg-red-600';
+            const messageBox = document.createElement('div');
+            messageBox.className = "fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50";
+            messageBox.innerHTML = `<div class="bg-white p-6 rounded-xl shadow-2xl w-80 text-center transform scale-100 transition-transform duration-300"><p class="font-bold text-lg text-white ${bgColor} p-3 rounded-lg">${message}</p></div>`;
+            document.body.appendChild(messageBox);
+            setTimeout(() => messageBox.remove(), 2500);
+        }
+
+        // --- Add client modal logic ---
+        function openAddClientModal() {
+            document.getElementById('add-client-modal').style.display = 'flex';
+            document.getElementById('add-client-form').reset();
+            document.getElementById('add-status-msg').textContent = '';
+            const defaultAddPlanValue = document.getElementById('add-plan').value;
+            if (defaultAddPlanValue) updateValidityDate(defaultAddPlanValue, 'add-validity');
+        }
+        function closeAddClientModal() { document.getElementById('add-client-modal').style.display = 'none'; }
+
+        document.getElementById('add-client-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const statusMsg = document.getElementById('add-status-msg');
+            const newClientData = {
+                username: form.elements['add-username'].value,
+                password: form.elements['add-password'].value,
+                clientName: form.elements['add-clientName'].value || null,
+                email: form.elements['add-email'].value || null,
+                mobile: form.elements['add-mobile'].value || null,
+                planName: form.elements['add-plan'].value,
+                validity: form.elements['add-validity'].value,
+                initialCredits: (form.elements['add-initial-credits'].value || null)
+            };
+            statusMsg.textContent = 'Creating client...';
+            statusMsg.style.color = '#6366F1';
+            try {
+                const response = await authFetch(`${API_BASE}/admin/client`, { method: 'POST', body: JSON.stringify(newClientData) });
+                const result = await response.json();
+                if (response.ok && result.status === 'Success') {
+                    statusMsg.textContent = 'Client created successfully!';
+                    statusMsg.style.color = '#06B6D4';
+                    loadClients();
+                    setTimeout(closeAddClientModal, 1200);
+                } else {
+                    statusMsg.textContent = `Creation Failed: ${result.message || 'Unknown'}`;
+                    statusMsg.style.color = '#DC2626';
+                }
+            } catch (error) {
+                statusMsg.textContent = `Network Error: ${error.message}`;
+                statusMsg.style.color = '#DC2626';
+            }
+        });
+
+        // --- Update client modal logic ---
+        function openUpdateModal(clientId) {
+            const client = activeClients.find(c => c._id === clientId);
+            if (!client) return showMessageModal("Client data not found.", 'error');
+            document.getElementById('update-client-id').value = client._id;
+            document.getElementById('update-plan').value = client.planName || document.getElementById('update-plan').value;
+            const date = client.validityEnd ? new Date(client.validityEnd) : new Date();
+            document.getElementById('update-validity').value = date.toISOString().substring(0,10);
+            document.getElementById('update-status').value = String(client.isActive);
+            document.getElementById('update-password').value = '';
+            document.getElementById('update-client-modal').style.display = 'flex';
+        }
+        function closeUpdateModal() {
+            document.getElementById('update-client-modal').style.display = 'none';
+            document.getElementById('update-client-form').reset();
+            document.getElementById('update-status-msg').textContent = '';
+        }
+
+        document.getElementById('update-client-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const clientId = form.elements['update-client-id'].value;
+            const statusMsg = document.getElementById('update-status-msg');
+            const updateData = {
+                planName: form.elements['update-plan'].value,
+                validity: form.elements['update-validity'].value,
+                isActive: form.elements['update-status'].value === 'true',
+            };
+            const password = form.elements['update-password'].value;
+            if (password) updateData.password = password;
+            statusMsg.textContent = 'Updating...';
+            statusMsg.style.color = '#6366F1';
+            try {
+                const response = await authFetch(`${API_BASE}/admin/client`, { method: 'PUT', body: JSON.stringify({...updateData, clientId}) });
+                const result = await response.json();
+                if (response.ok && result.status === 'Success') {
+                    statusMsg.textContent = 'Client updated successfully!';
+                    statusMsg.style.color = '#06B6D4';
+                    loadClients();
+                    setTimeout(closeUpdateModal, 1200);
+                } else {
+                    statusMsg.textContent = `Update Failed: ${result.message || 'Unknown'}`;
+                    statusMsg.style.color = '#DC2626';
+                }
+            } catch (error) {
+                statusMsg.textContent = `Network Error: ${error.message}`;
+                statusMsg.style.color = '#DC2626';
+            }
+        });
+
+        // --- Top-up modal logic ---
+        function openTopupModal(clientId) {
+            topupTargetClientId = clientId;
+            document.getElementById('topup-action').value = 'add';
+            document.getElementById('topup-value').value = '';
+            document.getElementById('topup-status').textContent = '';
+            document.getElementById('topup-modal').style.display = 'flex';
+        }
+        function closeTopupModal() {
+            document.getElementById('topup-modal').style.display = 'none';
+            topupTargetClientId = null;
+        }
+
+        async function confirmTopup() {
+            const action = document.getElementById('topup-action').value;
+            const value = document.getElementById('topup-value').value.trim();
+            const status = document.getElementById('topup-status');
+            if (!topupTargetClientId) { status.textContent = 'No client selected.'; status.style.color = '#DC2626'; return; }
+            let payload;
+            if (action === 'add') {
+                const n = Number(String(value).replace(/,/g,''));
+                if (isNaN(n) || n <= 0) { status.textContent = 'Enter a valid number to add.'; status.style.color = '#DC2626'; return; }
+                payload = { clientId: topupTargetClientId, action: 'add', addCredits: n };
+            } else {
+                if (String(value).toLowerCase() === 'unlimited') {
+                    payload = { clientId: topupTargetClientId, action: 'set', remainingCredits: 'Unlimited' };
+                } else {
+                    const n = Number(String(value).replace(/,/g,''));
+                    if (isNaN(n) || n < 0) { status.textContent = 'Enter a valid number or "Unlimited".'; status.style.color = '#DC2626'; return; }
+                    payload = { clientId: topupTargetClientId, action: 'set', remainingCredits: n };
+                }
+            }
+
+            status.textContent = 'Applying...'; status.style.color = '#6366F1';
+            try {
+                const resp = await authFetch(`${API_BASE}/admin/topup`, { method: 'POST', body: JSON.stringify(payload) });
+                const json = await resp.json();
+                if (resp.ok && json.status === 'Success') {
+                    status.textContent = 'Top-up applied.'; status.style.color = '#06B6D4';
+                    loadClients();
+                    setTimeout(closeTopupModal, 1000);
+                } else {
+                    status.textContent = `Failed: ${json.message || 'Unknown'}`; status.style.color = '#DC2626';
+                }
+            } catch (e) {
+                status.textContent = `Network error: ${e.message}`; status.style.color = '#DC2626';
+            }
+        }
+
+        // --- Clear session & toggle active ---
+        async function clearSession(clientId) {
+            if (!confirm('Clear active session for this client? This will force them to log in again.')) return;
+            try {
+                const resp = await authFetch(`${API_BASE}/admin/client`, { method: 'PUT', body: JSON.stringify({ clientId, clearSession: true })});
+                const json = await resp.json();
+                if (resp.ok && json.status === 'Success') { showMessageModal('Session cleared.', 'success'); loadClients(); } 
+                else showMessageModal(`Failed to clear session: ${json.message || 'Unknown'}`, 'error');
+            } catch (e) { showMessageModal(`Network error: ${e.message}`, 'error'); }
+        }
+
+        async function toggleActive(clientId, setActive) {
+            if (!confirm(`${setActive ? 'Enable' : 'Disable'} this client?`)) return;
+            try {
+                const resp = await authFetch(`${API_BASE}/admin/client`, { method: 'PUT', body: JSON.stringify({ clientId, isActive: setActive })});
+                const json = await resp.json();
+                if (resp.ok && json.status === 'Success') { showMessageModal('Updated.', 'success'); loadClients(); } 
+                else showMessageModal(`Failed: ${json.message || 'Unknown'}`, 'error');
+            } catch (e) { showMessageModal(`Network error: ${e.message}`, 'error'); }
+        }
+
+        // --- Inbox & messaging logic ---
+        async function loadInboxCounts() {
+            let totalUnread = 0;
+            try {
+                const msgResponse = await authFetch(`${API_BASE}/inbox/message`);
+                const msgResult = await msgResponse.json();
+                if (msgResult.status === "Success") {
+                    const adminReceivedMessages = msgResult.messages.filter(m => m.receiverId === ADMIN_ID);
+                    const unreadClientCount = adminReceivedMessages.filter(m => m.isRead === false).length;
+                    totalUnread += unreadClientCount;
+                }
+            } catch (e) { console.error("Failed to load client message counts:", e); }
+
+            try {
+                const supportResponse = await authFetch(`${API_BASE}/admin/support`);
+                const supportResult = await supportResponse.json();
+                if (supportResult.status === "Success") totalUnread += supportResult.unreadCount || 0;
+            } catch (e) { console.error("Failed to load support message counts:", e); }
+
+            const badgeElement = document.getElementById('notification-badge');
+            const inboxBadgeElement = document.getElementById('inbox-badge');
+            if (totalUnread > 0) {
+                badgeElement.textContent = totalUnread; inboxBadgeElement.textContent = totalUnread;
+                badgeElement.style.display = 'block'; inboxBadgeElement.style.display = 'block';
+            } else {
+                badgeElement.style.display = 'none'; inboxBadgeElement.style.display = 'none';
+            }
+        }
+
+        function toggleInbox(defaultTab = 'messages') {
+            document.getElementById('inbox-modal').style.display = 'flex';
+            document.getElementById('reply-form').style.display = 'none';
+            document.getElementById('inbox-messages-container').style.display = 'block';
+            switchInboxTab(defaultTab);
+        }
+        function closeInbox() {
+            document.getElementById('inbox-modal').style.display = 'none';
+            selectedClientId = null; selectedClientUsername = null;
+            loadInboxCounts();
+        }
+
+        function switchInboxTab(tabType) {
+            currentInboxTab = tabType;
+            document.getElementById('tab-messages-btn').classList.remove('active');
+            document.getElementById('tab-support-btn').classList.remove('active');
+            if (tabType === 'messages') { document.getElementById('tab-messages-btn').classList.add('active'); loadClientMessages(); }
+            else { document.getElementById('tab-support-btn').classList.add('active'); loadSupportMessages(); }
+        }
+
+        function openReplyForm(clientId, username) {
+            selectedClientId = clientId; selectedClientUsername = username;
+            document.getElementById('inbox-modal').style.display = 'flex';
+            document.getElementById('inbox-title').textContent = `Send Reply`;
+            document.getElementById('reply-to-client').textContent = username;
+            document.getElementById('reply-form').style.display = 'block';
+            document.getElementById('inbox-messages-container').style.display = 'none';
+            document.getElementById('reply-subject').value = '';
+            document.getElementById('reply-body').value = '';
+            document.getElementById('reply-status').textContent = '';
+        }
+
+        async function loadClientMessages() {
+            const msgContainer = document.getElementById('inbox-messages-container');
+            msgContainer.innerHTML = '<p class="text-center text-gray-500 py-4">Loading client messages...</p>';
+            try {
+                const response = await authFetch(`${API_BASE}/inbox/message`);
+                const result = await response.json();
+                if (result.status === "Success") {
+                    const receivedMessages = result.messages.filter(m => m.receiverId === ADMIN_ID);
+                    msgContainer.innerHTML = '';
+                    if (receivedMessages.length === 0) { msgContainer.innerHTML = '<p class="text-center text-gray-500 py-4">No authenticated messages from clients.</p>'; return; }
+                    receivedMessages.forEach(msg => {
+                        const isUnread = !msg.isRead;
+                        const clientName = activeClients.find(c => c._id === msg.senderId)?.username || 'Unknown Client';
+                        const messageHtml = `
+                            <div class="message-card ${isUnread ? 'unread' : ''}" onclick="viewClientMessage('${msg._id}', '${(msg.subject||'').replace(/'/g,"\\'")}', \`${(msg.body||'').replace(/`/g,'\\`')}\`, '${msg.senderId}', '${clientName}', ${isUnread}, '${msg.timestamp}')">
+                                <p class="text-sm text-gray-700">From: <strong>${clientName}</strong> (${isUnread ? 'NEW' : 'Read'})</p>
+                                <p class="text-md font-bold">${msg.subject || '(No Subject)'}</p>
+                                <small class="text-gray-500">${new Date(msg.timestamp).toLocaleString()}</small>
+                            </div>
+                        `;
+                        msgContainer.insertAdjacentHTML('beforeend', messageHtml);
+                    });
+                } else {
+                    msgContainer.innerHTML = `<p class="text-center text-red-500 py-4">Failed to load client inbox: ${result.message}</p>`;
+                }
+            } catch (error) {
+                msgContainer.innerHTML = `<p class="text-center text-red-500 py-4">Network Error: ${error.message}</p>`;
+            }
+        }
+
+        async function loadSupportMessages() {
+            const msgContainer = document.getElementById('inbox-messages-container');
+            msgContainer.innerHTML = '<p class="text-center text-gray-500 py-4">Loading demo requests...</p>';
+            try {
+                const response = await authFetch(`${API_BASE}/admin/support`);
+                const result = await response.json();
+                if (result.status === "Success") {
+                    const supportMessages = result.messages || [];
+                    msgContainer.innerHTML = '';
+                    if (supportMessages.length === 0) { msgContainer.innerHTML = '<p class="text-center text-gray-500 py-4">No demo requests or public inquiries.</p>'; return; }
+                    supportMessages.forEach(msg => {
+                        const isUnread = !msg.isRead;
+                        const senderInfo = `${msg.clientName || 'N/A'} (${msg.clientEmail || 'N/A'})`;
+                        const messageHtml = `
+                            <div class="message-card ${isUnread ? 'unread' : ''}" onclick="viewSupportMessage('${msg._id}', \`${(msg.messageText||'').replace(/`/g,'\\`')}\`, '${(msg.clientName||'').replace(/'/g,"\\'")}', '${(msg.clientEmail||'').replace(/'/g,"\\'")}', '${(msg.clientMobile||'').replace(/'/g,"\\'")}', ${isUnread}, '${msg.receivedAt}')">
+                                <p class="text-sm text-gray-700">From: <strong>${senderInfo}</strong> (${isUnread ? 'NEW' : 'Read'})</p>
+                                <p class="text-md font-bold">Inquiry: ${String(msg.messageText||'').substring(0,50)}...</p>
+                                <small class="text-gray-500">${new Date(msg.receivedAt).toLocaleString()}</small>
+                            </div>
+                        `;
+                        msgContainer.insertAdjacentHTML('beforeend', messageHtml);
+                    });
+                } else {
+                    msgContainer.innerHTML = `<p class="text-center text-red-500 py-4">Failed to load requests: ${result.message}</p>`;
+                }
+            } catch (error) {
+                msgContainer.innerHTML = `<p class="text-center text-red-500 py-4">Network Error: ${error.message}</p>`;
+            }
+        }
+
+        function viewClientMessage(messageId, subject, body, senderId, clientUsername, isUnread, timestamp) {
+            if (isUnread) authFetch(`${API_BASE}/inbox/message?messageId=${messageId}`, { method: 'PUT' }).catch(()=>{});
+            setTimeout(loadClientMessages, 200);
+            const messageContent = `
+                <div id="message-view-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[1001]">
+                    <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg">
+                        <h3 class="text-xl font-bold mb-2 text-tf-primary">Client Message: ${subject}</h3>
+                        <p class="text-sm text-gray-600 mb-3">From: <strong>${clientUsername}</strong> | Date: ${new Date(timestamp).toLocaleString()}</p>
+                        <div class="p-4 bg-gray-50 border rounded whitespace-pre-wrap">${body}</div>
+                        <div class="mt-4 flex justify-end"><button onclick="document.querySelector('#message-view-modal').remove()" class="action-btn delete">Close</button></div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', messageContent);
+            openReplyForm(senderId, clientUsername);
+        }
+
+        function viewSupportMessage(messageId, messageText, clientName, clientEmail, clientMobile, isUnread, receivedAt) {
+            if (isUnread) authFetch(`${API_BASE}/admin/support?messageId=${messageId}`, { method: 'PUT' }).catch(()=>{});
+            setTimeout(loadSupportMessages, 200);
+            const messageContent = `
+                <div id="message-view-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[1001]">
+                    <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg">
+                        <h3 class="text-xl font-bold mb-2 text-tf-secondary">Demo/Support Request</h3>
+                        <p class="text-sm text-gray-600">Name: <strong>${clientName || 'N/A'}</strong></p>
+                        <p class="text-sm text-gray-600">Email: <strong>${clientEmail || 'N/A'}</strong></p>
+                        <p class="text-sm text-gray-600 mb-3">Mobile: <strong>${clientMobile || 'N/A'}</strong> | Received: ${new Date(receivedAt).toLocaleString()}</p>
+                        <div class="p-4 bg-gray-50 border rounded whitespace-pre-wrap">${messageText}</div>
+                        <div class="mt-4 flex justify-end">
+                            <a href="mailto:${clientEmail}" target="_blank" class="action-btn modal-button mr-2 bg-tf-primary hover:bg-indigo-600">Reply via Email</a>
+                            <a href="https://wa.me/91${clientMobile}" target="_blank" class="action-btn modal-button mr-2 bg-whatsapp-green hover:bg-green-600">WhatsApp</a>
+                            <button onclick="document.querySelector('#message-view-modal').remove()" class="action-btn delete">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', messageContent);
+        }
+
+        async function sendMessage() {
+            const subject = document.getElementById('reply-subject').value;
+            const body = document.getElementById('reply-body').value;
+            const statusMsg = document.getElementById('reply-status');
+            if (!selectedClientId) { statusMsg.textContent = 'Error: No client selected.'; statusMsg.style.color = '#DC2626'; return; }
+            if (!body) { statusMsg.textContent = 'Message body cannot be empty.'; statusMsg.style.color = '#DC2626'; return; }
+            statusMsg.textContent = 'Sending...'; statusMsg.style.color = '#6366F1';
+            try {
+                const response = await authFetch(`${API_BASE}/inbox/message`, {
+                    method: 'POST',
+                    body: JSON.stringify({ subject, body, recipientId: selectedClientId, senderId: ADMIN_ID })
+                });
+                const result = await response.json();
+                if (response.ok && result.status === 'Success') {
+                    statusMsg.textContent = 'Reply sent successfully!'; statusMsg.style.color = '#06B6D4';
+                    document.getElementById('reply-subject').value = ''; document.getElementById('reply-body').value = '';
+                    setTimeout(() => switchInboxTab('messages'), 100); setTimeout(closeInbox, 1500);
+                } else {
+                    statusMsg.textContent = `Send Failed: ${result.message || 'Unknown'}`; statusMsg.style.color = '#DC2626';
+                }
+            } catch (error) {
+                statusMsg.textContent = `Network Error: ${error.message}`; statusMsg.style.color = '#DC2626';
+            }
+        }
+
+        // --- Initialization ---
+        window.onload = () => {
+            populatePlanDropdowns();
+            loadClients();
+            loadInboxCounts();
+            setInterval(loadClients, 30000);    // refresh clients every 30s for last active
+            setInterval(loadInboxCounts, 60000); // refresh inbox counts every 60s
+        };
+    </script>
+</body>
+</html>
