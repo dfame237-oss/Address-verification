@@ -1,209 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Client Login</title>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        // --- LIGHT THEME COLOR PALETTE (For consistency across all pages) ---
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'tf-bg-light': '#F8FAFC',
-                        'tf-card-light': '#FFFFFF',
-                        'tf-text-dark': '#1E293B',
-                        'tf-primary': '#6366F1',
-                        'tf-secondary': '#06B6D4',
-                        'alert-dark': '#DC2626',
-                    },
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                }
-            }
-        }
-    </script>
-
-    <style>
-        /* Shared Styles for Login Page - LIGHT THEME */
-        .text-gradient {
-            background-image: linear-gradient(to right, #6366F1, #06B6D4);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            display:flex; align-items:center; justify-content:center;
-            min-height:100vh; background-color:#F8FAFC;
-        }
-        .login-container {
-            background:#fff; padding:45px; border-radius:16px;
-            box-shadow:0 15px 40px rgba(0,0,0,0.08); width:100%; max-width:420px;
-            border-top:5px solid #6366F1;
-        }
-        .form-group { margin-bottom:20px; }
-        .form-group label { display:block; margin-bottom:8px; font-weight:600; color:#1E293B; }
-        .form-group input {
-            width:100%; padding:12px; border:1px solid #CBD5E1; border-radius:8px; box-sizing:border-box;
-            background:#fff; color:#1E293B; transition: border-color .2s, box-shadow .2s;
-        }
-        .form-group input:focus { border-color:#6366F1; box-shadow:0 0 0 2px rgba(99,102,241,0.12); outline:none; }
-        .btn-login {
-            width:100%; padding:12px; background:#06B6D4; color:#fff; border:none; border-radius:8px;
-            font-size:1.05rem; font-weight:700; cursor:pointer; box-shadow:0 4px 10px rgba(6,182,212,0.18);
-        }
-        .btn-login:disabled { opacity:0.75; cursor:not-allowed; transform:none; }
-        .helper { font-size:0.95rem; text-align:center; margin-top:12px; }
-        #error-message { color:#DC2626; text-align:center; margin-top:12px; font-weight:600; min-height:1.1em; }
-        .success { color:#06B6D4; }
-        .small-muted { color:#64748B; font-size:0.9rem; }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Client Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: Inter, sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; background:#F8FAFC; }
+    .login-container { background:#fff; padding:40px; border-radius:14px; box-shadow:0 12px 30px rgba(0,0,0,0.06); width:100%; max-width:420px; border-top:5px solid #6366F1; }
+    .form-group { margin-bottom:16px; }
+    .btn { width:100%; padding:12px; border-radius:8px; border:none; font-weight:700; cursor:pointer; }
+    .btn-primary { background:#06B6D4; color:#fff; }
+    .btn-disabled { opacity:.7; cursor:not-allowed; }
+    #status { text-align:center; margin-top:12px; min-height:1.1em; font-weight:600; }
+    #status.error { color:#DC2626; }
+    #status.ok { color:#06B6D4; }
+    #force-login-wrap { margin-top:12px; text-align:center; display:none; }
+    #force-login-btn { margin-top:8px; padding:10px 14px; border-radius:8px; background:#EF4444; color:#fff; border:none; cursor:pointer; font-weight:700; }
+    a.small { display:block; margin-top:12px; text-decoration:underline; color:#6366F1; }
+  </style>
 </head>
 <body>
-    <div class="login-container" role="main" aria-labelledby="login-heading">
-        <h1 id="login-heading" class="text-3xl font-extrabold text-center mb-6 text-tf-text-dark">
-            <span class="text-gradient">Client</span> Portal
-        </h1>
+  <div class="login-container">
+    <h1 style="text-align:center; font-size:28px; margin-bottom:18px;"><span style="color:#6366F1">Client</span> Portal</h1>
 
-        <form id="client-login-form" autocomplete="on" novalidate>
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input id="username" name="username" type="text" inputmode="text" autocomplete="username" required />
-            </div>
+    <form id="login-form" autocomplete="on" novalidate>
+      <div class="form-group">
+        <label>Username</label>
+        <input id="username" name="username" type="text" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #CBD5E1;">
+      </div>
 
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input id="password" name="password" type="password" autocomplete="current-password" required />
-            </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input id="password" name="password" type="password" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #CBD5E1;">
+      </div>
 
-            <button id="login-button" type="submit" class="btn-login">Secure Login</button>
+      <button id="login-btn" class="btn btn-primary" type="submit">Secure Login</button>
 
-            <p id="error-message" aria-live="polite"></p>
-        </form>
+      <div id="status" aria-live="polite"></div>
 
-        <p class="helper small-muted text-center mt-4">
-            <a href="index.html" class="text-tf-primary hover:underline">← Back to Main Site</a>
-        </p>
-    </div>
+      <div id="force-login-wrap" role="region" aria-live="polite">
+        <div id="force-msg" style="color:#DC2626; font-weight:700;">User already logged in on another device.</div>
+        <button id="force-login-btn">Logout other device & login here</button>
+      </div>
 
-    <script>
-        // API endpoint (same-origin). Adjust if your API is on another domain.
-        const API_LOGIN_URL = '/api/client/login';
-        const DASHBOARD_URL = 'client-dashboard.html';
+      <a href="index.html" class="small">← Back to Main Site</a>
+    </form>
+  </div>
 
-        const form = document.getElementById('client-login-form');
-        const errorMessage = document.getElementById('error-message');
-        const loginButton = document.getElementById('login-button');
+  <script>
+    const API_LOGIN_URL = '/api/client/login';
+    const DASHBOARD_URL = 'client-dashboard.html';
 
-        // If already logged in, redirect
-        if (localStorage.getItem('clientToken')) {
-            try { window.location.href = DASHBOARD_URL; } catch(e){ console.warn(e); }
-        }
+    const form = document.getElementById('login-form');
+    const loginBtn = document.getElementById('login-btn');
+    const statusEl = document.getElementById('status');
+    const forceWrap = document.getElementById('force-login-wrap');
+    const forceBtn = document.getElementById('force-login-btn');
+    const forceMsg = document.getElementById('force-msg');
 
-        // Helper to show status
-        function setStatus(text, type = 'error') {
-            // safety: always set text first
-            errorMessage.textContent = text || '';
+    // Keep last actionToken returned by server when alreadyLoggedIn
+    let lastActionToken = null;
+    let lastCredentials = null; // store username/password to retry when forcing (in-memory only)
 
-            // toggle 'success' class only (avoid removing empty tokens)
-            if (type === 'success') {
-                errorMessage.classList.add('success');
-            } else {
-                errorMessage.classList.remove('success');
-            }
-        }
+    function setStatus(text = '', type = '') {
+      statusEl.textContent = text;
+      statusEl.className = (type === 'error') ? 'error' : (type === 'ok') ? 'ok' : '';
+    }
 
-        // Timeout helper (AbortController)
-        function timeoutSignal(ms) {
-            const controller = new AbortController();
-            const id = setTimeout(() => controller.abort(), ms);
-            return { signal: controller.signal, clear: () => clearTimeout(id) };
-        }
+    async function doLogin({ username, password, force = false, actionToken = null }) {
+      // Validate
+      if (!username || !password) { setStatus('Please enter username and password.', 'error'); return null; }
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+      loginBtn.disabled = true;
+      loginBtn.classList.add('btn-disabled');
+      loginBtn.textContent = 'Authenticating...';
+      setStatus('Authenticating...', 'ok');
 
-            // quick offline check
-            if (!navigator.onLine) {
-                setStatus('You appear to be offline. Check your network connection.', 'error');
-                return;
-            }
+      try {
+        const payload = { username, password };
+        if (force) payload.force = true;
+        if (actionToken) payload.actionToken = actionToken;
 
-            const username = form.elements['username'].value.trim();
-            const password = form.elements['password'].value;
-
-            if (!username || !password) {
-                setStatus('Please enter both username and password.', 'error');
-                return;
-            }
-
-            // Disable UI while authenticating
-            loginButton.disabled = true;
-            loginButton.textContent = 'Authenticating...';
-            setStatus('Authenticating...', 'success');
-
-            // 10s timeout
-            const { signal, clear } = timeoutSignal(10000);
-
-            try {
-                const resp = await fetch(API_LOGIN_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password }),
-                    signal
-                });
-
-                clear(); // clear the timeout once fetch returns
-
-                // Read as text first to avoid JSON parse exceptions on HTML/500 pages
-                const text = await resp.text();
-                let result = null;
-                try {
-                    result = text ? JSON.parse(text) : null;
-                } catch (jsonErr) {
-                    // Server returned non-JSON (HTML error page or plain text)
-                    console.error('Server returned non-JSON response:', text.substring(0, 400));
-                    // Provide a helpful message to the user
-                    const serverMsg = `Server returned an unexpected response (status ${resp.status}). Try again or contact support.`;
-                    setStatus(serverMsg, 'error');
-                    return;
-                }
-
-                // At this point result is JSON-parsed (or null if empty)
-                if (resp.ok && result && (result.status === 'Success' || result.status === 'Warning')) {
-                    // success path
-                    // store token & plan details if provided
-                    if (result.token) localStorage.setItem('clientToken', result.token);
-                    if (result.planDetails) localStorage.setItem('planDetails', JSON.stringify(result.planDetails));
-                    // keep a friendly display name
-                    localStorage.setItem('clientName', (result.planDetails && result.planDetails.clientName) || username);
-
-                    setStatus('Login successful! Redirecting...', 'success');
-                    // slight delay so the user sees the status
-                    setTimeout(() => window.location.href = DASHBOARD_URL, 450);
-                    return;
-                } else {
-                    // handle known error shapes
-                    const serverMessage = (result && (result.message || result.error)) || `Login failed (status ${resp.status}).`;
-                    setStatus(serverMessage, 'error');
-                    return;
-                }
-
-            } catch (err) {
-                // Distinguish Abort (timeout) from other network errors
-                if (err.name === 'AbortError') {
-                    setStatus('Request timed out. The server did not respond. Try again.', 'error');
-                    console.error('Login request timed out:', err);
-                } else {
-                    setStatus('Could not connect to the server. Check network or backend.', 'error');
-                    console.error('Network / Fetch error during login:', err);
-                }
-            } finally {
-                loginButton.disabled = false;
-                loginButton.textContent = 'Secure Login';
-            }
+        const resp = await fetch(API_LOGIN_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
         });
-    </script>
+
+        const text = await resp.text().catch(()=>null);
+        let json = null;
+        try { json = text ? JSON.parse(text) : null; } catch(e) {
+          // Non-JSON (server crash)
+          setStatus('Server error: please contact support.', 'error');
+          console.error('Non-JSON server response:', text);
+          return null;
+        }
+
+        // If server returned OK or Success
+        if (resp.ok && json && (json.status === 'Success' || json.status === 'OK' || json.status === 'Success')) {
+          // Clean up force UI if present
+          forceWrap.style.display = 'none';
+          lastActionToken = null;
+          localStorage.setItem('clientToken', json.token || '');
+          if (json.planDetails) localStorage.setItem('planDetails', JSON.stringify(json.planDetails));
+          localStorage.setItem('clientName', (json.planDetails && json.planDetails.clientName) || username);
+          setStatus('Login successful — redirecting...', 'ok');
+          setTimeout(()=> window.location.href = DASHBOARD_URL, 350);
+          return json;
+        }
+
+        // Special: server told us user already logged in
+        if (json && json.alreadyLoggedIn) {
+          lastActionToken = json.actionToken || null;
+          lastCredentials = { username, password };
+          forceWrap.style.display = 'block';
+          setStatus('User already logged in on another device.', 'error');
+          return json;
+        }
+
+        // Known error cases returned from server (401, 403, etc)
+        const msg = (json && (json.message || json.error)) || `Login failed (status ${resp.status})`;
+        setStatus(msg, 'error');
+        return json;
+
+      } catch (err) {
+        console.error('Login fetch error:', err);
+        setStatus('Network error. Check your connection.', 'error');
+        return null;
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.classList.remove('btn-disabled');
+        loginBtn.textContent = 'Secure Login';
+      }
+    }
+
+    // Form submit
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      setStatus('', '');
+      forceWrap.style.display = 'none';
+      lastActionToken = null;
+      lastCredentials = null;
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      await doLogin({ username, password });
+    });
+
+    // Force-login button handler
+    forceBtn.addEventListener('click', async () => {
+      setStatus('', '');
+      if (!lastCredentials) {
+        setStatus('Credentials missing for forced login. Please enter them again.', 'error');
+        return;
+      }
+
+      // If server gave an actionToken, send it - otherwise send force=true (server may accept either)
+      const actionToken = lastActionToken;
+      const { username, password } = lastCredentials;
+
+      if (!actionToken) {
+        // fallback: try request with force=true (server might allow)
+        setStatus('Attempting to logout other device and login here...', 'ok');
+        await doLogin({ username, password, force: true, actionToken: null });
+        return;
+      }
+
+      // Preferred: send actionToken (safe)
+      setStatus('Confirming operation and logging in...', 'ok');
+      await doLogin({ username, password, force: true, actionToken });
+    });
+
+    // If user is already logged in locally, redirect
+    if (localStorage.getItem('clientToken')) {
+      try { window.location.href = DASHBOARD_URL; } catch(e){ /* ignore */ }
+    }
+  </script>
 </body>
 </html>
