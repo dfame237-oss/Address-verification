@@ -5,7 +5,7 @@ const { connectToDatabase } = require('../db');
 const jwt = require('jsonwebtoken'); 
 const { ObjectId } = require('mongodb'); 
 
-// 🚨 FIX 2: Define the JWT_SECRET using the consistent fallback value
+// 🚨 Define the JWT_SECRET using the consistent fallback value
 const JWT_SECRET = process.env.JWT_SECRET || 'replace_with_env_jwt_secret';
 
 // Get the message sender/receiver ID from the JWT payload
@@ -19,17 +19,19 @@ function getUserId(req) {
         // Use the consistent JWT_SECRET variable for verification
         const payload = jwt.verify(token, JWT_SECRET); 
         
-        // 🚨 FIX 1: Change to check for the correct 'clientId' property
-        if (payload.clientId === 'admin') {
+        // FIX: Check for 'clientId' (for clients) OR 'id' (common for admin/other users).
+        // The Admin token likely uses payload.id or payload.role.
+        let userId = payload.clientId || payload.id;
+        
+        // Handle explicit admin identity if present in the token (e.g., role: 'admin' or userId/clientId is 'admin')
+        if (userId === 'admin' || payload.role === 'admin') {
             return 'admin';
         }
         
-        // 🚨 FIX 1: Ensure the ID is read from the correct key 'clientId'
-        const userId = payload.clientId;
-
-        // Check for existence before calling toString() 
+        // Ensure the ID is always a string and is not null/undefined
         if (!userId) {
-            console.warn("JWT Verification Failed: Payload missing clientId property.");
+            // This is the source of the "Payload missing clientId property" error for Admins
+            console.warn("JWT Verification Failed: Payload missing required ID property (clientId or id).");
             return null;
         }
 
@@ -37,7 +39,6 @@ function getUserId(req) {
 
     } catch (err) { 
         console.warn("JWT Verification Failed in message.js:", err.message);
-        // This is the warning you saw in your logs!
         return null; 
     } 
 } 
@@ -61,18 +62,14 @@ module.exports = async (req, res) => {
     const messagesCollection = db.collection("messages"); 
     const userId = getUserId(req); 
 
+    // --- Authentication Check ---
+    if (!userId) {
+        return res.status(401).json({ status: "Error", message: "Authentication required." });
+    }
+
     // --- POST: Send Message (Client to Admin / Admin to Client) --- 
     if (req.method === 'POST') { 
-        // 401 Unauthorized check (previously fixed)
-        if (!userId) {
-            return res.status(401).json({ status: "Error", message: "Authentication context missing. Please log in again." });
-        }
         
-        // Since you only want clients to see admin messages, you may want to restrict the POST method 
-        // here unless the client is an 'admin' (which requires more complex token logic) 
-        // OR simply restrict client-side UI from showing the message composition form.
-        // For now, we allow POST, assuming you filter client-side.
-
         let body = req.body; 
         
         // Ensure body is parsed 
@@ -109,10 +106,9 @@ module.exports = async (req, res) => {
 
     // --- GET: Retrieve Inbox --- 
     if (req.method === 'GET') { 
-        if (!userId) return res.status(401).json({ status: "Error", message: "Authentication required to view inbox." }); 
         
         try { 
-            // Query for messages where the current user is either the sender OR the receiver
+            // The query handles messages where the current user (userId) is the sender OR the receiver
             const messages = await messagesCollection.find({ $or: [ { senderId: userId }, { receiverId: userId } ] }) 
             .sort({ timestamp: -1 }) 
             .toArray(); 
@@ -127,7 +123,6 @@ module.exports = async (req, res) => {
 
     // --- PUT: Mark as Read --- 
     if (req.method === 'PUT') { 
-        if (!userId) return res.status(401).json({ status: "Error", message: "Authentication required." }); 
         
         const messageId = req.query.messageId; 
         
