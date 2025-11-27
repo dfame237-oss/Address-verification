@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI Address Verification Platform - Teleforce</title>
-    
-        <link rel="stylesheet" href="style.css"> 
-    
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
+        <link rel="stylesheet" href="style.css"> 
+    
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
         <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -50,7 +49,15 @@
             -webkit-text-fill-color: transparent;
         }
         /* Modal Backdrop */
-        #demoModal { display: none; } /* Managed by JS */
+        #demoModal { 
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            background-color: rgba(0, 0, 0, 0.6); 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 50; 
+        }
     </style>
 </head>
 <body class="bg-tf-bg-light text-tf-text-dark">
@@ -67,7 +74,7 @@
 
                 <a href="pricing.html" class="font-semibold hover:text-tf-secondary">Pricing</a>
 
-                <a href="#demoModal" class="bg-tf-primary text-white py-2 px-6 rounded-full shadow hover:bg-indigo-600 transition" onclick="openModal()">
+                <a href="#demoModal" class="bg-tf-primary text-white py-2 px-6 rounded-lg font-bold shadow-lg hover:bg-indigo-600 transition" onclick="openModal()">
                     Request Demo
                 </a>
 
@@ -89,8 +96,8 @@
             </p>
 
                         <div class="flex flex-col sm:flex-row justify-center gap-6 mb-16">
-                <a href="#how-it-works" class="py-4 px-10 bg-tf-secondary text-white rounded-lg font-bold shadow-lg hover:bg-cyan-500 transition">
-                    Learn How It Works
+                <a href="#how-it-works" class="py-4 px-10 bg-tf-primary text-white rounded-lg font-bold shadow-lg hover:bg-indigo-600 transition">
+                    Request Demo & Pricing
                 </a>
                 <a href="single.html" class="py-4 px-10 bg-white border border-gray-300 text-tf-text-dark rounded-lg font-bold shadow hover:bg-gray-100 transition">
                     Try Single Check (Free)
@@ -166,7 +173,7 @@
 
     <section class="py-20 bg-gray-100 border-t">
         <div class="text-center max-w-4xl mx-auto px-6">
-            <h3 class="text-4xl font-extrabold mb-6 text-tf-text-dark">Ready to Integrate AI Verification?</h3>
+            <h3 class="text-4xl font-extrabold text-tf-text-dark mb-6">Ready to Integrate AI Verification?</h3>
 
             <div class="flex flex-col sm:flex-row justify-center gap-6">
                 <a href="#demoModal" class="py-3 px-10 bg-tf-primary text-white rounded-lg font-bold shadow-lg hover:bg-indigo-600 transition" onclick="openModal()">

@@ -4,33 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Single Address Verification</title>
-    
+    
     <link rel="stylesheet" href="style.css"> 
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
+        // Custom colors matching your overall palette (tf-primary is indigo)
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'primary-blue': '#1D4ED8', // Dark Blue
+                        'primary-blue': '#6366F1', // tf-primary (Indigo)
                         'secondary-green': '#059669', // Dark Green
-                        'neutral-gray': '#F9FAFB', // Lightest gray for background
-                        
-                        // Success/Good Colors
-                        'success-light': '#D1FAE5', // Green-100
-                        'success-dark': '#065F46', // Green-800
-                        
-                        // Alert/Bad Colors (Critical Error)
-                        'alert-light': '#FEE2E2', // Red-100
-                        'alert-dark': '#991B1B', // Red-800
-                        
-                        // Warning/Medium Colors (for Quality Score)
-                        'warning-light': '#FEF3C7', // Yellow-100 (Renamed from yellow-100)
-                        'warning-dark': '#92400E', // Yellow-800 (Renamed from yellow-800)
-                        
-                        // Neutral Copy Feedback
-                        'copy-neutral-border': '#D1D5DB', // Gray-300
+                        'neutral-gray': '#F9FAFB', 
+                        'success-light': '#D1FAE5',
+                        'success-dark': '#065F46',
+                        'alert-light': '#FEE2E2',
+                        'alert-dark': '#991B1B',
+                        'warning-light': '#FEF3C7',
+                        'warning-dark': '#92400E',
+                        'copy-neutral-border': '#D1D5DB',
+                        'tf-cyan': '#06B6D4',
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
@@ -41,69 +36,62 @@
     </script>
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .remarks-block {
-            transition: all 0.3s ease;
-        }
-        .result-block {
-            position: relative;
-        }
+        .remarks-block { transition: all 0.3s ease; }
+        .result-block { position: relative; }
         /* Style for the copy button */
         .copy-btn {
-            position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-            padding: 0.25rem 0.5rem;
-            font-size: 0.75rem; /* text-xs */
-            line-height: 1rem;
-            background-color: transparent;
-            color: #4B5563; /* Gray-600 */
-            border: 1px solid var(--copy-neutral-border); /* Use Tailwind color */
-            border-radius: 0.375rem; /* rounded-md */
-            transition: all 0.15s;
-            cursor: pointer;
-            z-index: 10;
+            position: absolute; top: 0.5rem; right: 0.5rem; padding: 0.25rem 0.5rem; 
+            font-size: 0.75rem; line-height: 1rem; background-color: transparent; 
+            color: #4B5563; border: 1px solid var(--copy-neutral-border); 
+            border-radius: 0.375rem; transition: all 0.15s; cursor: pointer; z-index: 10;
         }
-        .copy-btn:hover {
-            background-color: #F3F4F6; /* Gray-50 */
-            color: #1F2937; /* Gray-800 */
-        }
-        .result-content {
-            padding-right: 3.5rem;
-        }
+        .copy-btn:hover { background-color: #F3F4F6; color: #1F2937; }
+        .result-content { padding-right: 3.5rem; }
+        .form-input {
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-input:focus {
+            border-color: #6366F1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.4);
+        }
     </style>
 </head>
 <body class="bg-neutral-gray min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-2xl bg-white p-8 sm:p-10 rounded-xl shadow-2xl">
+    <div class="w-full max-w-2xl bg-white p-8 sm:p-10 rounded-xl shadow-2xl border-t-4 border-primary-blue">
 
-        <a href="index.html" class="text-primary-blue hover:text-blue-700 font-medium mb-6 inline-flex items-center transition duration-150">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        <a href="index.html" class="text-gray-500 hover:text-primary-blue font-medium mb-6 inline-flex items-center transition duration-150">
+            <i class="fas fa-arrow-left w-4 h-4 mr-2"></i>
             Back to Home
         </a>
 
         <header class="text-center mb-8">
             <h1 class="text-3xl font-extrabold text-gray-900 mb-2">
-                <span class="text-primary-blue">Single Address</span> Verification (Free)
+                <span class="text-tf-cyan">Single Address</span> Verification
             </h1>
-            <p class="text-gray-500">Enter a single address and name for real-time cleaning and validation.</p>
+            <p class="text-gray-600">Free, unauthenticated check powered by AI and India Post data.</p>
         </header>
         
         <div class="space-y-6">
+            <div class="p-4 bg-blue-50/50 border border-blue-100 rounded-lg text-sm text-gray-700 font-medium">
+                <i class="fas fa-info-circle mr-2 text-primary-blue"></i> No Login Required. This is a free demonstration.
+            </div>
+            
             <div>
                 <label for="customerName" class="block text-sm font-medium text-gray-700 mb-1">Customer Name (Optional)</label>
-                <input type="text" id="customerName" placeholder="e.g., Pankaj Rawat" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue transition duration-150">
+                <input type="text" id="customerName" placeholder="e.g., Pankaj Rawat" class="form-input w-full p-3 border border-gray-300 rounded-lg shadow-sm">
             </div>
 
             <div>
                 <label for="rawAddress" class="block text-sm font-medium text-gray-700 mb-1">Raw Address to Verify</label>
-                <textarea id="rawAddress" rows="4" placeholder="e.g., H.No. 123, Sector 40B, near bus stand, Chandigarh" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue resize-none transition duration-150"></textarea>
+                <textarea id="rawAddress" rows="4" placeholder="e.g., H.No. 123, Sector 40B, near bus stand, Chandigarh" class="form-input w-full p-3 border border-gray-300 rounded-lg shadow-sm resize-none"></textarea>
             </div>
 
-            <button id="verifyButton" class="w-full py-3 bg-secondary-green text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition duration-200 transform hover:scale-[1.01] focus:outline-none focus:ring-4 focus:ring-secondary-green focus:ring-opacity-50">
-                Verify Address
+            <button id="verifyButton" class="w-full py-3 bg-secondary-green text-white font-bold rounded-lg shadow-lg hover:bg-green-700 transition duration-200 transform hover:scale-[1.005] focus:outline-none focus:ring-4 focus:ring-secondary-green focus:ring-opacity-50">
+                <i class="fas fa-search mr-2"></i> Verify Address
             </button>
             
             <div id="loading-message" class="hidden text-center text-primary-blue font-semibold py-3 border border-blue-200 bg-blue-50 rounded-lg">
-                Verifying address using AI...
+                <i class="fas fa-spinner fa-spin mr-2"></i> Verifying address using AI...
             </div>
         </div>
 
@@ -112,46 +100,46 @@
             <div class="space-y-4">
                 
                 <div class="result-block bg-success-light p-4 rounded-lg border border-green-300 shadow-sm">
-                    <button class="copy-btn" data-target="out-name" title="Copy Clean Name">Copy</button>
+                    <button class="copy-btn" data-target="out-name" title="Copy Clean Name"><i class="far fa-copy"></i> Copy</button>
                     <div class="result-content">
-                        <strong class="text-success-dark block mb-1">Clean Name:</strong> 
+                        <strong class="text-success-dark block mb-1 flex items-center"><i class="fas fa-user-tag mr-2"></i> Clean Name:</strong> 
                         <span id="out-name" class="text-gray-700"></span>
                     </div>
                 </div>
 
                 <div class="result-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                    <button class="copy-btn" data-target="out-address" title="Copy Clean Address Line 1">Copy</button>
+                    <button class="copy-btn" data-target="out-address" title="Copy Clean Address Line 1"><i class="far fa-copy"></i> Copy</button>
                     <div class="result-content">
-                        <strong class="text-gray-600 block mb-1">Clean Address Line 1:</strong> 
+                        <strong class="text-gray-600 block mb-1 flex items-center"><i class="fas fa-location-arrow mr-2"></i> Clean Address Line 1:</strong> 
                         <span id="out-address" class="text-gray-800 font-medium"></span>
                     </div>
                 </div>
                 
                 <div class="result-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                    <button class="copy-btn" data-target="out-landmark" title="Copy Landmark">Copy</button>
+                    <button class="copy-btn" data-target="out-landmark" title="Copy Landmark"><i class="far fa-copy"></i> Copy</button>
                     <div class="result-content">
-                        <strong class="text-gray-600 block mb-1">Landmark (with Prefix):</strong> 
+                        <strong class="text-gray-600 block mb-1 flex items-center"><i class="fas fa-flag-checkered mr-2"></i> Landmark (with Prefix):</strong> 
                         <span id="out-landmark" class="text-gray-800 font-medium"></span>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div class="result-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                        <button class="copy-btn" data-target="out-district" title="Copy District">Copy</button>
+                        <button class="copy-btn" data-target="out-district" title="Copy District"><i class="far fa-copy"></i> Copy</button>
                         <div class="result-content">
                             <strong class="text-gray-600 block mb-1">District:</strong> 
                             <span id="out-district" class="text-gray-800"></span>
                         </div>
                     </div>
                     <div class="result-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                        <button class="copy-btn" data-target="out-state" title="Copy State">Copy</button>
+                        <button class="copy-btn" data-target="out-state" title="Copy State"><i class="far fa-copy"></i> Copy</button>
                         <div class="result-content">
                             <strong class="text-gray-600 block mb-1">State:</strong> 
                             <span id="out-state" class="text-gray-800"></span>
                         </div>
                     </div>
                     <div class="result-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                        <button class="copy-btn" data-target="out-pin" title="Copy PIN">Copy</button>
+                        <button class="copy-btn" data-target="out-pin" title="Copy PIN"><i class="far fa-copy"></i> Copy</button>
                         <div class="result-content">
                             <strong class="text-gray-600 block mb-1">PIN:</strong> 
                             <span id="out-pin" class="text-gray-800 font-bold"></span>
