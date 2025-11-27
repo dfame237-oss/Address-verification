@@ -75,10 +75,12 @@ function parseCSV(text) {
 }
 
 // --- Credit helper: GET remaining credits (no consumption) ---
+// NOTE: We call your verify-single-address GET endpoint since your backend returns credit info there.
+// If your backend exposes profile via client router, update the URL accordingly.
 async function getRemainingCredits() {
     try {
         const resp = await authFetch('/api/verify-single-address', { method: 'GET' });
-        const json = await resp.json();
+        const json = await resp.json().catch(()=>({ status: 'Error', message: 'Invalid JSON' }));
         if (!resp.ok || json.status === 'Error') {
             return { ok: false, error: json.message || 'Failed to fetch credits' };
         }
@@ -242,7 +244,6 @@ async function handleBulkVerification() {
                     console.error('Session/auth error during verification:', err);
                     updateStatusMessage('Session expired. Redirecting to login...', true);
                     setTimeout(() => {
-                        // clear local tokens and redirect to login page
                         try { localStorage.removeItem('clientToken'); } catch (e) {}
                         window.location.href = (typeof LOGIN_PAGE !== 'undefined' ? LOGIN_PAGE : 'client-login.html');
                     }, 1200);
