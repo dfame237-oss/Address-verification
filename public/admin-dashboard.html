@@ -13,6 +13,7 @@
             theme: {
                 extend: {
                     colors: {
+                        // 💜 Smart Locator/Teleforce Style Palette
                         'tf-primary': '#5F3DC4', // Deep Violet/Purple (New Primary)
                         'tf-secondary': '#A437C1', // Vibrant Magenta/Pink Accent (New Secondary)
                         'tf-dark': '#1f2937',
@@ -39,8 +40,20 @@
 
         /* Controls */
         .controls { display: flex; gap: 15px; align-items: center; }
-        .icon-btn { cursor: pointer; position: relative; font-size: 24px; color: #64748B; transition: color 0.2s; }
-        .icon-btn:hover { color: #5F3DC4; }
+        /* 🟣 CUSTOM INBOX ICON STYLE */
+        #notification-icon {
+            cursor: pointer; position: relative; 
+            font-size: 20px; 
+            color: #5F3DC4; /* Icon color */
+            padding: 8px 12px; 
+            border: 2px solid #EFE7FF; /* Light border */
+            background-color: white;
+            border-radius: 50%;
+            transition: background-color 0.2s, color 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        #notification-icon:hover { background-color: #EFE7FF; /* Light hover */ }
+
         .badge { position: absolute; top: -8px; right: -8px; background-color: #DC2626; color: white; border-radius: 50%; padding: 4px 8px; font-size: 11px; font-weight: 700; border: 2px solid white; }
 
         /* Tab Navigation - Critical Style Overrides */
@@ -74,6 +87,14 @@
         /* Modal Styles */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; display: none; }
         .modal-content { background-color: white; padding: 35px; border-radius: 12px; width: 90%; max-width: 720px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        .modal-close { float: right; font-size: 1.8rem; cursor: pointer; color: #6b7280; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #374151; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; transition: border-color 0.2s, box-shadow 0.2s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #5F3DC4; box-shadow: 0 0 0 2px rgba(95, 61, 196, 0.12); }
+        @media (max-width: 900px) {
+            .client-table-wrapper { overflow-x: auto; width: 100%; }
+            .client-table { min-width: 880px; }
+        }
         /* --- INBOX STYLES --- */
         .message-card { 
             border: 1px solid #e5e7eb; padding: 15px; border-radius: 10px; margin-bottom: 12px; 
@@ -379,8 +400,20 @@
         }
 
         // --- UI / Plan helpers (Omitted for brevity) ---
-        function generatePlanOptions() { /* ... */ } 
-        function populatePlanDropdowns() { 
+        function generatePlanOptions() {
+            const options = [];
+            PLANS.forEach(plan => {
+                DURATIONS.forEach(duration => {
+                    const finalPrice = calculatePrice(plan.basePrice, duration.months, duration.discount);
+                    const value = `${plan.name}_${finalPrice}_${duration.months}_Month_${plan.credits}`;
+                    const label = `${plan.name} (${plan.credits} Credits) - ₹${finalPrice} (${duration.label}${duration.discount > 0 ? ` - ${duration.discount*100}% OFF` : ''})`;
+                    options.push(`<option value="${value}">${label}</option>`);
+                });
+            });
+            return options.join('');
+        }
+
+        function populatePlanDropdowns() {
             const optionsHtml = generatePlanOptions();
             document.getElementById('add-plan').innerHTML = optionsHtml;
             document.getElementById('update-plan').innerHTML = optionsHtml;
@@ -982,10 +1015,11 @@
             
             // Determine endpoint based on whether it's a client message or support request
             if (type === 'support') {
+                // Endpoint for DELETE support message is correct for your consolidated router
                 endpoint = `${API_ADMIN}?action=support&messageId=${messageId}`;
                 confirmMessage = "Are you sure you want to delete this Demo Request permanently?";
             } else {
-                // This assumes the client inbox API supports DELETE method on this endpoint with messageId query
+                // Endpoint for client messages
                 endpoint = `${API_BASE}/inbox/message?messageId=${messageId}`; 
                 confirmMessage = "Are you sure you want to delete this Client Message permanently?";
             }
@@ -994,7 +1028,7 @@
             if (!shouldDelete) return;
 
             try {
-                // The delete API should ideally be a DELETE method, but using POST/DELETE as per standard
+                // Ensure DELETE method is used for deletion
                 const response = await authFetch(endpoint, { method: 'DELETE' }); 
                 const result = await response.json().catch(() => ({ message: "Delete failed (non-JSON response)." }));
 
