@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Client Dashboard</title>
 
-    <!-- Keep original styles and Tailwind -->
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,7 +13,7 @@
         // Custom Tailwind config for the professional look (kept from your original)
         tailwind.config = {
             theme: {
-               extend: {
+                extend: {
                     colors: {
                         'tf-dark': '#0F172A',
                         'tf-primary': '#6366F1',
@@ -25,7 +24,7 @@
                         'whatsapp-green': '#25D366',
                         'alert-dark': '#DC2626',
                     },
-                   fontFamily: {
+                    fontFamily: {
                         sans: ['Inter', 'sans-serif'],
                     },
                 }
@@ -35,62 +34,118 @@
 
     <style>
         /* (kept your styles exactly, small adjustments for missing elements) */
-        body { font-family: 'Inter', sans-serif; background-color: #F1F5F9; }
-        .dashboard-container { max-width: 1200px; margin: 30px auto; padding: 35px; background-color: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB; }
-        .header h1 { font-weight: 700; }
-        .nav-tabs { display: flex; border-bottom: 2px solid #E5E7EB; margin-bottom: 30px; }
-        .tab-button { padding: 12px 20px; cursor: pointer; border: none; background: none; font-weight: 600; color: #64748B; border-bottom: 2px solid transparent; transition: color 0.3s, border-bottom 0.3s; }
-        .tab-button.active { color: #6366F1; border-bottom: 2px solid #6366F1; }
-        .tab-content { padding: 15px 0; animation: fadeIn 0.5s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .controls { display: flex; gap: 20px; align-items: center; }
-        .icon-btn { cursor: pointer; position: relative; font-size: 24px; color: #64748B; transition: color 0.2s; }
-        .icon-btn:hover { color: #6366F1; }
-        .badge { position: absolute; top: -5px; right: -5px; background-color: #EF4444; color: white; border-radius: 50%; padding: 3px 7px; font-size: 11px; }
-        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
-        .profile-card, .plan-card { background-color: #F8FAFC; padding: 30px; border-radius: 12px; border: 1px solid #E2E8F0; transition: box-shadow 0.2s; }
-        .profile-card:hover, .plan-card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
-        .info-item strong { color: #1E293B; margin-right: 8px; font-weight: 600; }
-        .plan-status-badge { display: inline-block; padding: 6px 14px; border-radius: 9999px; font-size: 0.85rem; font-weight: 700; }
-        .status-enabled { background-color: #DBF5FF; color: #06B6D4; }
-        .status-disabled { background-color: #FEE2E2; color: #DC2626; }
-        .action-btn { background-color: #6366F1; color: white; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: background-color 0.2s, transform 0.1s; }
-        .action-btn:hover { background-color: #4F46E5; transform: translateY(-1px); }
-        .action-btn.logout { background-color: #DC2626; }
-        .action-btn.logout:hover { background-color: #B91C1C; }
-        .progress-container { margin-top: 2.5rem; padding: 1.5rem; background-color: #E2E8F0; border-radius: 10px; border: 1px solid #CBD5E1; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
-        .progress-fill { background-color: #06B6D4; height: 0.75rem; border-radius: 9999px; transition: all 0.5s ease-in-out; }
-        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #1E293B; }
-        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #CBD5E1; border-radius: 6px; }
-        .msg-card { display: flex; align-items: center; padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; border: 1px solid #E2E8F0; transition: background-color 0.2s, box-shadow 0.2s; }
-        .msg-card:hover { background-color: #F0F4FF; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1); }
-        .msg-card.unread { background-color: #EEF2FF; border-left: 4px solid #6366F1; font-weight: 600; }
-        .msg-card .msg-icon { font-size: 1.2rem; color: #6366F1; margin-right: 15px; flex-shrink: 0; }
-        #inbox-fixed-container { position: fixed; top: 20px; right: 20px; z-index: 1000; background-color: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 50%; padding: 12px; box-shadow: 0 6px 12px rgba(0,0,0,0.15); cursor: pointer; transition: background-color 0.2s; }
-        #inbox-fixed-container:hover { background-color: #F8FAFC; }
-        #inbox-fixed-container .fas { font-size: 20px; color: #6366F1; }
-        #inbox-fixed-container .badge { top: 0px; right: 0px; padding: 2px 6px; }
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; display: none; }
-        #full-message-detail { border: 1px solid #D1D5DB; background-color: #F8FAFC; border-radius: 8px; padding: 15px; line-height: 1.6; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
-        #full-message-detail h3 { color: #06B6D4; padding-bottom: 8px; border-bottom: 1px dashed #E2E8F0; margin-bottom: 8px; }
+        body { font-family: 'Inter', sans-serif;
+        background-color: #F1F5F9; }
+        .dashboard-container { max-width: 1200px; margin: 30px auto; padding: 35px;
+        background-color: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
+        .header { display: flex;
+        justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB;
+        }
+        .header h1 { font-weight: 700;
+        }
+        .nav-tabs { display: flex; border-bottom: 2px solid #E5E7EB; margin-bottom: 30px;
+        }
+        .tab-button { padding: 12px 20px; cursor: pointer; border: none; background: none;
+        font-weight: 600; color: #64748B; border-bottom: 2px solid transparent; transition: color 0.3s, border-bottom 0.3s;
+        }
+        .tab-button.active { color: #6366F1; border-bottom: 2px solid #6366F1;
+        }
+        .tab-content { padding: 15px 0; animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1;
+        } }
+        .controls { display: flex; gap: 20px; align-items: center;
+        }
+        .icon-btn { cursor: pointer; position: relative; font-size: 24px; color: #64748B;
+        transition: color 0.2s; }
+        .icon-btn:hover { color: #6366F1;
+        }
+        .badge { position: absolute; top: -5px; right: -5px; background-color: #EF4444; color: white;
+        border-radius: 50%; padding: 3px 7px; font-size: 11px; }
+        .info-grid { display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        .profile-card, .plan-card { background-color: #F8FAFC;
+        padding: 30px; border-radius: 12px; border: 1px solid #E2E8F0; transition: box-shadow 0.2s;
+        }
+        .profile-card:hover, .plan-card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+        .info-item strong { color: #1E293B; margin-right: 8px; font-weight: 600;
+        }
+        .plan-status-badge { display: inline-block; padding: 6px 14px; border-radius: 9999px; font-size: 0.85rem;
+        font-weight: 700; }
+        .status-enabled { background-color: #DBF5FF; color: #06B6D4;
+        }
+        .status-disabled { background-color: #FEE2E2; color: #DC2626;
+        }
+        .action-btn { background-color: #6366F1; color: white; padding: 10px 20px; border-radius: 8px;
+        border: none; cursor: pointer; font-weight: 600; transition: background-color 0.2s, transform 0.1s;
+        }
+        .action-btn:hover { background-color: #4F46E5; transform: translateY(-1px);
+        }
+        .action-btn.logout { background-color: #DC2626;
+        }
+        .action-btn.logout:hover { background-color: #B91C1C;
+        }
+        .progress-container { margin-top: 2.5rem; padding: 1.5rem; background-color: #E2E8F0; border-radius: 10px;
+        border: 1px solid #CBD5E1; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .progress-fill { background-color: #06B6D4; height: 0.75rem; border-radius: 9999px; transition: all 0.5s ease-in-out;
+        }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #1E293B;
+        }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px;
+        border: 1px solid #CBD5E1; border-radius: 6px; }
+        .msg-card { display: flex; align-items: center;
+        padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; border: 1px solid #E2E8F0; transition: background-color 0.2s, box-shadow 0.2s;
+        }
+        .msg-card:hover { background-color: #F0F4FF; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+        }
+        .msg-card.unread { background-color: #EEF2FF; border-left: 4px solid #6366F1; font-weight: 600;
+        }
+        .msg-card .msg-icon { font-size: 1.2rem; color: #6366F1; margin-right: 15px; flex-shrink: 0;
+        }
+        #inbox-fixed-container { position: fixed; top: 20px; right: 20px; z-index: 1000; background-color: #FFFFFF;
+        border: 1px solid #CBD5E1; border-radius: 50%; padding: 12px; box-shadow: 0 6px 12px rgba(0,0,0,0.15); cursor: pointer; transition: background-color 0.2s;
+        }
+        #inbox-fixed-container:hover { background-color: #F8FAFC;
+        }
+        #inbox-fixed-container .fas { font-size: 20px; color: #6366F1;
+        }
+        #inbox-fixed-container .badge { top: 0px; right: 0px; padding: 2px 6px;
+        }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; display: none;
+        }
+        #full-message-detail { border: 1px solid #D1D5DB; background-color: #F8FAFC; border-radius: 8px; padding: 15px;
+        line-height: 1.6; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
+        #full-message-detail h3 { color: #06B6D4;
+        padding-bottom: 8px; border-bottom: 1px dashed #E2E8F0; margin-bottom: 8px; }
         @media (max-width: 768px) {
-            .dashboard-container { padding: 15px; margin: 10px auto; width: 95%; box-shadow: none; }
-            .header { flex-direction: column; align-items: flex-start; margin-bottom: 20px; }
-            .header h1 { font-size: 1.75rem; margin-bottom: 10px; }
-            .controls { width: 100%; justify-content: flex-end; }
-            .nav-tabs { overflow-x: auto; flex-wrap: nowrap; justify-content: flex-start; -webkit-overflow-scrolling: touch; }
-            .tab-button { flex-shrink: 0; padding: 10px 15px; font-size: 0.9rem; }
-            .info-grid { grid-template-columns: 1fr; gap: 20px; }
-            #inbox-fixed-container { top: auto; bottom: 15px; right: 15px; padding: 12px; }
+            .dashboard-container { padding: 15px;
+        margin: 10px auto; width: 95%; box-shadow: none; }
+            .header { flex-direction: column;
+        align-items: flex-start; margin-bottom: 20px; }
+            .header h1 { font-size: 1.75rem;
+        margin-bottom: 10px; }
+            .controls { width: 100%; justify-content: flex-end;
+        }
+            .nav-tabs { overflow-x: auto; flex-wrap: nowrap; justify-content: flex-start;
+        -webkit-overflow-scrolling: touch; }
+            .tab-button { flex-shrink: 0;
+        padding: 10px 15px; font-size: 0.9rem; }
+            .info-grid { grid-template-columns: 1fr;
+        gap: 20px; }
+            #inbox-fixed-container { top: auto; bottom: 15px;
+        right: 15px; padding: 12px; }
         }
 
         /* Force-logout modal small style */
-        #force-logout-modal .modal-content { max-width: 520px; padding: 24px; border-radius: 12px; background: #fff; }
-        #force-logout-modal .modal-actions { margin-top: 16px; display:flex; gap:10px; justify-content:flex-end; }
+        #force-logout-modal .modal-content { max-width: 520px;
+        padding: 24px; border-radius: 12px; background: #fff; }
+        #force-logout-modal .modal-actions { margin-top: 16px; display:flex;
+        gap:10px; justify-content:flex-end; }
     </style>
 
-    <!-- include bulk script (must be loaded before we call initBulkListeners in onload) -->
     <script src="bulk_verification_logic.js"></script>
 </head>
 <body>
@@ -98,7 +153,8 @@
         <header class="header">
             <div>
                 <h1 class="text-3xl font-bold text-gray-800">Welcome, <span id="client-name-display" class="text-tf-primary">Client</span></h1>
-                <div class="text-sm text-gray-500 mt-1">Manage your address verifications and plan here.</div>
+                <div class="text-sm text-gray-500 mt-1">Manage your address verifications and 
+        plan here.</div>
             </div>
 
             <div class="controls">
@@ -115,13 +171,13 @@
             <span id="inbox-badge" class="badge" style="display:none;">0</span>
         </div>
 
+        
         <div class="nav-tabs">
             <button id="bulk-tab-btn" class="tab-button active" onclick="showTab('bulk-verification', this)">Bulk Address Verification</button>
             <button class="tab-button" onclick="showTab('profile-plan', this)">Profile & Plan Status</button>
             <button class="tab-button" onclick="showTab('support', this)">Support/Messaging</button>
         </div>
 
-        <!-- BULK TAB -->
         <div id="bulk-verification" class="tab-content">
             <header class="text-center mb-10">
                 <h2 class="text-4xl font-extrabold text-gray-900 mb-2">
@@ -130,6 +186,7 @@
                 <p class="text-lg text-gray-500 mt-2">Upload a CSV file for high-volume cleaning and verification.</p>
             </header>
 
+      
             <div id="bulkContent" class="space-y-8">
                 <div class="bg-tf-light p-8 rounded-xl border-l-4 border-tf-primary shadow-lg">
                     <p class="font-bold text-xl text-tf-primary mb-3 flex items-center">
@@ -142,7 +199,8 @@
                 </div>
 
                 <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-lg text-center">
-                    <p class="font-bold text-xl text-gray-800 mb-4 flex items-center justify-center">
+                    <p 
+                    class="font-bold text-xl text-gray-800 mb-4 flex items-center justify-center">
                         <i class="fas fa-upload mr-3 text-tf-secondary"></i> 2. Upload Your CSV File
                     </p>
                     <input type="file" id="csvFileInput" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-tf-secondary/10 file:text-tf-secondary hover:file:bg-tf-secondary/20 transition cursor-pointer">
@@ -158,6 +216,7 @@
                 <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Verification Status</h3>
                 <p id="status-message" class="font-semibold text-gray-600 mb-4 transition duration-300">Ready to upload.</p>
 
+        
                 <div class="progress-bar w-full bg-gray-300 rounded-full h-3">
                     <div class="progress-fill h-3 bg-tf-secondary rounded-full transition-all duration-500 ease-in-out" id="progressBarFill" style="width: 0%;"></div>
                 </div>
@@ -170,12 +229,13 @@
             <p id="access-denied-message" class="hidden mt-6 text-center text-red-700 font-bold"></p>
         </div>
 
-        <!-- PROFILE & PLAN TAB -->
-        <div id="profile-plan" class="tab-content" style="display:none;">
+        <div id="profile-plan" class="tab-content" 
+        style="display:none;">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Account Overview</h2>
             <div class="info-grid">
                 <div class="profile-card flex flex-col justify-between">
                     <h3 class="text-xl font-semibold text-tf-primary mb-4 flex items-center"><i class="fas fa-user-circle mr-2"></i> My Profile Details</h3>
+                  
                     <div class="space-y-3">
                         <div class="info-item"><p><strong>Username:</strong> <span id="profile-username"></span></p></div>
                         <div class="info-item"><p><strong>Email:</strong> <span id="profile-email"></span></p></div>
@@ -186,40 +246,45 @@
                 </div>
 
                 <div class="plan-card">
+ 
                     <h3 class="text-xl font-semibold text-tf-secondary mb-4 flex items-center"><i class="fas fa-award mr-2"></i> Plan Status</h3>
                     <div class="space-y-3">
                         <div class="info-item"><p><strong>Current Plan:</strong> <span id="plan-name" class="font-bold"></span></p></div>
+                    
                         <div class="info-item"><p><strong>Status:</strong> <span id="account-status"></span></p></div>
                         <div class="info-item"><p><strong>Valid Until:</strong> <span id="validity-end"></span></p></div>
                         <div class="info-item"><p><strong>Remaining Credits:</strong> <span id="remaining-credits" class="font-bold text-alert-dark">N/A</span></p></div>
                     </div>
+               
                     <button class="action-btn mt-6 w-full bg-tf-secondary hover:bg-cyan-600" onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(3)'))">Contact for Renewal</button>
                 </div>
             </div>
         </div>
 
-        <!-- SUPPORT TAB -->
         <div id="support" class="tab-content" style="display:none;">
             <div class="p-8 border rounded-xl shadow-md bg-tf-light space-y-6 max-w-lg mx-auto">
+       
                 <h2 class="text-2xl font-bold mb-4 flex items-center text-tf-primary">
                     <i class="fas fa-headset mr-3"></i> Contact Support
                 </h2>
 
-                <p class="text-gray-600">Need help with plan renewal, technical issues, or credits? Contact our dedicated support team instantly.</p>
+                <p class="text-gray-600">Need help with plan renewal, technical issues, or credits?
+        Contact our dedicated support team instantly.</p>
 
                 <a href="https://wa.me/9193246219" target="_blank" class="block w-full py-4 bg-whatsapp-green text-white font-bold rounded-lg shadow-lg hover:bg-green-600 transition transform hover:scale-[1.005] flex items-center justify-center">
                     <i class="fab fa-whatsapp text-xl mr-3"></i> WhatsApp Support (+91 9193246219)
                 </a>
 
-                <a href="tel:+919193246219" class="block w-full py-4 bg-tf-primary text-white font-bold rounded-lg shadow-lg hover:bg-indigo-600 transition transform hover:scale-[1.005] flex items-center justify-center">
+                <a href="tel:+919193246219" 
+                class="block w-full py-4 bg-tf-primary text-white font-bold rounded-lg shadow-lg hover:bg-indigo-600 transition transform hover:scale-[1.005] flex items-center justify-center">
                     <i class="fas fa-phone mr-3"></i> Call Support (+91 9193246219)
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- INBOX MODAL -->
     <div id="inbox-modal" class="modal">
+      
         <div class="modal-content w-full max-w-lg rounded-xl shadow-2xl p-6 bg-white relative">
             <span class="modal-close absolute right-4 top-4 text-2xl cursor-pointer" onclick="closeInbox()">&times;</span>
             <h2 class="text-3xl font-bold mb-6 text-tf-primary flex items-center">
@@ -227,22 +292,24 @@
             </h2>
 
             <div id="client-inbox-list" class="mt-4 max-h-96 overflow-y-auto space-y-3">
+   
                 <p class="text-center text-gray-500 mt-5">Loading messages...</p>
             </div>
 
             <div id="full-message-detail" class="mt-6 pt-4" style="display:none;">
                 <h3 id="full-message-subject" class="font-bold text-xl mb-1"></h3>
                 <small id="full-message-date" class="text-gray-500 block mb-4"></small>
+               
                 <div id="full-message-body" class="p-4 border rounded bg-gray-50 whitespace-pre-wrap text-gray-700 max-h-40 overflow-y-auto"></div>
             </div>
         </div>
     </div>
 
-    <!-- FORCE-LOGOUT MODAL -->
     <div id="force-logout-modal" class="modal">
         <div class="modal-content">
             <h3 class="text-xl font-bold text-gray-800 mb-2">Another device is logged in</h3>
-            <p class="text-gray-700">It looks like your account is currently active on another device. You can force-logout that session and continue here, or cancel to remain logged out.</p>
+            <p class="text-gray-700">It looks like your account is currently active on another device.
+        You can force-logout that session and continue here, or cancel to remain logged out.</p>
 
             <div class="modal-actions">
                 <button id="forceCancelBtn" class="py-2 px-4 bg-gray-200 rounded-lg" onclick="closeForceModal()">Cancel</button>
@@ -251,22 +318,34 @@
         </div>
     </div>
 
+ 
     <script>
         // --- CONSTANTS AND STATE ---
         const API_BASE = '/api';
         const API_CLIENT = `${API_BASE}/client`;
         const API_ENDPOINT = "/api/verify-single-address"; // used by bulk logic
         const LOGIN_PAGE = "client-login.html";
-
         // planDetails may be present in localStorage (from login)
         let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
         const CLIENT_NAME = localStorage.getItem('clientName') || planDetails.clientName || planDetails.username || 'Client';
         let isPlanValid = true;
-
         // --- AUTH check: if not logged in, redirect ---
         const initialToken = localStorage.getItem('clientToken');
         if (!initialToken) {
             window.location.href = LOGIN_PAGE;
+        }
+
+        // --- HEARTBEAT FUNCTION (MISSING FUNCTION ADDED) ---
+        async function sendHeartbeat() {
+            const currentToken = localStorage.getItem('clientToken');
+            if (!currentToken) return; // Cannot send heartbeat if token is missing
+            try {
+                // Use the dedicated activity API, which should now correctly validate the token
+                await authFetch(`${API_CLIENT}?action=activity`, { method: 'POST' }); 
+            } catch (e) {
+                // authFetch will handle 401/403 and redirect/logout
+                console.warn("Heartbeat failed, session may be invalid:", e);
+            }
         }
 
         // --- LOGOUT (notify server) ---
@@ -301,7 +380,6 @@
 
             const defaultHeaders = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` };
             const resp = await fetch(url, { ...options, headers: { ...defaultHeaders, ...(options.headers || {}) } });
-
             if (resp.status === 401 || resp.status === 403) {
                 // attempt to read server message for debugging
                 let debugText = '';
@@ -335,7 +413,6 @@
                     let bodyText = '';
                     try { bodyText = await resp.text(); } catch(e){}
                     console.warn('Profile fetch 401:', bodyText);
-
                     // If server says "Session invalidated" offer force-logout
                     if (bodyText && bodyText.toLowerCase().includes('session invalidated')) {
                         // show force logout modal
@@ -355,12 +432,14 @@
                     return;
                 }
 
-                const pd = json.planDetails || {};
+                const pd = json.planDetails ||
+                {};
                 planDetails = Object.assign({}, planDetails, pd);
                 localStorage.setItem('planDetails', JSON.stringify(planDetails));
 
                 const rc = pd.remainingCredits;
-                document.getElementById('remaining-credits').textContent = rc === 'Unlimited' ? 'Unlimited' : (rc == null ? 'N/A' : Number(rc).toLocaleString());
+                document.getElementById('remaining-credits').textContent = rc === 'Unlimited' ?
+                'Unlimited' : (rc == null ? 'N/A' : Number(rc).toLocaleString());
                 document.getElementById('client-name-display').textContent = pd.clientName || CLIENT_NAME;
                 document.getElementById('profile-username').textContent = pd.clientName || CLIENT_NAME;
                 document.getElementById('profile-email').textContent = planDetails.email || '—';
@@ -376,7 +455,6 @@
 
                 // re-evaluate plan validity
                 checkPlanValidity();
-
             } catch (e) {
                 console.error('fetchProfileData error:', e);
                 updateUIFromLocalPlan();
@@ -385,7 +463,8 @@
 
         function updateUIFromLocalPlan() {
             // Fallback if server call fails — use cached local planDetails
-            const rc = planDetails.remainingCredits ?? 'N/A';
+            const rc = planDetails.remainingCredits ??
+            'N/A';
             document.getElementById('remaining-credits').textContent = rc === 'Unlimited' ? 'Unlimited' : (rc === 'N/A' ? 'N/A' : Number(rc).toLocaleString());
             document.getElementById('client-name-display').textContent = CLIENT_NAME;
             document.getElementById('profile-username').textContent = planDetails.username || CLIENT_NAME;
@@ -427,7 +506,8 @@
             }
 
             try {
-                const validityEnd = planDetails.validityEnd ? new Date(planDetails.validityEnd) : null;
+                const validityEnd = planDetails.validityEnd ?
+                new Date(planDetails.validityEnd) : null;
                 const now = new Date();
 
                 if (planDetails.isActive === false) {
@@ -464,7 +544,6 @@
 
             const existing = document.querySelector('#bulk-verification .access-denied-block');
             if (existing) return;
-
             const errorBlock = document.createElement('div');
             errorBlock.className = 'access-denied-block space-y-6 mt-6';
             errorBlock.innerHTML = `
@@ -500,7 +579,6 @@
             const detailView = document.getElementById('full-message-detail');
             msgContainer.innerHTML = '<p class="text-center text-gray-500 mt-5">Loading messages...</p>';
             detailView.style.display = 'none';
-
             try {
                 const response = await authFetch(`${API_BASE}/inbox/message`);
                 const result = await response.json();
@@ -600,7 +678,6 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ clientId })
                 });
-
                 const json = await resp.json().catch(()=>null);
                 if (resp.ok && json && json.status === 'Success') {
                     // Force-success: clear local token and redirect to login so they can login fresh
@@ -635,7 +712,6 @@
                 console.error('Error during profile init:', e);
                 if (typeof initBulkListeners === 'function') initBulkListeners();
             });
-
             loadInboxCounts();
 
             // Periodic heartbeats & inbox refresh

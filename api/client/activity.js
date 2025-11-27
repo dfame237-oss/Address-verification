@@ -1,76 +1,65 @@
 // api/client/activity.js
-// Endpoint for client dashboard heartbeat: updates lastActivityAt
+// Endpoint for client dashboard to send a heartbeat, updating their lastActivityAt timestamp.
 
 const { connectToDatabase } = require('../db');
-const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken'); 
 const { ObjectId } = require('mongodb');
-
-// IMPORTANT: make this fallback identical to the one used in your login file!
-// Example fallback should match your other files. Prefer setting JWT_SECRET in Vercel envs.
-const JWT_SECRET = process.env.JWT_SECRET || 'change_this_secret';
-
-function getClientIdFromReq(req) {
-  const authHeader = req.headers.authorization || req.headers.Authorization || '';
-  const token = authHeader.split(' ')[1] || null;
-  if (!token) return null;
-
-  try {
-    const payload = jwt.verify(token, JWT_SECRET);
-    // Use the same key your login issues: clientId
-    const clientId = payload.clientId || payload.client_id || payload.id || null;
-    return clientId ? String(clientId) : null;
-  } catch (err) {
-    // Helpful debug log for server-side investigation (remove or lower verbosity in prod)
-    console.warn('activity.js - JWT verify failed:', err && err.message);
-    return null;
-  }
+// 🚨 FIX: Define the JWT_SECRET using the exact same fallback as the login file
+const JWT_SECRET = process.env.JWT_SECRET || 'replace_with_env_jwt_secret';
+// Helper to get client ID from JWT
+function getClientId(req) {
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    const token = authHeader?.split(' ')[1];
+    if (!token) return null;
+    try {
+        // Use the consistent JWT_SECRET variable for verification
+        const payload = jwt.verify(token, JWT_SECRET);
+        // FIX: The payload property should be 'clientId' for consistency with login/index APIs
+        // It was incorrectly set to 'id' causing 401 Unauthorized.
+        return payload.clientId.toString();
+    } catch (err) {
+        console.warn("JWT Verification Failed in activity.js:", err.message);
+        return null;
+    }
 }
 
 module.exports = async (req, res) => {
-  // CORS
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*'); // tighten to your domain in production
-  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+    // CORS Setup
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+    if (req.method === 'OPTIONS') return res.status(200).end();
+    if (req.method !== 'POST') return res.status(405).json({ status: "Error", error: 'Method Not Allowed' });
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ status: "Error", message: 'Method Not Allowed' });
-
-  const clientId = getClientIdFromReq(req);
-  if (!clientId) {
-    return res.status(401).json({ status: "Error", message: "Authentication required." });
-  }
-
-  if (!ObjectId.isValid(clientId)) {
-    return res.status(400).json({ status: "Error", message: "Invalid clientId in token." });
-  }
-
-  let db;
-  try {
-    db = (await connectToDatabase()).db;
-  } catch (e) {
-    console.error('activity.js DB connect failed:', e && (e.stack || e.message));
-    return res.status(500).json({ status: "Error", message: "Database connection failed." });
-  }
-
-  const clientsCollection = db.collection('clients');
-  const lastActivityAt = new Date();
-
-  try {
-    const result = await clientsCollection.updateOne(
-      { _id: new ObjectId(clientId) },
-      { $set: { lastActivityAt } }
-    );
-
-    if (result.matchedCount === 0) {
-      return res.status(404).json({ status: "Error", message: "Client not found." });
+    const clientId = getClientId(req);
+    if (!clientId) {
+        // 401 Unauthorized status is crucial for the client-side script to force a logout
+        return res.status(401).json({ status: "Error", message: "Authentication required." });
     }
 
-    return res.status(200).json({ status: "Success", message: "Activity updated.", timestamp: lastActivityAt });
-
-  } catch (e) {
-    console.error("Client Activity Update Error:", e && (e.stack || e.message));
-    return res.status(500).json({ status: "Error", message: `Internal Server Error: ${e && e.message}` });
-  }
-};
+    let db;
+    try {
+        db = (await connectToDatabase()).db;
+    } catch (e) {
+        return res.status(500).json({ status: "Error", message: "Database connection failed." });
+    }
     
+    const clientsCollection = db.collection("clients");
+    const lastActivityAt = new Date();
+    try {
+        // Update the client's activity timestamp
+        const result = await clientsCollection.updateOne(
+            { _id: new ObjectId(clientId) },
+            { $set: { lastActivityAt: lastActivityAt } }
+        );
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ status: "Error", message: "Client not found." });
+        }
+
+        return res.status(200).json({ status: "Success", message: "Activity updated.", timestamp: lastActivityAt });
+    } catch (e) {
+        console.error("Client Activity Update Error:", e);
+        return res.status(500).json({ status: "Error", message: `Internal Server Error: ${e.message}` });
+    }
+};
