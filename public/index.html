@@ -4,19 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Address Verification Platform - Teleforce</title>
+    
+    <link rel="stylesheet" href="style.css">
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
+    <style>
+        /* ADD INTER FONT IMPORT IF NEEDED */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+
+        /* Custom Tailwind Config */
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        // --- UPDATED LIGHT THEME COLORS ---
-                        'tf-bg-light': '#F8FAFC', // Main Light Background (Slate-50)
-                        'tf-card-light': '#FFFFFF', // White Card Background
-                        'tf-text-dark': '#1E293B', // Dark Text (Slate-800)
-                        // --- ACCENT COLORS (REMAIN THE SAME) ---
-                        'tf-primary': '#6366F1', // Indigo/Violet Primary Accent
-                        'tf-secondary': '#06B6D4', // Cyan Secondary Accent
+                        'tf-bg-light': '#F8FAFC', 
+                        'tf-card-light': '#FFFFFF',
+                        'tf-text-dark': '#1E293B',
+                        'tf-primary': '#6366F1',
+                        'tf-secondary': '#06B6D4',
                         'whatsapp-green': '#25D366',
                         'alert-dark': '#EF4444',
                     },
@@ -61,7 +66,7 @@
                     Pricing
                 </a>
                 
-                <a href="contact.html" class="bg-tf-primary text-white py-2 px-6 rounded-full font-semibold shadow-lg hover:bg-indigo-600 transition duration-300 transform hover:scale-105">Request Demo</a>
+                <a href="#demoModal" class="bg-tf-primary text-white py-2 px-6 rounded-full font-semibold shadow-lg hover:bg-indigo-600 transition duration-300 transform hover:scale-105">Request Demo</a>
                 
                 <a href="client-login.html" class="text-tf-text-dark hover:text-tf-secondary font-semibold border-b-2 border-transparent hover:border-tf-secondary transition">Client Login</a>
             </div>
@@ -120,10 +125,10 @@
                 </div>
                 
                 <div class="mt-16 pt-10 border-t border-gray-300 flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
-                    <a href="contact.html" class="py-4 px-12 bg-tf-primary text-white font-extrabold text-lg rounded-full shadow-xl hover:bg-indigo-600 transition transform hover:scale-[1.05] focus:ring-4 focus:ring-tf-primary/50">
+                    <a href="#demoModal" class="py-4 px-12 bg-tf-primary text-white font-extrabold text-lg rounded-full shadow-xl hover:bg-indigo-600 transition transform hover:scale-105 focus:ring-4 focus:ring-tf-primary/50">
                         Request Bulk Pricing & Demo
                     </a>
-                    <a href="single.html" class="py-4 px-12 bg-tf-card-light border border-gray-300 text-tf-text-dark font-bold text-lg rounded-full shadow-lg hover:bg-gray-100 transition transform hover:scale-[1.05]">
+                    <a href="single.html" class="py-4 px-12 bg-tf-card-light border border-gray-300 text-tf-text-dark font-bold text-lg rounded-full shadow-lg hover:bg-gray-100 transition transform hover:scale-105">
                         Try Single Check (Free)
                     </a>
                 </div>
@@ -187,7 +192,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h3 class="text-3xl font-bold mb-6 text-tf-text-dark">Ready to reduce RTO by up to 30%?</h3>
             <div class="flex justify-center space-x-6">
-                <a href="contact.html" class="py-3 px-10 bg-tf-primary text-white font-bold rounded-full hover:bg-indigo-600 transition shadow-lg">
+                <a href="#demoModal" class="py-3 px-10 bg-tf-primary text-white font-bold rounded-full hover:bg-indigo-600 transition shadow-lg">
                     Request Demo Now
                 </a>
                 <a href="contact.html" class="py-3 px-10 bg-whatsapp-green text-white font-bold rounded-full hover:bg-green-600 transition shadow-lg">
