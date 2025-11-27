@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login</title>
+    <title>Smart Locator — Admin Login</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -12,11 +12,10 @@
             theme: {
                 extend: {
                     colors: {
-                        'tf-dark': '#0F172A', // Deep Blue-Gray Background
-                        'tf-primary': '#6366F1', // Indigo/Violet Primary Accent
-                        'tf-secondary': '#06B6D4', // Cyan Secondary Accent
-                        'tf-text': '#E2E8F0', // Light Text
-                        'tf-card': '#1E293B', // Darker Card Background
+                        'tf-dark': '#0F172A', 
+                        'tf-primary': '#5F3DC4', // Deep Violet/Purple (New Primary)
+                        'tf-secondary': '#A437C1', // Vibrant Magenta/Pink Accent (New Secondary)
+                        'tf-bg-light': '#F1F5F9', // Light Background
                         'alert-dark': '#DC2626',
                     },
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
@@ -26,79 +25,65 @@
     </script>
     <style>
         /* Shared Login Styles */
-        body { font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #F1F5F9; }
-        
-        .login-container { 
-            background: white; 
-            padding: 45px; 
-            border-radius: 16px; 
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1); 
-            width: 100%; 
-            max-width: 420px; 
-            border-top: 5px solid #06B6D4; /* Secondary accent border */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            background-color: #F1F5F9; 
         }
         
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #1E293B; }
-        .form-group input { 
-            width: 100%; 
-            padding: 12px; 
-            border: 1px solid #CBD5E1; 
-            border-radius: 8px; 
-            box-sizing: border-box; 
+        /* Card styling applied directly via class in HTML */
+        
+        /* Form Input Focus Styling */
+        .input-style {
             transition: border-color 0.2s, box-shadow 0.2s;
         }
-        .form-group input:focus {
-            border-color: #6366F1;
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-        }
-        
-        .btn-login { 
-            width: 100%; 
-            padding: 12px; 
-            background-color: #6366F1; /* Primary accent color */
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            font-size: 1.1rem; 
-            font-weight: 700;
-            cursor: pointer; 
-            transition: background-color 0.3s, transform 0.1s; 
-            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
-        }
-        .btn-login:hover { 
-            background-color: #4F46E5;
-            transform: translateY(-1px);
+        .input-style:focus {
+            border-color: #5F3DC4; /* tf-primary */
+            box-shadow: 0 0 0 3px rgba(95, 61, 196, 0.2);
+            outline: none;
         }
     </style>
 </head>
-<body class="bg-[#F1F5F9] min-h-screen flex items-center justify-center p-4">
+<body class="bg-tf-bg-light">
     
-    <div class="w-full max-w-md login-container">
+    <div class="w-full max-w-md bg-white p-10 rounded-2xl shadow-3xl border-t-8 border-tf-secondary login-container">
 
-        <header class="text-center mb-8">
+        <header class="text-center mb-10">
             <h1 class="text-3xl font-extrabold text-gray-900 mb-2">
-                <span class="text-tf-secondary">Admin</span> Panel Login
+                <span class="text-tf-primary">Smart Locator</span>
             </h1>
-            <p class="text-gray-500">Secure access for managing clients and plans.</p>
+            <h2 class="text-xl font-semibold text-gray-700">Admin Portal</h2>
+            <p class="text-sm text-gray-500 mt-1">Secure access for managing clients and data.</p>
         </header>
 
         <form id="adminLoginForm" class="space-y-6">
             <div class="form-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" name="username" required>
+                <input type="text" id="username" name="username" required
+                       class="input-style w-full p-3 border border-gray-300 rounded-lg">
             </div>
 
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
+                <input type="password" id="password" name="password" required
+                       class="input-style w-full p-3 border border-gray-300 rounded-lg">
             </div>
 
-            <button type="submit" id="loginButton" class="btn-login">
+            <button type="submit" id="loginButton" 
+                    class="w-full p-3 bg-tf-primary text-white rounded-lg font-extrabold text-lg 
+                           hover:bg-[#4d2e97] transition duration-300 shadow-lg shadow-tf-primary/50">
                 Login to Dashboard
             </button>
             
             <p id="message" class="text-center text-sm hidden"></p>
         </form>
+        
+        <div class="mt-8 text-center">
+             <a href="index.html" class="text-sm text-tf-secondary hover:text-tf-primary transition">← Back to Smart Locator Home</a>
+        </div>
     </div>
     
     <script>
@@ -127,7 +112,7 @@
                     body: JSON.stringify({ username, password })
                 });
 
-                // Since the API returns JSON even on error (status 401/400/500), we read the body first.
+                // Since the API returns JSON even on error, we read the body first.
                 const result = await response.json();
 
                 if (response.ok && result.status === "Success") {
@@ -167,4 +152,4 @@
         }
     </script>
 </body>
-</html> 
+</html>
