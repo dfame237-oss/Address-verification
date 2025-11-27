@@ -78,16 +78,36 @@ function parseCSV(text) {
 // NOTE: We call your verify-single-address GET endpoint since your backend returns credit info there.
 // If your backend exposes profile via client router, update the URL accordingly.
 async function getRemainingCredits() {
+    let responseText = null;
     try {
         const resp = await authFetch('/api/verify-single-address', { method: 'GET' });
-        const json = await resp.json().catch(()=>({ status: 'Error', message: 'Invalid JSON' }));
-        if (!resp.ok || json.status === 'Error') {
-            return { ok: false, error: json.message || 'Failed to fetch credits' };
+        
+        // Always attempt to get text first, in case .json() fails
+        responseText = await resp.text();
+
+        // Attempt to parse JSON
+        let json;
+        try {
+            json = JSON.parse(responseText);
+        } catch (e) {
+            // If JSON parsing fails, this is the root error
+            console.error('getRemainingCredits JSON Parse Error:', responseText, e);
+            // Return an error object showing the raw response text
+            return { ok: false, error: `Invalid JSON. Server responded with: "${responseText.substring(0, 50)}..."` };
         }
+
+        // Handle server-reported error statuses
+        if (!resp.ok || json.status === 'Error') {
+            return { ok: false, error: json.message || `Server error (Status ${resp.status})` };
+        }
+
+        // Success
         return { ok: true, remainingCredits: json.remainingCredits, initialCredits: json.initialCredits, planName: json.planName };
     } catch (e) {
-        console.error('getRemainingCredits error:', e);
-        return { ok: false, error: e.message || 'Network error' };
+        console.error('getRemainingCredits network/authFetch error:', e);
+        // If authFetch throws an error (e.g., due to 401/403 redirection), the client-dashboard script handles it.
+        // We return a fallback error here.
+        return { ok: false, error: e.message || `Network error. Raw text: ${responseText ? responseText.substring(0, 50) : 'N/A'}` };
     }
 }
 
