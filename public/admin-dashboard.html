@@ -32,11 +32,17 @@
     </script>
 
     <style>
-        /* General Styles - Forced Colors and Structure */
+        /* General Styles - Modernized Look (Inter is default font) */
         body { font-family: 'Inter', sans-serif; background-color: #F1F5F9; }
         .dashboard-container { max-width: 1400px; margin: 30px auto; padding: 35px; background-color: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB; }
         .header h1 { font-size: 2.25rem; font-weight: 800; color: #1f2937; }
+
+        /* Controls */
+        .controls { display: flex; gap: 15px; align-items: center; }
+        .icon-btn { cursor: pointer; position: relative; font-size: 24px; color: #64748B; transition: color 0.2s; }
+        .icon-btn:hover { color: #5F3DC4; }
+        .badge { position: absolute; top: -8px; right: -8px; background-color: #DC2626; color: white; border-radius: 50%; padding: 4px 8px; font-size: 11px; font-weight: 700; border: 2px solid white; }
 
         /* Tab Navigation - Critical Style Overrides */
         .nav-tabs { display: flex; border-bottom: 2px solid #E5E7EB; margin-bottom: 30px; }
@@ -73,7 +79,6 @@
         .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #374151; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; transition: border-color 0.2s, box-shadow 0.2s; }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #5F3DC4; box-shadow: 0 0 0 2px rgba(95, 61, 196, 0.12); }
-        /* Mobile Fixes */
         @media (max-width: 900px) {
             .client-table-wrapper { overflow-x: auto; width: 100%; }
             .client-table { min-width: 880px; }
@@ -85,8 +90,8 @@
         <header class="header">
             <h1><span class="text-tf-primary">Smart Locator</span> Admin Panel</h1>
             <div class="controls">
-                <div id="notification-icon" class="icon-btn" title="Notifications" onclick="toggleInbox('support')">
-                    <i class="fas fa-bell"></i>
+                <div id="notification-icon" class="icon-btn" title="Inbox" onclick="toggleInbox('support')">
+                    <i class="fas fa-inbox"></i>
                     <span id="notification-badge" class="badge" style="display: none;">0</span>
                 </div>
                 <button onclick="logout()" class="action-btn delete">Logout</button>
@@ -123,13 +128,13 @@
             
             <div class="mt-8 p-6 bg-white border rounded-xl shadow-md">
                  <h3 class="text-xl font-bold mb-3 text-tf-primary">Quick Actions</h3>
-                 <button class="action-btn modal-button bg-tf-secondary hover:bg-[#86259d]" onclick="openAddClientModal()">
+                 <button class="action-btn modal-button bg-tf-primary hover:bg-[#4d2e97] mr-3" onclick="openAddClientModal()">
                     <i class="fas fa-plus-circle mr-2"></i> Add New Client
                  </button>
-                 <button class="action-btn" onclick="showTab('client-management', document.getElementById('tab-clients-btn'))">
+                 <button class="action-btn bg-tf-secondary hover:bg-[#86259d] mr-3" onclick="showTab('client-management', document.getElementById('tab-clients-btn'))">
                     <i class="fas fa-list-alt mr-2"></i> View Client List
                  </button>
-                 <button class="action-btn modal-button bg-tf-primary hover:bg-[#4d2e97]" onclick="showTab('inbox-support', document.getElementById('tab-inbox-btn'))">
+                 <button class="action-btn modal-button bg-tf-secondary hover:bg-[#86259d]" onclick="showTab('inbox-support', document.getElementById('tab-inbox-btn'))">
                     <i class="fas fa-inbox mr-2"></i> Check Inbox
                  </button>
             </div>
@@ -397,7 +402,7 @@
         async function loadClients() {
             const clientListBody = document.getElementById('client-list');
             
-            // 🛑 FIX: Silent fetch for data needed for metrics
+            // 1. Silent fetch for data needed for metrics and background updates
             if (document.getElementById('client-management').style.display !== 'block') {
                 try {
                     const response = await authFetch(`${API_ADMIN}?action=client`);
@@ -412,7 +417,7 @@
                 return;
             }
 
-            // Only update the table if we are on the Client Management tab
+            // 2. Only update the table if we are on the Client Management tab
             clientListBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-4">Loading clients...</td></tr>';
             try {
                 const response = await authFetch(`${API_ADMIN}?action=client`);
@@ -425,6 +430,7 @@
                     clientListBody.innerHTML = `<tr><td colspan="5" class="text-center text-red-500 py-4">Failed to load clients: ${result.message}</td></tr>`;
                 }
             } catch (error) {
+                // The network error is now correctly placed in the client list body
                 console.error('Error loading clients:', error);
                 clientListBody.innerHTML = `<tr><td colspan="5" class="text-center text-red-500 py-4">Network Error: ${error.message}</td></tr>`;
             }
@@ -435,18 +441,19 @@
             const activeClientsCount = clients.filter(c => c.isActive).length;
             const onlineClientsCount = clients.filter(c => c.lastActivityAt && (Date.now() - new Date(c.lastActivityAt).getTime() < ONLINE_THRESHOLD_MS)).length;
             
-            // Check if metric elements exist before setting textContent (Prevents crash on initial load)
+            // 🐛 FIX: Check if metric elements exist before setting textContent (Prevents null crash)
             const totalEl = document.getElementById('metric-total-clients');
             const activeEl = document.getElementById('metric-active-clients');
             const onlineEl = document.getElementById('metric-online-clients');
-            
+            const issuedEl = document.getElementById('metric-credits-issued');
+
             if (totalEl) totalEl.textContent = totalClients.toLocaleString();
             if (activeEl) activeEl.textContent = activeClientsCount.toLocaleString();
             if (onlineEl) onlineEl.textContent = onlineClientsCount.toLocaleString();
-            
-            // Placeholder for used credits metric
-            const issuedEl = document.getElementById('metric-credits-issued');
             if (issuedEl) issuedEl.textContent = '—'; // Placeholder for complex calc
+
+            // Update Support/Inbox badge count if they exist
+            loadInboxCounts();
         }
 
         function formatLastActive(lastActivityAt) {
@@ -466,7 +473,6 @@
 
         function renderClients(clients) {
             const clientListBody = document.getElementById('client-list');
-            // Ensure we are using the correct element (client-list)
             clientListBody.innerHTML = ''; 
             if (!clients || clients.length === 0) {
                 clientListBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-4">No clients found.</td></tr>';
@@ -736,7 +742,9 @@
                 const supportResult = await supportResponse.json();
                 if (supportResult.status === "Success") {
                     totalUnread += supportResult.unreadCount || 0;
-                    document.getElementById('metric-new-requests').textContent = (supportResult.unreadCount || 0).toLocaleString();
+                    // Only update metric on the Overview tab if it exists
+                    const reqEl = document.getElementById('metric-new-requests');
+                    if (reqEl) reqEl.textContent = (supportResult.unreadCount || 0).toLocaleString();
                 }
             } catch (e) { console.error("Failed to load support message counts:", e); }
 
@@ -755,15 +763,15 @@
             document.getElementById(tabId).style.display = 'block';
             if (button) button.classList.add('active');
 
+            // --- TAB ACTIONS ---
             if (tabId === 'client-management') {
-                loadClients();
+                loadClients(); // Fetches and Renders clients to the table
             } else if (tabId === 'inbox-support') {
                 loadInboxCounts();
                 switchInboxTab('support'); // Default to Demo Requests/Support
             } else if (tabId === 'admin-overview') {
                  // Load data needed for metrics when overview is shown
                  loadClients(); 
-                 loadInboxCounts(); 
             }
         }
 
