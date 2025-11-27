@@ -1,223 +1,290 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Address Verification Platform - Teleforce</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Address Verification Platform - Teleforce</title>
+    
+        <link rel="stylesheet" href="style.css"> 
+    
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
-  <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'tf-bg-light': '#F8FAFC',
-            'tf-card-light': '#FFFFFF',
-            'tf-text-dark': '#1E293B',
-            'tf-primary': '#6366F1',
-            'tf-secondary': '#06B6D4',
-            'whatsapp-green': '#25D366',
-            'alert-dark': '#EF4444'
-          },
-          fontFamily: {
-            sans: ['Inter', 'sans-serif']
-          }
-        }
-      }
-    }
-  </script>
+        <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'tf-bg-light': '#F8FAFC', 
+                        'tf-card-light': '#FFFFFF',
+                        'tf-text-dark': '#1E293B',
+                        'tf-primary': '#6366F1', // Indigo
+                        'tf-secondary': '#06B6D4', // Cyan
+                        'whatsapp-green': '#25D366',
+                        'alert-dark': '#EF4444',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
 
-  <style>
-    body { background:#F8FAFC; font-family:Inter,sans-serif; }
-    .input-focus:focus { border-color:#6366F1; --tw-ring-color:#6366F1; }
-    .text-gradient {
-      background-image: linear-gradient(to right, #6366F1, #06B6D4);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-  </style>
+    <style>
+        /* Basic Global Styles */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            scroll-behavior: smooth; 
+        }
+        /* Custom Focus Styles */
+        .input-focus:focus {
+            border-color: #6366F1; 
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.4);
+        }
+        /* Text Gradient for Branding */
+        .text-gradient {
+            background-image: linear-gradient(to right, #6366F1, #06B6D4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        /* Modal Backdrop */
+        #demoModal { display: none; } /* Managed by JS */
+    </style>
 </head>
+<body class="bg-tf-bg-light text-tf-text-dark">
 
-<body class="text-tf-text-dark">
+        <nav class="bg-tf-card-light shadow-xl sticky top-0 z-50 border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
 
-  <!-- NAVBAR -->
-  <nav class="bg-white shadow-md border-b sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-3xl font-extrabold text-tf-text-dark">
+                <span class="text-tf-primary">AI</span> VERIFY
+            </div>
 
-      <div class="text-3xl font-extrabold">
-        <span class="text-tf-primary">AI</span> VERIFY
-      </div>
+            <div class="flex gap-6 items-center">
+                <a href="admin-login.html" class="text-xs text-gray-500 hover:text-gray-700">Admin Access</a>
 
-      <div class="flex gap-6 items-center">
-        <a href="admin-login.html" class="text-xs text-gray-500 hover:text-gray-700">Admin</a>
+                <a href="pricing.html" class="font-semibold hover:text-tf-secondary">Pricing</a>
 
-        <a href="pricing.html" class="font-semibold hover:text-tf-secondary">Pricing</a>
+                <a href="#demoModal" class="bg-tf-primary text-white py-2 px-6 rounded-full shadow hover:bg-indigo-600 transition" onclick="openModal()">
+                    Request Demo
+                </a>
 
-        <a href="#demoModal" class="bg-tf-primary text-white py-2 px-6 rounded-full shadow hover:bg-indigo-600 transition">
-          Request Demo
-        </a>
+                <a href="client-login.html" class="font-semibold hover:text-tf-secondary">Client Login</a>
+            </div>
 
-        <a href="client-login.html" class="font-semibold hover:text-tf-secondary">Client Login</a>
-      </div>
+        </div>
+    </nav>
 
-    </div>
-  </nav>
+        <header id="hero" class="pt-24 pb-28 text-center bg-tf-bg-light">
+        <div class="max-w-6xl mx-auto px-6">
 
-  <!-- HERO -->
-  <header class="pt-24 pb-28 text-center bg-tf-bg-light">
-    <div class="max-w-6xl mx-auto px-6">
+            <h1 class="text-6xl font-extrabold mb-6">
+                Stop RTO. <span class="text-gradient">Start Scaling.</span>
+            </h1>
 
-      <h1 class="text-6xl font-extrabold mb-6">
-        Stop RTO. <span class="text-gradient">Start Scaling.</span>
-      </h1>
+            <p class="text-xl text-gray-600 mb-14 max-w-3xl mx-auto">
+                The <strong>Smartest AI Address Platform</strong> built to process 100% of your customer database and guarantee first-attempt delivery success.
+            </p>
 
-      <p class="text-xl text-gray-600 mb-14 max-w-3xl mx-auto">
-        The <strong>Smartest AI Address Platform</strong> built to process 100% of your customer database and guarantee first-attempt delivery success.
-      </p>
+                        <div class="flex flex-col sm:flex-row justify-center gap-6 mb-16">
+                <a href="#how-it-works" class="py-4 px-10 bg-tf-secondary text-white rounded-lg font-bold shadow-lg hover:bg-cyan-500 transition">
+                    Learn How It Works
+                </a>
+                <a href="single.html" class="py-4 px-10 bg-white border border-gray-300 text-tf-text-dark rounded-lg font-bold shadow hover:bg-gray-100 transition">
+                    Try Single Check (Free)
+                </a>
+            </div>
 
-      <!-- PROCESS CARDS -->
-      <div class="bg-white border shadow-xl rounded-3xl p-10">
+                        <div id="process-cards" class="bg-tf-card-light border shadow-2xl rounded-xl p-8 md:p-12">
+                <h2 class="text-4xl font-extrabold mb-10 text-center">3-Stage Verification Process</h2>
 
-        <h2 class="text-4xl font-extrabold mb-10">3-Stage Verification Process</h2>
+                <div class="grid md:grid-cols-3 gap-10">
+                    
+                                        <div class="text-center p-6 rounded-xl shadow-xl border-t-4 border-tf-primary/60">
+                        <div class="w-16 h-16 rounded-full bg-tf-primary text-white flex items-center justify-center mx-auto mb-4 text-3xl font-bold">
+                          1
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Secure Upload</h3>
+                        <p class="text-gray-600">Upload your raw address data in bulk through a secure client portal.</p>
+                    </div>
 
-        <div class="grid md:grid-cols-3 gap-10">
+                                        <div class="text-center p-6 rounded-xl shadow-xl border-t-4 border-tf-secondary/60">
+                        <div class="w-16 h-16 rounded-full bg-tf-secondary text-white flex items-center justify-center mx-auto mb-4 text-3xl font-bold">
+                          2
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">AI Cleaning & Validation</h3>
+                        <p class="text-gray-600">Our **Gemini-powered AI** corrects spelling, normalizes data, and validates against official India Post records.</p>
+                    </div>
 
-          <!-- STEP 1 -->
-          <div class="text-center p-6 bg-gray-50 rounded-xl shadow border border-tf-primary/40">
-            <div class="w-16 h-16 rounded-full bg-tf-primary text-white flex items-center justify-center mx-auto mb-4 shadow-lg">
-              ⬆️
+                                        <div class="text-center p-6 rounded-xl shadow-xl border-t-4 border-gray-400/60">
+                        <div class="w-16 h-16 rounded-full bg-tf-text-dark text-white flex items-center justify-center mx-auto mb-4 text-3xl font-bold">
+                          3
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Deliverability Score</h3>
+                        <p class="text-gray-600">Get standardized addresses and a precise risk score for every entry to guide dispatch decisions.</p>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+        <section id="whyus" class="py-24 bg-tf-card-light border-t">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+
+            <h2 class="text-5xl font-extrabold mb-4">Why Deliverability Matters</h2>
+            <p class="text-xl text-gray-600 text-center mb-14 max-w-3xl mx-auto">
+                Incorrect addresses are the #1 cause of RTO losses. Fix them before dispatch.
+            </p>
+
+            <div class="grid md:grid-cols-3 gap-10">
+
+                <div class="bg-tf-bg-light p-8 rounded-xl shadow-lg border-t-4 border-alert-dark">
+                    <i class="fas fa-truck-moving text-5xl mb-4 text-alert-dark"></i>
+                    <h3 class="text-2xl font-bold mb-2">Minimize RTO Losses</h3>
+                    <p class="text-gray-600">RTO shipments cost 2–3× more. We verify addresses to eliminate losses and reverse logistics fees.</p>
+                </div>
+
+                <div class="bg-tf-bg-light p-8 rounded-xl shadow-lg border-t-4 border-tf-secondary">
+                    <i class="fas fa-map-marked-alt text-5xl mb-4 text-tf-secondary"></i>
+                    <h3 class="text-2xl font-bold mb-2">Eliminate Bad Data</h3>
+                    <p class="text-gray-600">Fix spelling, missing PIN codes, incorrect landmarks, and incomplete addresses before they leave your warehouse.</p>
+                </div>
+
+                <div class="bg-tf-bg-light p-8 rounded-xl shadow-lg border-t-4 border-tf-primary">
+                    <i class="fas fa-smile-beam text-5xl mb-4 text-tf-primary"></i>
+                    <h3 class="text-2xl font-bold mb-2">Boost Customer Experience</h3>
+                    <p class="text-gray-600">More first-attempt deliveries lead to higher customer satisfaction and fewer support escalations.</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 bg-gray-100 border-t">
+        <div class="text-center max-w-4xl mx-auto px-6">
+            <h3 class="text-4xl font-extrabold mb-6 text-tf-text-dark">Ready to Integrate AI Verification?</h3>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-6">
+                <a href="#demoModal" class="py-3 px-10 bg-tf-primary text-white rounded-lg font-bold shadow-lg hover:bg-indigo-600 transition" onclick="openModal()">
+                    Request Demo & Pricing
+                </a>
+                <a href="contact.html" class="py-3 px-10 bg-whatsapp-green text-white rounded-lg font-bold shadow-lg hover:bg-green-600 transition">
+                    <i class="fab fa-whatsapp mr-2"></i> Contact Sales
+                </a>
             </div>
-            <h3 class="text-xl font-bold mb-2">1. Secure Upload</h3>
-            <p class="text-gray-600">Upload your raw address data in bulk through a secure client portal.</p>
-          </div>
-
-          <!-- STEP 2 -->
-          <div class="text-center p-6 bg-gray-50 rounded-xl shadow border border-tf-secondary/40">
-            <div class="w-16 h-16 rounded-full bg-tf-secondary text-white flex items-center justify-center mx-auto mb-4 shadow-lg">
-              ⚙️
-            </div>
-            <h3 class="text-xl font-bold mb-2">2. AI Cleaning</h3>
-            <p class="text-gray-600">Our AI auto-corrects, cleans, normalizes and validates against official sources.</p>
-          </div>
-
-          <!-- STEP 3 -->
-          <div class="text-center p-6 bg-gray-50 rounded-xl shadow border border-gray-300/60">
-            <div class="w-16 h-16 rounded-full bg-tf-text-dark text-white flex items-center justify-center mx-auto mb-4 shadow-lg">
-              📊
-            </div>
-            <h3 class="text-xl font-bold mb-2">3. Deliverability Score</h3>
-            <p class="text-gray-600">Get standardized addresses + risk score for dispatch accuracy.</p>
-          </div>
-
         </div>
+    </section>
 
-        <div class="mt-12 flex flex-col sm:flex-row justify-center gap-6">
-          <a href="#demoModal" class="py-4 px-10 bg-tf-primary text-white rounded-full font-bold shadow hover:bg-indigo-600 transition">
-            Request Demo
-          </a>
-          <a href="single.html" class="py-4 px-10 bg-white border rounded-full font-bold shadow hover:bg-gray-200 transition">
-            Try Single Check
-          </a>
-        </div>
+        <footer class="py-12 bg-gray-200 text-tf-text-dark border-t border-gray-300">
+        <div class="text-center max-w-4xl mx-auto">
+            <p class="text-sm text-gray-500">Developed by: <strong>Pankaj Singh Rawat</strong></p>
+            <p class="text-sm text-gray-500">&copy; 2025 AI VERIFY. All rights reserved.</p>
+        </div>
+    </footer>
 
-      </div>
-    </div>
-  </header>
+        <div id="demoModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center px-4 z-50">
+        <div class="bg-white p-6 rounded-xl max-w-md w-full shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-3 mb-3">
+                <h3 class="text-xl font-bold text-tf-primary">Request a Demo</h3>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
 
-  <!-- WHY US -->
-  <section class="py-24 bg-tf-bg-light border-t">
-    <div class="max-w-7xl mx-auto px-6">
+            <form id="demoForm" class="space-y-4">
+                <input type="text" id="demoName" placeholder="Your Name" required class="w-full p-3 border rounded input-focus">
+                <input type="email" id="demoEmail" placeholder="Your Email" required class="w-full p-3 border rounded input-focus">
+                <input type="tel" id="demoPhone" placeholder="Mobile Number" required class="w-full p-3 border rounded input-focus">
+                <textarea id="demoMessage" class="w-full p-3 border rounded input-focus" rows="3">I am interested in a demo for bulk verification.</textarea>
 
-      <h2 class="text-5xl font-extrabold text-center mb-4">Why Deliverability Matters</h2>
-      <p class="text-xl text-gray-600 text-center mb-14 max-w-3xl mx-auto">
-        Incorrect addresses are the #1 cause of RTO losses. Fix them before dispatch.
-      </p>
+                <button type="submit" id="demoSubmit" class="w-full bg-tf-secondary py-3 text-white rounded-lg font-bold hover:bg-cyan-500 transition">
+                    Submit Request
+                </button>
 
-      <div class="grid md:grid-cols-3 gap-10">
+                <p id="demoStatus" class="text-center text-sm font-semibold"></p>
+            </form>
+        </div>
+    </div>
 
-        <div class="bg-white p-8 rounded-xl shadow border-t-4 border-alert-dark">
-          <div class="text-5xl mb-4">🚨</div>
-          <h3 class="text-2xl font-bold mb-2">Reduce RTO Losses</h3>
-          <p class="text-gray-600">RTO shipments cost 2–3× more. We ensure address correctness before dispatch.</p>
-        </div>
+    <script>
+        const API_SUPPORT_ENDPOINT = "/api/support/message";
 
-        <div class="bg-white p-8 rounded-xl shadow border-t-4 border-tf-secondary">
-          <div class="text-5xl mb-4">🎯</div>
-          <h3 class="text-2xl font-bold mb-2">Eliminate Bad Data</h3>
-          <p class="text-gray-600">Fix spelling, missing PIN codes, incorrect landmarks, and incomplete addresses.</p>
-        </div>
+        function openModal() {
+            document.getElementById('demoModal').classList.remove('hidden');
+            document.getElementById('demoStatus').textContent = '';
+            document.getElementById('demoForm').reset();
+        }
 
-        <div class="bg-white p-8 rounded-xl shadow border-t-4 border-tf-primary">
-          <div class="text-5xl mb-4">📈</div>
-          <h3 class="text-2xl font-bold mb-2">Improve Deliverability</h3>
-          <p class="text-gray-600">More first-attempt deliveries = higher satisfaction + fewer support escalations.</p>
-        </div>
+        function closeModal() {
+            document.getElementById('demoModal').classList.add("hidden");
+        }
 
-      </div>
-    </div>
-  </section>
+        document.querySelectorAll('a[href="#demoModal"]').forEach(btn => {
+            btn.addEventListener("click", e => {
+                e.preventDefault();
+                openModal();
+            });
+        });
 
-  <!-- FOOTER -->
-  <footer class="py-12 bg-gray-100 border-t">
-    <div class="text-center max-w-4xl mx-auto">
+        document.getElementById('demoForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
 
-      <h3 class="text-3xl font-bold mb-6">Ready to reduce RTO by 30%?</h3>
+            const button = document.getElementById('demoSubmit');
+            const statusMessage = document.getElementById('demoStatus');
+            
+            button.disabled = true;
+            button.textContent = 'Sending...';
+            statusMessage.textContent = '';
 
-      <div class="flex justify-center gap-6 mb-6">
-        <a href="#demoModal" class="py-3 px-10 bg-tf-primary text-white rounded-full font-bold shadow hover:bg-indigo-600">
-          Request Demo
-        </a>
-        <a href="contact.html" class="py-3 px-10 bg-whatsapp-green text-white rounded-full font-bold shadow hover:bg-green-600">
-          Contact Sales
-        </a>
-      </div>
+            const clientMobile = document.getElementById('demoPhone').value.trim();
+            
+            // Basic client-side validation
+            if (clientMobile.length !== 10 || !/^\d{10}$/.test(clientMobile)) {
+                statusMessage.className = 'text-alert-dark mt-3';
+                statusMessage.textContent = 'Please enter a valid 10-digit mobile number.';
+                button.disabled = false;
+                button.textContent = 'Submit Request';
+                return;
+            }
 
-      <p class="text-sm text-gray-500">Developed by: <strong>Pankaj Singh Rawat</strong></p>
-      <p class="text-sm text-gray-500">&copy; 2025 AI VERIFY. All rights reserved.</p>
-    </div>
-  </footer>
+            const messageData = {
+                clientName: document.getElementById('demoName').value,
+                clientEmail: document.getElementById('demoEmail').value,
+                clientMobile: clientMobile, 
+                messageText: document.getElementById('demoMessage').value,
+            };
 
-  <!-- DEMO MODAL -->
-  <div id="demoModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center px-4 z-50">
-    <div class="bg-white p-6 rounded-xl max-w-md w-full shadow-xl">
-      <div class="flex justify-between items-center border-b pb-3 mb-3">
-        <h3 class="text-xl font-bold">Request a Demo</h3>
-        <button onclick="closeModal()" class="text-2xl">&times;</button>
-      </div>
+            try {
+                const response = await fetch(API_SUPPORT_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(messageData)
+                });
 
-      <form id="demoForm" class="space-y-4">
-        <input type="text" id="demoName" placeholder="Your Name" required class="w-full p-3 border rounded input-focus">
-        <input type="email" id="demoEmail" placeholder="Your Email" required class="w-full p-3 border rounded input-focus">
-        <input type="tel" id="demoPhone" placeholder="Mobile Number" required class="w-full p-3 border rounded input-focus">
+                const result = await response.json();
 
-        <textarea id="demoMessage" class="w-full p-3 border rounded input-focus" rows="3">
-I am interested in a demo for bulk verification.
-        </textarea>
-
-        <button type="submit" id="demoSubmit" class="w-full bg-tf-secondary py-3 rounded font-bold hover:bg-cyan-500">
-          Submit Request
-        </button>
-
-        <p id="demoStatus" class="text-center text-sm font-semibold"></p>
-      </form>
-    </div>
-  </div>
-
-  <script>
-    const modal = document.getElementById("demoModal");
-
-    function closeModal() {
-      modal.classList.add("hidden");
-    }
-
-    document.querySelectorAll('a[href="#demoModal"]').forEach(btn => {
-      btn.addEventListener("click", e => {
-        e.preventDefault();
-        modal.classList.remove("hidden");
-      });
-    });
-  </script>
-
+                if (response.ok && result.status === "Success") {
+                    statusMessage.className = 'text-tf-secondary mt-3';
+                    statusMessage.textContent = 'Demo request sent! We will contact you shortly.';
+                    document.getElementById('demoForm').reset();
+                    setTimeout(() => closeModal(), 2000);
+                } else {
+                    statusMessage.className = 'text-alert-dark mt-3';
+                    statusMessage.textContent = `Error: ${result.message || 'Failed to send request.'}`;
+                }
+            } catch (e) {
+                statusMessage.className = 'text-alert-dark mt-3';
+                statusMessage.textContent = 'Network error occurred.';
+                console.error("Demo Form Submission Error:", e);
+            } finally {
+                setTimeout(() => { 
+                    button.disabled = false;
+                    button.textContent = 'Submit Request';
+                }, 2000);
+            }
+        });
+    </script>
 </body>
 </html>
