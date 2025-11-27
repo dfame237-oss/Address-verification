@@ -40,7 +40,7 @@
 
         /* Controls */
         .controls { display: flex; gap: 15px; align-items: center; }
-        /* 🟣 CUSTOM INBOX ICON STYLE */
+        /* 🟣 CUSTOM INBOX ICON STYLE (Now used for counter) */
         #notification-icon {
             cursor: pointer; position: relative; 
             font-size: 20px; 
@@ -913,7 +913,7 @@
                                     <small class="text-gray-500 block mt-1">Email: ${msg.clientEmail} &bull; ${new Date(msg.receivedAt).toLocaleString()}</small>
                                 </div>
                                 <div class="message-actions-container">
-                                    <button onclick="viewSupportMessage('${msg._id}', \`${(msg.messageText||'').replace(/`/g,'\\`')}\', '${(msg.clientName||'').replace(/'/g,"\\'")}', '${(msg.clientEmail||'').replace(/'/g,"\\'")}', '${(msg.clientMobile||'').replace(/'/g,"\\"')}', ${isUnread}, '${msg.receivedAt}')" 
+                                    <button onclick="viewSupportMessage('${msg._id}', \`${(msg.messageText||'').replace(/`/g,'\\`')}\', '${(msg.clientName||'').replace(/'/g,"\\'")}', '${(msg.clientEmail||'').replace(/'/g,"\\'")}', '${(msg.clientMobile||'').replace(/'/g,"\\'")}', ${isUnread}, '${msg.receivedAt}')" 
                                             class="action-btn modal-button bg-tf-primary hover:bg-[#4d2e97]"><i class="fas fa-eye"></i></button>
                                     <button onclick="deleteMessage('${msg._id}', 'support')" 
                                             class="action-btn delete"><i class="fas fa-trash-alt"></i></button>
@@ -931,7 +931,6 @@
         }
         
         function viewClientMessage(messageId, subject, body, senderId, clientUsername, isUnread, timestamp) {
-            // Mark as read immediately (client message uses inbox API)
             if (isUnread) authFetch(`${API_BASE}/inbox/message?messageId=${messageId}`, { method: 'PUT' }).catch(()=>{});
             setTimeout(loadClientMessages, 200); 
             
@@ -1007,7 +1006,7 @@
                     statusMsg.textContent = `Send Failed: ${result.message || 'Unknown'}`; statusMsg.style.color = '#DC2626';
                 }
             } catch (error) {
-                statusMsg.textContent = `Network error: ${error.message}`; statusMsg.style.color = '#DC2626';
+                statusMsg.textContent = `Network Error: ${error.message}`; statusMsg.style.color = '#DC2626';
             }
         }
         
@@ -1041,8 +1040,7 @@
                 showMessageModal(`Network error: ${error.message}`, 'error');
             }
         }
-        // (Other CRUD/utility functions are omitted for brevity in the final output, but should be in your file)
-        
+
         // --- Initialization ---
         window.onload = () => {
             populatePlanDropdowns();
