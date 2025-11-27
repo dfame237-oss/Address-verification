@@ -4,20 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact & Plan Purchase - AI VERIFY</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // FIX: Updated to use the consistent 'tf-' color palette
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-      
-                        'tf-primary': '#6366F1', // Indigo/Violet Primary Accent (Replaced primary-blue)
-                        'tf-secondary': '#06B6D4', // Cyan Secondary Accent (Replaced secondary-green)
-                        'neutral-gray': '#F9FAFB', // Using a lighter gray for background
-                        
+                        'tf-primary': '#6366F1', // Indigo/Violet Primary Accent
+                        'tf-secondary': '#06B6D4', // Cyan Secondary Accent
+                        'neutral-gray': '#F9FAFB', 
                         'whatsapp-green': '#25D366',
-                        'alert-dark': '#DC2626', // Consistent error color
+                        'alert-dark': '#DC2626', 
                     },
                     fontFamily: { sans: ['Inter', 'sans-serif'], },
                 }
@@ -26,67 +24,82 @@
     </script>
     <style>
         body { font-family: 'Inter', sans-serif; }
+        .input-focus {
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
         .input-focus:focus {
-            --tw-ring-color: #06B6D4; /* FIX: Changed to tf-secondary (Cyan) */
             border-color: #06B6D4;
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.4); 
+            outline: none;
         }
     </style>
 </head>
 <body class="bg-neutral-gray min-h-screen flex items-center justify-center p-4">
     
-    <div class="w-full max-w-xl bg-white p-8 sm:p-10 rounded-xl shadow-2xl">
+    <div class="w-full max-w-xl bg-white p-8 sm:p-10 rounded-xl shadow-2xl border-t-4 border-tf-secondary">
 
         <a href="index.html" class="text-tf-primary hover:text-indigo-700 font-medium mb-6 inline-flex items-center transition duration-150">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            <i class="fas fa-arrow-left w-4 h-4 mr-2"></i>
             Back to Home
         </a>
 
         <header class="text-center mb-10">
             <h1 class="text-3xl font-extrabold text-gray-900 mb-2">
-                <span class="text-tf-secondary">Let's Get Started</span>
+                <span class="text-tf-secondary">Contact Support & Pricing</span>
             </h1>
-            <p class="text-lg text-gray-600 mt-2">Choose the best way to contact us about your bulk plan requirements.</p>
+            <p class="text-lg text-gray-600 mt-2">Get in touch instantly for bulk plan requirements, pricing, and demos.</p>
         </header>
         
         <div class="space-y-8">
             
             <div class="p-6 bg-cyan-50 border-l-4 border-tf-secondary rounded-xl shadow-inner">
-                <h3 class="font-bold text-xl text-tf-secondary mb-3 flex items-center">
-                    <span class="text-2xl mr-2">📞</span> Immediate Assistance
+                <h3 class="font-bold text-xl text-tf-secondary mb-4 flex items-center">
+                    <i class="fas fa-headset text-2xl mr-3"></i> Immediate Sales Support (Recommended)
                 </h3>
-                <a href="https://wa.me/9193246219" target="_blank" class="block w-full text-center py-3 px-6 bg-whatsapp-green text-white font-bold rounded-lg shadow-lg transition hover:bg-green-600 mb-3">
-                    <span class="mr-1"></span> WhatsApp Sales (Recommended)
+                
+                <a href="https://wa.me/919193246219" target="_blank" class="block w-full text-center py-3 px-6 bg-whatsapp-green text-white font-bold rounded-lg shadow-lg transition hover:bg-green-600 mb-4 transform hover:scale-[1.01]">
+                    <i class="fab fa-whatsapp mr-2"></i> Direct WhatsApp Chat
                 </a>
-                <p class="text-center text-sm text-gray-700">Call Support: <span class="font-semibold">+91 9193246219</span></p>
+                
+                <p class="text-center text-sm text-gray-700">
+                    Need to talk? Call us at: 
+                    <a href="tel:+919193246219" class="font-semibold text-tf-primary hover:underline transition">+91 9193246219</a>
+                </p>
             </div>
 
             <div class="p-6 border border-gray-300 rounded-xl shadow-lg bg-white">
-                <h3 class="font-bold text-xl text-tf-primary mb-5">Or Send a Direct Plan Inquiry</h3>
+                <h3 class="font-bold text-xl text-tf-primary mb-5 flex items-center">
+                    <i class="fas fa-paper-plane text-2xl mr-3"></i> Or Send a Direct Inquiry
+                </h3>
                 <form id="contactForm" class="space-y-4">
-                    <div>
-                        <label for="clientName" class="block text-sm font-medium text-gray-700">Your Name</label>
-                        <input type="text" id="clientName" required class="w-full p-3 border border-gray-300 rounded-lg input-focus focus:ring-1">
-                    </div>
                     
-                    <div>
-                        <label for="clientEmail" class="block text-sm font-medium text-gray-700">Work Email</label>
-                        <input type="email" id="clientEmail" required class="w-full p-3 border border-gray-300 rounded-lg input-focus focus:ring-1">
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="clientName" class="block text-sm font-medium text-gray-700">Your Name</label>
+                            <input type="text" id="clientName" required class="w-full p-3 border border-gray-300 rounded-lg input-focus">
+                        </div>
+                        <div>
+                            <label for="clientEmail" class="block text-sm font-medium text-gray-700">Work Email</label>
+                            <input type="email" id="clientEmail" required class="w-full p-3 border border-gray-300 rounded-lg input-focus">
+                        </div>
                     </div>
                     
                     <div>
                         <label for="clientMobile" class="block text-sm font-medium text-gray-700">Mobile Number (Required for Call Back)</label>
                         <div class="flex">
-                            <span class="inline-flex items-center px-3 border border-r-0 border-gray-300 bg-gray-50 text-gray-500 rounded-l-lg">
+                            <span class="inline-flex items-center px-3 border border-r-0 border-gray-300 bg-gray-50 text-gray-500 rounded-l-lg font-medium text-sm">
                                 +91
                             </span>
                             <input type="tel" id="clientMobile" required 
                                 pattern="[0-9]{10}" title="10 digit Indian Mobile Number"
                                 placeholder="9876543210"
-                                class="w-full p-3 border border-gray-300 rounded-r-lg input-focus focus:ring-1 focus:border-tf-secondary"> </div>
+                                class="w-full p-3 border border-gray-300 rounded-r-lg input-focus"> 
+                        </div>
                     </div>
+                    
                     <div>
                         <label for="messageText" class="block text-sm font-medium text-gray-700">Your Requirement (e.g., "Need plan for 5,000 checks" or "Requesting a demo")</label>
-                        <textarea id="messageText" rows="4" required class="w-full p-3 border border-gray-300 rounded-lg input-focus focus:ring-1 resize-none"></textarea>
+                        <textarea id="messageText" rows="4" required class="w-full p-3 border border-gray-300 rounded-lg input-focus resize-none"></textarea>
                     </div>
                     
                     <button type="submit" id="sendMessageButton" class="w-full py-3 bg-tf-primary text-white font-bold rounded-lg shadow-md hover:bg-indigo-700 transition transform hover:scale-[1.005]">
@@ -99,7 +112,7 @@
     </div>
     
     <script>
-        // Use a relative path for the support API
+        // Endpoint for submitting the contact form data to your admin panel
         const API_SUPPORT_ENDPOINT = "/api/support/message";
 
         document.getElementById('contactForm').addEventListener('submit', async function(event) {
@@ -109,16 +122,14 @@
             const statusMessage = document.getElementById('messageStatus');
             
             button.disabled = true;
-            button.textContent = 'Sending...';
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Sending...';
             statusMessage.textContent = '';
 
             const clientMobile = document.getElementById('clientMobile').value.trim();
-
             const messageData = {
                 clientName: document.getElementById('clientName').value,
                 clientEmail: document.getElementById('clientEmail').value,
                 clientMobile: clientMobile, 
-                // Message text is the main body
                 messageText: document.getElementById('messageText').value,
             };
 
@@ -131,8 +142,8 @@
                  return;
             }
 
-
             try {
+                // Assuming this API endpoint is set up to receive and log the message data
                 const response = await fetch(API_SUPPORT_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -142,7 +153,6 @@
                 const result = await response.json();
 
                 if (response.ok && result.status === "Success") {
-                    // FIX: Updated color class to use tf-secondary (Cyan)
                     statusMessage.className = 'text-tf-secondary mt-3';
                     statusMessage.textContent = 'Inquiry submitted! We will contact you via email or phone shortly.';
                     document.getElementById('contactForm').reset();

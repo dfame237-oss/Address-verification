@@ -16,15 +16,13 @@
             theme: {
                 extend: {
                     colors: {
-                        // Defined by you
-                        'tf-bg-light': '#F8FAFC', // Near White
+                        'tf-bg-light': '#F8FAFC', 
                         'tf-card-light': '#FFFFFF',
                         'tf-text-dark': '#1E293B',
                         'tf-primary': '#6366F1', // Indigo 500
                         'tf-secondary': '#06B6D4', // Cyan 500
                         'whatsapp-green': '#25D366',
                         'alert-dark': '#EF4444',
-                        // Added for accents
                         'tf-primary-light': '#E0E7FF',
                     },
                     fontFamily: {
@@ -39,7 +37,6 @@
     </script>
 
     <style>
-        /* Your existing styles */
         body { scroll-behavior: smooth; }
         .input-focus:focus {
             border-color: #6366F1; 
@@ -50,13 +47,14 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        #demoModal { display: none; inset: 0; background-color: rgba(0, 0, 0, 0.6); align-items: center; justify-content: center; z-index: 50; }
-        
-        /* Advanced Hero Background: Subtle Grid Pattern */
         .hero-background {
             background-color: #F8FAFC; 
             background-image: radial-gradient(#E5E7EB 1px, transparent 1px);
             background-size: 20px 20px;
+        }
+        /* Style for Accordion active state */
+        .accordion-header[aria-expanded="true"] .chevron {
+            transform: rotate(180deg);
         }
     </style>
 </head>
@@ -70,13 +68,13 @@
             </a>
 
             <div class="flex gap-4 sm:gap-6 items-center">
-                <a href="#how-it-works" class="hidden sm:inline font-medium text-gray-600 hover:text-tf-secondary transition">How it Works</a>
+                <a href="#features" class="hidden sm:inline font-medium text-gray-600 hover:text-tf-secondary transition">Details</a>
                 <a href="pricing.html" class="hidden sm:inline font-medium text-gray-600 hover:text-tf-secondary transition">Pricing</a>
                 <a href="client-login.html" class="font-medium text-tf-primary hover:text-indigo-600 transition">Client Login</a>
 
-                <button onclick="openModal()" class="bg-tf-primary text-white py-2 px-4 sm:px-6 rounded-lg font-bold shadow-lg shadow-tf-primary/30 hover:bg-indigo-600 transition transform hover:scale-105">
+                <a href="contact.html" class="bg-tf-primary text-white py-2 px-4 sm:px-6 rounded-lg font-bold shadow-lg shadow-tf-primary/30 hover:bg-indigo-600 transition transform hover:scale-105">
                     Request Demo
-                </button>
+                </a>
             </div>
         </div>
     </nav>
@@ -96,9 +94,9 @@
             </p>
 
             <div class="flex flex-col sm:flex-row justify-center gap-4 mb-20">
-                <button onclick="openModal()" class="py-3 px-8 bg-tf-primary text-white rounded-lg font-extrabold shadow-xl shadow-tf-primary/40 hover:bg-indigo-600 transition transform hover:-translate-y-0.5">
+                <a href="contact.html" class="py-3 px-8 bg-tf-primary text-white rounded-lg font-extrabold shadow-xl shadow-tf-primary/40 hover:bg-indigo-600 transition transform hover:-translate-y-0.5">
                     Get Started & Pricing →
-                </button>
+                </a>
                 <a href="single.html" class="py-3 px-8 bg-tf-card-light border border-gray-300 text-tf-text-dark rounded-lg font-bold shadow-lg hover:bg-gray-100 transition">
                     <i class="fas fa-search mr-2"></i> Try Single Check (Free)
                 </a>
@@ -140,7 +138,98 @@
         </div>
     </header>
 
-    <section id="whyus" class="py-24 bg-tf-card-light border-t" style="margin-top: -6rem;">
+    <section class="py-12 bg-tf-card-light border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <h3 class="text-lg font-semibold text-gray-500 uppercase tracking-widest mb-8">
+                Trusted to verify over 10 Million addresses annually
+            </h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 items-center justify-center opacity-70">
+                <img src="logos/logo-a.svg" alt="Client Logo A" class="h-8 mx-auto filter grayscale hover:grayscale-0 transition duration-300">
+                <img src="logos/logo-b.svg" alt="Client Logo B" class="h-8 mx-auto filter grayscale hover:grayscale-0 transition duration-300">
+                <img src="logos/logo-c.svg" alt="Client Logo C" class="h-8 mx-auto filter grayscale hover:grayscale-0 transition duration-300">
+                <img src="logos/logo-d.svg" alt="Client Logo D" class="h-8 mx-auto filter grayscale hover:grayscale-0 transition duration-300 hidden md:block">
+                <img src="logos/logo-e.svg" alt="Client Logo E" class="h-8 mx-auto filter grayscale hover:grayscale-0 transition duration-300 hidden md:block">
+            </div>
+        </div>
+    </section>
+
+
+    <section id="features" class="py-24 bg-tf-bg-light">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-4xl font-extrabold text-tf-text-dark mb-4">Under the Hood: Our Verification Engine</h2>
+                <p class="text-lg text-gray-600">
+                    We combine the best of advanced Large Language Models (LLMs) with ground truth data for unprecedented accuracy.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-10">
+                
+                <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-tf-primary">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-magic text-3xl text-tf-primary mr-3"></i>
+                        <h3 class="text-2xl font-bold">Intelligent Error Correction</h3>
+                    </div>
+                    <p class="text-gray-600 mb-3">
+                        Our Gemini AI model automatically fixes phonetic errors ("Nager" -> "Nagar"), spelling mistakes, and common abbreviations (e.g., converting "rd" to "Road").
+                    </p>
+                    <ul class="text-sm text-gray-700 list-disc list-inside space-y-1">
+                        <li>Standardizes input formats.</li>
+                        <li>Removes filler/meaningless words.</li>
+                        <li>Extracts H.no./Flat No. accurately.</li>
+                    </ul>
+                </div>
+
+                <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-tf-secondary">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-database text-3xl text-tf-secondary mr-3"></i>
+                        <h3 class="text-2xl font-bold">India Post PIN Validation</h3>
+                    </div>
+                    <p class="text-gray-600 mb-3">
+                        Every address is cross-referenced with official postal data to ensure the PIN, Post Office, Tehsil, and District are correct and verified.
+                    </p>
+                    <ul class="text-sm text-gray-700 list-disc list-inside space-y-1">
+                        <li>Corrects invalid or wrong PIN codes.</li>
+                        <li>Guarantees official geographical mappings.</li>
+                        <li>Reduces dependence on vague city names.</li>
+                    </ul>
+                </div>
+
+                <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-alert-dark">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-road text-3xl text-alert-dark mr-3"></i>
+                        <h3 class="text-2xl font-bold">Location Suitability Analysis</h3>
+                    </div>
+                    <p class="text-gray-600 mb-3">
+                        We provide an actionable score (Prime, Tier 1/2, Remote/Difficult) so your logistics team can flag high-risk orders *before* dispatch.
+                    </p>
+                    <ul class="text-sm text-gray-700 list-disc list-inside space-y-1">
+                        <li>Prioritize orders based on ease of delivery.</li>
+                        <li>Dynamically select couriers.</li>
+                        <li>Automated COD/Prepaid risk assessment.</li>
+                    </ul>
+                </div>
+
+                <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-gray-500">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-thumbtack text-3xl text-gray-500 mr-3"></i>
+                        <h3 class="text-2xl font-bold">Standardized Shipping Output</h3>
+                    </div>
+                    <p class="text-gray-600 mb-3">
+                        Receive a clean, formatted address string, ready for generating shipping labels on platforms like ShipRocket or Delhivery.
+                    </p>
+                    <ul class="text-sm text-gray-700 list-disc list-inside space-y-1">
+                        <li>Clean Name (removed symbols/extra spaces).</li>
+                        <li>Landmark with directional prefix (Near, Opp.).</li>
+                        <li>Single, shipping-ready address line.</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="whyus" class="py-24 bg-tf-card-light border-t">
         <div class="max-w-7xl mx-auto px-6 text-center">
 
             <h2 class="text-4xl md:text-5xl font-extrabold mb-4">The Real Cost of Messy Data</h2>
@@ -175,43 +264,67 @@
 
     <hr class="border-gray-300">
 
-    <section class="py-24 bg-gray-100">
-        <div class="max-w-7xl mx-auto px-6">
-            <h2 class="text-4xl font-extrabold text-center mb-12">Trusted by Leading E-commerce & D2C Brands</h2>
 
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div class="bg-tf-card-light p-6 rounded-xl shadow-lg border-t-4 border-green-500">
-                    <p class="text-gray-700 italic mb-4">"We reduced our address-related RTO by 18% in the first month. The deliverability score is a game changer for our dispatch team."</p>
-                    <div class="flex items-center">
-                        <div class="font-bold text-tf-text-dark">Ankita R.</div>
-                        <div class="ml-auto text-sm text-gray-500">Logistics Head, Retail Co.</div>
+    <section class="py-24 bg-tf-bg-light">
+        <div class="max-w-4xl mx-auto px-6">
+            <h2 class="text-4xl font-extrabold text-center text-tf-text-dark mb-12">Frequently Asked Questions</h2>
+
+            <div class="space-y-4">
+                
+                <div class="bg-tf-card-light p-4 rounded-xl shadow-lg border border-gray-200">
+                    <button class="accordion-header w-full text-left font-bold text-lg text-tf-text-dark py-2 flex justify-between items-center" 
+                            aria-expanded="false" aria-controls="content-1" onclick="toggleAccordion('content-1', this)">
+                        How does the AI handle phonetic spellings and common typos?
+                        <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300 chevron"></i>
+                    </button>
+                    <div id="content-1" class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                        <p class="pt-2 pb-4 text-gray-600 border-t border-gray-100 mt-2">
+                            Our system uses Google's Gemini LLM, which is trained to recognize common Indian language phonetic errors (e.g., 'Nager' vs. 'Nagar', 'Rd' vs. 'Road') and applies the standard English correction, ensuring the output is clean and accurate for logistics systems.
+                        </p>
                     </div>
                 </div>
-                <div class="bg-tf-card-light p-6 rounded-xl shadow-lg border-t-4 border-orange-500">
-                    <p class="text-gray-700 italic mb-4">"Integration was seamless. The ability to automatically correct PINs and standardize names is incredibly valuable."</p>
-                    <div class="flex items-center">
-                        <div class="font-bold text-tf-text-dark">Prakash S.</div>
-                        <div class="ml-auto text-sm text-gray-500">Founder, D2C Brand</div>
+
+                <div class="bg-tf-card-light p-4 rounded-xl shadow-lg border border-gray-200">
+                    <button class="accordion-header w-full text-left font-bold text-lg text-tf-text-dark py-2 flex justify-between items-center" 
+                            aria-expanded="false" aria-controls="content-2" onclick="toggleAccordion('content-2', this)">
+                        What happens if the address has the wrong PIN code?
+                        <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300 chevron"></i>
+                    </button>
+                    <div id="content-2" class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                        <p class="pt-2 pb-4 text-gray-600 border-t border-gray-100 mt-2">
+                            The system first uses the PIN provided (if any) to query the India Post API. If the PIN is incorrect or missing, the AI uses the extracted address components (District, State, Locality) to find the correct 6-digit PIN and cross-verify it before providing the final output. Critical warnings are flagged in the remarks section.
+                        </p>
                     </div>
                 </div>
-                <div class="hidden lg:flex flex-col items-center justify-center p-6 bg-tf-bg-light rounded-xl shadow-inner border border-gray-300">
-                    <i class="fas fa-users text-4xl text-gray-400 mb-3"></i>
-                    <p class="text-gray-600 font-semibold">Join 50+ businesses scaling safely.</p>
+                
+                <div class="bg-tf-card-light p-4 rounded-xl shadow-lg border border-gray-200">
+                    <button class="accordion-header w-full text-left font-bold text-lg text-tf-text-dark py-2 flex justify-between items-center" 
+                            aria-expanded="false" aria-controls="content-3" onclick="toggleAccordion('content-3', this)">
+                        How accurate is the Location Suitability Score?
+                        <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300 chevron"></i>
+                    </button>
+                    <div id="content-3" class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                        <p class="pt-2 pb-4 text-gray-600 border-t border-gray-100 mt-2">
+                            The score is highly reliable. It categorizes the location (Prime Location, Tier 1 & 2 Cities, Remote/Difficult Location) based on the official Post Office/District data and known courier service levels in those regions. This predictive score is designed specifically to minimize RTO due to difficult access.
+                        </p>
+                    </div>
                 </div>
+
             </div>
         </div>
     </section>
+
 
     <section class="py-20 bg-tf-primary text-white">
         <div class="text-center max-w-4xl mx-auto px-6">
             <h3 class="text-4xl font-extrabold mb-6">Stop RTO Headaches. Start Your Free Trial Today.</h3>
 
             <div class="flex flex-col sm:flex-row justify-center gap-6">
-                <button onclick="openModal()" class="py-3 px-10 bg-tf-secondary text-white rounded-lg font-bold shadow-xl hover:bg-cyan-500 transition transform hover:-translate-y-0.5">
+                <a href="contact.html" class="py-3 px-10 bg-tf-secondary text-white rounded-lg font-bold shadow-xl hover:bg-cyan-500 transition transform hover:-translate-y-0.5">
                     Request Demo & Pricing
-                </button>
-                <a href="https://wa.me/YOUR-WHATSAPP-NUMBER" target="_blank" class="py-3 px-10 bg-whatsapp-green text-white rounded-lg font-bold shadow-xl hover:bg-green-600 transition">
-                    <i class="fab fa-whatsapp mr-2"></i> Instant Sales Support
+                </a>
+                <a href="contact.html" class="py-3 px-10 bg-whatsapp-green text-white rounded-lg font-bold shadow-xl hover:bg-green-600 transition">
+                    <i class="fab fa-whatsapp mr-2"></i> Contact Support
                 </a>
             </div>
         </div>
@@ -228,108 +341,42 @@
         </div>
     </footer>
     
-    <a href="https://wa.me/YOUR-WHATSAPP-NUMBER" target="_blank" class="fixed bottom-6 right-6 z-40 p-4 bg-whatsapp-green text-white rounded-full shadow-3xl hover:bg-green-600 transition transform hover:scale-110" aria-label="Contact us on WhatsApp">
+    <a href="https://wa.me/919193246219" target="_blank" class="fixed bottom-6 right-6 z-40 p-4 bg-whatsapp-green text-white rounded-full shadow-3xl hover:bg-green-600 transition transform hover:scale-110" aria-label="Contact us on WhatsApp">
         <i class="fab fa-whatsapp text-3xl"></i>
     </a>
 
-    <div id="demoModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center px-4 z-50">
-        <div class="bg-white p-6 rounded-xl max-w-md w-full shadow-2xl">
-            <div class="flex justify-between items-center border-b pb-3 mb-3">
-                <h3 class="text-xl font-bold text-tf-primary">Request a Demo</h3>
-                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-            </div>
-
-            <form id="demoForm" class="space-y-4">
-                <input type="text" id="demoName" placeholder="Your Name" required class="w-full p-3 border rounded input-focus">
-                <input type="email" id="demoEmail" placeholder="Your Work Email" required class="w-full p-3 border rounded input-focus">
-                <input type="tel" id="demoPhone" placeholder="Mobile Number (10 digits)" required class="w-full p-3 border rounded input-focus">
-                <textarea id="demoMessage" class="w-full p-3 border rounded input-focus" rows="3" placeholder="I am interested in bulk verification for my business."></textarea>
-
-                <button type="submit" id="demoSubmit" class="w-full bg-tf-secondary py-3 text-white rounded-lg font-bold hover:bg-cyan-500 transition">
-                    Submit Request
-                </button>
-
-                <p id="demoStatus" class="text-center text-sm font-semibold"></p>
-            </form>
-        </div>
-    </div>
-
     <script>
-        const API_SUPPORT_ENDPOINT = "/api/support/message";
+        // JavaScript for the FAQ Accordion functionality
+        function toggleAccordion(contentId, headerElement) {
+            const content = document.getElementById(contentId);
+            const isExpanded = headerElement.getAttribute('aria-expanded') === 'true';
 
-        function openModal() {
-            document.getElementById('demoModal').classList.remove('hidden');
-            document.getElementById('demoStatus').textContent = '';
-            document.getElementById('demoForm').reset();
-        }
-
-        function closeModal() {
-            document.getElementById('demoModal').classList.add("hidden");
-        }
-
-        document.querySelectorAll('a[href="#demoModal"]').forEach(btn => {
-            btn.addEventListener("click", e => {
-                e.preventDefault();
-                openModal();
-            });
-        });
-
-        document.getElementById('demoForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
-
-            const button = document.getElementById('demoSubmit');
-            const statusMessage = document.getElementById('demoStatus');
-            
-            button.disabled = true;
-            button.textContent = 'Sending...';
-            statusMessage.textContent = '';
-
-            const clientMobile = document.getElementById('demoPhone').value.trim();
-            
-            // Basic client-side validation
-            if (clientMobile.length !== 10 || !/^\d{10}$/.test(clientMobile)) {
-                statusMessage.className = 'text-alert-dark mt-3';
-                statusMessage.textContent = 'Please enter a valid 10-digit mobile number.';
-                button.disabled = false;
-                button.textContent = 'Submit Request';
-                return;
-            }
-
-            const messageData = {
-                clientName: document.getElementById('demoName').value,
-                clientEmail: document.getElementById('demoEmail').value,
-                clientMobile: clientMobile, 
-                messageText: document.getElementById('demoMessage').value,
-            };
-
-            try {
-                const response = await fetch(API_SUPPORT_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(messageData)
+            if (isExpanded) {
+                // Collapse
+                content.style.maxHeight = null;
+                headerElement.setAttribute('aria-expanded', 'false');
+            } else {
+                // Expand
+                // Close any currently open accordion in the same container
+                document.querySelectorAll('.accordion-header[aria-expanded="true"]').forEach(openHeader => {
+                    if (openHeader !== headerElement) {
+                        openHeader.setAttribute('aria-expanded', 'false');
+                        document.getElementById(openHeader.getAttribute('aria-controls')).style.maxHeight = null;
+                    }
                 });
-
-                const result = await response.json();
-
-                if (response.ok && result.status === "Success") {
-                    statusMessage.className = 'text-tf-secondary mt-3';
-                    statusMessage.textContent = 'Demo request sent! We will contact you shortly.';
-                    document.getElementById('demoForm').reset();
-                    setTimeout(() => closeModal(), 2000);
-                } else {
-                    statusMessage.className = 'text-alert-dark mt-3';
-                    statusMessage.textContent = `Error: ${result.message || 'Failed to send request.'}`;
-                }
-            } catch (e) {
-                statusMessage.className = 'text-alert-dark mt-3';
-                statusMessage.textContent = 'Network error occurred.';
-                console.error("Demo Form Submission Error:", e);
-            } finally {
-                setTimeout(() => { 
-                    button.disabled = false;
-                    button.textContent = 'Submit Request';
-                }, 2000);
+                
+                // Expand the clicked one
+                content.style.maxHeight = content.scrollHeight + "px"; // Set max height to content height
+                headerElement.setAttribute('aria-expanded', 'true');
             }
+        }
+        
+        // Initial setup to ensure max-height is correctly calculated
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.accordion-content').forEach(content => {
+                // Initially set max-height to 0, but read the scrollHeight for future transitions
+                content.style.maxHeight = '0';
+            });
         });
     </script>
 </body>
