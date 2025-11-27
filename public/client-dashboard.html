@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- CRITICAL: Import Bulk Logic here -->
+    <script src="bulk_verification_logic.js"></script> 
     <script>
         // Custom Tailwind config for the professional look
         tailwind.config = {
@@ -74,7 +76,7 @@
         #client-inbox-list div { cursor: pointer; border-left: 5px solid transparent; }
         #client-inbox-list div:hover { border-left-color: #6366F1; background-color: #F0F4FF; }
         
-        /* FIX 1: Fixed positioning for Inbox Icon, separated from header flow */
+        /* FIX: Fixed positioning for Inbox Icon, separated from header flow */
         #inbox-fixed-container {
             position: fixed; 
             top: 20px;
@@ -103,7 +105,7 @@
             display: none; 
         }
 
-        /* FIX 2: Mobile Responsiveness */
+        /* FIX: Mobile Responsiveness */
         @media (max-width: 768px) {
             .dashboard-container { 
                 padding: 15px; 
@@ -158,6 +160,7 @@
             </div>
         </header>
 
+        <!-- Fixed Inbox Icon Container (Corrected position) -->
         <div id="inbox-fixed-container" onclick="toggleInbox()">
             <i class="fas fa-inbox icon-btn"></i>
             <span id="inbox-badge" class="badge" style="display: none;">0</span>
@@ -290,7 +293,7 @@
         const API_BASE = '/api';
         const API_ENDPOINT = "/api/verify-single-address"; 
         const LOGIN_PAGE = "client-login.html";
-        const AUTH_TOKEN = localStorage.getItem('clientToken');
+        // REMOVED: const AUTH_TOKEN = localStorage.getItem('clientToken'); <-- NO LONGER NEEDED AS IT WAS STALE.
         
         let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
         // NOTE: The server passes the ID in the JWT payload, which is why we rely on planDetails.id.
@@ -299,17 +302,28 @@
         let isPlanValid = true;
         
         // --- AUTH CHECK ---
-        if (!AUTH_TOKEN) {
+        const initialToken = localStorage.getItem('clientToken');
+        if (!initialToken) {
             window.location.href = LOGIN_PAGE;
         }
         
-        // --- FIX: Updated Logout Function to Call Server ---
+        // --- LOGOUT FUNCTION ---
         async function logout() {
+            // CRITICAL: Fetch the token just before logging out to ensure the server is notified.
+            const tokenToNotify = localStorage.getItem('clientToken'); 
+            
             try {
-                await authFetch(`${API_BASE}/client/logout`, {
-                    method: 'POST',
-                });
-                console.log("Server logout status recorded successfully.");
+                if (tokenToNotify) {
+                    // Use a specific fetch for logout (cannot rely on authFetch throwing an error here)
+                    await fetch(`${API_BASE}/client/logout`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${tokenToNotify}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    console.log("Server logout status recorded successfully.");
+                }
             } catch (error) {
                 console.warn("Could not notify server of logout status, proceeding with local logout:", error);
             }
@@ -317,13 +331,22 @@
             localStorage.clear();
             window.location.href = LOGIN_PAGE;
         }
-        // --- END FIX ---
+        // --- END LOGOUT FUNCTION ---
 
-        // --- AUTHENTICATED FETCH HELPER ---
+        // --- AUTHENTICATED FETCH HELPER (CRITICAL FIX APPLIED) ---
         async function authFetch(url, options = {}) {
+            // CRITICAL FIX: Fetch the latest token directly inside the function scope
+            const currentToken = localStorage.getItem('clientToken'); 
+            
+            if (!currentToken) {
+                // If token is missing, force immediate hard logout via refresh
+                logout(); 
+                throw new Error("Session expired. Please log in again.");
+            }
+
             const defaultHeaders = {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${AUTH_TOKEN}`,
+                'Authorization': `Bearer ${currentToken}`, // Use the latest token
             };
 
             const response = await fetch(url, {
@@ -332,6 +355,7 @@
             });
 
             if (response.status === 403 || response.status === 401) {
+                // If server explicitly denies, trigger logout and propagate error
                 logout();
                 throw new Error("Session expired. Please log in again.");
             }
@@ -340,12 +364,16 @@
         
         // --- HEARTBEAT FUNCTION ---
         async function sendHeartbeat() {
-            if (!AUTH_TOKEN) return;
+            const currentToken = localStorage.getItem('clientToken');
+            if (!currentToken) return; // Prevent network requests if client has already logged out locally
+            
             try {
+                // Uses authFetch, which handles token inclusion and 401 response
                 await authFetch(`${API_BASE}/client/activity`, {
                     method: 'POST',
                 });
             } catch (e) {
+                // authFetch will call logout() internally on 401/403
                 console.warn("Heartbeat failed (Session likely expired or network error).", e);
             }
         }
@@ -479,19 +507,7 @@
             bulkVerificationDiv.appendChild(errorBlock);
         }
         
-        // --- BULK VERIFICATION LOGIC (MOVED TO SEPARATE FILE) ---
-        // These functions will now be imported from bulk_verification_logic.js
-        // The stubs below are kept for local execution reference only.
-        
-        // function updateStatusMessage(message, isError = false) { /* ... */ } 
-        // function handleTemplateDownload() { /* ... */ } 
-        // function parseCSV(text) { /* ... */ } 
-        // async function fetchVerification(rawAddress, customerName) { /* ... */ } 
-        // function createAndDownloadCSV(rows, filename) { /* ... */ } 
-        // async function handleBulkVerification() { /* ... */ }
-        // function initBulkListeners() { /* ... */ } 
-        
-        // --- MESSAGING / SUPPORT LOGIC (FIXED) ---
+        // --- MESSAGING / SUPPORT LOGIC (FINALIZED) ---
         document.getElementById('support-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const subject = document.getElementById('support-subject').value;
@@ -515,6 +531,7 @@
             statusMsg.style.color = '#6366F1'; // Use tf-primary color
             
             try {
+                // CRITICAL: This uses the fixed authFetch which gets the token dynamically
                 const response = await authFetch(`${API_BASE}/inbox/message`, {
                     method: 'POST',
                     body: JSON.stringify({
@@ -535,13 +552,13 @@
                     document.getElementById('support-body').value = '';
                     loadClientInbox(); 
                 } else {
-                    // FIX: Ensure we display the message property, falling back to a known error
+                    // Ensure we display the message property, falling back to a known error
                     statusMsg.textContent = `Send Failed: ${result.message || 'Unknown API Error. Check console.'}`; 
                     statusMsg.style.color = '#DC2626'; // Use alert-dark color
                 }
             } catch (error) {
-                // Network error, connection issue, or JSON parse failure
-                statusMsg.textContent = `Network Error. Check console for details.`;
+                // If authFetch logged out, this catches the throw and updates UI
+                statusMsg.textContent = `Error: Session Expired. Please log in.`;
                 console.error("Messaging Fetch Error:", error);
                 statusMsg.style.color = '#DC2626'; // Use alert-dark color
             }
@@ -643,6 +660,5 @@
             showTab('bulk-verification', document.getElementById('bulk-tab-btn'));
         };
     </script>
-    <script src="bulk_verification_logic.js"></script>
 </body>
 </html>

@@ -1,13 +1,12 @@
 // public/bulk_verification_logic.js
-
-// NOTE: This file relies on the following constants and functions defined in client-dashboard.html:
+// This script is imported by client-dashboard.html and uses its global scope:
 // const API_ENDPOINT;
 // const isPlanValid;
 // function checkPlanValidity();
 // async function authFetch(url, options); 
 // const LOGIN_PAGE;
 
-// --- BULK VERIFICATION LOGIC ---
+// --- BULK VERIFICATION CORE FUNCTIONS ---
 
 function updateStatusMessage(message, isError = false) { 
     const statusMessage = document.getElementById('status-message');
@@ -102,7 +101,8 @@ async function fetchVerification(rawAddress, customerName) {
         } catch (error) {
             lastError = error;
             
-            // CRITICAL FIX: If authFetch throws a session error, stop retrying immediately
+            // CRITICAL FIX: If authFetch throws the session error, stop retrying immediately.
+            // This is required to prevent continuous loops if the token is bad.
             if (error.message.includes("Session expired")) {
                 throw error; 
             }
@@ -232,6 +232,7 @@ async function handleBulkVerification() {
     reader.readAsText(file);
 }
 
+// Function called by window.onload in client-dashboard.html
 function initBulkListeners() {
     if (isPlanValid) {
         const downloadTemplateButton = document.getElementById('downloadTemplateButton');
