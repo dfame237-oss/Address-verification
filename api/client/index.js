@@ -1,8 +1,8 @@
 // api/client/index.js
 // Combined client router: login | logout | force-logout | activity | profile
 
-// FIX: Change to require('./db') to correctly resolve module path within the /api/ directory
-const { connectToDatabase } = require('./db');
+// FIX: Corrected path: We moved db.js from the same directory (./db) to ../../utils/db
+const { connectToDatabase } = require('../../utils/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { randomUUID } = require('crypto');
