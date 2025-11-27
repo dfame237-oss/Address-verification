@@ -1,11 +1,11 @@
 // api/verify-single-address.js
-// Vercel Serverless Function (Node.js)
+// Merged: your original Gemini + IndiaPost logic + credits handling + auth + GET remainingCredits
+// NOTE: Replace process.env.GEMINI_API_KEY and process.env.JWT_SECRET in your Vercel env.
 
-// --- 1. CONFIGURATION AND UTILITIES ---
 const INDIA_POST_API = 'https://api.postalpincode.in/pincode/';
-let pincodeCache = {}; 
+let pincodeCache = {};
 
-const testingKeywords = ['test', 'testing', 'asdf', 'qwer', 'zxcv', 'random', 'gjnj', 'fgjnj']; 
+const testingKeywords = ['test', 'testing', 'asdf', 'qwer', 'zxcv', 'random', 'gjnj', 'fgjnj'];
 const coreMeaningfulWords = [
     "ddadu", "ddadu", "ai", "add", "add-", "raw", "dumping", "grand", "dumping grand",
     "chd", "chd-", "chandigarh", "chandigarh-", "chandigarh", "west", "sector", "sector-",
@@ -14,15 +14,20 @@ const coreMeaningfulWords = [
     "tq", "job", "dist"
 ];
 
-// Combine both lists for comprehensive cleanup
 const meaningfulWords = [...coreMeaningfulWords, ...testingKeywords];
-
 const meaninglessRegex = new RegExp(`\\b(?:${meaningfulWords.join('|')})\\b`, 'gi');
-// directionalKeywords array is used for the Landmark Prefix Logic
-const directionalKeywords = ['near', 'opposite', 'back side', 'front side', 'behind', 'opp']; 
+const directionalKeywords = ['near', 'opposite', 'back side', 'front side', 'behind', 'opp'];
 
+// --- DB helper and auth ---
+const { connectToDatabase } = require('../db');
+const jwt = require('jsonwebtoken');
+const { ObjectId } = require('mongodb');
 
+const JWT_SECRET = process.env.JWT_SECRET || 'replace_with_env_jwt_secret';
+
+// --- India Post helper ---
 async function getIndiaPostData(pin) {
+    if (!pin) return { PinStatus: 'Error' };
     if (pincodeCache[pin]) return pincodeCache[pin];
 
     try {
@@ -54,11 +59,11 @@ async function getIndiaPostData(pin) {
     }
 }
 
-
+// --- Gemini helper (unchanged) ---
 async function getGeminiResponse(prompt) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-        return { text: null, error: "Gemini API key not set in Vercel environment variables." };
+        return { text: null, error: "Gemini API key not set in environment variables." };
     }
 
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
@@ -97,6 +102,7 @@ async function getGeminiResponse(prompt) {
     }
 }
 
+// --- Utilities from your original file ---
 function extractPin(address) {
     const match = String(address).match(/\b\d{6}\b/);
     return match ? match[0] : null;
@@ -128,8 +134,7 @@ Raw Address: "${originalAddress}"
     } else {
         basePrompt += `\nAddress has no PIN or the PIN is invalid. You must find and verify the correct 6-digit PIN. If you cannot find a valid PIN, set "PIN" to null and provide the best available data.`;
     }
-    
-    // Add the JSON output instruction
+
     basePrompt += `\nYour entire response MUST be a single, valid JSON object starting with { and ending with } and contain ONLY the keys listed above.`;
 
     return basePrompt;
@@ -140,171 +145,249 @@ function processAddress(address, postalData) {
     return getGeminiResponse(prompt);
 }
 
-// --- 2. MAIN HANDLER ---
-
+// --- Main Handler (merged) ---
 module.exports = async (req, res) => {
-    // START OF CORS FIX (Step 36)
+    // CORS - keep your original origin for security
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', 'https://dfame237-oss.github.io/Address-verification');
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
-    
+    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
+
     if (req.method === 'OPTIONS') {
         res.status(200).end();
         return;
     }
 
-    if (req.method !== 'POST') {
-        res.status(405).json({ status: "Error", error: 'Method Not Allowed' });
-        return;
-    }
-    // END OF CORS FIX
-
+    // Connect DB early (used for credits)
+    let db;
     try {
-        const { address, customerName } = req.body;
-        let remarks = []; // Initialize remarks array
-        
-        if (!address) {
-            return res.status(400).json({ status: "Error", error: "Address is required." });
-        }
-
-        const cleanedName = customerName.replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim() || null;
-        const initialPin = extractPin(address);
-        let postalData = { PinStatus: 'Error' };
-        
-        if (initialPin) {
-            postalData = await getIndiaPostData(initialPin);
-        }
-
-        // 1. Call Gemini API
-        const geminiResult = await processAddress(address, postalData);
-        if (geminiResult.error || !geminiResult.text) {
-            return res.status(500).json({ status: "Error", error: geminiResult.error || "Gemini API failed to return text." });
-        }
-
-        // 2. Parse Gemini JSON output
-        let parsedData;
-        try {
-            // Attempt to clean up and parse the JSON string
-            const jsonText = geminiResult.text.replace(/```json|```/g, '').trim();
-            parsedData = JSON.parse(jsonText);
-        } catch (e) {
-            console.error("JSON Parsing Error:", e.message);
-            // VITAL: Add critical alert for JSON failure
-            remarks.push(`CRITICAL_ALERT: JSON parse failed. Raw Gemini Output: ${geminiResult.text.substring(0, 50)}...`);
-            // Continue with fallback data
-            parsedData = {
-                FormattedAddress: address.replace(meaninglessRegex, '').trim(),
-                Landmark: '',
-                State: '',
-                DIST: '',
-                PIN: initialPin,
-                AddressQuality: 'Very Bad',
-                Remaining: remarks[0], // Use the error as remaining
-            };
-        }
-
-        // 3. --- PIN VERIFICATION & CORRECTION LOGIC ---
-        let finalPin = String(parsedData.PIN).match(/\b\d{6}\b/) ? parsedData.PIN : initialPin;
-        let primaryPostOffice = postalData.PostOfficeList ? postalData.PostOfficeList[0] : {};
-
-        if (finalPin) {
-            // Re-run India Post lookup if PIN is different or original lookup failed
-            if (postalData.PinStatus !== 'Success' || (initialPin && finalPin !== initialPin)) {
-                const aiPostalData = await getIndiaPostData(finalPin);
-
-                if (aiPostalData.PinStatus === 'Success') {
-                    // AI PIN is valid, use its data and update Post Office details
-                    postalData = aiPostalData;
-                    primaryPostOffice = postalData.PostOfficeList[0] || {};
-                    
-                    // Add PIN correction remarks
-                    if (initialPin && initialPin !== finalPin) {
-                        remarks.push(`CRITICAL_ALERT: Wrong PIN (${initialPin}) corrected to (${finalPin}).`);
-                    } else if (!initialPin) {
-                        remarks.push(`Correct PIN (${finalPin}) added by AI.`);
-                    }
-                } else {
-                    // AI PIN also failed API check, warn the user and revert PIN if possible
-                    remarks.push(`CRITICAL_ALERT: AI-provided PIN (${finalPin}) not verified by API.`);
-                    finalPin = initialPin; // Revert to original, which might be valid or invalid
-                }
-            } else if (initialPin && postalData.PinStatus === 'Success') {
-                remarks.push(`PIN (${initialPin}) verified successfully.`);
-            }
-        } else {
-            // If neither original nor AI could find a valid PIN
-            remarks.push("CRITICAL_ALERT: PIN not found after verification attempts. Manual check needed.");
-            finalPin = initialPin || null; // Fallback to initialPin even if invalid, for user reference
-        }
-        
-        // 3.5. --- Short Address Check ---
-        if (parsedData.FormattedAddress && parsedData.FormattedAddress.length < 35 && parsedData.AddressQuality !== 'Very Good' && parsedData.AddressQuality !== 'Good') {
-             remarks.push(`CRITICAL_ALERT: Formatted address is short (${parsedData.FormattedAddress.length} chars). Manual verification recommended.`);
-        }
-
-
-        // 4. --- Directional Prefix Logic for Landmark ---
-        let landmarkValue = parsedData.Landmark || '';
-        const originalAddressLower = address.toLowerCase();
-        let finalLandmark = '';
-
-        if (landmarkValue.toString().trim() !== '') {
-            const foundDirectionalWord = directionalKeywords.find(keyword => originalAddressLower.includes(keyword));
-            
-            if (foundDirectionalWord) {
-                // Find the original spelling of the directional word in the raw address
-                const originalDirectionalWordMatch = address.match(new RegExp(`\\b${foundDirectionalWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i'));
-                const originalDirectionalWord = originalDirectionalWordMatch ? originalDirectionalWordMatch[0] : foundDirectionalWord;
-                
-                // Capitalize the first letter for clean display
-                const prefixedWord = originalDirectionalWord.charAt(0).toUpperCase() + originalDirectionalWord.slice(1);
-                
-                finalLandmark = `${prefixedWord} ${landmarkValue.toString().trim()}`;
-            } else {
-                // If no directional word is found, use "Near" as the default
-                finalLandmark = `Near ${landmarkValue.toString().trim()}`;
-            }
-        }
-        
-        // Final Remarks cleanup and addition
-        if (parsedData.Remaining && parsedData.Remaining.trim() !== '') {
-            remarks.push(`Remaining/Ambiguous Text: ${parsedData.Remaining.trim()}`);
-        } else if (remarks.length === 0) {
-            remarks.push('Address verified and formatted successfully.');
-        }
-
-
-        // 5. Construct the Final JSON Response
-        const finalResponse = {
-            status: "Success",
-            customerRawName: customerName,
-            customerCleanName: cleanedName,
-            
-            // Core Address Components
-            addressLine1: parsedData.FormattedAddress || address.replace(meaninglessRegex, '').trim() || '',
-            landmark: finalLandmark, // <<< UPDATED
-            
-            // Geographic Components (Prioritize India Post verification)
-            postOffice: primaryPostOffice.Name || parsedData['P.O.'] || '',
-            tehsil: primaryPostOffice.Taluk || parsedData.Tehsil || '',
-            district: primaryPostOffice.District || parsedData['DIST.'] || '',
-            state: primaryPostOffice.State || parsedData.State || '',
-            pin: finalPin, // <<< UPDATED
-
-            // Quality/Verification Metrics
-            addressQuality: parsedData.AddressQuality || 'Medium',
-            locationType: parsedData.LocationType || 'Unknown',
-            locationSuitability: parsedData.LocationSuitability || 'Unknown',
-            
-            // Remarks
-            remarks: remarks.join('; ').trim(), // <<< UPDATED: Send as a single string
-        };
-
-        return res.status(200).json(finalResponse);
-
+        const dbResult = await connectToDatabase();
+        db = dbResult.db;
     } catch (e) {
-        console.error("Internal Server Error:", e);
-        return res.status(500).json({ status: "Error", error: `Internal Server Error: ${e.message}` });
+        console.error('DB connection failed in /api/verify-single-address:', e);
+        return res.status(500).json({ status: 'Error', error: 'Database connection failed.' });
     }
+    const clients = db.collection('clients');
+
+    // Helper: parse JWT payload from Authorization header
+    function parseJwtFromHeader(req) {
+        const authHeader = req.headers.authorization || req.headers.Authorization;
+        if (!authHeader) return null;
+        const parts = authHeader.split(' ');
+        if (parts.length !== 2) return null;
+        const token = parts[1];
+        try {
+            const payload = jwt.verify(token, JWT_SECRET);
+            return payload;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // GET: return remaining credits for authenticated client (no consumption)
+    if (req.method === 'GET') {
+        const jwtPayload = parseJwtFromHeader(req);
+        if (!jwtPayload || !jwtPayload.clientId) {
+            return res.status(401).json({ status: 'Error', message: 'Authentication required.' });
+        }
+        try {
+            const client = await clients.findOne({ _id: new ObjectId(jwtPayload.clientId) }, { projection: { remainingCredits: 1, initialCredits: 1, planName: 1 } });
+            if (!client) return res.status(404).json({ status: 'Error', message: 'Client not found.' });
+
+            return res.status(200).json({
+                status: 'Success',
+                remainingCredits: client.remainingCredits ?? 0,
+                initialCredits: client.initialCredits ?? 0,
+                planName: client.planName ?? null
+            });
+        } catch (e) {
+            console.error('GET /api/verify-single-address error:', e);
+            return res.status(500).json({ status: 'Error', message: 'Internal server error.' });
+        }
+    }
+
+    // POST: process verification with credits logic
+    if (req.method === 'POST') {
+        // Authenticate
+        const jwtPayload = parseJwtFromHeader(req);
+        if (!jwtPayload || !jwtPayload.clientId) {
+            return res.status(401).json({ status: 'Error', message: 'Authentication required.' });
+        }
+        const clientId = jwtPayload.clientId;
+
+        // Parse request body
+        let body = req.body;
+        if (typeof body === 'string') {
+            try { body = JSON.parse(body); } catch (e) { /* keep original */ }
+        }
+        const { address, customerName } = body || {};
+        if (!address) {
+            return res.status(400).json({ status: 'Error', error: 'Address is required.' });
+        }
+
+        try {
+            // Load client doc
+            const client = await clients.findOne({ _id: new ObjectId(clientId) });
+            if (!client) return res.status(404).json({ status: 'Error', message: 'Client not found.' });
+
+            const initialPin = extractPin(address);
+            let postalData = { PinStatus: 'Error' };
+            if (initialPin) postalData = await getIndiaPostData(initialPin);
+
+            // Determine if plan is Unlimited
+            const remaining = client.remainingCredits;
+            const initial = client.initialCredits;
+            const isUnlimited = (remaining === 'Unlimited' || initial === 'Unlimited' || String(initial).toLowerCase() === 'unlimited');
+
+            let reserved = false;
+
+            if (!isUnlimited) {
+                // Atomically decrement remainingCredits if it's > 0
+                const reserveResult = await clients.findOneAndUpdate(
+                    { _id: client._id, remainingCredits: { $gt: 0 } },
+                    { $inc: { remainingCredits: -1 }, $set: { lastActivityAt: new Date() } },
+                    { returnDocument: 'after' }
+                );
+
+                if (!reserveResult.value) {
+                    return res.status(200).json({
+                        status: 'QuotaExceeded',
+                        message: 'You have exhausted your verification credits. Contact support to purchase more credits or upgrade your plan.',
+                        remainingCredits: client.remainingCredits ?? 0
+                    });
+                }
+
+                reserved = true;
+            } else {
+                // Unlimited: update lastActivityAt only
+                await clients.updateOne({ _id: client._id }, { $set: { lastActivityAt: new Date() } });
+            }
+
+            // Now run your original Gemini + IndiaPost verification workflow
+            let remarks = [];
+            const cleanedName = (customerName || '').replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim() || null;
+
+            // Call Gemini/Gemini-processing using your build/process functions
+            const geminiResult = await processAddress(address, postalData);
+            if (geminiResult.error || !geminiResult.text) {
+                // Refund reserved credit if external failed
+                if (reserved) {
+                    try {
+                        await clients.updateOne({ _id: client._id }, { $inc: { remainingCredits: 1 } });
+                    } catch (refundErr) {
+                        console.error('Failed to refund reserved credit after Gemini error:', refundErr);
+                    }
+                }
+                return res.status(500).json({ status: 'Error', error: geminiResult.error || 'Gemini API failed to return text.' });
+            }
+
+            // Parse Gemini JSON output (your original parse logic)
+            let parsedData;
+            try {
+                const jsonText = geminiResult.text.replace(/```json|```/g, '').trim();
+                parsedData = JSON.parse(jsonText);
+            } catch (e) {
+                console.error('JSON Parsing Error:', e.message);
+                remarks.push(`CRITICAL_ALERT: JSON parse failed. Raw Gemini Output: ${String(geminiResult.text || '').substring(0, 50)}...`);
+                parsedData = {
+                    FormattedAddress: address.replace(meaninglessRegex, '').trim(),
+                    Landmark: '',
+                    State: '',
+                    DIST: '',
+                    PIN: initialPin,
+                    AddressQuality: 'Very Bad',
+                    Remaining: remarks[0],
+                };
+            }
+
+            // PIN verification/correction logic (kept from original)
+            let finalPin = String(parsedData.PIN).match(/\b\d{6}\b/) ? parsedData.PIN : initialPin;
+            let primaryPostOffice = postalData.PostOfficeList ? postalData.PostOfficeList[0] : {};
+
+            if (finalPin) {
+                if (postalData.PinStatus !== 'Success' || (initialPin && finalPin !== initialPin)) {
+                    const aiPostalData = await getIndiaPostData(finalPin);
+                    if (aiPostalData.PinStatus === 'Success') {
+                        postalData = aiPostalData;
+                        primaryPostOffice = postalData.PostOfficeList[0] || {};
+                        if (initialPin && initialPin !== finalPin) {
+                            remarks.push(`CRITICAL_ALERT: Wrong PIN (${initialPin}) corrected to (${finalPin}).`);
+                        } else if (!initialPin) {
+                            remarks.push(`Correct PIN (${finalPin}) added by AI.`);
+                        }
+                    } else {
+                        remarks.push(`CRITICAL_ALERT: AI-provided PIN (${finalPin}) not verified by API.`);
+                        finalPin = initialPin;
+                    }
+                } else if (initialPin && postalData.PinStatus === 'Success') {
+                    remarks.push(`PIN (${initialPin}) verified successfully.`);
+                }
+            } else {
+                remarks.push('CRITICAL_ALERT: PIN not found after verification attempts. Manual check needed.');
+                finalPin = initialPin || null;
+            }
+
+            if (parsedData.FormattedAddress && parsedData.FormattedAddress.length < 35 && parsedData.AddressQuality !== 'Very Good' && parsedData.AddressQuality !== 'Good') {
+                remarks.push(`CRITICAL_ALERT: Formatted address is short (${parsedData.FormattedAddress.length} chars). Manual verification recommended.`);
+            }
+
+            // Landmark directional prefix logic (kept from original)
+            let landmarkValue = parsedData.Landmark || '';
+            const originalAddressLower = address.toLowerCase();
+            let finalLandmark = '';
+            if (landmarkValue.toString().trim() !== '') {
+                const foundDirectionalWord = directionalKeywords.find(keyword => originalAddressLower.includes(keyword));
+                if (foundDirectionalWord) {
+                    const originalDirectionalWordMatch = address.match(new RegExp(`\\b${foundDirectionalWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i'));
+                    const originalDirectionalWord = originalDirectionalWordMatch ? originalDirectionalWordMatch[0] : foundDirectionalWord;
+                    const prefixedWord = originalDirectionalWord.charAt(0).toUpperCase() + originalDirectionalWord.slice(1);
+                    finalLandmark = `${prefixedWord} ${landmarkValue.toString().trim()}`;
+                } else {
+                    finalLandmark = `Near ${landmarkValue.toString().trim()}`;
+                }
+            }
+
+            if (parsedData.Remaining && parsedData.Remaining.trim() !== '') {
+                remarks.push(`Remaining/Ambiguous Text: ${parsedData.Remaining.trim()}`);
+            } else if (remarks.length === 0) {
+                remarks.push('Address verified and formatted successfully.');
+            }
+
+            // Build final response (kept original keys)
+            const finalResponse = {
+                status: "Success",
+                customerRawName: customerName,
+                customerCleanName: cleanedName,
+                addressLine1: parsedData.FormattedAddress || address.replace(meaninglessRegex, '').trim() || '',
+                landmark: finalLandmark,
+                postOffice: primaryPostOffice.Name || parsedData['P.O.'] || '',
+                tehsil: primaryPostOffice.Taluk || parsedData.Tehsil || '',
+                district: primaryPostOffice.District || parsedData['DIST.'] || '',
+                state: primaryPostOffice.State || parsedData.State || '',
+                pin: finalPin,
+                addressQuality: parsedData.AddressQuality || 'Medium',
+                locationType: parsedData.LocationType || 'Unknown',
+                locationSuitability: parsedData.LocationSuitability || 'Unknown',
+                remarks: remarks.join('; ').trim(),
+            };
+
+            // Determine and return updated remainingCredits
+            const updatedClient = isUnlimited
+                ? { remainingCredits: 'Unlimited' }
+                : await clients.findOne({ _id: client._id }, { projection: { remainingCredits: 1 } });
+
+            return res.status(200).json({
+                ...finalResponse,
+                remainingCredits: isUnlimited ? 'Unlimited' : (updatedClient.remainingCredits ?? 0)
+            });
+
+        } catch (e) {
+            console.error('POST /api/verify-single-address error:', e);
+            return res.status(500).json({ status: 'Error', message: `Internal Server Error: ${e.message}` });
+        }
+    }
+
+    // Method not allowed
+    return res.status(405).json({ status: 'Error', error: 'Method Not Allowed' });
 };
+    

@@ -1,70 +1,762 @@
-// api/client/activity.js
-// Endpoint for client dashboard to send a heartbeat, updating their lastActivityAt timestamp.
-
-const { connectToDatabase } = require('../db');
-const jwt = require('jsonwebtoken'); 
-const { ObjectId } = require('mongodb');
-
-// 🚨 FIX: Define the JWT_SECRET using the exact same fallback as the login file
-const JWT_SECRET = process.env.JWT_SECRET || 'your_default_secret_for_dev_only';
-
-// Helper to get client ID from JWT
-function getClientId(req) {
-    const authHeader = req.headers.authorization || req.headers.Authorization;
-    const token = authHeader?.split(' ')[1];
-    if (!token) return null;
-    try {
-        // Use the consistent JWT_SECRET variable for verification
-        const payload = jwt.verify(token, JWT_SECRET);
-        // Assuming client IDs are stored as ObjectId strings
-        return payload.id.toString(); 
-    } catch (err) {
-        console.warn("JWT Verification Failed in activity.js:", err.message);
-        return null;
-    }
-}
-
-module.exports = async (req, res) => {
-    // CORS Setup
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader('Access-Control-Allow-Origin', '*'); 
-    res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
-    if (req.method === 'OPTIONS') return res.status(200).end();
-    if (req.method !== 'POST') return res.status(405).json({ status: "Error", error: 'Method Not Allowed' });
-
-    const clientId = getClientId(req);
-
-    if (!clientId) {
-        // 401 Unauthorized status is crucial for the client-side script to force a logout
-        return res.status(401).json({ status: "Error", message: "Authentication required." });
-    }
-
-    let db;
-    try {
-        db = (await connectToDatabase()).db;
-    } catch (e) {
-        return res.status(500).json({ status: "Error", message: "Database connection failed." });
-    }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    const clientsCollection = db.collection("clients");
-    const lastActivityAt = new Date();
+    <script src="bulk_verification_logic.js"></script> 
+    <script>
+        // Custom Tailwind config for the professional look
+        tailwind.config = {
+            theme: {
+  
+               extend: {
+                    colors: {
+                        'tf-dark': '#0F172A', // Deep Blue-Gray Background
+                        'tf-primary': '#6366F1', // Indigo/Violet Primary Accent
+      
+                   'tf-secondary': '#06B6D4', // Cyan Secondary Accent
+                        'tf-text': '#E2E8F0', // Light Text
+                        'tf-card': '#1E293B', // Darker Card Background
+                    
+     'tf-light': '#F1F5F9', // Very light gray for background
+                        'whatsapp-green': '#25D366',
+                        'alert-dark': '#DC2626',
+                    },
+                   
+  fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        
+ /* Shared Dashboard Styles - Updated for Teleforce feel */
+        body { font-family: 'Inter', sans-serif;
+ background-color: #F1F5F9; }
+        .dashboard-container { max-width: 1200px; margin: 30px auto; padding: 35px;
+ background-color: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
+        .header { display: flex;
+ justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB;
+ }
+        .header h1 { font-weight: 700;
+ }
+        
+        .nav-tabs { display: flex;
+ border-bottom: 2px solid #E5E7EB; margin-bottom: 30px; }
+        .tab-button { padding: 12px 20px;
+ cursor: pointer; border: none; background: none; font-weight: 600; color: #64748B; border-bottom: 2px solid transparent; transition: color 0.3s, border-bottom 0.3s;
+ }
+        .tab-button.active { color: #6366F1; border-bottom: 2px solid #6366F1;
+ }
+        .tab-content { padding: 15px 0; animation: fadeIn 0.5s;
+ }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1;
+ } }
 
-    try {
-        // Update the client's activity timestamp
-        const result = await clientsCollection.updateOne(
-            { _id: new ObjectId(clientId) },
-            { $set: { lastActivityAt: lastActivityAt } }
-        );
+        .controls { display: flex; gap: 20px; align-items: center;
+ }
+        .icon-btn { cursor: pointer; position: relative; font-size: 24px; color: #64748B;
+ transition: color 0.2s; }
+        .icon-btn:hover { color: #6366F1;
+ }
+        .badge { position: absolute; top: -5px; right: -5px; background-color: #EF4444; color: white;
+ border-radius: 50%; padding: 3px 7px; font-size: 11px; }
+        
+        /* Profile & Plan Cards */
+        .info-grid { display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        .profile-card, .plan-card { background-color: #F8FAFC;
+ padding: 30px; border-radius: 12px; border: 1px solid #E2E8F0; transition: box-shadow 0.2s;
+ }
+        .profile-card:hover, .plan-card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+ }
+        .info-item strong { color: #1E293B; margin-right: 8px; font-weight: 600;
+ }
 
-        if (result.matchedCount === 0) {
-            return res.status(404).json({ status: "Error", message: "Client not found." });
+        .plan-status-badge { display: inline-block; padding: 6px 14px; border-radius: 9999px; font-size: 0.85rem;
+ font-weight: 700; }
+        .status-enabled { background-color: #DBF5FF; color: #06B6D4;
+ } /* Cyan background */
+        .status-disabled { background-color: #FEE2E2; color: #DC2626;
+ }
+        
+        .action-btn { background-color: #6366F1;
+ color: white; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: background-color 0.2s, transform 0.1s;
+ }
+        .action-btn:hover { background-color: #4F46E5; transform: translateY(-1px);
+ }
+        .action-btn.logout { background-color: #DC2626;
+ }
+        .action-btn.logout:hover { background-color: #B91C1C;
+ }
+        
+        /* Bulk Specific Styles */
+        .progress-container { margin-top: 2.5rem;
+ padding: 1.5rem; background-color: #E2E8F0; border-radius: 10px; border: 1px solid #CBD5E1; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+ }
+        .progress-fill { background-color: #06B6D4; /* tf-secondary */ height: 0.75rem; border-radius: 9999px;
+ transition: all 0.5s ease-in-out; }
+        
+        /* Support/Messaging Forms */
+        .form-group label { display: block;
+ margin-bottom: 6px; font-weight: 600; color: #1E293B; }
+        .form-group input, .form-group textarea { width: 100%;
+ padding: 10px; border: 1px solid #CBD5E1; border-radius: 6px; }
+        
+        /* FIX: Modernized Inbox Card Look */
+        .msg-card { 
+            display: flex;
+ align-items: center;
+            padding: 12px 15px; 
+            border-radius: 8px; 
+            margin-bottom: 10px;
+            cursor: pointer; 
+            border: 1px solid #E2E8F0;
+            transition: background-color 0.2s, box-shadow 0.2s;
+ }
+        .msg-card:hover {
+            background-color: #F0F4FF;
+ /* Light indigo hover */
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+ }
+        .msg-card.unread { 
+            background-color: #EEF2FF;
+ /* Light background for unread */
+            border-left: 4px solid #6366F1;
+ /* Primary color indicator */
+            font-weight: 600;
+ }
+        .msg-card .msg-icon {
+            font-size: 1.2rem;
+ color: #6366F1;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        /* FIX: Modern Inbox Icon Styling */
+        #inbox-fixed-container {
+            position: fixed;
+ top: 20px;
+            right: 20px;
+            z-index: 1000; 
+            background-color: #FFFFFF; 
+            border: 1px solid #CBD5E1;
+ /* Light gray border */
+            border-radius: 50%;
+            padding: 12px;
+ /* Slightly larger padding */
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+ /* More prominent shadow */
+            cursor: pointer;
+ transition: background-color 0.2s;
+        }
+        #inbox-fixed-container:hover {
+            background-color: #F8FAFC;
+ }
+        #inbox-fixed-container .fas {
+            font-size: 20px;
+ color: #6366F1; /* Primary brand color for the icon */
+        }
+        #inbox-fixed-container .badge {
+            top: 0px;
+ right: 0px; 
+            padding: 2px 6px;
         }
 
-        return res.status(200).json({ status: "Success", message: "Activity updated.", timestamp: lastActivityAt });
+        /* FIX: Modal positioning to center correctly over the viewport */
+        .modal {
+            position: fixed;
+ top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+ z-index: 2000; /* Ensure it's above everything */
+            display: none;
+ }
 
-    } catch (e) {
-        console.error("Client Activity Update Error:", e);
-        return res.status(500).json({ status: "Error", message: `Internal Server Error: ${e.message}` });
-    }
-};
+        /* FIX: Message Detail View Styling */
+        #full-message-detail {
+            border: 1px solid #D1D5DB;
+ /* Light border */
+            background-color: #F8FAFC;
+ /* Light gray background */
+            border-radius: 8px;
+            padding: 15px;
+ line-height: 1.6;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+        #full-message-detail h3 {
+             color: #06B6D4;
+ /* Secondary color for subject */
+             padding-bottom: 8px;
+ border-bottom: 1px dashed #E2E8F0;
+             margin-bottom: 8px;
+        }
+
+
+        /* FIX: Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .dashboard-container { 
+                padding: 15px;
+ margin: 10px auto;
+                width: 95%; 
+                box-shadow: none; 
+            }
+            .header {
+                flex-direction: column;
+ align-items: flex-start;
+                margin-bottom: 20px;
+            }
+            .header h1 {
+                font-size: 1.75rem;
+ margin-bottom: 10px;
+            }
+            .controls {
+                width: 100%;
+ justify-content: flex-end;
+            }
+            .nav-tabs {
+                overflow-x: auto;
+ flex-wrap: nowrap;
+                justify-content: flex-start;
+                -webkit-overflow-scrolling: touch; 
+            }
+            .tab-button {
+                flex-shrink: 0;
+ padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+            .info-grid {
+                grid-template-columns: 1fr;
+ gap: 20px; 
+            }
+            /* Fixed Inbox Icon Adjustment for Mobile (Pin to bottom-right corner) */
+            #inbox-fixed-container {
+                top: auto;
+ bottom: 15px; 
+                right: 15px;
+                padding: 12px; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="header">
+            <h1 class="text-3xl font-bold text-gray-800">Welcome, <span id="client-name-display" class="text-tf-primary">Client</span></h1>
+            <div class="controls">
+                <button onclick="logout()" class="action-btn logout">Logout</button>
+            </div>
+      
+    </header>
+
+        <div id="inbox-fixed-container" onclick="toggleInbox()">
+            <i class="fas fa-envelope-open-text"></i> <span id="inbox-badge" class="badge" style="display: none;">0</span>
+        </div>
+
+        <div class="nav-tabs">
+            <button id="bulk-tab-btn" class="tab-button active" onclick="showTab('bulk-verification', this)">Bulk 
+ Address Verification</button>
+            <button class="tab-button" onclick="showTab('profile-plan', this)">Profile & Plan Status</button>
+            <button class="tab-button" onclick="showTab('support', this)">Support/Messaging</button>
+        </div>
+
+        <div id="bulk-verification" class="tab-content">
+            <header class="text-center mb-10">
+                <h2 class="text-4xl font-extrabold text-gray-900 mb-2">
+              
+       <span class="text-tf-secondary">Bulk Address</span> Verification
+                </h2>
+                <p class="text-lg text-gray-500 mt-2">Upload a CSV file for high-volume cleaning and verification.</p>
+            </header>
+            
+            <div id="bulkContent" class="space-y-8">
+          
+       
+                <div class="bg-tf-light p-8 rounded-xl border-l-4 border-tf-primary shadow-lg">
+                    <p class="font-bold text-xl text-tf-primary mb-3 flex items-center">
+                        <i class="fas fa-download mr-3"></i>
+                   
+      1. Download Template
+                    </p>
+                    <p class="text-sm text-gray-600 mb-4">Use this template to ensure your CSV file has the required columns: <code class="bg-gray-200 px-1 rounded font-mono">ORDER ID</code>, <code class="bg-gray-200 px-1 rounded font-mono">CUSTOMER NAME</code>, <code class="bg-gray-200 px-1 rounded font-mono">CUSTOMER RAW ADDRESS</code>.</p>
+                    
+ <button id="downloadTemplateButton" class="w-full py-3 bg-tf-primary text-white font-semibold rounded-lg hover:bg-indigo-600 transition duration-200 focus:outline-none focus:ring-4 focus:ring-tf-primary focus:ring-opacity-50">
+                        Download Verification Template (CSV)
+                    </button>
+                </div>
+
+                <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-lg 
+ text-center">
+                    <p class="font-bold text-xl text-gray-800 mb-4 flex items-center justify-center">
+                        <i class="fas fa-upload mr-3 text-tf-secondary"></i>
+                        2. Upload Your CSV File
+                 
+    </p>
+                    <input type="file" id="csvFileInput" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-tf-secondary/10 file:text-tf-secondary hover:file:bg-tf-secondary/20 transition cursor-pointer">
+                    <p class="text-xs text-gray-500 mt-2">Maximum 1000 rows recommended for stability.</p>
+                </div>
+
+              
+    <button id="processButton" class="w-full py-4 bg-tf-secondary text-white font-bold text-lg rounded-lg shadow-xl transition duration-200 transform hover:scale-[1.005] focus:outline-none focus:ring-4 focus:ring-tf-secondary focus:ring-opacity-50" disabled>
+                    Start Verification
+                </button>
+            </div>
+
+            <div class="progress-container mt-12 p-8 bg-tf-light rounded-xl border border-gray-300 shadow-inner">
+           
+      <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Verification Status</h3>
+                <p id="status-message" class="font-semibold text-gray-600 mb-4 transition duration-300">Ready to upload.</p>
+                <div class="progress-bar w-full bg-gray-300 rounded-full h-3">
+                    <div class="progress-fill h-3 bg-tf-secondary rounded-full transition-all duration-500 ease-in-out" id="progressBarFill" style="width: 0%;"></div>
+             
+    </div>
+                
+                <a id="downloadLink" class="hidden mt-6 w-full py-3 bg-tf-primary text-white font-bold text-center rounded-lg shadow-xl transition duration-200 transform hover:scale-[1.01] focus:outline-none focus:ring-4 focus:ring-tf-primary focus:ring-opacity-50" href="#" download="verified_addresses.csv">
+                    <i class="fas fa-download mr-2"></i> Download Verified CSV
+                </a>
+  
+            </div>
+
+            <p id="access-denied-message" class="hidden mt-6 text-center text-red-700 font-bold"></p>
+
+        </div>
+
+        <div id="profile-plan" class="tab-content" style="display: none;">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Account Overview</h2>
+            <div class="info-grid">
+                <div class="profile-card flex flex-col justify-between">
+  
+                   <h3 class="text-xl font-semibold text-tf-primary mb-4 flex items-center"><i class="fas fa-user-circle mr-2"></i> My Profile Details</h3>
+                    <div class="space-y-3">
+                        <div class="info-item"><p><strong>Username:</strong> <span id="profile-username"></span></p></div>
+                      
+   <div class="info-item"><p><strong>Email:</strong> <span id="profile-email"></span></p></div>
+                        <div class="info-item"><p><strong>Mobile:</strong> <span id="profile-mobile"></span></p></div>
+                        <div class="info-item"><p><strong>Access Code:</strong> <span id="bulk-code"></span></p></div>
+                    </div>
+                    
+ <button class="action-btn mt-6 w-full bg-tf-card text-tf-text border border-gray-600 hover:bg-gray-700" onclick="alert('TODO: Implement password change API')">Change Password</button>
+                </div>
+
+                <div class="plan-card">
+                    <h3 class="text-xl font-semibold text-tf-secondary mb-4 flex items-center"><i class="fas fa-award mr-2"></i> Plan Status</h3>
+                    <div class="space-y-3">
+ 
+                       <div class="info-item"><p><strong>Current Plan:</strong> <span id="plan-name" class="font-bold"></span></p></div>
+                        <div class="info-item"><p><strong>Status:</strong> <span id="account-status"></span></p></div>
+                        <div class="info-item"><p><strong>Valid Until:</strong> <span id="validity-end"></span></p></div>
+                 
+               <div class="info-item"><p><strong>Remaining Credits:</strong> <span id="remaining-credits" class="font-bold text-alert-dark">N/A</span></p></div>
+                    </div>
+                    <button class="action-btn mt-6 w-full bg-tf-secondary hover:bg-cyan-600" onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(3)'))">Contact for Renewal</button>
+                </div>
+            </div>
+        </div>
+
+ 
+      
+        <div id="support" class="tab-content" style="display: none;">
+            <div class="p-8 border rounded-xl shadow-md bg-tf-light space-y-6 max-w-lg mx-auto">
+                <h2 class="text-2xl font-bold mb-4 flex items-center text-tf-primary">
+                    <i class="fas fa-headset mr-3"></i> Contact Support
+    
+              </h2>
+                <p class="text-gray-600">
+                    Need help with plan renewal, technical issues, or credits?
+ Contact our dedicated support team instantly.
+                </p>
+
+                <a href="https://wa.me/9193246219" target="_blank" class="block w-full py-4 bg-whatsapp-green text-white font-bold rounded-lg shadow-lg hover:bg-green-600 transition transform hover:scale-[1.005] flex items-center justify-center">
+                    <i class="fab fa-whatsapp text-xl mr-3"></i> 
+                 
+    WhatsApp Support (+91 9193246219)
+                </a>
+
+                <a href="tel:+919193246219" class="block w-full py-4 bg-tf-primary text-white font-bold rounded-lg shadow-lg hover:bg-indigo-600 transition transform hover:scale-[1.005] flex items-center justify-center">
+                    <i class="fas fa-phone mr-3"></i> 
+   
+                  Call Support (+91 9193246219)
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div id="inbox-modal" class="modal">
+        <div class="modal-content w-full max-w-lg rounded-xl shadow-2xl">
+         
+    <span class="modal-close" onclick="closeInbox()">&times;</span>
+            <h2 class="text-3xl font-bold mb-6 text-tf-primary flex items-center">
+                <i class="fas fa-envelope-open-text mr-3"></i> Client Inbox
+            </h2>
+            
+            <div id="client-inbox-list" class="mt-4 max-h-96 overflow-y-auto space-y-3">
+               
+              <p class="text-center text-gray-500 mt-5">Loading messages...</p>
+            </div>
+            
+            <div id="full-message-detail" class="mt-6 pt-4" style="display: none;">
+                <h3 id="full-message-subject" class="font-bold text-xl mb-1"></h3>
+           
+         <small id="full-message-date" class="text-gray-500 block mb-4"></small>
+                
+                <div id="full-message-body" class="p-4 border rounded bg-gray-50 whitespace-pre-wrap text-gray-700 max-h-40 overflow-y-auto"></div>
+            </div>
+        </div>
+    </div>
+
+  
+    <script>
+        // --- CONSTANTS AND STATE ---
+        const API_BASE = '/api';
+        const API_ENDPOINT = "/api/verify-single-address"; 
+        const LOGIN_PAGE = "client-login.html";
+        
+        let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
+        // NOTE: The server passes the ID in the JWT payload, which is why we rely on planDetails.id.
+        const CLIENT_ID = planDetails.id || null; 
+        const CLIENT_NAME = localStorage.getItem('clientName') || planDetails.username;
+        let isPlanValid = true;
+        // --- AUTH CHECK ---
+        const initialToken = localStorage.getItem('clientToken');
+        if (!initialToken) {
+            window.location.href = LOGIN_PAGE;
+        }
+        
+        // --- LOGOUT FUNCTION (UPDATED for Server Notification) ---
+        async function logout() {
+            const tokenToNotify = localStorage.getItem('clientToken');
+            try {
+                if (tokenToNotify) {
+                    // Send notification to server to clear session/single-login token
+                    await fetch(`${API_BASE}/client/logout`, { 
+                        method: 'POST',
+                        headers: {
+         
+                            'Authorization': `Bearer ${tokenToNotify}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    console.log("Server logout status recorded successfully.");
+                }
+            } catch (error) {
+                console.warn("Could not notify server of logout status, proceeding with local logout:", error);
+            }
+
+            localStorage.clear();
+            window.location.href = LOGIN_PAGE;
+        }
+        // --- END LOGOUT FUNCTION ---
+
+        // --- AUTHENTICATED FETCH HELPER (CRITICAL FIX FOR TOKEN ERROR) ---
+        async function authFetch(url, options = {}) {
+            // CRITICAL FIX: Fetch the latest token dynamically
+            const currentToken = localStorage.getItem('clientToken');
+            if (!currentToken) {
+                // If token is missing, force immediate hard logout via refresh
+                logout();
+                throw new Error("Session expired. Please log in again.");
+            }
+
+            const defaultHeaders = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${currentToken}`, // Use the latest token
+            };
+            const response = await fetch(url, {
+                ...options,
+                headers: { ...defaultHeaders, ...options.headers },
+            });
+            if (response.status === 403 || response.status === 401) {
+                // If server explicitly denies, trigger logout and propagate error
+                logout();
+                throw new Error("Session expired. Please log in again.");
+            }
+            return response;
+        }
+        
+        // --- HEARTBEAT FUNCTION ---
+        async function sendHeartbeat() {
+            const currentToken = localStorage.getItem('clientToken');
+            if (!currentToken) return;
+            
+            try {
+                // Uses authFetch, which handles token inclusion and 401 response
+                await authFetch(`${API_BASE}/client/activity`, {
+                    method: 'POST',
+                });
+            } catch (e) {
+                // authFetch will call logout() internally on 401/403
+                console.warn("Heartbeat failed (Session likely expired or network error).", e);
+            }
+        }
+        
+        // --- PROFILE DATA FETCH (Display Credits - Request 2) ---
+        async function fetchProfileData() {
+            // NOTE: The server should pass 'credits' in the JWT payload on login.
+            const credits = planDetails.remainingCredits ? planDetails.remainingCredits.toLocaleString() : 'N/A';
+            document.getElementById('remaining-credits').textContent = credits;
+            return {
+                username: planDetails.username ||
+ CLIENT_NAME,
+                email: planDetails.email ||
+ 'client@example.com', 
+                mobile: planDetails.mobile ||
+ '+91-9988776655', 
+                clientName: planDetails.clientName ||
+ CLIENT_NAME,
+            };
+        }
+
+
+        // --- TAB NAVIGATION (FIXED) ---
+        function showTab(tabId, button) {
+            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabId).style.display = 'block';
+            button.classList.add('active');
+
+            if (tabId === 'bulk-verification') {
+                 checkPlanValidity(); // CRITICAL FIX: Ensure validity is checked when returning to bulk tab
+            } else if (tabId === 'profile-plan') {
+                 loadProfileAndPlan();
+            } else if (tabId === 'support') {
+                // No action needed; contact links are static.
+            }
+        }
+
+        // --- LOAD PROFILE & PLAN LOGIC ---
+        async function loadProfileAndPlan() {
+            const profileData = await fetchProfileData();
+            document.getElementById('client-name-display').textContent = profileData.clientName;
+            
+            // Profile Details
+            document.getElementById('profile-username').textContent = profileData.username;
+            document.getElementById('profile-email').textContent = profileData.email;
+            document.getElementById('profile-mobile').textContent = profileData.mobile;
+            document.getElementById('bulk-code').textContent = planDetails.bulkAccessCode || 'N/A';
+            // Plan Details
+            const statusEl = document.getElementById('account-status');
+            const isActive = planDetails.isActive;
+            const statusText = isActive ? 'Enabled' : 'Disabled';
+            
+            statusEl.textContent = statusText;
+            statusEl.className = `plan-status-badge ${isActive ?
+ 'status-enabled' : 'status-disabled'}`;
+
+            // Handle Plan Name Display (show only the name part)
+            const fullPlanName = planDetails.planName ||
+ 'Not Set';
+            document.getElementById('plan-name').textContent = fullPlanName.split('_')[0]; 
+            
+            document.getElementById('validity-end').textContent = new Date(planDetails.validityEnd).toLocaleDateString() || 'N/A';
+            
+            checkPlanValidity();
+        }
+
+        // --- PLAN VALIDATION LOGIC (UNCHANGED) ---
+        function checkPlanValidity() {
+            const token = localStorage.getItem('clientToken');
+            const planDetailsString = localStorage.getItem('planDetails');
+            const bulkContent = document.getElementById('bulkContent');
+            const progressContainer = document.querySelector('#bulk-verification .progress-container');
+
+            const existingErrorBlock = document.querySelector('#bulk-verification .space-y-6.mt-6');
+            if (existingErrorBlock) existingErrorBlock.remove();
+
+
+            if (!token || !planDetailsString) {
+                showAccessDenied("Please log in to access Bulk Address Verification.");
+                isPlanValid = false;
+                return false;
+            }
+
+            try {
+                const validityEnd = new Date(planDetails.validityEnd);
+                const now = new Date();
+                
+                if (!planDetails.isActive) {
+                    showAccessDenied("Your account has been **disabled** by the administrator. Please contact support.");
+                    isPlanValid = false;
+                    return false;
+                }
+
+                if (validityEnd < now) {
+                    showAccessDenied(`Your bulk plan expired on **${validityEnd.toLocaleDateString()}**. Please contact support to renew.`);
+                    isPlanValid = false;
+                    return false;
+                }
+                
+                if (bulkContent) bulkContent.classList.remove('hidden');
+                if (progressContainer) progressContainer.classList.remove('hidden');
+                isPlanValid = true;
+                return true; 
+
+            } catch (e) {
+                console.error("Error parsing plan details:", e);
+                showAccessDenied("Client authentication data is corrupted. Please log in again.");
+                setTimeout(() => { localStorage.clear(); window.location.href = LOGIN_PAGE; }, 1500);
+                isPlanValid = false;
+                return false;
+            }
+        }
+        function showAccessDenied(message) {
+            const bulkContent = document.getElementById('bulkContent');
+            const progressContainer = document.querySelector('#bulk-verification .progress-container');
+            
+            if (bulkContent) bulkContent.classList.add('hidden');
+            if (progressContainer) progressContainer.classList.add('hidden');
+
+            const errorBlock = document.createElement('div');
+            errorBlock.className = 'space-y-6 mt-6';
+            errorBlock.innerHTML = `
+                <div class="bg-red-50 p-8 rounded-xl border-l-4 border-alert-dark shadow-lg">
+                    <p class="font-bold text-xl text-alert-dark mb-3 flex items-center">
+                        🛑 Access Denied
+                    </p>
+    
+                  <p class="text-base text-gray-700 mb-6">${message.replace(/\*\*/g, '<strong>')}</p>
+                </div>
+                <a href="tel:+919193246219" class="block w-full py-3 bg-tf-secondary text-white text-center font-bold rounded-lg hover:bg-cyan-600 transition">
+                    Call Support / Renew Plan
+             
+    </a>
+                <a href="https://wa.me/9193246219" target="_blank" class="block w-full py-3 bg-whatsapp-green text-white text-center font-bold rounded-lg hover:bg-green-600">
+                    <span class="mr-2">🟢</span> WhatsApp Support
+                </a>
+            `;
+            const bulkVerificationDiv = document.getElementById('bulk-verification');
+            if (bulkVerificationDiv.querySelector('.space-y-6.mt-6')) return;
+            bulkVerificationDiv.appendChild(errorBlock);
+        }
+        
+        // --- INBOX FUNCTIONS (UPDATED UI LOGIC) ---
+        async function loadInboxCounts() {
+            try {
+                const response = await authFetch(`${API_BASE}/inbox/message`);
+                const result = await response.json();
+                
+                if (result.status === "Success" && result.unreadCount > 0) {
+                    document.getElementById('inbox-badge').textContent = result.unreadCount;
+                    document.getElementById('inbox-badge').style.display = 'block';
+                } else {
+                    document.getElementById('inbox-badge').style.display = 'none';
+                }
+            } catch (e) {
+                console.error("Failed to load client inbox counts:", e);
+            }
+        }
+
+        async function loadClientInbox() {
+            const msgContainer = document.getElementById('client-inbox-list');
+            const detailView = document.getElementById('full-message-detail');
+            msgContainer.innerHTML = '<p class="text-center text-gray-500 mt-5">Loading messages...</p>';
+            detailView.style.display = 'none';
+            // Hide detail view on load
+
+            try {
+                const response = await authFetch(`${API_BASE}/inbox/message`);
+                const result = await response.json();
+
+                if (result.status === "Success") {
+                    msgContainer.innerHTML = '';
+                    if (result.messages.length === 0) {
+                        msgContainer.innerHTML = '<p class="text-center text-gray-500 mt-5">No messages in your inbox.</p>';
+                        return;
+                    }
+
+                    result.messages.forEach(msg => {
+                        // A message is unread if it was sent by the admin and hasn't been read yet.
+                        const isUnread = !msg.isRead && msg.senderId === 'admin'; 
+     
+                        const cardClass = isUnread ? 'unread' : '';
+                        const icon = isUnread ? 'fa-envelope' : 'fa-envelope-open';
+                        const sender = msg.senderId === 'admin' ? 'Admin' : 'You';
+          
+               
+                        const messageHtml = `
+                            <div id="msg-${msg._id}" class="msg-card ${cardClass}" 
+                           
+                            onclick="viewClientMessage('${msg._id}', '${msg.subject}', \`${msg.body.replace(/`/g, '\\`')}\`, ${isUnread}, '${msg.timestamp}')">
+                                <i class="fas ${icon} msg-icon"></i>
+                                <div class="flex-grow">
+                     
+                                <p class="text-md truncate">${msg.subject ||
+ '(No Subject)'}</p>
+                                    <small class="text-gray-500 block">From: ${sender} &bull;
+ ${new Date(msg.timestamp).toLocaleDateString()}</small>
+                                </div>
+                            </div>
+                        `;
+                        msgContainer.insertAdjacentHTML('beforeend', messageHtml);
+                    });
+                } else {
+                    msgContainer.innerHTML = `<p class="text-center text-red-500 mt-5">Failed to load inbox: ${result.message}</p>`;
+                }
+            } catch (error) {
+                msgContainer.innerHTML = `<p class="text-center text-red-500 mt-5">Network Error: ${error.message}</p>`;
+            }
+        }
+
+        function toggleInbox() {
+            document.getElementById('inbox-modal').style.display = 'flex';
+            loadClientInbox(); // Load messages every time the modal is opened
+        }
+        
+        function closeInbox() {
+            document.getElementById('inbox-modal').style.display = 'none';
+            loadInboxCounts(); // Refresh count on close
+        }
+
+        function viewClientMessage(messageId, subject, body, isUnread, timestamp) {
+            const detailView = document.getElementById('full-message-detail');
+            document.getElementById('full-message-subject').textContent = subject;
+            document.getElementById('full-message-body').textContent = body;
+            document.getElementById('full-message-date').textContent = new Date(timestamp).toLocaleString();
+            
+            detailView.style.display = 'block';
+            if (isUnread) {
+                // Mark message as read on server
+                authFetch(`${API_BASE}/inbox/message?messageId=${messageId}`, { method: 'PUT' });
+                // Update UI instantly
+                const card = document.getElementById(`msg-${messageId}`);
+                if(card) {
+                    card.classList.remove('unread');
+                    card.querySelector('.msg-icon').classList.replace('fa-envelope', 'fa-envelope-open');
+                }
+                setTimeout(loadInboxCounts, 500);
+            }
+        }
+
+
+        // --- INITIALIZATION ---
+        window.onload = () => {
+            loadProfileAndPlan();
+            loadInboxCounts();
+            
+            // CRITICAL: Call initBulkListeners() after the file is imported
+            if (typeof initBulkListeners === 'function') {
+                initBulkListeners();
+            } else {
+                 console.error("Bulk listeners not initialized. Check import of bulk_verification_logic.js");
+            }
+            
+            // Heartbeat call every 60 seconds (60000ms) to update server timestamp
+            setInterval(sendHeartbeat, 60000);
+            setInterval(loadInboxCounts, 60000); 
+            showTab('bulk-verification', document.getElementById('bulk-tab-btn'));
+        };
+    </script>
+</body>
+</html>
