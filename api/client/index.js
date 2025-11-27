@@ -1,5 +1,5 @@
 // api/client/index.js
-// Combined client router: login | logout | force-logout | activity
+// Combined client router: login | logout | force-logout | activity | profile
 const { connectToDatabase } = require('../db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -152,8 +152,13 @@ module.exports = async (req, res) => {
       const { clientId } = body || {};
       if (!clientId) return sendJSON(res, 400, { status: 'Error', message: 'clientId required' });
 
-      await clients.updateOne({ _id: new ObjectId(clientId) }, { $set: { activeSessionId: null, lastActivityAt: new Date() } });
-      return sendJSON(res, 200, { status: 'Success', message: 'Force logout complete' });
+      try {
+        await clients.updateOne({ _id: new ObjectId(clientId) }, { $set: { activeSessionId: null, lastActivityAt: new Date() } });
+        return sendJSON(res, 200, { status: 'Success', message: 'Force logout complete' });
+      } catch (e) {
+        console.error('force-logout error:', e && (e.stack || e.message));
+        return sendJSON(res, 500, { status: 'Error', message: 'Internal Server Error' });
+      }
     }
 
     // -------------------------
@@ -171,14 +176,64 @@ module.exports = async (req, res) => {
       catch (e) { return sendJSON(res, 401, { status: 'Error', message: 'Invalid token' }); }
 
       const clientId = payload?.clientId;
+      const sessionId = payload?.sessionId;
       if (!clientId) return sendJSON(res, 400, { status: 'Error', message: 'Invalid token payload' });
+
+      // Validate the sessionId matches what's stored (prevent stale tokens)
+      const client = await clients.findOne({ _id: new ObjectId(clientId) });
+      if (!client) return sendJSON(res, 401, { status: 'Error', message: 'Invalid session' });
+      if (client.activeSessionId && sessionId && client.activeSessionId !== sessionId) {
+        // token does not match currently active session
+        return sendJSON(res, 401, { status: 'Error', message: 'Session invalidated by server' });
+      }
 
       await clients.updateOne({ _id: new ObjectId(clientId) }, { $set: { lastActivityAt: new Date() } });
       return sendJSON(res, 200, { status: 'Success', message: 'Activity updated' });
     }
 
+    // -------------------------
+    // ACTION: profile (GET) - NEW
+    // Returns authoritative plan/credits & validates session
+    // -------------------------
+    if (action === 'profile') {
+      if (req.method !== 'GET') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
+
+      const authHeader = req.headers.authorization || '';
+      const token = (authHeader.split(' ')[1]) || null;
+      if (!token) return sendJSON(res, 401, { status: 'Error', message: 'Missing token' });
+
+      let payload;
+      try { payload = jwt.verify(token, JWT_SECRET); }
+      catch (e) {
+        return sendJSON(res, 401, { status: 'Error', message: 'Invalid token' });
+      }
+
+      const clientId = payload?.clientId;
+      const sessionId = payload?.sessionId;
+      if (!clientId) return sendJSON(res, 400, { status: 'Error', message: 'Invalid token payload' });
+
+      const client = await clients.findOne({ _id: new ObjectId(clientId) });
+      if (!client) return sendJSON(res, 401, { status: 'Error', message: 'Invalid session' });
+
+      // If there is an activeSessionId that differs from token -> session invalidated
+      if (client.activeSessionId && sessionId && client.activeSessionId !== sessionId) {
+        return sendJSON(res, 401, { status: 'Error', message: 'Session invalidated (another device logged in)' });
+      }
+
+      const planDetails = {
+        planName: client.planName || null,
+        clientName: client.clientName || client.username || null,
+        initialCredits: client.initialCredits ?? null,
+        remainingCredits: client.remainingCredits ?? null,
+        validityEnd: client.validityEnd ?? null,
+        isActive: client.isActive
+      };
+
+      return sendJSON(res, 200, { status: 'Success', planDetails });
+    }
+
     // no action matched
-    return sendJSON(res, 400, { status: 'Error', message: 'Unknown action. Use ?action=login|logout|force-logout|activity or set body.action.' });
+    return sendJSON(res, 400, { status: 'Error', message: 'Unknown action. Use ?action=login|logout|force-logout|activity|profile or set body.action.' });
   } catch (err) {
     console.error('UNCAUGHT in /api/client/index.js', err && (err.stack || err.message));
     return sendJSON(res, 500, { status: 'Error', message: 'Internal server error' });

@@ -34,7 +34,7 @@
     </script>
 
     <style>
-        /* (kept your styles, small safety tweaks for modals and badges) */
+        /* (kept your styles exactly, small adjustments for missing elements) */
         body { font-family: 'Inter', sans-serif; background-color: #F1F5F9; }
         .dashboard-container { max-width: 1200px; margin: 30px auto; padding: 35px; background-color: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB; }
@@ -72,8 +72,6 @@
         #inbox-fixed-container .fas { font-size: 20px; color: #6366F1; }
         #inbox-fixed-container .badge { top: 0px; right: 0px; padding: 2px 6px; }
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; display: none; }
-        .modal-content { background-color: white; padding: 24px; border-radius: 12px; width: 95%; max-width: 820px; }
-        .modal-close { float: right; font-size: 1.5rem; cursor: pointer; color: #6b7280; }
         #full-message-detail { border: 1px solid #D1D5DB; background-color: #F8FAFC; border-radius: 8px; padding: 15px; line-height: 1.6; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
         #full-message-detail h3 { color: #06B6D4; padding-bottom: 8px; border-bottom: 1px dashed #E2E8F0; margin-bottom: 8px; }
         @media (max-width: 768px) {
@@ -86,6 +84,10 @@
             .info-grid { grid-template-columns: 1fr; gap: 20px; }
             #inbox-fixed-container { top: auto; bottom: 15px; right: 15px; padding: 12px; }
         }
+
+        /* Force-logout modal small style */
+        #force-logout-modal .modal-content { max-width: 520px; padding: 24px; border-radius: 12px; background: #fff; }
+        #force-logout-modal .modal-actions { margin-top: 16px; display:flex; gap:10px; justify-content:flex-end; }
     </style>
 
     <!-- include bulk script (must be loaded before we call initBulkListeners in onload) -->
@@ -104,7 +106,7 @@
                     <div>Remaining Credits</div>
                     <div id="remaining-credits" class="font-bold text-xl text-alert-dark">N/A</div>
                 </div>
-                <button id="logoutBtn" onclick="logout()" class="action-btn logout">Logout</button>
+                <button onclick="logout()" class="action-btn logout">Logout</button>
             </div>
         </header>
 
@@ -236,10 +238,24 @@
         </div>
     </div>
 
+    <!-- FORCE-LOGOUT MODAL -->
+    <div id="force-logout-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Another device is logged in</h3>
+            <p class="text-gray-700">It looks like your account is currently active on another device. You can force-logout that session and continue here, or cancel to remain logged out.</p>
+
+            <div class="modal-actions">
+                <button id="forceCancelBtn" class="py-2 px-4 bg-gray-200 rounded-lg" onclick="closeForceModal()">Cancel</button>
+                <button id="forceConfirmBtn" class="py-2 px-4 bg-red-600 text-white rounded-lg" onclick="forceLogoutOtherDevice()">Logout other device & Continue</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- CONSTANTS AND STATE ---
         const API_BASE = '/api';
-        const API_ENDPOINT = "/api/verify-single-address"; // unchanged
+        const API_CLIENT = `${API_BASE}/client`;
+        const API_ENDPOINT = "/api/verify-single-address"; // used by bulk logic
         const LOGIN_PAGE = "client-login.html";
 
         // planDetails may be present in localStorage (from login)
@@ -253,39 +269,12 @@
             window.location.href = LOGIN_PAGE;
         }
 
-        // --- Unified authFetch helper ---
-        async function authFetch(urlOrAction, options = {}) {
-            // If urlOrAction begins with '/api/' treat as full path, otherwise treat as client action
-            let url = urlOrAction;
-            if (!String(urlOrAction).startsWith('/')) {
-                url = `/api/client?action=${urlOrAction}`;
-            }
-
-            const currentToken = localStorage.getItem('clientToken');
-            if (!currentToken) {
-                localStorage.clear();
-                window.location.href = LOGIN_PAGE;
-                throw new Error("Session expired. Please log in again.");
-            }
-
-            const defaultHeaders = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` };
-            const resp = await fetch(url, { ...options, headers: { ...defaultHeaders, ...(options.headers || {}) } });
-
-            if (resp.status === 401 || resp.status === 403) {
-                // Server says token invalid — clear and redirect
-                localStorage.clear();
-                window.location.href = LOGIN_PAGE;
-                throw new Error("Session expired. Please log in again.");
-            }
-            return resp;
-        }
-
-        // --- LOGOUT (notify server router) ---
+        // --- LOGOUT (notify server) ---
         async function logout() {
             const tokenToNotify = localStorage.getItem('clientToken');
             try {
                 if (tokenToNotify) {
-                    await fetch('/api/client?action=logout', {
+                    await fetch(`${API_CLIENT}?action=logout`, {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${tokenToNotify}`,
@@ -301,58 +290,101 @@
             }
         }
 
-        // --- Heartbeat (use router action) ---
-        async function sendHeartbeat() {
-            try {
-                await authFetch('activity', { method: 'POST' }); // calls /api/client?action=activity
-            } catch (e) {
-                console.warn("Heartbeat failed:", e);
+        // --- authFetch: keeps behavior for other calls (auto-logout on 401/403) ---
+        async function authFetch(url, options = {}) {
+            const currentToken = localStorage.getItem('clientToken');
+            if (!currentToken) {
+                localStorage.clear();
+                window.location.href = LOGIN_PAGE;
+                throw new Error("Session expired. Please log in again.");
             }
+
+            const defaultHeaders = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` };
+            const resp = await fetch(url, { ...options, headers: { ...defaultHeaders, ...(options.headers || {}) } });
+
+            if (resp.status === 401 || resp.status === 403) {
+                // attempt to read server message for debugging
+                let debugText = '';
+                try { debugText = await resp.text(); } catch(e){}
+                console.warn('authFetch got 401/403 from', url, 'server message:', debugText);
+                localStorage.clear();
+                window.location.href = LOGIN_PAGE;
+                throw new Error("Session expired. Please log in again.");
+            }
+            return resp;
         }
 
-        // --- Profile & credits retrieval (authoritative) ---
+        // --- Profile fetch using the new profile action (handles 401 specially) ---
         async function fetchProfileData() {
-            // First try the client router profile endpoint (if implemented server-side).
-            try {
-                // We call a profile action if server supports it; many stacks return profile info here.
-                const resp = await authFetch('profile', { method: 'GET' }).catch(() => null);
-                if (resp && resp.ok) {
-                    const json = await resp.json().catch(()=>null);
-                    if (json && json.status === 'Success') {
-                        planDetails = { ...planDetails, ...json.data };
-                        localStorage.setItem('planDetails', JSON.stringify(planDetails));
-                    }
-                }
-            } catch (e) {
-                // ignore; fallback to verify-endpoint below
+            // Use a direct fetch so we can inspect 401 response and show a force-logout option
+            const currentToken = localStorage.getItem('clientToken');
+            if (!currentToken) {
+                localStorage.clear();
+                window.location.href = LOGIN_PAGE;
+                return;
             }
 
-            // If server didn't provide profile action, attempt GET on verify endpoint (your legacy method).
             try {
-                const resp2 = await authFetch(API_ENDPOINT, { method: 'GET' }).catch(()=>null);
-                if (resp2 && resp2.ok) {
-                    const j = await resp2.json().catch(()=>null);
-                    // If verify endpoint returns remainingCredits etc, pick them
-                    if (j && (j.remainingCredits !== undefined || j.planName !== undefined)) {
-                        planDetails = { ...planDetails,
-                            initialCredits: j.initialCredits ?? planDetails.initialCredits,
-                            remainingCredits: j.remainingCredits ?? planDetails.remainingCredits,
-                            planName: j.planName ?? planDetails.planName,
-                        };
-                        localStorage.setItem('planDetails', JSON.stringify(planDetails));
-                    }
-                }
-            } catch (e) {
-                // fallback to localStorage
-            }
+                const resp = await fetch(`${API_CLIENT}?action=profile`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${currentToken}`, 'Content-Type': 'application/json' }
+                });
 
-            // Update UI from planDetails (authoritative or cached)
-            updateUIFromLocalPlan();
-            // Determine plan validity
-            checkPlanValidity();
+                if (resp.status === 401) {
+                    // Could be token expired or session invalidated by another device
+                    let bodyText = '';
+                    try { bodyText = await resp.text(); } catch(e){}
+                    console.warn('Profile fetch 401:', bodyText);
+
+                    // If server says "Session invalidated" offer force-logout
+                    if (bodyText && bodyText.toLowerCase().includes('session invalidated')) {
+                        // show force logout modal
+                        openForceModal();
+                        return;
+                    }
+
+                    // otherwise fallback to local
+                    updateUIFromLocalPlan();
+                    return;
+                }
+
+                const json = await resp.json().catch(()=>null);
+                if (!resp.ok || !json || json.status === 'Error') {
+                    console.warn('Profile fetch failed', resp.status, json);
+                    updateUIFromLocalPlan();
+                    return;
+                }
+
+                const pd = json.planDetails || {};
+                planDetails = Object.assign({}, planDetails, pd);
+                localStorage.setItem('planDetails', JSON.stringify(planDetails));
+
+                const rc = pd.remainingCredits;
+                document.getElementById('remaining-credits').textContent = rc === 'Unlimited' ? 'Unlimited' : (rc == null ? 'N/A' : Number(rc).toLocaleString());
+                document.getElementById('client-name-display').textContent = pd.clientName || CLIENT_NAME;
+                document.getElementById('profile-username').textContent = pd.clientName || CLIENT_NAME;
+                document.getElementById('profile-email').textContent = planDetails.email || '—';
+                document.getElementById('profile-mobile').textContent = planDetails.mobile || '—';
+                document.getElementById('bulk-code').textContent = planDetails.bulkAccessCode || 'N/A';
+                document.getElementById('plan-name').textContent = (planDetails.planName || 'Not Set').split('_')[0];
+                document.getElementById('validity-end').textContent = planDetails.validityEnd ? new Date(planDetails.validityEnd).toLocaleDateString() : 'N/A';
+
+                const statusEl = document.getElementById('account-status');
+                const isActive = (typeof planDetails.isActive === 'undefined') ? true : planDetails.isActive;
+                statusEl.textContent = isActive ? 'Enabled' : 'Disabled';
+                statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
+
+                // re-evaluate plan validity
+                checkPlanValidity();
+
+            } catch (e) {
+                console.error('fetchProfileData error:', e);
+                updateUIFromLocalPlan();
+            }
         }
 
         function updateUIFromLocalPlan() {
+            // Fallback if server call fails — use cached local planDetails
             const rc = planDetails.remainingCredits ?? 'N/A';
             document.getElementById('remaining-credits').textContent = rc === 'Unlimited' ? 'Unlimited' : (rc === 'N/A' ? 'N/A' : Number(rc).toLocaleString());
             document.getElementById('client-name-display').textContent = CLIENT_NAME;
@@ -365,8 +397,7 @@
 
             const statusEl = document.getElementById('account-status');
             const isActive = (typeof planDetails.isActive === 'undefined') ? true : planDetails.isActive;
-            const statusText = isActive ? 'Enabled' : 'Disabled';
-            statusEl.textContent = statusText;
+            statusEl.textContent = isActive ? 'Enabled' : 'Disabled';
             statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
         }
 
@@ -384,9 +415,11 @@
             }
         }
 
-        // --- PLAN VALIDITY CHECK ---
+        // --- PLAN VALIDITY CHECK (keeps your original messaging) ---
         function checkPlanValidity() {
             const token = localStorage.getItem('clientToken');
+            const planDetailsString = localStorage.getItem('planDetails');
+
             if (!token) {
                 showAccessDenied("Please log in to access Bulk Address Verification.");
                 isPlanValid = false;
@@ -409,9 +442,11 @@
                     return false;
                 }
 
+                // OK
                 document.getElementById('bulkContent').classList.remove('hidden');
                 isPlanValid = true;
                 return true;
+
             } catch (e) {
                 console.error("Error parsing plan details:", e);
                 showAccessDenied("Client authentication data is corrupted. Please log in again.");
@@ -525,6 +560,64 @@
                     if (iconEl) iconEl.classList.replace('fa-envelope', 'fa-envelope-open');
                 }
                 setTimeout(loadInboxCounts, 500);
+            }
+        }
+
+        // --- FORCE-LOGOUT UI / helpers ---
+        function openForceModal() {
+            document.getElementById('force-logout-modal').style.display = 'flex';
+        }
+        function closeForceModal() {
+            document.getElementById('force-logout-modal').style.display = 'none';
+        }
+
+        function getTokenPayload() {
+            const token = localStorage.getItem('clientToken');
+            if (!token) return null;
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return payload;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function forceLogoutOtherDevice() {
+            // Use the clientId from token payload (or planDetails) to request server to clear active session
+            const payload = getTokenPayload();
+            const clientId = payload && payload.clientId ? payload.clientId : (planDetails.id || planDetails.clientId);
+            if (!clientId) {
+                alert('Cannot determine clientId. Please log in again.');
+                closeForceModal();
+                localStorage.clear();
+                window.location.href = LOGIN_PAGE;
+                return;
+            }
+
+            try {
+                const resp = await fetch(`${API_CLIENT}?action=force-logout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ clientId })
+                });
+
+                const json = await resp.json().catch(()=>null);
+                if (resp.ok && json && json.status === 'Success') {
+                    // Force-success: clear local token and redirect to login so they can login fresh
+                    closeForceModal();
+                    localStorage.removeItem('clientToken');
+                    // small pause so user sees confirmation
+                    alert('Other device logged out. Please log in again here.');
+                    window.location.href = LOGIN_PAGE;
+                } else {
+                    console.warn('force-logout failed', resp.status, json);
+                    alert('Could not force logout other device. Contact support.');
+                    closeForceModal();
+                }
+            } catch (e) {
+                console.error('forceLogoutOtherDevice error', e);
+                alert('Network error. Try again or contact support.');
+                closeForceModal();
             }
         }
 
