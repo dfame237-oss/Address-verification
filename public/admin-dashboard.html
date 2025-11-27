@@ -38,12 +38,6 @@
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB; }
         .header h1 { font-size: 2.25rem; font-weight: 800; color: #1f2937; }
 
-        /* Controls */
-        .controls { display: flex; gap: 15px; align-items: center; }
-        .icon-btn { cursor: pointer; position: relative; font-size: 24px; color: #64748B; transition: color 0.2s; }
-        .icon-btn:hover { color: #5F3DC4; }
-        .badge { position: absolute; top: -8px; right: -8px; background-color: #DC2626; color: white; border-radius: 50%; padding: 4px 8px; font-size: 11px; font-weight: 700; border: 2px solid white; }
-
         /* Tab Navigation - Critical Style Overrides */
         .nav-tabs { display: flex; border-bottom: 2px solid #E5E7EB; margin-bottom: 30px; }
         .tab-button { padding: 12px 20px; cursor: pointer; border: none; background: none; font-weight: 600; color: #64748B; border-bottom: 2px solid transparent; transition: color 0.3s, border-bottom 0.3s; }
@@ -79,13 +73,14 @@
         .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #374151; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; transition: border-color 0.2s, box-shadow 0.2s; }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #5F3DC4; box-shadow: 0 0 0 2px rgba(95, 61, 196, 0.12); }
+        /* Mobile Fixes */
         @media (max-width: 900px) {
             .client-table-wrapper { overflow-x: auto; width: 100%; }
             .client-table { min-width: 880px; }
         }
     </style>
 </head>
-<body onload="loadClients(); loadInboxCounts();">
+<body>
     <div class="dashboard-container">
         <header class="header">
             <h1><span class="text-tf-primary">Smart Locator</span> Admin Panel</h1>
@@ -401,9 +396,9 @@
         // --- Client management: load / render / delete / update / add / topup / clear session / toggle active ---
         async function loadClients() {
             const clientListBody = document.getElementById('client-list');
-            // Check if we are currently on the client list tab before trying to update the table body
+            
+            // 🛑 FIX: Silent fetch for data needed for metrics
             if (document.getElementById('client-management').style.display !== 'block') {
-                // If not on the tab, just fetch the data silently for metrics
                 try {
                     const response = await authFetch(`${API_ADMIN}?action=client`);
                     const result = await response.json();
@@ -440,12 +435,18 @@
             const activeClientsCount = clients.filter(c => c.isActive).length;
             const onlineClientsCount = clients.filter(c => c.lastActivityAt && (Date.now() - new Date(c.lastActivityAt).getTime() < ONLINE_THRESHOLD_MS)).length;
             
-            document.getElementById('metric-total-clients').textContent = totalClients.toLocaleString();
-            document.getElementById('metric-active-clients').textContent = activeClientsCount.toLocaleString();
-            document.getElementById('metric-online-clients').textContent = onlineClientsCount.toLocaleString();
+            // Check if metric elements exist before setting textContent (Prevents crash on initial load)
+            const totalEl = document.getElementById('metric-total-clients');
+            const activeEl = document.getElementById('metric-active-clients');
+            const onlineEl = document.getElementById('metric-online-clients');
             
-            // This would require a server calculation for total credits issued, but for now, we'll keep it simple/placeholder
-            document.getElementById('metric-credits-issued').textContent = '—';
+            if (totalEl) totalEl.textContent = totalClients.toLocaleString();
+            if (activeEl) activeEl.textContent = activeClientsCount.toLocaleString();
+            if (onlineEl) onlineEl.textContent = onlineClientsCount.toLocaleString();
+            
+            // Placeholder for used credits metric
+            const issuedEl = document.getElementById('metric-credits-issued');
+            if (issuedEl) issuedEl.textContent = '—'; // Placeholder for complex calc
         }
 
         function formatLastActive(lastActivityAt) {
@@ -465,7 +466,8 @@
 
         function renderClients(clients) {
             const clientListBody = document.getElementById('client-list');
-            clientListBody.innerHTML = '';
+            // Ensure we are using the correct element (client-list)
+            clientListBody.innerHTML = ''; 
             if (!clients || clients.length === 0) {
                 clientListBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-4">No clients found.</td></tr>';
                 return;
@@ -759,7 +761,9 @@
                 loadInboxCounts();
                 switchInboxTab('support'); // Default to Demo Requests/Support
             } else if (tabId === 'admin-overview') {
-                 loadClients(); // Fetches data needed for metrics
+                 // Load data needed for metrics when overview is shown
+                 loadClients(); 
+                 loadInboxCounts(); 
             }
         }
 
