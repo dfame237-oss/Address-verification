@@ -1,5 +1,5 @@
 // public/bulk_verification_logic.js
-// This script is imported by client-dashboard.html and uses its global scope:
+// This script is imported by client-dashboard.html and relies on the global scope:
 // const API_ENDPOINT;
 // const isPlanValid;
 // function checkPlanValidity();
@@ -77,7 +77,7 @@ function parseCSV(text) {
     return data;
 }
 
-// CRITICALLY FIXED FUNCTION: Now uses authFetch and correctly handles session errors
+// Fixed Function: Uses authFetch and correctly handles session errors
 async function fetchVerification(rawAddress, customerName) {
     const payload = { address: rawAddress, customerName }; 
     const maxRetries = 3;
@@ -101,9 +101,8 @@ async function fetchVerification(rawAddress, customerName) {
         } catch (error) {
             lastError = error;
             
-            // CRITICAL FIX: If authFetch throws the session error, stop retrying immediately.
-            // This is required to prevent continuous loops if the token is bad.
-            if (error.message.includes("Session expired")) {
+            // CRITICAL FIX: If authFetch threw the session error, stop retrying immediately.
+            if (error.message && error.message.includes("Session expired")) {
                 throw error; 
             }
             

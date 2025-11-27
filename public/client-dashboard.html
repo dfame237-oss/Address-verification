@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <!-- CRITICAL: Import Bulk Logic here -->
     <script src="bulk_verification_logic.js"></script> 
     <script>
@@ -72,22 +73,58 @@
         .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #1E293B; }
         .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #CBD5E1; border-radius: 6px; }
         
-        /* Inbox Styles */
-        #client-inbox-list div { cursor: pointer; border-left: 5px solid transparent; }
-        #client-inbox-list div:hover { border-left-color: #6366F1; background-color: #F0F4FF; }
+        /* FIX: Modernized Inbox Card Look */
+        .msg-card { 
+            display: flex;
+            align-items: center;
+            padding: 12px 15px; 
+            border-radius: 8px; 
+            margin-bottom: 10px;
+            cursor: pointer; 
+            border: 1px solid #E2E8F0;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+        .msg-card:hover {
+            background-color: #F0F4FF; /* Light indigo hover */
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+        }
+        .msg-card.unread { 
+            background-color: #EEF2FF; /* Light background for unread */
+            border-left: 4px solid #6366F1; /* Primary color indicator */
+            font-weight: 600;
+        }
+        .msg-card .msg-icon {
+            font-size: 1.2rem;
+            color: #6366F1;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
         
-        /* FIX: Fixed positioning for Inbox Icon, separated from header flow */
+        /* FIX: Modern Inbox Icon Styling */
         #inbox-fixed-container {
             position: fixed; 
             top: 20px;
             right: 20px;
             z-index: 1000; 
             background-color: #FFFFFF; 
-            border: 1px solid #E2E8F0;
+            border: 1px solid #CBD5E1; /* Light gray border */
             border-radius: 50%;
-            padding: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            padding: 12px; /* Slightly larger padding */
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15); /* More prominent shadow */
             cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #inbox-fixed-container:hover {
+            background-color: #F8FAFC;
+        }
+        #inbox-fixed-container .fas {
+            font-size: 20px;
+            color: #6366F1; /* Primary brand color for the icon */
+        }
+        #inbox-fixed-container .badge {
+            top: 0px; 
+            right: 0px; 
+            padding: 2px 6px;
         }
 
         /* FIX: Modal positioning to center correctly over the viewport */
@@ -160,9 +197,9 @@
             </div>
         </header>
 
-        <!-- Fixed Inbox Icon Container (Corrected position) -->
+        <!-- Fixed Inbox Icon Container (Modernized) -->
         <div id="inbox-fixed-container" onclick="toggleInbox()">
-            <i class="fas fa-inbox icon-btn"></i>
+            <i class="fas fa-envelope-open-text"></i> <!-- Changed to a modern envelope/message icon -->
             <span id="inbox-badge" class="badge" style="display: none;">0</span>
         </div>
 
@@ -250,41 +287,49 @@
             </div>
         </div>
 
+        <!-- FIX 1: Support/Messaging Tab - Changed to Contact Links -->
         <div id="support" class="tab-content" style="display: none;">
-            <div class="info-grid">
-                <div class="p-8 border rounded-xl shadow-md bg-tf-light">
-                    <h2 class="text-xl font-semibold mb-4 flex items-center"><i class="fas fa-paper-plane mr-3 text-tf-primary"></i> Send a Message to Admin</h2>
-                    <form id="support-form" class="space-y-4">
-                        <div class="form-group">
-                            <label for="support-subject">Subject</label>
-                            <input type="text" id="support-subject" placeholder="Plan Renewal Inquiry / Technical Issue" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="support-body">Message</label>
-                            <textarea id="support-body" rows="6" placeholder="Your detailed message or support request" required></textarea>
-                        </div>
-                        <button type="submit" class="action-btn w-full py-3">Send Support Message</button>
-                        <p id="support-status" class="mt-2 text-sm text-center font-semibold"></p>
-                    </form>
-                </div>
-                
-                <div class="p-8 border rounded-xl shadow-md bg-white">
-                    <h2 class="text-xl font-semibold mb-4 flex items-center"><i class="fas fa-inbox mr-3 text-tf-secondary"></i> My Inbox History</h2>
-                    <div id="client-inbox-list" class="mt-4 max-h-96 overflow-y-auto space-y-3">
-                        <p class="text-center text-gray-500">Loading messages...</p>
-                    </div>
-                </div>
+            <div class="p-8 border rounded-xl shadow-md bg-tf-light space-y-6 max-w-lg mx-auto">
+                <h2 class="text-2xl font-bold mb-4 flex items-center text-tf-primary">
+                    <i class="fas fa-headset mr-3"></i> Contact Support
+                </h2>
+                <p class="text-gray-600">
+                    Need help with plan renewal, technical issues, or credits? Contact our dedicated support team instantly.
+                </p>
+
+                <!-- WhatsApp Support -->
+                <a href="https://wa.me/9193246219" target="_blank" class="block w-full py-4 bg-whatsapp-green text-white font-bold rounded-lg shadow-lg hover:bg-green-600 transition transform hover:scale-[1.005] flex items-center justify-center">
+                    <i class="fab fa-whatsapp text-xl mr-3"></i> 
+                    WhatsApp Support (+91 9193246219)
+                </a>
+
+                <!-- Call Support -->
+                <a href="tel:+919193246219" class="block w-full py-4 bg-tf-primary text-white font-bold rounded-lg shadow-lg hover:bg-indigo-600 transition transform hover:scale-[1.005] flex items-center justify-center">
+                    <i class="fas fa-phone mr-3"></i> 
+                    Call Support (+91 9193246219)
+                </a>
             </div>
         </div>
     </div>
 
+    <!-- FIX 4: Inbox Modal Structure - Modernized -->
     <div id="inbox-modal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content w-full max-w-lg rounded-xl shadow-2xl">
             <span class="modal-close" onclick="closeInbox()">&times;</span>
-            <h2 class="text-2xl font-bold mb-3 text-tf-primary">Message Details</h2>
-            <p id="full-message-subject" class="font-bold text-lg text-tf-primary"></p>
-            <small id="full-message-date" class="text-gray-500 block mb-3"></small>
-            <div id="full-message-body" class="p-4 border rounded bg-gray-50 whitespace-pre-wrap text-gray-700"></div>
+            <h2 class="text-3xl font-bold mb-6 text-tf-primary flex items-center">
+                <i class="fas fa-inbox mr-3"></i> Client Inbox
+            </h2>
+            
+            <div id="client-inbox-list" class="mt-4 max-h-96 overflow-y-auto space-y-3">
+                 <p class="text-center text-gray-500 mt-5">Loading messages...</p>
+            </div>
+            
+            <!-- Message Detail View (Hidden by default, appears on click) -->
+            <div id="full-message-detail" class="mt-6 border-t border-gray-200 pt-4" style="display: none;">
+                <h3 id="full-message-subject" class="font-bold text-xl text-tf-secondary mb-1"></h3>
+                <small id="full-message-date" class="text-gray-500 block mb-4"></small>
+                <div id="full-message-body" class="p-4 border rounded bg-gray-50 whitespace-pre-wrap text-gray-700 max-h-40 overflow-y-auto"></div>
+            </div>
         </div>
     </div>
 
@@ -293,7 +338,6 @@
         const API_BASE = '/api';
         const API_ENDPOINT = "/api/verify-single-address"; 
         const LOGIN_PAGE = "client-login.html";
-        // REMOVED: const AUTH_TOKEN = localStorage.getItem('clientToken'); <-- NO LONGER NEEDED AS IT WAS STALE.
         
         let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
         // NOTE: The server passes the ID in the JWT payload, which is why we rely on planDetails.id.
@@ -309,12 +353,10 @@
         
         // --- LOGOUT FUNCTION ---
         async function logout() {
-            // CRITICAL: Fetch the token just before logging out to ensure the server is notified.
             const tokenToNotify = localStorage.getItem('clientToken'); 
             
             try {
                 if (tokenToNotify) {
-                    // Use a specific fetch for logout (cannot rely on authFetch throwing an error here)
                     await fetch(`${API_BASE}/client/logout`, {
                         method: 'POST',
                         headers: {
@@ -333,9 +375,9 @@
         }
         // --- END LOGOUT FUNCTION ---
 
-        // --- AUTHENTICATED FETCH HELPER (CRITICAL FIX APPLIED) ---
+        // --- AUTHENTICATED FETCH HELPER (CRITICAL FIX FOR TOKEN ERROR) ---
         async function authFetch(url, options = {}) {
-            // CRITICAL FIX: Fetch the latest token directly inside the function scope
+            // CRITICAL FIX: Fetch the latest token dynamically
             const currentToken = localStorage.getItem('clientToken'); 
             
             if (!currentToken) {
@@ -365,7 +407,7 @@
         // --- HEARTBEAT FUNCTION ---
         async function sendHeartbeat() {
             const currentToken = localStorage.getItem('clientToken');
-            if (!currentToken) return; // Prevent network requests if client has already logged out locally
+            if (!currentToken) return;
             
             try {
                 // Uses authFetch, which handles token inclusion and 401 response
@@ -378,9 +420,12 @@
             }
         }
         
-        // --- MOCK PROFILE DATA FETCH ---
+        // --- PROFILE DATA FETCH (Requirement 3: Show Credits) ---
         async function fetchProfileData() {
-            // The profile details are sourced from the JWT payload cached in localStorage
+            // NOTE: The server should pass 'credits' in the JWT payload on login.
+            const credits = planDetails.remainingCredits ? planDetails.remainingCredits.toLocaleString() : 'N/A';
+            document.getElementById('remaining-credits').textContent = credits;
+            
             return {
                 username: planDetails.username || CLIENT_NAME,
                 email: planDetails.email || 'client@example.com', 
@@ -399,11 +444,13 @@
             button.classList.add('active');
 
             if (tabId === 'support') {
-                loadClientInbox();
+                // No action needed; contact links are static.
+            } else if (tabId === 'profile-plan') {
+                 loadProfileAndPlan();
             }
         }
 
-        // --- PROFILE & PLAN LOGIC ---
+        // --- LOAD PROFILE & PLAN LOGIC ---
         async function loadProfileAndPlan() {
             const profileData = await fetchProfileData();
             
@@ -432,7 +479,7 @@
             checkPlanValidity();
         }
 
-        // --- PLAN VALIDATION LOGIC ---
+        // --- PLAN VALIDATION LOGIC (UNCHANGED) ---
         function checkPlanValidity() {
             const token = localStorage.getItem('clientToken');
             const planDetailsString = localStorage.getItem('planDetails');
@@ -478,7 +525,6 @@
                 return false;
             }
         }
-
         function showAccessDenied(message) {
             const bulkContent = document.getElementById('bulkContent');
             const progressContainer = document.querySelector('#bulk-verification .progress-container');
@@ -495,9 +541,9 @@
                     </p>
                     <p class="text-base text-gray-700 mb-6">${message.replace(/\*\*/g, '<strong>')}</p>
                 </div>
-                <button onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(3)'))" class="block w-full py-3 bg-tf-secondary text-white text-center font-bold rounded-lg hover:bg-cyan-600 transition">
-                    Contact Support / Renew Plan
-                </button>
+                <a href="tel:+919193246219" class="block w-full py-3 bg-tf-secondary text-white text-center font-bold rounded-lg hover:bg-cyan-600 transition">
+                    Call Support / Renew Plan
+                </a>
                 <a href="https://wa.me/9193246219" target="_blank" class="block w-full py-3 bg-whatsapp-green text-white text-center font-bold rounded-lg hover:bg-green-600">
                     <span class="mr-2">🟢</span> WhatsApp Support
                 </a>
@@ -507,64 +553,7 @@
             bulkVerificationDiv.appendChild(errorBlock);
         }
         
-        // --- MESSAGING / SUPPORT LOGIC (FINALIZED) ---
-        document.getElementById('support-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const subject = document.getElementById('support-subject').value;
-            const body = document.getElementById('support-body').value;
-            const statusMsg = document.getElementById('support-status');
-
-            const clientId = planDetails.id || null;
-            if (!clientId) {
-                statusMsg.textContent = 'Error: Authentication context missing. Please log in again.';
-                statusMsg.style.color = '#dc2626';
-                return;
-            }
-
-            if (!body) {
-                statusMsg.textContent = 'Message body cannot be empty.';
-                statusMsg.style.color = '#dc2626';
-                return;
-            }
-
-            statusMsg.textContent = 'Sending...';
-            statusMsg.style.color = '#6366F1'; // Use tf-primary color
-            
-            try {
-                // CRITICAL: This uses the fixed authFetch which gets the token dynamically
-                const response = await authFetch(`${API_BASE}/inbox/message`, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        subject,
-                        body,
-                        recipientId: 'admin', 
-                        senderId: clientId, 
-                    }),
-                });
-                
-                // Read response body regardless of status, as the server sends JSON errors
-                const result = await response.json(); 
-                
-                if (response.ok && result.status === "Success") {
-                    statusMsg.textContent = 'Message sent successfully! Admin will reply soon.';
-                    statusMsg.style.color = '#06B6D4'; // Use tf-secondary color
-                    document.getElementById('support-subject').value = '';
-                    document.getElementById('support-body').value = '';
-                    loadClientInbox(); 
-                } else {
-                    // Ensure we display the message property, falling back to a known error
-                    statusMsg.textContent = `Send Failed: ${result.message || 'Unknown API Error. Check console.'}`; 
-                    statusMsg.style.color = '#DC2626'; // Use alert-dark color
-                }
-            } catch (error) {
-                // If authFetch logged out, this catches the throw and updates UI
-                statusMsg.textContent = `Error: Session Expired. Please log in.`;
-                console.error("Messaging Fetch Error:", error);
-                statusMsg.style.color = '#DC2626'; // Use alert-dark color
-            }
-        });
-
-        // --- Inbox Functions (Optimized and Consolidated) ---
+        // --- INBOX FUNCTIONS (UPDATED UI LOGIC) ---
         async function loadInboxCounts() {
             try {
                 const response = await authFetch(`${API_BASE}/inbox/message`);
@@ -583,8 +572,10 @@
 
         async function loadClientInbox() {
             const msgContainer = document.getElementById('client-inbox-list');
-            msgContainer.innerHTML = '<p class="text-center text-gray-500">Loading messages...</p>';
-            
+            const detailView = document.getElementById('full-message-detail');
+            msgContainer.innerHTML = '<p class="text-center text-gray-500 mt-5">Loading messages...</p>';
+            detailView.style.display = 'none'; // Hide detail view on load
+
             try {
                 const response = await authFetch(`${API_BASE}/inbox/message`);
                 const result = await response.json();
@@ -592,53 +583,68 @@
                 if (result.status === "Success") {
                     msgContainer.innerHTML = '';
                     if (result.messages.length === 0) {
-                        msgContainer.innerHTML = '<p class="text-center text-gray-500">No messages in your inbox.</p>';
+                        msgContainer.innerHTML = '<p class="text-center text-gray-500 mt-5">No messages in your inbox.</p>';
                         return;
                     }
 
                     result.messages.forEach(msg => {
-                        const isUnread = !msg.isRead && msg.receiverId !== msg.senderId; 
-                        const cardClass = isUnread ? 'font-bold bg-indigo-50 border-tf-primary' : 'bg-white border-gray-200';
+                        // A message is unread if it was sent by the admin and hasn't been read yet.
+                        const isUnread = !msg.isRead && msg.senderId === 'admin'; 
+                        const cardClass = isUnread ? 'unread' : '';
+                        const icon = isUnread ? 'fa-envelope' : 'fa-envelope-open';
                         const sender = msg.senderId === 'admin' ? 'Admin' : 'You';
                         
                         const messageHtml = `
-                            <div class="p-3 border rounded mb-2 ${cardClass}" 
-                                 onclick="viewClientMessage('${msg._id}', '${msg.subject}', '${msg.body}', ${isUnread}, '${msg.timestamp}')">
-                                <p class="text-sm text-gray-700">From: <strong>${sender}</strong></p>
-                                <p class="text-md">${msg.subject}</p>
-                                <small class="text-gray-500">${new Date(msg.timestamp).toLocaleString()}</small>
+                            <div id="msg-${msg._id}" class="msg-card ${cardClass}" 
+                                 onclick="viewClientMessage('${msg._id}', '${msg.subject}', \`${msg.body.replace(/`/g, '\\`')}\`, ${isUnread}, '${msg.timestamp}')">
+                                <i class="fas ${icon} msg-icon"></i>
+                                <div class="flex-grow">
+                                    <p class="text-md truncate">${msg.subject || '(No Subject)'}</p>
+                                    <small class="text-gray-500 block">From: ${sender} &bull; ${new Date(msg.timestamp).toLocaleDateString()}</small>
+                                </div>
                             </div>
                         `;
                         msgContainer.insertAdjacentHTML('beforeend', messageHtml);
                     });
                 } else {
-                    msgContainer.innerHTML = `<p class="text-center text-red-500">Failed to load inbox: ${result.message}</p>`;
+                    msgContainer.innerHTML = `<p class="text-center text-red-500 mt-5">Failed to load inbox: ${result.message}</p>`;
                 }
             } catch (error) {
-                msgContainer.innerHTML = `<p class="text-center text-red-500">Network Error: ${error.message}</p>`;
+                msgContainer.innerHTML = `<p class="text-center text-red-500 mt-5">Network Error: ${error.message}</p>`;
             }
         }
 
         function toggleInbox() {
             document.getElementById('inbox-modal').style.display = 'flex';
+            loadClientInbox(); // Load messages every time the modal is opened
         }
         
         function closeInbox() {
             document.getElementById('inbox-modal').style.display = 'none';
-            loadInboxCounts();
+            loadInboxCounts(); // Refresh count on close
         }
 
         function viewClientMessage(messageId, subject, body, isUnread, timestamp) {
+            const detailView = document.getElementById('full-message-detail');
+            
             document.getElementById('full-message-subject').textContent = subject;
             document.getElementById('full-message-body').textContent = body;
             document.getElementById('full-message-date').textContent = new Date(timestamp).toLocaleString();
             
+            detailView.style.display = 'block';
+
             if (isUnread) {
+                // Mark message as read on server
                 authFetch(`${API_BASE}/inbox/message?messageId=${messageId}`, { method: 'PUT' });
-                setTimeout(loadClientInbox, 500); 
+                
+                // Update UI instantly
+                const card = document.getElementById(`msg-${messageId}`);
+                if(card) {
+                    card.classList.remove('unread');
+                    card.querySelector('.msg-icon').classList.replace('fa-envelope', 'fa-envelope-open');
+                }
+                setTimeout(loadInboxCounts, 500); 
             }
-            
-            document.getElementById('inbox-modal').style.display = 'flex';
         }
 
 
