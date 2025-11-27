@@ -14,17 +14,17 @@
             theme: {
                 extend: {
                     colors: {
-                        // 💜 Updated Smart Locator/Teleforce Style Palette
-                        'tf-primary': '#5F3DC4', // Deep Violet/Purple (was Indigo)
-                        'tf-secondary': '#A437C1', // Vibrant Magenta/Pink Accent (was Cyan)
+                        // 💜 Smart Locator/Teleforce Style Palette
+                        'tf-primary': '#5F3DC4', 
+                        'tf-secondary': '#A437C1', 
                         'tf-dark': '#0F172A',
                         'tf-text': '#E2E8F0',
                         'tf-card': '#1E293B',
                         'tf-light': '#F1F5F9',
                         'whatsapp-green': '#25D366',
                         'alert-dark': '#EF4444',
-                        'alert-light': '#FEE2E2', // Added for clarity
-                        'success-light': '#D1FAE5', // Added for clarity
+                        'alert-light': '#FEE2E2',
+                        'success-light': '#D1FAE5',
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
@@ -50,18 +50,18 @@
         .tab-button { padding: 12px 20px; cursor: pointer; border: none; background: none;
         font-weight: 600; color: #64748B; border-bottom: 2px solid transparent; transition: color 0.3s, border-bottom 0.3s;
         }
-        /* ACTIVE tab color changed to tf-primary (Purple) */
         .tab-button.active { color: #5F3DC4; border-bottom: 2px solid #5F3DC4;
         }
         .tab-content { padding: 15px 0; animation: fadeIn 0.5s;
         }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1;
         } }
-        .controls { display: flex; gap: 20px; align-items: center;
+        /* Controls are updated to align better */
+        .controls { display: flex; gap: 15px; align-items: center;
         }
         .icon-btn { cursor: pointer; position: relative; font-size: 24px; color: #64748B;
         transition: color 0.2s; }
-        .icon-btn:hover { color: #5F3DC4; /* tf-primary */
+        .icon-btn:hover { color: #5F3DC4;
         }
         .badge { position: absolute; top: -5px; right: -5px; background-color: #EF4444; color: white;
         border-radius: 50%; padding: 3px 7px; font-size: 11px; }
@@ -76,29 +76,25 @@
         }
         .plan-status-badge { display: inline-block; padding: 6px 14px; border-radius: 9999px; font-size: 0.85rem;
         font-weight: 700; }
-        /* Status colors */
-        .status-enabled { background-color: #EFE7FF; color: #5F3DC4; /* tf-primary-light / tf-primary */
+        .status-enabled { background-color: #EFE7FF; color: #5F3DC4;
         }
-        .status-disabled { background-color: #FEE2E2; color: #DC2626; /* alert-light / alert-dark */
+        .status-disabled { background-color: #FEE2E2; color: #DC2626;
         }
-        /* Action buttons using new primary color */
         .action-btn { background-color: #5F3DC4; color: white; padding: 10px 20px; border-radius: 8px;
         border: none; cursor: pointer; font-weight: 600; transition: background-color 0.2s, transform 0.1s;
         }
         .action-btn:hover { background-color: #4d2e97; 
         transform: translateY(-1px);
         }
-        .action-btn.logout { background-color: #DC2626; /* Alert Red */
+        .action-btn.logout { background-color: #DC2626;
         }
         .action-btn.logout:hover { background-color: #B91C1C;
         }
-        /* Progress bar */
         .progress-container { margin-top: 2.5rem; padding: 1.5rem; background-color: #E2E8F0; border-radius: 10px;
         border: 1px solid #CBD5E1; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
         }
-        .progress-fill { background-color: #A437C1; /* tf-secondary (Magenta) */ height: 0.75rem; border-radius: 9999px; transition: all 0.5s ease-in-out;
+        .progress-fill { background-color: #A437C1; height: 0.75rem; border-radius: 9999px; transition: all 0.5s ease-in-out;
         }
-        /* Form inputs and messaging */
         .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #1E293B;
         }
         .form-group input, .form-group textarea { width: 100%; padding: 10px;
@@ -108,26 +104,32 @@
         }
         .msg-card:hover { background-color: #F0F4FF; box-shadow: 0 2px 8px rgba(95, 61, 196, 0.1);
         }
-        /* Unread color changed to tf-primary (Purple) */
         .msg-card.unread { background-color: #EEF2FF; border-left: 4px solid #5F3DC4; font-weight: 600;
         }
         .msg-card .msg-icon { font-size: 1.2rem; color: #5F3DC4; margin-right: 15px; flex-shrink: 0;
         }
-        /* Fixed Inbox Button */
-        #inbox-fixed-container { position: fixed; top: 20px; right: 20px; z-index: 1000; background-color: #FFFFFF;
-        border: 1px solid #CBD5E1; border-radius: 50%; padding: 12px; box-shadow: 0 6px 12px rgba(0,0,0,0.15); cursor: pointer; transition: background-color 0.2s;
+        /* Fixed Inbox Button Styles - integrated into header, not fixed */
+        #inbox-header-btn { 
+            position: relative; 
+            background: #F8FAFC; 
+            border: 1px solid #CBD5E1; 
+            border-radius: 50%; 
+            padding: 10px 14px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+            cursor: pointer; 
+            transition: background-color 0.2s;
         }
-        #inbox-fixed-container:hover { background-color: #F8FAFC;
-        }
-        #inbox-fixed-container .fas { font-size: 20px; color: #5F3DC4;
-        }
-        #inbox-fixed-container .badge { top: 0px; right: 0px; padding: 2px 6px; }
+        #inbox-header-btn:hover { background-color: #EFE7FF; }
+        #inbox-header-btn .fas { font-size: 20px; color: #5F3DC4; }
+        #inbox-header-btn .badge { top: -5px; right: -5px; padding: 2px 6px; }
+
+
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; display: none;
         }
         #full-message-detail { border: 1px solid #D1D5DB; background-color: #F8FAFC; border-radius: 8px; padding: 15px;
         line-height: 1.6; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
-        #full-message-detail h3 { color: #A437C1; /* tf-secondary */
+        #full-message-detail h3 { color: #A437C1;
         padding-bottom: 8px; border-bottom: 1px dashed #E2E8F0; margin-bottom: 8px; }
         
         /* Responsive adjustments */
@@ -146,8 +148,6 @@
         padding: 10px 15px; font-size: 0.9rem; }
             .info-grid { grid-template-columns: 1fr;
         gap: 20px; }
-            #inbox-fixed-container { top: auto; bottom: 15px;
-        right: 15px; padding: 12px; }
         }
         /* Force-logout modal small style */
         #force-logout-modal .modal-content { max-width: 520px;
@@ -166,21 +166,16 @@
             </div>
 
             <div class="controls">
-                <div class="text-sm text-gray-600 mr-4 text-right">
-                    <div class="font-semibold">Remaining Credits</div>
-                    <div id="remaining-credits" class="font-extrabold text-2xl text-tf-secondary">N/A</div>
-                </div>
+                
+                <button id="inbox-header-btn" onclick="toggleInbox()">
+                    <i class="fas fa-envelope-open-text"></i>
+                    <span id="inbox-badge" class="badge" style="display:none;">0</span>
+                </button>
            
                 <button onclick="logout()" class="action-btn logout">Logout</button>
             </div>
         </header>
 
-        <div id="inbox-fixed-container" onclick="toggleInbox()">
-            <i class="fas fa-envelope-open-text"></i>
-            <span id="inbox-badge" class="badge" style="display:none;">0</span>
-        </div>
-
-        
         <div 
         class="nav-tabs">
             <button id="bulk-tab-btn" class="tab-button active" onclick="showTab('bulk-verification', this)">Bulk Address Verification</button>
@@ -261,7 +256,7 @@
                         <div class="info-item"><p><strong>Email:</strong> <span id="profile-email"></span></p></div>
         
                         <div class="info-item"><p><strong>Mobile:</strong> <span id="profile-mobile"></span></p></div>
-                        <div class="info-item"><p><strong>Access Code:</strong> <span id="bulk-code"></span></p></div>
+                        <div class="info-item"><p><strong>Access Code:</strong> <span id="profile-bulk-code"></span></p></div>
                     </div>
                     <button class="action-btn mt-6 w-full bg-gray-500 text-white hover:bg-gray-600" onclick="alert('TODO: Implement password change API')">Change Password</button>
                 </div>
@@ -276,7 +271,7 @@
                         <div class="info-item"><p><strong>Status:</strong> <span id="account-status"></span></p></div>
                         <div class="info-item"><p><strong>Valid Until:</strong> <span id="validity-end"></span></p></div>
           
-                        <div class="info-item"><p><strong>Remaining Credits:</strong> <span id="remaining-credits" class="font-bold text-tf-secondary">N/A</span></p></div>
+                        <div class="info-item"><p><strong>Remaining Credits:</strong> <span id="plan-remaining-credits" class="font-bold text-tf-secondary">N/A</span></p></div>
                     </div>
                  
                     <button class="action-btn mt-6 w-full bg-tf-secondary hover:bg-[#86259d]" onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(3)'))">Contact for Renewal</button>
@@ -355,6 +350,7 @@
         const API_ENDPOINT = "/api/verify-single-address"; // used by bulk logic
         const LOGIN_PAGE = "client-login.html";
         
+        // Ensure that the plan details are parsed from the correct localStorage key
         let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
         const CLIENT_NAME = localStorage.getItem('clientName') || planDetails.clientName || planDetails.username || 'Client';
         let isPlanValid = true;
@@ -454,22 +450,28 @@
                 }
 
                 const pd = json.planDetails || {};
+                // Correct assignment of data to planDetails
                 planDetails = Object.assign({}, planDetails, pd);
                 localStorage.setItem('planDetails', JSON.stringify(planDetails));
 
                 const rc = pd.remainingCredits;
-                document.getElementById('remaining-credits').textContent = rc === 'Unlimited' ?
-                'Unlimited' : (rc == null ? 'N/A' : Number(rc).toLocaleString());
+                const creditsDisplay = rc === 'Unlimited' ? 'Unlimited' : (rc == null ? 'N/A' : Number(rc).toLocaleString());
+                
+                // --- FIX: Only update the Plan Card Credit Display ---
+                // document.getElementById('remaining-credits').textContent = creditsDisplay; <-- REMOVED HEADER UPDATE
+                document.getElementById('plan-remaining-credits').textContent = creditsDisplay; 
+
+                // FIX: Ensure all profile details are updated
                 document.getElementById('client-name-display').textContent = pd.clientName || CLIENT_NAME;
-                document.getElementById('profile-username').textContent = pd.clientName || CLIENT_NAME;
-                document.getElementById('profile-email').textContent = planDetails.email || '—';
-                document.getElementById('profile-mobile').textContent = planDetails.mobile || '—';
-                document.getElementById('bulk-code').textContent = planDetails.bulkAccessCode || 'N/A';
-                document.getElementById('plan-name').textContent = (planDetails.planName || 'Not Set').split('_')[0];
-                document.getElementById('validity-end').textContent = planDetails.validityEnd ? new Date(planDetails.validityEnd).toLocaleDateString() : 'N/A';
+                document.getElementById('profile-username').textContent = pd.username || pd.clientName || CLIENT_NAME;
+                document.getElementById('profile-email').textContent = pd.email || '—';
+                document.getElementById('profile-mobile').textContent = pd.mobile || '—';
+                document.getElementById('profile-bulk-code').textContent = pd.bulkAccessCode || 'N/A';
+                document.getElementById('plan-name').textContent = (pd.planName || 'Not Set').split('_')[0];
+                document.getElementById('validity-end').textContent = pd.validityEnd ? new Date(pd.validityEnd).toLocaleDateString() : 'N/A';
 
                 const statusEl = document.getElementById('account-status');
-                const isActive = (typeof planDetails.isActive === 'undefined') ? true : planDetails.isActive;
+                const isActive = (typeof pd.isActive === 'undefined') ? true : pd.isActive;
                 statusEl.textContent = isActive ? 'Enabled' : 'Disabled';
                 statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
 
@@ -481,14 +483,21 @@
         }
 
         function updateUIFromLocalPlan() {
+            // This function runs on fallback and uses locally stored planDetails
             const rc = planDetails.remainingCredits ??
             'N/A';
-            document.getElementById('remaining-credits').textContent = rc === 'Unlimited' ? 'Unlimited' : (rc === 'N/A' ? 'N/A' : Number(rc).toLocaleString());
+            const creditsDisplay = rc === 'Unlimited' ? 'Unlimited' : (rc === 'N/A' ? 'N/A' : Number(rc).toLocaleString());
+
+            // FIX: Only update the Plan Card Credit Display on fallback
+            // document.getElementById('remaining-credits').textContent = creditsDisplay; <-- REMOVED HEADER UPDATE
+            document.getElementById('plan-remaining-credits').textContent = creditsDisplay; 
+            
+            // FIX: Ensure all profile details are updated from planDetails
             document.getElementById('client-name-display').textContent = CLIENT_NAME;
             document.getElementById('profile-username').textContent = planDetails.username || CLIENT_NAME;
             document.getElementById('profile-email').textContent = planDetails.email || '—';
             document.getElementById('profile-mobile').textContent = planDetails.mobile || '—';
-            document.getElementById('bulk-code').textContent = planDetails.bulkAccessCode || 'N/A';
+            document.getElementById('profile-bulk-code').textContent = planDetails.bulkAccessCode || 'N/A';
             document.getElementById('plan-name').textContent = (planDetails.planName || 'Not Set').split('_')[0];
             document.getElementById('validity-end').textContent = planDetails.validityEnd ? new Date(planDetails.validityEnd).toLocaleDateString() : 'N/A';
 
@@ -508,11 +517,11 @@
             if (tabId === 'bulk-verification') {
                 checkPlanValidity();
             } else if (tabId === 'profile-plan') {
-                fetchProfileData();
+                fetchProfileData(); // Ensure fresh data on tab click
             }
         }
 
-        // --- PLAN VALIDITY CHECK (keeps your original messaging) ---
+        // --- PLAN VALIDITY CHECK (kept for completeness) ---
         function checkPlanValidity() {
             const token = localStorage.getItem('clientToken');
             const planDetailsString = localStorage.getItem('planDetails');
@@ -576,7 +585,7 @@
             document.getElementById('bulk-verification').appendChild(errorBlock);
         }
 
-        // --- INBOX FUNCTIONS ---
+        // --- INBOX FUNCTIONS (kept for completeness) ---
         async function loadInboxCounts() {
             try {
                 const response = await authFetch(`${API_BASE}/inbox/message`);
@@ -664,7 +673,7 @@
             }
         }
 
-        // --- FORCE-LOGOUT UI / helpers ---
+        // --- FORCE-LOGOUT UI / helpers (kept for completeness) ---
         function openForceModal() {
             document.getElementById('force-logout-modal').style.display = 'flex';
         }
