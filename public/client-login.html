@@ -1,24 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Client Login</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         // --- LIGHT THEME COLOR PALETTE (For consistency across all pages) ---
         tailwind.config = {
             theme: {
                 extend: {
-             
                     colors: {
-                        'tf-bg-light': '#F8FAFC', // Main Light Background
-                        'tf-card-light': '#FFFFFF', // White Card Background
-                        'tf-text-dark': '#1E293B', // Dark Text (Slate-800)
-     
-                        'tf-primary': '#6366F1', // Indigo/Violet Primary Accent
-                        'tf-secondary': '#06B6D4', // Cyan Secondary Accent
-                       
+                        'tf-bg-light': '#F8FAFC',
+                        'tf-card-light': '#FFFFFF',
+                        'tf-text-dark': '#1E293B',
+                        'tf-primary': '#6366F1',
+                        'tf-secondary': '#06B6D4',
                         'alert-dark': '#DC2626',
                     },
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
@@ -26,164 +24,182 @@
             }
         }
     </script>
+
     <style>
-        /* Shared Styles for Login Page - CONVERTED TO LIGHT THEME */
+        /* Shared Styles for Login Page - LIGHT THEME */
         .text-gradient {
             background-image: linear-gradient(to right, #6366F1, #06B6D4);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
-        /* LIGHT BODY BACKGROUND */
-        body { 
+        body {
             font-family: 'Inter', sans-serif;
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            background-color: #F8FAFC;
-            /* tf-bg-light */
+            display:flex; align-items:center; justify-content:center;
+            min-height:100vh; background-color:#F8FAFC;
         }
-        
-        /* LIGHT LOGIN CONTAINER */
-        .login-container { 
-            background: #FFFFFF;
-            /* tf-card-light */
-            padding: 45px; 
-            border-radius: 16px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1); /* Lighter shadow */
-            width: 100%;
-            max-width: 420px; 
-            border-top: 5px solid #6366F1; /* Accent border */
+        .login-container {
+            background:#fff; padding:45px; border-radius:16px;
+            box-shadow:0 15px 40px rgba(0,0,0,0.08); width:100%; max-width:420px;
+            border-top:5px solid #6366F1;
         }
-        
-        .form-group { margin-bottom: 20px;
+        .form-group { margin-bottom:20px; }
+        .form-group label { display:block; margin-bottom:8px; font-weight:600; color:#1E293B; }
+        .form-group input {
+            width:100%; padding:12px; border:1px solid #CBD5E1; border-radius:8px; box-sizing:border-box;
+            background:#fff; color:#1E293B; transition: border-color .2s, box-shadow .2s;
         }
-        /* DARK LABEL TEXT */
-        .form-group label { 
-            display: block;
-            margin-bottom: 8px; 
-            font-weight: 600; 
-            color: #1E293B; /* tf-text-dark */
+        .form-group input:focus { border-color:#6366F1; box-shadow:0 0 0 2px rgba(99,102,241,0.12); outline:none; }
+        .btn-login {
+            width:100%; padding:12px; background:#06B6D4; color:#fff; border:none; border-radius:8px;
+            font-size:1.05rem; font-weight:700; cursor:pointer; box-shadow:0 4px 10px rgba(6,182,212,0.18);
         }
-        .form-group input { 
-            width: 100%;
-            padding: 12px; 
-            border: 1px solid #CBD5E1; /* Light gray border */
-            border-radius: 8px;
-            box-sizing: border-box; 
-            background-color: #FFFFFF; /* White input background */
-            color: #1E293B;
-            /* Dark input text */
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .form-group input:focus {
-            border-color: #6366F1;
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.4);
-        }
-        
-        .btn-login { 
-            width: 100%;
-            padding: 12px; 
-            background-color: #06B6D4; /* tf-secondary */
-            color: #FFFFFF;
-            /* White text for contrast */
-            border: none;
-            border-radius: 8px; 
-            font-size: 1.1rem; 
-            font-weight: 700;
-            cursor: pointer; 
-            transition: background-color 0.3s, transform 0.1s;
-            box-shadow: 0 4px 10px rgba(6, 182, 212, 0.3);
-        }
-        .btn-login:hover { 
-            background-color: #0891B2;
-            transform: translateY(-2px) scale(1.01); 
-        }
-        
-        #error-message { color: #DC2626;
-            text-align: center; margin-top: 15px; font-weight: 500; }
+        .btn-login:disabled { opacity:0.75; cursor:not-allowed; transform:none; }
+        .helper { font-size:0.95rem; text-align:center; margin-top:12px; }
+        #error-message { color:#DC2626; text-align:center; margin-top:12px; font-weight:600; min-height:1.1em; }
+        .success { color:#06B6D4; }
+        .small-muted { color:#64748B; font-size:0.9rem; }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h1 class="text-3xl font-extrabold text-center mb-8 text-tf-text-dark">
+    <div class="login-container" role="main" aria-labelledby="login-heading">
+        <h1 id="login-heading" class="text-3xl font-extrabold text-center mb-6 text-tf-text-dark">
             <span class="text-gradient">Client</span> Portal
         </h1>
-        <form id="client-login-form">
+
+        <form id="client-login-form" autocomplete="on" novalidate>
             <div class="form-group">
                 <label for="username">Username</label>
-           
-                <input type="text" id="username" name="username" required>
+                <input id="username" name="username" type="text" inputmode="text" autocomplete="username" required />
             </div>
+
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
+                <input id="password" name="password" type="password" autocomplete="current-password" required />
             </div>
-            <button type="submit" class="btn-login">Secure Login</button>
-  
-            <p id="error-message"></p>
+
+            <button id="login-button" type="submit" class="btn-login">Secure Login</button>
+
+            <p id="error-message" aria-live="polite"></p>
         </form>
-        <p class="text-center text-sm text-gray-500 mt-6">
+
+        <p class="helper small-muted text-center mt-4">
             <a href="index.html" class="text-tf-primary hover:underline">← Back to Main Site</a>
         </p>
     </div>
 
     <script>
+        // API endpoint (same-origin). Adjust if your API is on another domain.
         const API_LOGIN_URL = '/api/client/login';
+        const DASHBOARD_URL = 'client-dashboard.html';
+
         const form = document.getElementById('client-login-form');
         const errorMessage = document.getElementById('error-message');
-        const DASHBOARD_URL = 'client-dashboard.html';
-        // Check if already logged in (optional, but good practice)
+        const loginButton = document.getElementById('login-button');
+
+        // If already logged in, redirect
         if (localStorage.getItem('clientToken')) {
-            window.location.href = DASHBOARD_URL;
+            try { window.location.href = DASHBOARD_URL; } catch(e){ console.warn(e); }
+        }
+
+        // Helper to show status
+        function setStatus(text, type = 'error') {
+            errorMessage.textContent = text || '';
+            if (type === 'success') {
+                errorMessage.classList.remove(''); // noop placeholder
+                errorMessage.classList.add('success');
+            } else {
+                errorMessage.classList.remove('success');
+            }
+        }
+
+        // Timeout helper (AbortController)
+        function timeoutSignal(ms) {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), ms);
+            return { signal: controller.signal, clear: () => clearTimeout(id) };
         }
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            errorMessage.textContent = 'Authenticating...';
-            errorMessage.style.color = '#6366F1';
 
-            const username = form.elements['username'].value;
+            // quick offline check
+            if (!navigator.onLine) {
+                setStatus('You appear to be offline. Check your network connection.', 'error');
+                return;
+            }
+
+            const username = form.elements['username'].value.trim();
             const password = form.elements['password'].value;
 
+            if (!username || !password) {
+                setStatus('Please enter both username and password.', 'error');
+                return;
+            }
+
+            // Disable UI while authenticating
+            loginButton.disabled = true;
+            loginButton.textContent = 'Authenticating...';
+            setStatus('Authenticating...', 'success');
+
+            // 10s timeout
+            const { signal, clear } = timeoutSignal(10000);
+
             try {
-     
-                const response = await fetch(API_LOGIN_URL, {
+                const resp = await fetch(API_LOGIN_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-               
+                    body: JSON.stringify({ username, password }),
+                    signal
                 });
 
-                const result = await response.json();
+                clear(); // clear the timeout once fetch returns
 
-                if (response.ok && result.status === "Success") {
-                    // SUCCESS: Store token and user details
-                    localStorage.setItem('clientToken', result.token);
-          
-                    localStorage.setItem('clientName', result.planDetails.clientName || username);
-                    localStorage.setItem('planDetails', JSON.stringify(result.planDetails));
-                    errorMessage.textContent = 'Login successful! Redirecting...';
-                    errorMessage.style.color = '#06B6D4';
-                    
-                    setTimeout(() => {
-                        window.location.href = DASHBOARD_URL; // Redirect to new dashboard
-                    }, 500);
-                } else if (response.status === 401) {
-                    errorMessage.textContent = result.message ||
-                        'Authentication failed. Please check credentials.';
-                    errorMessage.style.color = '#DC2626';
-                } else {
-                    errorMessage.textContent = result.message ||
-                        'An unexpected error occurred.';
-                    errorMessage.style.color = '#DC2626';
+                // Read as text first to avoid JSON parse exceptions on HTML/500 pages
+                const text = await resp.text();
+                let result = null;
+                try {
+                    result = text ? JSON.parse(text) : null;
+                } catch (jsonErr) {
+                    // Server returned non-JSON (HTML error page or plain text)
+                    console.error('Server returned non-JSON response:', text.substring(0, 400));
+                    // Provide a helpful message to the user
+                    const serverMsg = `Server returned an unexpected response (status ${resp.status}). Try again or contact support.`;
+                    setStatus(serverMsg, 'error');
+                    return;
                 }
 
-            } catch (error) {
-                console.error('Network error during login:', error);
-                errorMessage.textContent = 'Could not connect to the server.';
-                errorMessage.style.color = '#DC2626';
+                // At this point result is JSON-parsed (or null if empty)
+                if (resp.ok && result && (result.status === 'Success' || result.status === 'Warning')) {
+                    // success path
+                    // store token & plan details if provided
+                    if (result.token) localStorage.setItem('clientToken', result.token);
+                    if (result.planDetails) localStorage.setItem('planDetails', JSON.stringify(result.planDetails));
+                    // keep a friendly display name
+                    localStorage.setItem('clientName', (result.planDetails && result.planDetails.clientName) || username);
+
+                    setStatus('Login successful! Redirecting...', 'success');
+                    // slight delay so the user sees the status
+                    setTimeout(() => window.location.href = DASHBOARD_URL, 450);
+                    return;
+                } else {
+                    // handle known error shapes
+                    const serverMessage = (result && (result.message || result.error)) || `Login failed (status ${resp.status}).`;
+                    setStatus(serverMessage, 'error');
+                    return;
+                }
+
+            } catch (err) {
+                // Distinguish Abort (timeout) from other network errors
+                if (err.name === 'AbortError') {
+                    setStatus('Request timed out. The server did not respond. Try again.', 'error');
+                    console.error('Login request timed out:', err);
+                } else {
+                    setStatus('Could not connect to the server. Check network or backend.', 'error');
+                    console.error('Network / Fetch error during login:', err);
+                }
+            } finally {
+                loginButton.disabled = false;
+                loginButton.textContent = 'Secure Login';
             }
         });
     </script>
