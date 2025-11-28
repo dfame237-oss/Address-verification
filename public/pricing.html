@@ -12,12 +12,12 @@
             theme: {
                 extend: {
                     colors: {
-                        'tf-bg-light': '#F8FAFC', // Main Light Background (Slate-50)
-                        'tf-card-light': '#FFFFFF', // White Card Background
-                        'tf-text-dark': '#1E293B', // Dark Text (Slate-800)
-                        'tf-primary': '#6366F1', // Indigo/Violet Primary Accent
+                        'tf-bg-light': '#F8FAFC', 
+                        'tf-card-light': '#FFFFFF', 
+                        'tf-text-dark': '#1E293B', 
+                        'tf-primary': '#4F46E5', // Updated to match Index.html purple
                         'tf-secondary': '#06B6D4', // Cyan Secondary Accent
-                        'tf-border': '#E2E8F0', // Light Border (Slate-200)
+                        'tf-border': '#E2E8F0', 
                         'alert-dark': '#EF4444',
                         'success-green': '#10B981',
                     },
@@ -29,15 +29,15 @@
         }
     </script>
     <style>
-        /* General Styles - Light Theme */
+        /* General Styles */
         body {  
             font-family: 'Inter', sans-serif;  
             background-color: var(--tf-bg-light, #F8FAFC);
             color: var(--tf-text-dark, #1E293B);  
         }
-        /* Custom gradient for titles if needed */
+        /* Custom gradient for titles (using Index.html colors) */
         .text-gradient {
-            background-image: linear-gradient(to right, #6366F1, #06B6D4);
+            background-image: linear-gradient(to right, #4F46E5, #06B6D4);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -61,17 +61,23 @@
         .tier-list li:last-child {
             border-bottom: none;
         }
+        /* Logo text style alignment with index.html */
+        .logo-text-link {
+            font-size: 1.875rem; /* text-3xl */
+            font-weight: 800; /* font-extrabold */
+        }
     </style>
 </head>
 <body>
     
     <header class="p-4 border-b border-gray-200 bg-tf-card-light shadow-md">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex justify-between items-center">
-            <a href="index.html" class="text-3xl font-extrabold text-tf-text-dark group">
+            
+            <a href="index.html" class="logo-text-link text-tf-text-dark group">
                 <span class="text-tf-primary group-hover:text-tf-secondary transition-colors duration-300">Smart</span> <span class="group-hover:text-tf-primary transition-colors duration-300">Locator</span>
             </a>
+            
             <div class="space-x-6 flex items-center">
-                <a href="admin-login.html" class="text-xs text-gray-500 hover:text-gray-600 transition-colors duration-300" title="Admin Login">Admin Access</a>
                 <a href="pricing.html" class="text-tf-secondary hover:text-tf-secondary font-semibold border-b-2 border-tf-secondary transition">Pricing</a>
                 <a href="index.html#demoModal" class="bg-tf-primary text-white py-2 px-6 rounded-full font-semibold shadow-lg hover:bg-indigo-600 transition">Request Demo</a>
                 <a href="client-login.html" class="text-tf-text-dark hover:text-tf-secondary font-semibold border-b-2 border-transparent hover:border-tf-secondary transition">Client Login</a>
@@ -244,4 +250,4 @@
         });
     </script>
 </body>
-                    </html>
+    </html>
