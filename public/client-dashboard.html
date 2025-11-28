@@ -139,6 +139,11 @@
         padding: 24px; border-radius: 12px; background: #fff; }
         #force-logout-modal .modal-actions { margin-top: 16px; display:flex;
         gap:10px; justify-content:flex-end; }
+         /* Message card styles */
+        .msg-card { border: 1px solid #E5E7EB; padding: 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: background-color 0.2s, box-shadow 0.2s; }
+        .msg-card:hover { background-color: #F0F4FF; box-shadow: 0 2px 8px rgba(95, 61, 196, 0.1); }
+        .msg-card.unread { background-color: #EEF2FF; border-left: 4px solid #5F3DC4; font-weight: 600; }
+        .msg-card .msg-icon { font-size: 1.2rem; color: #5F3DC4; margin-right: 15px; flex-shrink: 0; }
     </style>
 </head>
 <body>
@@ -151,7 +156,6 @@
             </div>
 
             <div class="controls">
-                
                 <button id="inbox-header-btn" onclick="toggleInbox()">
                     <i class="fas fa-envelope-open-text"></i>
                     <span id="inbox-badge" class="badge" style="display:none;">0</span>
@@ -603,7 +607,7 @@
                     result.messages.forEach(msg => {
                         const isUnread = !msg.isRead && msg.senderId === 'admin';
                         const cardClass = isUnread ? 'unread' : '';
-           
+            
                         const icon = isUnread ? 'fa-envelope' : 'fa-envelope-open';
                         const sender = msg.senderId === 'admin' ? 'Admin' : 'You';
 
@@ -612,12 +616,12 @@
                             <div id="msg-${msg._id}" class="msg-card ${cardClass}" onclick="viewClientMessage('${msg._id}', ${JSON.stringify(msg.subject)}, ${JSON.stringify(msg.body)}, ${isUnread}, '${msg.timestamp}')">
                                 <i class="fas ${icon} msg-icon"></i>
                                 <div class="flex-grow">
-                     
+                            
                                     <p class="text-md truncate">${msg.subject || '(No Subject)'}</p>
                                     <small class="text-gray-500 block">From: ${sender} • ${new Date(msg.timestamp).toLocaleDateString()}</small>
                                 </div>
-           
-                           </div>
+            
+                            </div>
                         `;
                         msgContainer.insertAdjacentHTML('beforeend', messageHtml);
                     });
