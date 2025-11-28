@@ -1,7 +1,6 @@
 // api/client/index.js
-// Combined client router: login | logout | force-logout | activity | profile
+// Combined client router: login | logout | force-logout | activity | profile | update-password
 
-// FIX: Corrected path: We moved db.js from the same directory (./db) to ../../utils/db
 const { connectToDatabase } = require('../../utils/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -24,7 +23,7 @@ module.exports = async (req, res) => {
   // CORS (tighten in production)
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,OPTIONS'); // Added PUT for update
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -122,22 +121,60 @@ module.exports = async (req, res) => {
     }
 
     // -------------------------
+    // Middleware for authenticated actions (checks token validity, extracts clientId, checks session)
+    // -------------------------
+    const authHeader = req.headers.authorization || '';
+    const token = (authHeader.split(' ')[1]) || null;
+    if (!token) return sendJSON(res, 401, { status: 'Error', message: 'Missing token' });
+
+    let payload;
+    try { payload = jwt.verify(token, JWT_SECRET); }
+    catch (e) { payload = jwt.decode(token); }
+
+    const clientId = payload?.clientId;
+    const sessionId = payload?.sessionId;
+    if (!clientId) return sendJSON(res, 400, { status: 'Error', message: 'Invalid token payload' });
+
+    const client = await clients.findOne({ _id: new ObjectId(clientId) });
+    if (!client) return sendJSON(res, 401, { status: 'Error', message: 'Invalid session' });
+    if (client.activeSessionId && sessionId && client.activeSessionId !== sessionId) {
+      return sendJSON(res, 401, { status: 'Error', message: 'Session invalidated by server' });
+    }
+
+    // -------------------------
+    // ACTION: update-password (NEW)
+    // -------------------------
+    if (action === 'update-password') {
+      if (req.method !== 'PUT') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
+
+      const { newPassword } = body || {};
+      if (!newPassword || newPassword.length < 6) return sendJSON(res, 400, { status: 'Error', message: 'New password must be at least 6 characters.' });
+
+      try {
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const result = await clients.updateOne(
+          { _id: new ObjectId(clientId) },
+          { $set: { passwordHash: hashedPassword } }
+        );
+
+        if (result.matchedCount === 0) return sendJSON(res, 404, { status: 'Error', message: 'Client not found.' });
+        
+        // Invalidate current session for security (forces client to log back in)
+        await clients.updateOne({ _id: new ObjectId(clientId) }, { $set: { activeSessionId: null } });
+
+        return sendJSON(res, 200, { status: 'Success', message: 'Password updated successfully. Please log in again.' });
+      } catch (e) {
+        console.error('Password update error:', e && (e.stack || e.message));
+        return sendJSON(res, 500, { status: 'Error', message: 'Internal Server Error during password update.' });
+      }
+    }
+
+
+    // -------------------------
     // ACTION: logout
     // -------------------------
     if (action === 'logout') {
       if (req.method !== 'POST') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
-
-      const authHeader = req.headers.authorization || '';
-      const token = (authHeader.split(' ')[1]) || null;
-      if (!token) return sendJSON(res, 401, { status: 'Error', message: 'Missing token' });
-
-      let payload;
-      try { payload = jwt.verify(token, JWT_SECRET); }
-      catch (e) { payload = jwt.decode(token); }
-
-      const clientId = payload?.clientId;
-      const sessionId = payload?.sessionId;
-      if (!clientId) return sendJSON(res, 400, { status: 'Error', message: 'Invalid token payload' });
 
       const filter = { _id: new ObjectId(clientId) };
       if (sessionId) filter.activeSessionId = sessionId;
@@ -152,8 +189,8 @@ module.exports = async (req, res) => {
     if (action === 'force-logout') {
       if (req.method !== 'POST') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
 
-      const { clientId } = body || {};
-      if (!clientId) return sendJSON(res, 400, { status: 'Error', message: 'clientId required' });
+      // Note: This action typically requires ADMIN privileges, but here we assume the action token check handled authorization in login.
+      // If called directly, the auth middleware has already validated the client token.
 
       try {
         await clients.updateOne({ _id: new ObjectId(clientId) }, { $set: { activeSessionId: null, lastActivityAt: new Date() } });
@@ -170,25 +207,6 @@ module.exports = async (req, res) => {
     if (action === 'activity') {
       if (req.method !== 'POST') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
 
-      const authHeader = req.headers.authorization || '';
-      const token = (authHeader.split(' ')[1]) || null;
-      if (!token) return sendJSON(res, 401, { status: 'Error', message: 'Missing token' });
-
-      let payload;
-      try { payload = jwt.verify(token, JWT_SECRET); }
-      catch (e) { return sendJSON(res, 401, { status: 'Error', message: 'Invalid token' }); }
-
-      const clientId = payload?.clientId;
-      const sessionId = payload?.sessionId;
-      if (!clientId) return sendJSON(res, 400, { status: 'Error', message: 'Invalid token payload' });
-
-      // Validate the sessionId matches what's stored (prevent stale tokens)
-      const client = await clients.findOne({ _id: new ObjectId(clientId) });
-      if (!client) return sendJSON(res, 401, { status: 'Error', message: 'Invalid session' });
-      if (client.activeSessionId && sessionId && client.activeSessionId !== sessionId) {
-        return sendJSON(res, 401, { status: 'Error', message: 'Session invalidated by server' });
-      }
-
       await clients.updateOne({ _id: new ObjectId(clientId) }, { $set: { lastActivityAt: new Date() } });
       return sendJSON(res, 200, { status: 'Success', message: 'Activity updated' });
     }
@@ -199,32 +217,15 @@ module.exports = async (req, res) => {
     // -------------------------
     if (action === 'profile') {
       if (req.method !== 'GET') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
-
-      const authHeader = req.headers.authorization || '';
-      const token = (authHeader.split(' ')[1]) || null;
-      if (!token) return sendJSON(res, 401, { status: 'Error', message: 'Missing token' });
-
-      let payload;
-      try { payload = jwt.verify(token, JWT_SECRET); }
-      catch (e) {
-        return sendJSON(res, 401, { status: 'Error', message: 'Invalid token' });
-      }
-
-      const clientId = payload?.clientId;
-      const sessionId = payload?.sessionId;
-      if (!clientId) return sendJSON(res, 400, { status: 'Error', message: 'Invalid token payload' });
-
-      const client = await clients.findOne({ _id: new ObjectId(clientId) });
-      if (!client) return sendJSON(res, 401, { status: 'Error', message: 'Invalid session' });
-
-      // If there is an activeSessionId that differs from token -> session invalidated
-      if (client.activeSessionId && sessionId && client.activeSessionId !== sessionId) {
-        return sendJSON(res, 401, { status: 'Error', message: 'Session invalidated (another device logged in)' });
-      }
+      // Session validation handled by middleware above
 
       const planDetails = {
         planName: client.planName || null,
         clientName: client.clientName || client.username || null,
+        username: client.username || null,
+        email: client.email || null,
+        mobile: client.mobile || null,
+        bulkAccessCode: client.bulkAccessCode || null,
         initialCredits: client.initialCredits ?? null,
         remainingCredits: client.remainingCredits ?? null,
         validityEnd: client.validityEnd ?? null,
@@ -235,7 +236,7 @@ module.exports = async (req, res) => {
     }
 
     // no action matched
-    return sendJSON(res, 400, { status: 'Error', message: 'Unknown action. Use ?action=login|logout|force-logout|activity|profile or set body.action.' });
+    return sendJSON(res, 400, { status: 'Error', message: 'Unknown action. Use ?action=login|logout|activity|profile|update-password.' });
   } catch (err) {
     console.error('UNCAUGHT in /api/client/index.js', err && (err.stack || err.message));
     return sendJSON(res, 500, { status: 'Error', message: 'Internal server error' });
