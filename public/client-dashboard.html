@@ -169,7 +169,7 @@
         <div 
         class="nav-tabs">
             <button id="bulk-tab-btn" class="tab-button active" onclick="showTab('bulk-verification', this)">Bulk Address Verification</button>
-            <button class="tab-button" onclick="showTab('profile-plan', this)">Profile & Plan Status</button>
+            <button id="profile-tab-btn" class="tab-button" onclick="showTab('profile-plan', this)">Profile & Plan Status</button>
             <button class="tab-button" onclick="showTab('support', this)">Support/Messaging</button>
         </div>
 
@@ -248,7 +248,7 @@
                         <div class="info-item"><p><strong>Mobile:</strong> <span id="profile-mobile"></span></p></div>
                         <div class="info-item"><p><strong>Access Code:</strong> <span id="profile-bulk-code"></span></p></div>
                     </div>
-                    <button class="action-btn mt-6 w-full bg-gray-500 text-white hover:bg-gray-600" onclick="alert('TODO: Implement password change API')">Change Password</button>
+                    <button class="action-btn mt-6 w-full bg-gray-500 text-white hover:bg-gray-600" onclick="openPasswordModal()">Change Password</button>
                 </div>
 
                 <div class="plan-card">
@@ -316,6 +316,27 @@
             </div>
         </div>
     </div>
+
+    <div id="password-modal" class="modal" aria-hidden="true">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closePasswordModal()">&times;</span>
+            <h2 class="text-2xl font-bold mb-4 text-tf-primary">Change Your Password</h2>
+            <form id="password-update-form" class="space-y-4">
+                <div class="form-group">
+                    <label for="new-password">New Password</label>
+                    <input type="password" id="new-password" name="newPassword" required minlength="6" class="w-full p-3 border rounded input-focus">
+                </div>
+                <div class="form-group">
+                    <label for="confirm-password">Confirm New Password</label>
+                    <input type="password" id="confirm-password" required minlength="6" class="w-full p-3 border rounded input-focus">
+                </div>
+                <button type="submit" id="updatePasswordBtn" class="action-btn w-full bg-red-600 hover:bg-red-700">Update & Log Out</button>
+                <p id="password-update-status" class="mt-3 text-sm text-center text-gray-700"></p>
+            </form>
+            <p class="text-xs text-center text-gray-500 mt-4">Note: Changing your password will immediately log you out of all devices for security.</p>
+        </div>
+    </div>
+
 
     <div id="force-logout-modal" class="modal">
         <div class="modal-content">
@@ -508,6 +529,69 @@
                 fetchProfileData(); // Ensure fresh data on tab click
             }
         }
+
+        // --- PASSWORD MODAL LOGIC (NEW) ---
+
+        function openPasswordModal() {
+            document.getElementById('password-modal').style.display = 'flex';
+            document.getElementById('password-update-form').reset();
+            document.getElementById('password-update-status').textContent = '';
+        }
+
+        function closePasswordModal() {
+            document.getElementById('password-modal').style.display = 'none';
+        }
+
+        document.getElementById('password-update-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const statusEl = document.getElementById('password-update-status');
+            const updateBtn = document.getElementById('updatePasswordBtn');
+
+            if (newPassword !== confirmPassword) {
+                statusEl.textContent = 'Passwords do not match.';
+                statusEl.className = 'text-red-600 mt-3';
+                return;
+            }
+            if (newPassword.length < 6) {
+                statusEl.textContent = 'Password must be at least 6 characters.';
+                statusEl.className = 'text-red-600 mt-3';
+                return;
+            }
+
+            updateBtn.disabled = true;
+            updateBtn.textContent = 'Processing...';
+            statusEl.textContent = 'Sending request to server...';
+            statusEl.className = 'text-tf-primary mt-3';
+
+            try {
+                // ACTION: update-password uses PUT method
+                const resp = await authFetch(`${API_CLIENT}?action=update-password`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ newPassword })
+                });
+                const result = await resp.json();
+
+                if (resp.ok && result.status === 'Success') {
+                    statusEl.textContent = 'Password changed successfully! Redirecting to login...';
+                    statusEl.className = 'text-green-600 mt-3';
+                    // Mandatory logout after successful password change
+                    setTimeout(logout, 1500); 
+                } else {
+                    statusEl.textContent = result.message || 'Update failed.';
+                    statusEl.className = 'text-red-600 mt-3';
+                }
+            } catch (error) {
+                statusEl.textContent = 'Network error or session expired.';
+                statusEl.className = 'text-red-600 mt-3';
+                console.error('Password Update Error:', error);
+            } finally {
+                updateBtn.disabled = false;
+                updateBtn.textContent = 'Update & Log Out';
+            }
+        });
+
 
         // --- PLAN VALIDITY CHECK (kept for completeness) ---
         function checkPlanValidity() {
@@ -709,7 +793,7 @@
                     closeForceModal();
                 }
             } catch (e) {
-                console.error('forceLogoutOtherDevice error', e);
+                console.error('force-logout error', e);
                 alert('Network error. Try again or contact support.');
                 closeForceModal();
             }
@@ -736,4 +820,4 @@
         };
     </script>
 </body>
-</html>
+    </html>
