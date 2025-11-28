@@ -118,10 +118,10 @@ module.exports = async (req, res) => {
     }
     const clientsCollection = db.collection('clients');
     const supportCollection = db.collection("supportMessages"); 
-    const { clientId } = req.query;
+    const { clientId, messageId } = req.query; // Destructure messageId here too
 
     // --------------------------------------------------------
-    // ACTION: SUPPORT (GET / PUT) - Consolidates admin/support.js
+    // ACTION: SUPPORT (GET / PUT / DELETE)
     // --------------------------------------------------------
     if (action === 'support') {
         if (req.method === 'GET') {
@@ -144,6 +144,18 @@ module.exports = async (req, res) => {
             } catch (e) {
                 console.error("Failed to update support message status:", e);
                 return res.status(500).json({ status: "Error", message: `Failed to update message status: ${e.message}` });
+            }
+        }
+        // 🛑 FIX: Injecting DELETE handler for support messages
+        if (req.method === 'DELETE') {
+            if (!messageId) return res.status(400).json({ status: "Error", message: "Message ID is required for deletion." });
+            try {
+                const result = await supportCollection.deleteOne({ _id: new ObjectId(messageId) });
+                if (result.deletedCount === 0) return res.status(404).json({ status: "Error", message: "Message not found." });
+                return res.status(200).json({ status: "Success", message: "Support message deleted successfully." });
+            } catch (e) {
+                console.error('DELETE /api/admin/index (support) error:', e);
+                return res.status(500).json({ status: 'Error', message: `Deletion failed: ${e.message}` });
             }
         }
         return res.status(405).json({ status: 'Error', error: 'Method Not Allowed' });
@@ -203,10 +215,10 @@ module.exports = async (req, res) => {
                     initialCredits, remainingCredits, activeSessionId: null,
                 };
                 const result = await clientsCollection.insertOne(newClient);
-                return res.status(201).json({ status: 'Success', message: 'Client added successfully.', clientId: result.insertedId, client: { ...newClient, _id: result.insertedId } });
+                return res.status(201).json({ status: "Success", message: "Client added successfully.", clientId: result.insertedId, client: { ...newClient, _id: result.insertedId } });
             } catch (e) {
                 console.error('POST /api/admin/index (client) error:', e);
-                return res.status(500).json({ status: 'Error', message: `Internal Server Error: ${e.message}` });
+                return res.status(500).json({ status: "Error", message: `Internal Server Error: ${e.message}` });
             }
         }
 
@@ -266,7 +278,7 @@ module.exports = async (req, res) => {
 
                 const result = await clientsCollection.updateOne({ _id: clientObjectId }, { $set: updateDoc });
                 if (result.matchedCount === 0) return res.status(404).json({ status: 'Error', message: 'Client not found.' });
-                return res.status(200).json({ status: 'Success', message: 'Client updated successfully.' });
+                return res.status(200).json({ status: "Success", message: "Client updated successfully." });
 
             } catch (e) {
                 console.error('PUT /api/admin/index (client) error:', e);
@@ -281,7 +293,7 @@ module.exports = async (req, res) => {
             try {
                 const result = await clientsCollection.deleteOne({ _id: new ObjectId(targetId) });
                 if (result.deletedCount === 0) return res.status(404).json({ status: 'Error', message: 'Client not found.' });
-                return res.status(200).json({ status: 'Success', message: 'Client deleted successfully.' });
+                return res.status(200).json({ status: "Success", message: "Client deleted successfully." });
             } catch (e) {
                 console.error('DELETE /api/admin/index (client) error:', e);
                 return res.status(500).json({ status: 'Error', message: `Deletion failed: ${e.message}` });
