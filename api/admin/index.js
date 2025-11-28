@@ -1,10 +1,11 @@
 // api/admin/index.js
 // MASTER CONSOLIDATED ADMIN ROUTER: Handles Login, Client CRUD (List, Add, Update, Delete), Topup, and Support messages.
 
+// FIX: Corrected path for db.js (up two levels to the root then into /utils/)
 const { connectToDatabase } = require('../../utils/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { ObjectId } = require('mongodb'); 
+const { ObjectId } = require('mongodb');
 
 // --- CONSTANTS AND UTILITIES ---
 const JWT_SECRET = process.env.JWT_SECRET || 'replace_with_env_jwt_secret';
@@ -26,7 +27,7 @@ function checkAdminAuth(req) {
     }
 }
 
-// Helper: parse credits from frontend plan string format (Copied from admin/client.js)
+// Helper: parse credits from frontend plan string format
 function parseCreditsFromPlanValue(planValue) {
     if (!planValue || typeof planValue !== 'string') return null;
     const parts = planValue.split('_');
@@ -37,7 +38,7 @@ function parseCreditsFromPlanValue(planValue) {
     return isNaN(numeric) ? null : numeric;
 }
 
-// Helper: normalize credits (Copied from admin/client.js)
+// Helper: normalize credits
 function normalizeCreditsForStorage(credits) {
     if (credits === 'Unlimited') return 'Unlimited';
     if (credits === null || credits === undefined) return 0;
