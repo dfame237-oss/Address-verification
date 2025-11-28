@@ -152,7 +152,7 @@ module.exports = async (req, res) => {
         } 
     } 
     
-    // 🛑 NEW LOGIC: DELETE Handler for removing messages
+    // 🛑 NEW LOGIC: DELETE Handler for removing client messages
     if (req.method === 'DELETE') { 
         const messageId = req.query.messageId; 
         
@@ -167,7 +167,6 @@ module.exports = async (req, res) => {
             } 
             
             // Allow only the Admin to delete messages from the collection
-            // In a real application, you might check if the sender is 'admin' or has a specific role.
             if (userId !== 'admin') {
                 return res.status(403).json({ status: "Error", message: "Unauthorized to delete messages." });
             }
