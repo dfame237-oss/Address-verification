@@ -67,8 +67,14 @@
     
     <header class="p-4 border-b border-gray-200 bg-tf-card-light shadow-md">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex justify-between items-center">
-            <div class="text-3xl font-extrabold text-tf-text-dark">
-                <span class="text-tf-primary">Smart Locator</span>
+            <div class="flex items-center space-x-4">
+                <a href="index.html" class="flex items-center text-3xl font-extrabold text-tf-text-dark group">
+                    <img src="smart_locator_logo.png" alt="Smart Locator Logo" class="h-10 mr-2">
+                    <span class="text-tf-primary group-hover:text-tf-secondary transition-colors duration-300">Smart</span> <span class="group-hover:text-tf-primary transition-colors duration-300">Locator</span>
+                </a>
+                <a href="index.html" class="hidden sm:inline-flex items-center px-4 py-2 border border-tf-border rounded-full text-sm font-medium text-gray-700 bg-tf-card-light hover:bg-tf-border transition-colors duration-300">
+                    <i class="fas fa-home mr-2"></i> Back to Home
+                </a>
             </div>
             <div class="space-x-6 flex items-center">
                 <a href="admin-login.html" class="text-xs text-gray-500 hover:text-gray-600 transition-colors duration-300" title="Admin Login">Admin Access</a>
@@ -190,7 +196,7 @@
 
 
                 const cardHtml = `
-                    <div class="tier-card p-8 rounded-xl shadow-xl border-t-4 ${isPopular ? 'border-tf-secondary transform scale-[1.03] shadow-2xl z-10' : 'border-tf-primary'} transition duration-300">
+                    <div class="tier-card p-8 rounded-xl shadow-xl border-t-4 ${isPopular ? 'border-tf-secondary transform scale-[1.03] shadow-2xl z-10' : 'border-tf-primary'} transition duration-300 relative">
                         ${isPopular ? '<p class="absolute top-0 right-0 -mt-3 mr-4 px-3 py-1 bg-tf-secondary text-white text-xs font-bold uppercase rounded-full">Most Popular</p>' : ''}
                         
                         <h2 class="text-3xl font-bold mb-2" style="color: ${isPopular ? plan.color : '#6366F1'};">${plan.name}</h2>
@@ -244,4 +250,4 @@
         });
     </script>
 </body>
-</html>
+                    </html>
