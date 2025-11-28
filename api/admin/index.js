@@ -1,12 +1,10 @@
 // api/admin/index.js
 // MASTER CONSOLIDATED ADMIN ROUTER: Handles Login, Client CRUD (List, Add, Update, Delete), Topup, and Support messages.
 
-// FIX: Corrected path for db.js (up two levels to the root then into /utils/)
 const { connectToDatabase } = require('../../utils/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { randomUUID } = require('crypto');
-const { ObjectId } = require('mongodb');
+const { ObjectId } = require('mongodb'); 
 
 // --- CONSTANTS AND UTILITIES ---
 const JWT_SECRET = process.env.JWT_SECRET || 'replace_with_env_jwt_secret';
@@ -38,16 +36,38 @@ function parseCreditsFromPlanValue(planValue) {
     const numeric = parseInt(String(rawCredits).replace(/,/g, ''), 10);
     return isNaN(numeric) ? null : numeric;
 }
+
 // Helper: normalize credits (Copied from admin/client.js)
 function normalizeCreditsForStorage(credits) {
     if (credits === 'Unlimited') return 'Unlimited';
     if (credits === null || credits === undefined) return 0;
     return Number(credits);
 }
+
 const sendFailure = (res) => {
     return res.status(401).json({ status: "Error", message: "Invalid credentials." });
 }
-// --- END CONSTANTS AND UTILITIES ---
+
+// --- NEW UTILITY: Sends a system message to a client's inbox ---
+async function sendSystemMessage(db, recipientId, subject, body) {
+    if (!recipientId || !db) return;
+    const messagesCollection = db.collection("messages");
+    
+    const newMessage = { 
+        senderId: 'admin', // System generated message
+        receiverId: recipientId.toString(), // Ensure it's a string ID
+        subject: subject, 
+        body: body, 
+        isRead: false, 
+        timestamp: new Date(), 
+    }; 
+    try {
+        await messagesCollection.insertOne(newMessage);
+    } catch (e) {
+        console.error("Failed to send system message:", e);
+    }
+}
+// --- END NEW UTILITY ---
 
 module.exports = async (req, res) => {
     // CORS Setup
@@ -146,7 +166,7 @@ module.exports = async (req, res) => {
                 return res.status(500).json({ status: "Error", message: `Failed to update message status: ${e.message}` });
             }
         }
-        // 🛑 FIX: Injecting DELETE handler for support messages
+        // 🛑 DELETE handler for support messages
         if (req.method === 'DELETE') {
             if (!messageId) return res.status(400).json({ status: "Error", message: "Message ID is required for deletion." });
             try {
@@ -171,17 +191,35 @@ module.exports = async (req, res) => {
 
         try {
             const clientObjId = new ObjectId(clientId);
+            let client = await clientsCollection.findOne({ _id: clientObjId });
+
             if (body.action === 'add') {
                 const n = Number(addCredits || 0);
                 if (isNaN(n) || n <= 0) return res.status(400).json({ status: 'Error', message: 'Invalid addCredits' });
                 const result = await clientsCollection.updateOne({ _id: clientObjId }, { $inc: { remainingCredits: n } });
                 if (result.matchedCount === 0) return res.status(404).json({ status: 'Error', message: 'Client not found' });
+                
+                client = await clientsCollection.findOne({ _id: clientObjId });
+                // --- AUTO MESSAGE TRIGGER ---
+                const systemSubject = "💰 Credits Added";
+                const systemBody = `Your account was credited with ${n.toLocaleString()} new credits. Your new remaining balance is **${client.remainingCredits}** credits.`;
+                await sendSystemMessage(db, clientId, systemSubject, systemBody);
+                // --- END TRIGGER ---
+
                 return res.status(200).json({ status: 'Success', message: 'Credits added.' });
             } else if (body.action === 'set') {
                 const newVal = (typeof remainingCredits === 'string' && remainingCredits.toLowerCase() === 'unlimited') ? 'Unlimited' : Number(remainingCredits);
                 if (newVal !== 'Unlimited' && (isNaN(newVal) || newVal < 0)) return res.status(400).json({ status: 'Error', message: 'Invalid remainingCredits' });
                 const result = await clientsCollection.updateOne({ _id: clientObjId }, { $set: { remainingCredits: newVal } });
                 if (result.matchedCount === 0) return res.status(404).json({ status: 'Error', message: 'Client not found' });
+                
+                client = await clientsCollection.findOne({ _id: clientObjId });
+                // --- AUTO MESSAGE TRIGGER ---
+                const systemSubject = "⚙️ Credits Adjusted";
+                const systemBody = `Your remaining credit balance has been manually set by the administrator. Your new balance is **${client.remainingCredits}** credits.`;
+                await sendSystemMessage(db, clientId, systemSubject, systemBody);
+                // --- END TRIGGER ---
+
                 return res.status(200).json({ status: 'Success', message: 'remainingCredits set.' });
             } else {
                 return res.status(400).json({ status: 'Error', message: 'Invalid action. Use add or set.' });
@@ -204,9 +242,12 @@ module.exports = async (req, res) => {
             try {
                 if (await clientsCollection.findOne({ username })) return res.status(409).json({ status: 'Error', message: 'Username already exists.' });
                 const hashedPassword = await bcrypt.hash(password, 10);
+                
+                // --- CREDIT/PLAN LOGIC ---
                 const parsedCredits = parseCreditsFromPlanValue(planName);
                 const initialCredits = parsedCredits === 'Unlimited' ? 'Unlimited' : normalizeCreditsForStorage(parsedCredits);
                 const remainingCredits = initialCredits === 'Unlimited' ? 'Unlimited' : initialCredits;
+                // --- END CREDIT LOGIC ---
 
                 const newClient = {
                     clientName: clientName || null, username: username, passwordHash: hashedPassword, mobile: mobile || null, email: email || null, 
@@ -215,6 +256,20 @@ module.exports = async (req, res) => {
                     initialCredits, remainingCredits, activeSessionId: null,
                 };
                 const result = await clientsCollection.insertOne(newClient);
+                
+                // --- AUTO MESSAGE TRIGGER ---
+                if (result.insertedId) {
+                    const welcomeSubject = "🎉 Welcome to Smart Locator!";
+                    const welcomeBody = `Your account has been successfully created.
+Plan: ${newClient.planName.split('_')[0]}
+Credits: ${newClient.remainingCredits}
+Validity End: ${new Date(newClient.validityEnd).toLocaleDateString()}
+                    
+You can log in now using your credentials.`;
+                    await sendSystemMessage(db, result.insertedId.toString(), welcomeSubject, welcomeBody);
+                }
+                // --- END TRIGGER ---
+
                 return res.status(201).json({ status: "Success", message: "Client added successfully.", clientId: result.insertedId, client: { ...newClient, _id: result.insertedId } });
             } catch (e) {
                 console.error('POST /api/admin/index (client) error:', e);
@@ -245,6 +300,9 @@ module.exports = async (req, res) => {
                 if (!existingClient) return res.status(404).json({ status: 'Error', message: 'Client not found.' });
                 const updateDoc = {};
 
+                // Determine if a status change occurred for messaging
+                const statusChanged = typeof updateFields.isActive !== 'undefined' && updateFields.isActive !== existingClient.isActive;
+                
                 // Password Change
                 if (updateFields.password) updateDoc.passwordHash = await bcrypt.hash(updateFields.password, 10);
                 // Validity Change
@@ -278,6 +336,34 @@ module.exports = async (req, res) => {
 
                 const result = await clientsCollection.updateOne({ _id: clientObjectId }, { $set: updateDoc });
                 if (result.matchedCount === 0) return res.status(404).json({ status: 'Error', message: 'Client not found.' });
+                
+                // --- AUTO MESSAGE TRIGGER ---
+                if (result.matchedCount > 0) {
+                    const client = await clientsCollection.findOne({ _id: clientObjectId });
+                    let systemSubject = "Account Update Applied";
+                    let systemBody = "Your client details have been successfully updated by the admin.";
+
+                    if (statusChanged) {
+                        if (updateDoc.isActive === false) {
+                            systemSubject = "⚠️ Account Disabled";
+                            systemBody = "Your account has been **disabled** by the administrator. Please contact support immediately.";
+                        } else {
+                            systemSubject = "✅ Account Re-Enabled";
+                            systemBody = "Your account status has been restored to **Enabled**. You can now resume verification services.";
+                        }
+                    } else if (updateFields.planName) {
+                        systemSubject = "✨ Plan Updated";
+                        systemBody = `Your plan has been updated to **${client.planName.split('_')[0]}**. 
+New Credits: ${client.remainingCredits}
+New Validity: ${new Date(client.validityEnd).toLocaleDateString()}`;
+                    }
+                    
+                    if (statusChanged || updateFields.planName) {
+                        await sendSystemMessage(db, targetId, systemSubject, systemBody);
+                    }
+                }
+                // --- END TRIGGER ---
+
                 return res.status(200).json({ status: "Success", message: "Client updated successfully." });
 
             } catch (e) {
