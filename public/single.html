@@ -76,7 +76,7 @@
             <h1 class="text-3xl font-extrabold text-gray-900 mb-2">
                 <span class="text-tf-cyan">Single Address</span> Verification
             </h1>
-            <p class="text-gray-600">Free, unauthenticated check powered by **AI (Gemini)** and **India Post** data.</p>
+            <p class="text-gray-600">Free, unauthenticated check powered by **Smart AI** and **India Post** data.</p>
         </header>
         
         <div class="space-y-6">
@@ -133,34 +133,7 @@
                     </div>
                 </div>
             </div>
-
-            <div class="grid sm:grid-cols-3 gap-4">
-                <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                    <strong class="text-gray-600 block mb-1">PIN Code:</strong> 
-                    <span id="out-pin" class="text-tf-text-dark font-bold text-lg"></span>
-                </div>
-                <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                    <strong class="text-gray-600 block mb-1">State:</strong> 
-                    <span id="out-state" class="text-tf-text-dark text-lg"></span>
-                </div>
-                <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                    <strong class="text-gray-600 block mb-1">District/City:</strong> 
-                    <span id="out-district" class="text-tf-text-dark text-lg"></span>
-                </div>
-                <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                    <strong class="text-gray-600 block mb-1">Address Line 1 (Clean):</strong> 
-                    <span id="out-address" class="text-gray-800 font-medium"></span>
-                </div>
-                <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                    <strong class="text-gray-600 block mb-1">Landmark (Prefixed):</strong> 
-                    <span id="out-landmark" class="text-gray-800 font-medium"></span>
-                </div>
-                <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                    <strong class="text-gray-600 block mb-1">Post Office / Tehsil:</strong> 
-                    <span id="out-po" class="text-gray-800 font-medium"></span>
-                </div>
-            </div>
-
+            
             <div id="remarks-block" class="result-block remarks-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm mt-6">
                 <strong class="text-gray-600 block mb-1 flex items-center">
                     <i class="fas fa-exclamation-triangle mr-2"></i> System Remarks & Warnings:
@@ -223,7 +196,7 @@
             button.innerHTML = newText; // Use innerHTML to avoid overriding icon if present
 
             setTimeout(() => {
-                button.innerHTML = `<i class="far fa-copy"></i> ${originalText.includes('Copy Full') ? 'Copy Full' : 'Copy'}`;
+                button.innerHTML = originalText;
                 button.className = 'copy-btn';
             }, duration);
         }
@@ -345,16 +318,16 @@
             const name = result.customerCleanName || '';
             const address = result.addressLine1 || '';
             const landmark = result.landmark || '';
+            const postOffice = result.postOffice || '';
             const district = result.district || '';
             const state = result.state || '';
             const pin = result.pin || '';
             const country = 'INDIA';
 
-            // Use the FormattedAddress from the backend if available, otherwise construct it
-            // Assuming addressLine1 is the formatted address as requested by the Gemini prompt.
-            
+            // Construct the comprehensive shipping string
             let formattedString = address;
-            if (landmark) formattedString += `\n${landmark}`;
+            if (landmark) formattedString += `\nLandmark: ${landmark}`;
+            if (postOffice) formattedString += `\nPost Office: ${postOffice}`;
             formattedString += `\n${district}, ${state} - ${pin}`;
             formattedString += `\n${country}`;
             
@@ -375,13 +348,13 @@
 
             if (rawAddress.trim() === "") {
                 showMessage('loading-message', 'Please enter a raw address to verify.', true);
-                loadingMessage.classList.remove('hidden');
+                document.getElementById('loading-message').classList.remove('hidden');
                 resultsContainer.classList.add('hidden');
                 return;
             }
 
             // Show loading state
-            loadingMessage.classList.remove('hidden');
+            document.getElementById('loading-message').classList.remove('hidden');
             resultsContainer.classList.add('hidden');
             verifyButton.disabled = true;
             verifyButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Verifying...';
@@ -396,27 +369,16 @@
                 }
                 
                 // Hide loading message and show results
-                loadingMessage.classList.add('hidden');
+                document.getElementById('loading-message').classList.add('hidden');
                 resultsContainer.classList.remove('hidden');
 
                 // Populate individual component results
                 document.getElementById('out-name').textContent = verificationResult.customerCleanName || 'N/A';
-                document.getElementById('out-address').textContent = verificationResult.addressLine1 || 'N/A';
-                document.getElementById('out-landmark').textContent = verificationResult.landmark || 'N/A';
-                document.getElementById('out-district').textContent = verificationResult.district || 'N/A';
-                document.getElementById('out-state').textContent = verificationResult.state || 'N/A';
-                document.getElementById('out-pin').textContent = verificationResult.pin || 'N/A';
-                
-                // Assuming 'postOffice' or 'tehsil' are available from the primaryPostOffice object
-                // If the backend doesn't explicitly return this, it will show N/A
-                document.getElementById('out-po').textContent = (verificationResult.postOffice && verificationResult.tehsil) 
-                    ? `${verificationResult.postOffice} / ${verificationResult.tehsil}`
-                    : verificationResult.postOffice || verificationResult.tehsil || 'N/A'; 
-                
-                const qualityScore = verificationResult.addressQuality || verificationResult.locationSuitability || 'N/A';
                 
                 // Build the main copy block
                 buildFormattedShippingAddress(verificationResult);
+                
+                const qualityScore = verificationResult.addressQuality || verificationResult.locationSuitability || 'N/A';
                 
                 // UI UPDATES
                 updateQualityScoreUI(qualityScore); 
@@ -431,4 +393,4 @@
         }
     </script>
 </body>
-</html>
+                </html>
