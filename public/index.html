@@ -97,6 +97,12 @@
         }
 
         /* end nav fix */
+        
+        /* Ensure marquee content is aligned when using flex inside */
+        marquee > div {
+            display: inline-flex;
+            align-items: center;
+        }
     </style>
 </head>
 <body class="bg-tf-bg-light text-tf-text-dark">
@@ -181,24 +187,34 @@
         </div>
     </header>
 
-    <section class="py-12 bg-tf-card-light border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-6 text-center">
-            <h3 class="text-lg font-semibold text-gray-500 uppercase tracking-widest mb-8">
+    <section class="py-12 bg-tf-card-light border-b border-gray-200 overflow-hidden">
+        <div class="text-center">
+            <h3 class="text-lg font-semibold text-gray-500 uppercase tracking-widest mb-8 px-6">
                 Trusted to verify over 10 Million addresses annually
             </h3>
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 items-center justify-center opacity-70">
-                <img src="logos/logo-a.svg" alt="Bharat Mart" class="h-8 mx-auto filter grayscale hover:grayscale-0 transition duration-300">
-                <img src="logos/logo-b.svg" alt="Desi Threads" class="h-8 mx-auto filter grayscale hover:grayscale-0 transition duration-300">
-                <img src="logos/logo-c.svg" alt="TechTonic India" class="h-8 mx-auto filter grayscale hover:grayscale-0 transition duration-300">
-                <img src="logos/logo-d.svg" alt="Local Haat" class="h-8 mx-auto filter grayscale hover:grayscale-0 transition duration-300 hidden md:block">
-                <img src="logos/logo-e.svg" alt="Aromatic Spices Co." class="h-8 mx-auto filter grayscale hover:grayscale-0 transition duration-300 hidden md:block">
-            </div>
             
-                
+            <marquee behavior="scroll" direction="left" scrollamount="6" class="flex items-center space-x-12">
+                <div class="flex items-center space-x-12 mx-6 opacity-70">
+                    <img src="logos/vitaessentials.svg" alt="VitaEssentials logo" class="h-10 w-auto filter grayscale hover:grayscale-0 transition duration-300">
+                    <img src="logos/urbanstitchco.svg" alt="Urban Stitch Co. logo" class="h-10 w-auto filter grayscale hover:grayscale-0 transition duration-300">
+                    <img src="logos/decosphereindia.svg" alt="DecoSphere India logo" class="h-10 w-auto filter grayscale hover:grayscale-0 transition duration-300">
+                    <img src="logos/auricskincare.svg" alt="Auric Skincare logo" class="h-10 w-auto filter grayscale hover:grayscale-0 transition duration-300">
+                    <img src="logos/shoptimizehub.svg" alt="Shoptimize Hub logo" class="h-10 w-auto filter grayscale hover:grayscale-0 transition duration-300">
+                    <img src="logos/techtotonicindia.svg" alt="TechTonic India logo" class="h-10 w-auto filter grayscale hover:grayscale-0 transition duration-300">
+                </div>
+                <div class="flex items-center space-x-12 mx-6 opacity-70">
+                    <img src="logos/vitaessentials.svg" alt="VitaEssentials logo" class="h-10 w-auto filter grayscale hover:grayscale-0 transition duration-300">
+                    <img src="logos/urbanstitchco.svg" alt="Urban Stitch Co. logo" class="h-10 w-auto filter grayscale hover:grayscale-0 transition duration-300">
+                    <img src="logos/decosphereindia.svg" alt="DecoSphere India logo" class="h-10 w-auto filter grayscale hover:grayscale-0 transition duration-300">
+                    <img src="logos/auricskincare.svg" alt="Auric Skincare logo" class="h-10 w-auto filter grayscale hover:grayscale-0 transition duration-300">
+                    <img src="logos/shoptimizehub.svg" alt="Shoptimize Hub logo" class="h-10 w-auto filter grayscale hover:grayscale-0 transition duration-300">
+                    <img src="logos/techtotonicindia.svg" alt="TechTonic India logo" class="h-10 w-auto filter grayscale hover:grayscale-0 transition duration-300">
+                </div>
+            </marquee>
             
+                 
         </div>
     </section>
-    
     <section class="py-24 bg-tf-primary-light">
         <div class="max-w-7xl mx-auto px-6">
             <div class="text-center max-w-4xl mx-auto mb-16">
@@ -449,4 +465,4 @@ Smart Locator fixes them in real-time — reducing RTO, increasing revenue, and 
       window.addEventListener('resize', syncNavSpacer);
     </script>
 </body>
-                    </html>
+</html>
