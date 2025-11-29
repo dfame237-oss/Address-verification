@@ -79,30 +79,42 @@
         }
 
         /* ====== NAV FIX: keep everything visually identical, but make nav fixed ====== */
-        /* Minimal, safe CSS additions */
         .site-nav {
           position: fixed;
           top: 0;
           left: 0;
           right: 0;
-          z-index: 50; /* matches your original z-50 */
-          background-color: inherit; /* keep same background */
+          z-index: 50;
+          background-color: inherit;
           -webkit-backdrop-filter: blur(4px);
           backdrop-filter: blur(4px);
         }
 
-        /* spacer fallback in case JS is disabled */
         .site-spacer {
           height: 64px;
         }
-
-        /* end nav fix */
         
-        /* Ensure marquee content is aligned when using flex inside */
-        marquee > div {
-            display: inline-flex;
-            align-items: center;
+        /* --- START MARQUEE FIX: Custom CSS for Infinite Scroll --- */
+        @keyframes scroll-left {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); } /* Scrolls the container exactly half its width */
         }
+
+        .infinite-scroll {
+            display: flex;
+            width: 200%; /* Double the width to hold the duplicated content */
+            animation: scroll-left 30s linear infinite; /* 30 seconds duration, linear speed, infinite loop */
+        }
+        
+        .logo-group {
+            width: 50%; /* Each group takes up exactly half the 200% container */
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            flex-shrink: 0;
+            padding: 0 20px;
+        }
+        /* --- END MARQUEE FIX --- */
     </style>
 </head>
 <body class="bg-tf-bg-light text-tf-text-dark">
@@ -193,69 +205,70 @@
                 Trusted to verify over 10 Million addresses annually
             </h3>
             
-            <div class="overflow-hidden w-full"> 
-                <marquee behavior="scroll" direction="left" scrollamount="6" class="flex items-center space-x-16">
+            <div class="overflow-hidden whitespace-nowrap"> 
+                
+                <div class="infinite-scroll">
                     
-                    <div class="flex items-start space-x-16 mx-6">
+                    <div class="logo-group">
                         
-                        <div class="flex flex-col items-center justify-center min-w-[120px]">
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
                             <img src="logos/vitaessentials.svg" alt="VitaEssentials logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
                             <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">VitaEssentials</p>
                         </div>
                         
-                        <div class="flex flex-col items-center justify-center min-w-[120px]">
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
                             <img src="logos/urbanstitchco.svg" alt="Urban Stitch Co. logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
                             <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">Urban Stitch Co.</p>
                         </div>
                         
-                        <div class="flex flex-col items-center justify-center min-w-[120px]">
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
                             <img src="logos/decosphereindia.svg" alt="DecoSphere India logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
                             <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">DecoSphere India</p>
                         </div>
                         
-                        <div class="flex flex-col items-center justify-center min-w-[120px]">
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
                             <img src="logos/auricskincare.svg" alt="Auric Skincare logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
                             <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">Auric Skincare</p>
                         </div>
                         
-                        <div class="flex flex-col items-center justify-center min-w-[120px]">
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
                             <img src="logos/shoptimizehub.svg" alt="Shoptimize Hub logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
                             <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">Shoptimize Hub</p>
                         </div>
                         
-                        <div class="flex flex-col items-center justify-center min-w-[120px]">
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
                             <img src="logos/techtotonicindia.svg" alt="TechTonic India logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
                             <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">TechTonic India</p>
                         </div>
                     </div>
                     
-                    <div class="flex items-start space-x-16 mx-6">
-                        <div class="flex flex-col items-center justify-center min-w-[120px]">
+                    <div class="logo-group">
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
                             <img src="logos/vitaessentials.svg" alt="VitaEssentials logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
                             <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">VitaEssentials</p>
                         </div>
-                        <div class="flex flex-col items-center justify-center min-w-[120px]">
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
                             <img src="logos/urbanstitchco.svg" alt="Urban Stitch Co. logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
                             <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">Urban Stitch Co.</p>
                         </div>
-                        <div class="flex flex-col items-center justify-center min-w-[120px]">
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
                             <img src="logos/decosphereindia.svg" alt="DecoSphere India logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
                             <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">DecoSphere India</p>
                         </div>
-                        <div class="flex flex-col items-center justify-center min-w-[120px]">
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
                             <img src="logos/auricskincare.svg" alt="Auric Skincare logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
                             <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">Auric Skincare</p>
                         </div>
-                        <div class="flex flex-col items-center justify-center min-w-[120px]">
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
                             <img src="logos/shoptimizehub.svg" alt="Shoptimize Hub logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
                             <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">Shoptimize Hub</p>
                         </div>
-                        <div class="flex flex-col items-center justify-center min-w-[120px]">
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
                             <img src="logos/techtotonicindia.svg" alt="TechTonic India logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
                             <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">TechTonic India</p>
                         </div>
                     </div>
-                </marquee>
+                </div>
             </div>
             
                  
@@ -511,4 +524,4 @@ Smart Locator fixes them in real-time — reducing RTO, increasing revenue, and 
       window.addEventListener('resize', syncNavSpacer);
     </script>
 </body>
-                                                                   </html>
+    </html>
