@@ -5,17 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Smart Locator - AI Address Verification Platform</title>
 
-    <meta name="description" content="Smart Locator — AI address verification with India Post data. Reduce RTO, improve first-attempt delivery, and cut logistics cost.">
-    <link rel="icon" href="/favicon.ico">
-
     <link rel="stylesheet" href="style.css"> 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        /* Tailwind config must be set before loading the CDN so it takes effect */
-        tailwind = window.tailwind || {};
         tailwind.config = {
             theme: {
                 extend: {
@@ -23,12 +19,11 @@
                         'tf-bg-light': '#F8FAFC', 
                         'tf-card-light': '#FFFFFF',
                         'tf-text-dark': '#1E293B',
-                        // 💜 TELEFORCE STYLE COLOR PALETTE
-                        'tf-primary': '#5F3DC4', // Deep Violet/Purple
-                        'tf-secondary': '#A437C1', // Vibrant Magenta/Pink Accent
+                        'tf-primary': '#5F3DC4',
+                        'tf-secondary': '#A437C1',
                         'whatsapp-green': '#25D366',
                         'alert-dark': '#EF4444',
-                        'tf-primary-light': '#EFE7FF', // Very Light Purple Background
+                        'tf-primary-light': '#EFE7FF',
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
@@ -40,16 +35,14 @@
             }
         }
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
         body { scroll-behavior: smooth; }
         .input-focus:focus {
-            border-color: #5F3DC4; /* tf-primary */
+            border-color: #5F3DC4;
             box-shadow: 0 0 0 2px rgba(95, 61, 196, 0.4);
         }
         .text-gradient {
-            /* Updated gradient for Purple/Magenta style */
             background-image: linear-gradient(to right, #5F3DC4, #A437C1); 
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -62,11 +55,9 @@
         .accordion-header[aria-expanded="true"] .chevron {
             transform: rotate(180deg);
         }
-        /* Advanced Button Hover Effect */
         .btn-primary-adv {
             position: relative;
             overflow: hidden;
-            /* Stronger shadow reflecting the new primary color */
             box-shadow: 0 10px 15px -3px rgba(95, 61, 196, 0.5), 0 4px 6px -2px rgba(95, 61, 196, 0.05);
         }
         .btn-primary-adv::after {
@@ -83,9 +74,8 @@
         .btn-primary-adv:hover::after {
             transform: translate(200%, 0) skewX(-20deg);
         }
-        /* NEW: Subtle color change on text links for the new palette */
         .link-hover:hover {
-             color: #A437C1; /* tf-secondary */
+             color: #A437C1;
         }
     </style>
 </head>
@@ -121,7 +111,7 @@
             </h1>
 
             <p class="text-xl text-gray-600 mb-14 max-w-3xl mx-auto">
-                The <strong>Smartest AI Address Platform</strong> leveraging <strong>Smart AI</strong> and <strong>India Post</strong> to fix messy data and give you a precise deliverability score.
+                The **Smartest AI Address Platform** leveraging **Smart AI** and **India Post** to fix messy data and give you a precise deliverability score.
             </p>
 
             <div class="flex flex-col sm:flex-row justify-center gap-4 mb-20">
@@ -153,7 +143,7 @@
                             <i class="fas fa-brain"></i>
                         </div>
                         <h3 class="text-xl font-bold mb-2">2. AI Cleaning & Validation</h3>
-                        <p class="text-gray-600"><strong>Smart AI</strong> corrects errors and verifies against <strong>India Post</strong> records.</p>
+                        <p class="text-gray-600">**Smart AI** corrects errors and verifies against **India Post** records.</p>
                     </div>
 
                     <div class="text-center p-6 rounded-xl border-t-4 border-tf-text-dark/80 hover:shadow-xl transition duration-300">
@@ -161,7 +151,7 @@
                             <i class="fas fa-chart-line"></i>
                         </div>
                         <h3 class="text-xl font-bold mb-2">3. Actionable Scorecard</h3>
-                        <p class="text-gray-600">Receive a standardized address and a <strong>Location Suitability Score</strong> for every entry.</p>
+                        <p class="text-gray-600">Receive a standardized address and a **Location Suitability Score** for every entry.</p>
                     </div>
                 </div>
 
@@ -189,8 +179,8 @@
             <div class="text-center max-w-4xl mx-auto mb-16">
                 <h2 class="text-4xl font-extrabold text-tf-text-dark mb-4">The True Cost of RTO: How Much Can You Save?</h2>
                 <p class="text-lg text-gray-600">
-                    E-commerce brands lose millions because <strong>22%–45% of RTOs are caused by bad addresses</strong>.  
-                    Smart Locator fixes them in real-time — reducing RTO, increasing revenue, and improving customer experience.
+                    E-commerce brands lose millions because **22%–45% of RTOs are caused by bad addresses**.  
+Smart Locator fixes them in real-time — reducing RTO, increasing revenue, and improving customer experience.
                 </p>
             </div>
             
@@ -198,21 +188,21 @@
                 <div class="space-y-6">
                     <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-tf-primary">
                         <strong class="text-3xl font-extrabold text-tf-primary block">30%</strong>
-                        <p class="text-gray-600 mt-1">Reduction in <strong>Address-Related RTO</strong> for most clients within 90 days.</p>
+                        <p class="text-gray-600 mt-1">Reduction in **Address-Related RTO** for most clients within 90 days.</p>
                     </div>
                     <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-tf-secondary">
                         <strong class="text-3xl font-extrabold text-tf-secondary block">₹120+</strong>
-                        <p class="text-gray-600 mt-1">Average <strong>Cost Savings per Order</strong> by eliminating forward, reverse, and processing fees.</p>
+                        <p class="text-gray-600 mt-1">Average **Cost Savings per Order** by eliminating forward, reverse, and processing fees.</p>
                     </div>
                     <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-alert-dark">
                         <strong class="text-3xl font-extrabold text-alert-dark block">8X ROI</strong>
-                        <p class="text-gray-600 mt-1">Estimated <strong>Return on Investment</strong> on address verification fees for high-volume sellers.</p>
+                        <p class="text-gray-600 mt-1">Estimated **Return on Investment** on address verification fees for high-volume sellers.</p>
                     </div>
                     
                     <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-tf-primary">
                         <strong class="text-base font-bold text-tf-primary block mb-1">The Core Problem: Data Ambiguity</strong>
                         <p class="text-sm text-gray-700">
-                           RTO costs are caused by typos, missing PINs, invalid/wrong PINs, and ambiguous landmarks or locality. We eliminate this data failure point before shipment.
+                           RTO costs are caused by typos, missing PINs, invalid or wrong PIN, and ambiguous landmarks and locality. We eliminate this data failure point before shipment.
                         </p>
                     </div>
                     
@@ -221,7 +211,7 @@
                 <div class="p-8 bg-tf-card-light rounded-2xl shadow-2xl">
                     <h3 class="text-2xl font-bold text-tf-text-dark mb-4">Your Profit is in the Data.</h3>
                     <p class="text-gray-700 mb-4">
-                        A single failed delivery costs you not just the shipping fees, but also the staff time, inventory holding cost, and loss of customer trust. By verifying addresses at the point of entry, you <strong>convert losses into successful deliveries</strong>.
+                        A single failed delivery costs you not just the shipping fees, but also the staff time, inventory holding cost, and loss of customer trust. By verifying addresses at the point of entry, you **convert losses into successful deliveries**.
                     </p>
                     <a href="contact.html" class="inline-flex items-center text-tf-primary font-bold hover:text-tf-secondary transition">
                         Calculate Your Potential Savings <i class="fas fa-arrow-right ml-2"></i>
@@ -258,7 +248,7 @@
                 <div class="bg-tf-bg-light p-8 rounded-xl shadow-lg hover:shadow-2xl transition duration-300 border-l-4 border-tf-primary">
                     <i class="fas fa-bolt text-5xl mb-4 text-tf-primary"></i>
                     <h3 class="text-2xl font-bold mb-2">Instant Dispatch Decisions</h3>
-                    <p class="text-gray-600">Score addresses as <strong>Prime Location, Tier 1/2, or Remote</strong> to select the right courier and shipping method.</p>
+                    <p class="text-gray-600">Score addresses as **Prime Location, Tier 1/2, or Remote** to select the right courier and shipping method.</p>
                 </div>
 
             </div>
@@ -273,7 +263,7 @@
             <div class="text-center max-w-3xl mx-auto mb-16">
                 <h2 class="text-4xl font-extrabold text-tf-text-dark mb-4">Under the Hood: Our AI-Powered Engine</h2>
                 <p class="text-lg text-gray-600">
-                    We combine the best of <strong>Advanced AI</strong> models with ground truth data for unprecedented accuracy.
+                    We combine the best of **Advanced AI** models with ground truth data for unprecedented accuracy.
                 </p>
             </div>
 
@@ -285,7 +275,7 @@
                         <h3 class="text-2xl font-bold">Intelligent Error Correction</h3>
                     </div>
                     <p class="text-gray-600 mb-3">
-                        Our <strong>Smart AI</strong> model automatically fixes phonetic errors ("Nager" -> "Nagar"), spelling mistakes, and common abbreviations.
+                        Our **Smart AI** model automatically fixes phonetic errors ("Nager" -> "Nagar"), spelling mistakes, and common abbreviations.
                     </p>
                     <ul class="text-sm text-gray-700 list-disc list-inside space-y-1">
                         <li>Standardizes input formats.</li>
@@ -300,7 +290,7 @@
                         <h3 class="text-2xl font-bold">Official India Post Validation</h3>
                     </div>
                     <p class="text-gray-600 mb-3">
-                        Every address is cross-referenced with <strong>India Post</strong> data to ensure the PIN, Post Office, Tehsil, and District are correct and verified.
+                        Every address is cross-referenced with **India Post** data to ensure the PIN, Post Office, Tehsil, and District are correct and verified.
                     </p>
                     <ul class="text-sm text-gray-700 list-disc list-inside space-y-1">
                         <li>Corrects invalid or wrong PIN codes.</li>
@@ -329,7 +319,7 @@
                     </button>
                     <div id="content-1" class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
                         <p class="pt-2 pb-4 text-gray-600 border-t border-gray-100 mt-2">
-                            The workflow uses a multi-step process: 1) <strong>AI Parsing</strong>: Smart AI automatically <strong>corrects spelling mistakes</strong>, standardizes abbreviations, and <strong>correctly identifies</strong> crucial components like House No. and Street. 2) <strong>PIN Validation</strong>: The system uses <strong>India Post</strong> API to confirm the PIN code, correcting it if necessary, and fetching the official District and State data. 3) <strong>Scoring</strong>: A final <strong>Location Suitability Score</strong> (e.g., Prime, Remote) is provided. 4) <strong>Remarks</strong>: Detailed remarks for discrepancy (e.g., "Wrong PIN corrected") guide your logistics team.
+                            The workflow uses a multi-step process: 1) **AI Parsing**: Smart AI automatically **corrects spelling mistakes**, standardizes abbreviations, and **correctly identifies** crucial components like House No. and Street. 2) **PIN Validation**: The system uses **India Post** API to confirm the PIN code, correcting it if necessary, and fetching the official District and State data. 3) **Scoring**: A final **Location Suitability Score** (e.g., Prime, Remote) is **provided**. 4) **Remarks**: Detailed **remarks for discrepancy** (e.g., "Wrong PIN corrected") guide your logistics team.
                         </p>
                     </div>
                 </div>
@@ -342,7 +332,7 @@
                     </button>
                     <div id="content-2" class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
                         <p class="pt-2 pb-4 text-gray-600 border-t border-gray-100 mt-2">
-                            You save on three main areas: <strong>Forward Logistics Cost</strong> (the first shipping fee), <strong>Reverse Logistics Cost</strong> (the fee to ship the package back), and <strong>Soft Costs</strong> (staff time processing the return, inventory holding, and customer service escalation). By ensuring first-attempt delivery success, these costs are eliminated.
+                            You save on three main areas: **Forward Logistics Cost** (the first shipping fee), **Reverse Logistics Cost** (the fee to ship the package back), and **Soft Costs** (staff time processing the return, inventory holding, and customer service escalation). By ensuring first-attempt delivery success, these costs are eliminated.
                         </p>
                     </div>
                 </div>
@@ -355,7 +345,7 @@
                     </button>
                     <div id="content-3" class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
                         <p class="pt-2 pb-4 text-gray-600 border-t border-gray-100 mt-2">
-                            Standard APIs only check if a PIN exists. Our system, combining <strong>Smart AI</strong> and <strong>India Post</strong> data, can <em>correct</em> missing or wrong data. If an address says 'H-10, Pune, 400001' but the actual address is 'H-10, Mumbai, 400001', the AI will correct the geographical inconsistency and flag the issue. We provide corrected data, not just an error message.
+                            Standard APIs only check if a PIN exists. Our system, combining **Smart AI** and **India Post** data, can *correct* missing or wrong data. If an address says 'H-10, Pune, 400001' but the actual address is 'H-10, Mumbai, 400001', the AI will correct the geographical inconsistency and flag the issue. We provide corrected data, not just an error message.
                         </p>
                     </div>
                 </div>
@@ -387,27 +377,23 @@
                 <a href="privacy.html" class="hover:text-tf-primary">Privacy Policy</a>
                 <a href="terms.html" class="hover:text-tf-primary">Terms of Service</a>
             </div>
-            <p class="text-sm text-gray-500">Powered by <strong>Smart AI</strong> and <strong>India Post</strong>. &copy; 2025 Smart Locator. All rights reserved.</p>
+            <p class="text-sm text-gray-500">Powered by **Smart AI** and **India Post**. &copy; 2025 Smart Locator. All rights reserved.</p>
         </div>
     </footer>
     
-    <a href="https://wa.me/919193246219" target="_blank" rel="noopener noreferrer" class="fixed bottom-6 right-6 z-40 p-4 bg-whatsapp-green text-white rounded-full shadow-3xl hover:bg-green-600 transition transform hover:scale-110" aria-label="Contact us on WhatsApp">
+    <a href="https://wa.me/919193246219" target="_blank" class="fixed bottom-6 right-6 z-40 p-4 bg-whatsapp-green text-white rounded-full shadow-3xl hover:bg-green-600 transition transform hover:scale-110" aria-label="Contact us on WhatsApp">
         <i class="fab fa-whatsapp text-3xl"></i>
     </a>
 
     <script>
-        // JavaScript for the FAQ Accordion functionality
         function toggleAccordion(contentId, headerElement) {
             const content = document.getElementById(contentId);
             const isExpanded = headerElement.getAttribute('aria-expanded') === 'true';
 
             if (isExpanded) {
-                // Collapse
                 content.style.maxHeight = null;
                 headerElement.setAttribute('aria-expanded', 'false');
             } else {
-                // Expand
-                // Close any currently open accordion in the same container
                 document.querySelectorAll('.accordion-header[aria-expanded="true"]').forEach(openHeader => {
                     if (openHeader !== headerElement) {
                         openHeader.setAttribute('aria-expanded', 'false');
@@ -415,19 +401,11 @@
                     }
                 });
                 
-                // Expand the clicked one
-                // ensure a fresh measurement (helpful if fonts/images change height)
-                content.style.maxHeight = content.scrollHeight + "px"; // Set max height to content height
+                content.style.maxHeight = content.scrollHeight + "px";
                 headerElement.setAttribute('aria-expanded', 'true');
-
-                // small safety: recalc after a tick if content includes images/font loading
-                setTimeout(() => {
-                    content.style.maxHeight = content.scrollHeight + "px";
-                }, 50);
             }
         }
         
-        // Initial setup to ensure max-height is correctly calculated
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.accordion-content').forEach(content => {
                 content.style.maxHeight = '0';
