@@ -78,7 +78,6 @@
              color: #A437C1;
         }
 
-        /* ====== NAV FIX: keep everything visually identical, but make nav fixed ====== */
         .site-nav {
           position: fixed;
           top: 0;
@@ -94,27 +93,25 @@
           height: 64px;
         }
         
-        /* --- START MARQUEE FIX: Custom CSS for Infinite Scroll --- */
         @keyframes scroll-left {
             0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); } /* Scrolls the container exactly half its width */
+            100% { transform: translateX(-50%); }
         }
 
         .infinite-scroll {
             display: flex;
-            width: 200%; /* Double the width to hold the duplicated content */
-            animation: scroll-left 30s linear infinite; /* 30 seconds duration, linear speed, infinite loop */
+            width: 200%;
+            animation: scroll-left 30s linear infinite;
         }
         
         .logo-group {
-            width: 50%; /* Each group takes up exactly half the 200% container */
+            width: 50%;
             display: flex;
             justify-content: space-around;
             align-items: flex-start;
             flex-shrink: 0;
             padding: 0 20px;
         }
-        /* --- END MARQUEE FIX --- */
     </style>
 </head>
 <body class="bg-tf-bg-light text-tf-text-dark">
@@ -271,7 +268,7 @@
                 </div>
             </div>
             
-                 
+                  
         </div>
     </section>
     <section class="py-24 bg-tf-primary-light">
@@ -524,4 +521,4 @@ Smart Locator fixes them in real-time — reducing RTO, increasing revenue, and 
       window.addEventListener('resize', syncNavSpacer);
     </script>
 </body>
-    </html>
+        </html>
