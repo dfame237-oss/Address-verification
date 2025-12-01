@@ -130,7 +130,7 @@
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .dashboard-container { padding: 15px;
-                margin: 10px auto; width: 95%; box-shadow: none; }
+                margin: 10px auto; w-width: 95%; box-shadow: none; }
             .header { flex-direction: column;
                 align-items: flex-start; margin-bottom: 20px; }
             .header h1 { font-size: 1.75rem;
@@ -413,7 +413,7 @@
         const API_BASE = '/api';
         const API_CLIENT = `${API_BASE}/client/index`;
         const API_ENDPOINT = "/api/verify-single-address"; // used by single verification
-        // const API_BULK_JOBS = "/api/bulk-jobs"; // <-- REMOVED: This constant is already defined and loaded via bulk_verification_logic.js
+        // const API_BULK_JOBS is defined in bulk_verification_logic.js
         const LOGIN_PAGE = "client-login.html";
         
         // Ensure that the plan details are parsed from the correct localStorage key
@@ -811,6 +811,7 @@
         async function fetchAndUpdateJobStatus() {
             try {
                 // Use the new bulk jobs endpoint
+                // API_BULK_JOBS is available globally from bulk_verification_logic.js
                 const resp = await authFetch(API_BULK_JOBS, { method: 'GET' });
                 const result = await resp.json();
 
@@ -860,9 +861,9 @@
                                         <i class="fas fa-times"></i> Cancel
                                     </button>` 
                                 : isCompleted ? `
-                                    <a class="py-1 px-3 bg-tf-primary text-white text-sm rounded hover:bg-[#4d2e97] transition" href="${API_BULK_JOBS}?action=download&jobId=${job._id}&filename=${job.filename.replace('.csv', '')}_verified.csv" download>
+                                    <button class="py-1 px-3 bg-tf-primary text-white text-sm rounded hover:bg-[#4d2e97] transition" onclick="handleAuthenticatedDownload('${job._id}', '${job.filename.replace(/'/g, "\\'").replace(/"/g, '')}')">
                                         <i class="fas fa-download"></i> Download
-                                    </a>`
+                                    </button>`
                                 : isFailed ? `<span class="text-red-500 text-sm italic">${job.error || 'Check server logs.'}</span>`
                                 : job.status === 'Cancelled' ? `<span class="text-red-500 text-sm italic">Cancelled by user.</span>`
                                 : ''}
@@ -893,11 +894,11 @@
                 const bulkTabBtn = document.getElementById('bulk-tab-btn');
                 const csvFileInput = document.getElementById('csvFileInput');
 
-                if (activeCount >= 1) { // Changed check to 1
+                if (activeCount >= 1) { 
                     if (processBtn) processBtn.disabled = true;
                     if (bulkTabBtn) bulkTabBtn.style.borderBottom = '2px solid #EF4444';
                     maxJobsMsgEl.style.display = 'block';
-                    maxJobsMsgEl.textContent = `Maximum ${activeCount} job is running. Please wait for completion.`; // Updated message
+                    maxJobsMsgEl.textContent = `Maximum ${activeCount} job is running. Please wait for completion.`; 
                 } else {
                     // Only enable if fewer than 1 job AND a file is selected
                      if (processBtn && csvFileInput) {
@@ -928,6 +929,49 @@
             }
         }
         
+        // --- AUTHENTICATED DOWNLOAD FUNCTION (FIX for "Needs Authorisation") ---
+        async function handleAuthenticatedDownload(jobId, jobFilename) {
+            // Ensure filename is clean and safe
+            const safeFilename = `${jobFilename.replace('.csv', '').replace(/'/g, '').replace(/"/g, '')}_verified.csv`;
+            const downloadUrl = `${API_BULK_JOBS}?action=download&jobId=${jobId}`;
+
+            try {
+                // Use authFetch to ensure JWT is included in the header
+                const resp = await authFetch(downloadUrl, { method: 'GET' });
+
+                if (!resp.ok) {
+                    const errorText = await resp.text();
+                    // If the response is an expected JSON error (from the server's 404/500 handlers), display it.
+                    if (errorText.startsWith('{') && errorText.endsWith('}')) {
+                         const errorJson = JSON.parse(errorText);
+                         alert('Download failed: ' + (errorJson.message || 'File unavailable.'));
+                    } else {
+                        // General network/stream error
+                        alert('Download failed. Please try again later.');
+                    }
+                    return;
+                }
+
+                // Get the response data as a Blob (raw file data)
+                const blob = await resp.blob(); 
+                
+                // Trigger download using Blob URL
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = safeFilename; // Use the safe filename
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+                
+            } catch (e) {
+                console.error("Authenticated Download Failed:", e);
+                alert('Download failed due to a network or authentication error.');
+            }
+        }
+
         // --- PASSWORD UPDATE LISTENER (PUBLIC) ---
         document.getElementById('password-update-form').addEventListener('submit', async (e) => {
             e.preventDefault();
