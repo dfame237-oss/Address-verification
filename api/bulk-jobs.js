@@ -62,10 +62,17 @@ function parseCSV(text) {
     return data;
 }
 
-// --- Helper: CSV result builder from public/bulk_verification_logic.js ---
+// --- Helper: CSV result builder (FIXED FOR SEMICOLON DELIMITER) ---
 function createCSV(rows) {
-    const header = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS,CLEAN NAME,CLEAN ADDRESS LINE 1,LANDMARK,STATE,DISTRICT,PIN,REMARKS,QUALITY\n";
-    const escapeAndQuote = (cell) => `\"${String(cell || '').replace(/\"/g, '\"\"')}\"`;
+    // Use SEMICOLON (;) for better auto-detection in international spreadsheet programs
+    const CUSTOM_DELIMITER = ";"; 
+    
+    // Updated header line to use the semicolon delimiter
+    const header = "ORDER ID;CUSTOMER NAME;CUSTOMER RAW ADDRESS;CLEAN NAME;CLEAN ADDRESS LINE 1;LANDMARK;STATE;DISTRICT;PIN;REMARKS;QUALITY\n";
+    const escapeAndQuote = (cell) => {
+        // Encapsulate data in quotes and escape any internal quotes
+        return `\"${String(cell || '').replace(/\"/g, '\"\"')}\"`;
+    };
     
     const outputRows = rows.map(vr => {
         return [
@@ -80,7 +87,7 @@ function createCSV(rows) {
             vr.pin,
             vr.remarks,
             vr.addressQuality
-        ].map(escapeAndQuote).join(',');
+        ].map(escapeAndQuote).join(CUSTOM_DELIMITER); // Use semicolon here
     });
     
     return header + outputRows.join('\n');
