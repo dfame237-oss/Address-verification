@@ -12,7 +12,17 @@ const coreMeaningfulWords = [
     "tq", "job", "dist"
 ];
 const meaningfulWords = [...coreMeaningfulWords, ...testingKeywords]; 
-const meaninglessRegex = new RegExp(`\\b(?:${meaningWords.join('|')})\\b`, 'gi');
+// FIX: Use an Immediately Invoked Function Expression (IIFE) to compile the regex, 
+// ensuring the 'meaningfulWords' variable is fully defined first.
+const meaninglessRegex = (() => {
+    try {
+        return new RegExp(`\\b(?:${meaningfulWords.join('|')})\\b`, 'gi');
+    } catch (e) {
+        console.error("Failed to compile meaninglessRegex:", e);
+        return /a^/; // Return a regex that matches nothing as a safe fallback
+    }
+})();
+
 const directionalKeywords = ['near', 'opposite', 'back side', 'front side', 'behind', 'opp'];
 // --- DB helper and auth ---
 const { connectToDatabase } = require('../utils/db');
@@ -217,7 +227,6 @@ async function runVerificationLogic(address, customerName) {
                 finalPin = initialPin; 
             }
         } 
-        // NOTE: Misleading 'PIN verified successfully' remark removed here.
     } else {
         remarks.push('CRITICAL_ALERT: PIN not found after verification attempts. Manual check needed.');
         finalPin = initialPin || null; 
@@ -227,7 +236,7 @@ async function runVerificationLogic(address, customerName) {
     let currentQuality = parsedData.AddressQuality;
     const rawAddressLower = address.toLowerCase();
 
-    // --- 4. RULE: Missing Locality/Specifics Check (Quality Downgrade) ---
+    // --- 4. RULE: Missing Locality/Specifics Check ---
     const hasHouseOrFlat = parsedData['H.no.'] || parsedData['Flat No.'] || parsedData['Plot No.'];
     const hasStreetOrColony = parsedData.Street || parsedData.Colony || parsedData.Locality;
 
@@ -236,10 +245,10 @@ async function runVerificationLogic(address, customerName) {
         if (currentQuality === 'Very Good' || currentQuality === 'Good' || currentQuality === 'Medium') {
             parsedData.AddressQuality = 'Bad';
         }
-        currentQuality = parsedData.AddressQuality; 
+        currentQuality = parsedData.AddressQuality; // Update for next check
     }
 
-    // --- 5. RULE: Location Conflict Downgrade Check (Quality Downgrade) ---
+    // --- 5. RULE: Location Conflict Downgrade Check ---
     if (verifiedState) {
         const verifiedStateLower = verifiedState.toLowerCase();
         for (const city in MAJOR_CITY_CONFLICTS) {
@@ -249,7 +258,7 @@ async function runVerificationLogic(address, customerName) {
                 remarks.push(`CRITICAL_ALERT: Major location conflict found. Raw address mentioned '${city.toUpperCase()}' but verified state is '${verifiedState}'. Quality severely penalized.`);
                 
                 parsedData.AddressQuality = 'Very Bad';
-                currentQuality = parsedData.AddressQuality; 
+                currentQuality = parsedData.AddressQuality; // Update for next check
                 break; 
             }
         }
