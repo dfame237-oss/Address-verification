@@ -1,402 +1,524 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Single Address Verification Demo</title>
-    
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Locator - AI Address Verification Platform</title>
+
     <link rel="stylesheet" href="style.css"> 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Custom colors matching your overall palette (tf-primary is indigo)
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'primary-blue': '#6366F1', // tf-primary (Indigo)
-                        'secondary-green': '#059669', // Dark Green
-                        'neutral-gray': '#F9FAFB', 
-                        'success-light': '#D1FAE5',
-                        'success-dark': '#065F46',
-                        'alert-light': '#FEE2E2',
-                        'alert-dark': '#991B1B',
-                        'warning-light': '#FEF3C7',
-                        'warning-dark': '#92400E',
-                        'copy-neutral-border': '#D1D5DB',
-                        'tf-cyan': '#06B6D4',
-                        // Re-defining for clean use
-                        'tf-text-dark': '#1E293B', 
-                        'tf-primary': '#6366F1',
-                        'tf-secondary': '#06B6D4',
+                        'tf-bg-light': '#F8FAFC', 
+                        'tf-card-light': '#FFFFFF',
+                        'tf-text-dark': '#1E293B',
+                        'tf-primary': '#5F3DC4',
+                        'tf-secondary': '#A437C1',
+                        'whatsapp-green': '#25D366',
+                        'alert-dark': '#EF4444',
+                        'tf-primary-light': '#EFE7FF',
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
                     },
+                    boxShadow: {
+                        '3xl': '0 35px 60px -15px rgba(0, 0, 0, 0.2)',
+                    }
                 }
             }
         }
     </script>
+
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .result-block { position: relative; }
-        /* Style for the copy button */
-        .copy-btn {
-            position: absolute; top: 0.5rem; right: 0.5rem; padding: 0.25rem 0.5rem; 
-            font-size: 0.75rem; line-height: 1rem; background-color: transparent; 
-            color: #4B5563; border: 1px solid var(--copy-neutral-border); 
-            border-radius: 0.375rem; transition: all 0.15s; cursor: pointer; z-index: 10;
+        body { scroll-behavior: smooth; }
+        .input-focus:focus {
+            border-color: #5F3DC4;
+            box-shadow: 0 0 0 2px rgba(95, 61, 196, 0.4);
         }
-        .copy-btn:hover { background-color: #F3F4F6; color: #1F2937; }
-        .result-content { padding-right: 3.5rem; }
-        .form-input {
-            transition: border-color 0.2s, box-shadow 0.2s;
+        .text-gradient {
+            background-image: linear-gradient(to right, #5F3DC4, #A437C1); 
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        .form-input:focus {
-            border-color: #6366F1;
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.4);
+        .hero-background {
+            background-color: #F8FAFC; 
+            background-image: radial-gradient(#E5E7EB 1px, transparent 1px);
+            background-size: 20px 20px;
         }
-        /* Style for the main copy block */
-        #formatted-shipping-block {
-            line-height: 1.4;
-            white-space: pre-wrap; /* Ensures line breaks are respected */
+        .accordion-header[aria-expanded="true"] .chevron {
+            transform: rotate(180deg);
+        }
+        .btn-primary-adv {
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(95, 61, 196, 0.5), 0 4px 6px -2px rgba(95, 61, 196, 0.05);
+        }
+        .btn-primary-adv::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.15);
+            transition: transform 0.3s ease-out;
+            transform: skewX(-20deg);
+        }
+        .btn-primary-adv:hover::after {
+            transform: translate(200%, 0) skewX(-20deg);
+        }
+        .link-hover:hover {
+             color: #A437C1;
+        }
+
+        .site-nav {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 50;
+          background-color: inherit;
+          -webkit-backdrop-filter: blur(4px);
+          backdrop-filter: blur(4px);
+        }
+
+        .site-spacer {
+          height: 64px;
+        }
+        
+        @keyframes scroll-left {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .infinite-scroll {
+            display: flex;
+            width: 200%;
+            animation: scroll-left 30s linear infinite;
+        }
+        
+        .logo-group {
+            width: 50%;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            flex-shrink: 0;
+            padding: 0 20px;
         }
     </style>
 </head>
-<body class="bg-neutral-gray min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-4xl bg-white p-8 sm:p-10 rounded-xl shadow-2xl border-t-4 border-primary-blue">
+<body class="bg-tf-bg-light text-tf-text-dark">
 
-        <a href="index.html" class="text-gray-500 hover:text-primary-blue font-medium mb-6 inline-flex items-center transition duration-150">
-            <i class="fas fa-arrow-left w-4 h-4 mr-2"></i>
-            Back to Home
-        </a>
+    <nav class="site-nav bg-tf-card-light shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
 
-        <header class="text-center mb-8">
-            <h1 class="text-3xl font-extrabold text-gray-900 mb-2">
-                <span class="text-tf-cyan">Single Address</span> Verification
-            </h1>
-            <p class="text-gray-600">Free, unauthenticated check powered by **Smart AI** and **India Post** data.</p>
-        </header>
-        
-        <div class="space-y-6">
-            <div class="p-4 bg-blue-50/50 border border-blue-100 rounded-lg text-sm text-gray-700 font-medium">
-                <i class="fas fa-info-circle mr-2 text-primary-blue"></i> This is a **live, free demo**. For bulk processing and API access, please use the Client Login or Request Demo.
-            </div>
-            
-            <div class="grid sm:grid-cols-2 gap-4">
-                <div>
-                    <label for="customerName" class="block text-sm font-medium text-gray-700 mb-1">Customer Name (Optional)</label>
-                    <input type="text" id="customerName" placeholder="e.g., Pankaj Rawat" class="form-input w-full p-3 border border-gray-300 rounded-lg shadow-sm">
-                </div>
-                <div>
-                    <label for="rawAddress" class="block text-sm font-medium text-gray-700 mb-1">Raw Address to Verify *</label>
-                    <textarea id="rawAddress" rows="4" placeholder="e.g., H.No. 123, Sector 40B, near bus stand, Chandigarh" class="form-input w-full p-3 border border-gray-300 rounded-lg shadow-sm resize-none"></textarea>
-                </div>
-            </div>
+            <a href="index.html" class="text-3xl font-extrabold text-tf-text-dark flex items-center">
+                <span class="text-gradient">Smart Locator</span>
+            </a>
 
-            <button id="verifyButton" class="w-full py-3 bg-secondary-green text-white font-bold rounded-lg shadow-lg hover:bg-green-700 transition duration-200 transform hover:scale-[1.005] focus:outline-none focus:ring-4 focus:ring-secondary-green focus:ring-opacity-50">
-                <i class="fas fa-search mr-2"></i> Verify Address
-            </button>
-            
-            <div id="loading-message" class="hidden text-center text-primary-blue font-semibold py-3 border border-blue-200 bg-blue-50 rounded-lg">
-                <i class="fas fa-spinner fa-spin mr-2"></i> Verifying address using AI...
+            <div class="flex gap-4 sm:gap-6 items-center">
+                <a href="#features" class="hidden sm:inline font-medium text-gray-600 link-hover transition">Details</a>
+                <a href="pricing.html" class="hidden sm:inline font-medium text-gray-600 link-hover transition">Pricing</a>
+                <a href="client-login.html" class="font-medium text-tf-primary link-hover transition">Client Login</a>
+
+                <a href="contact.html" class="btn-primary-adv bg-tf-primary text-white py-2 px-4 sm:px-6 rounded-lg font-bold transition transform hover:scale-105 hover:bg-[#4d2e97]">
+                    Request Demo (Bulk)
+                </a>
             </div>
         </div>
+    </nav>
 
-        <div id="resultsContainer" class="hidden mt-10">
-            <h3 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">Verified & Standardized Output</h3>
-            
-            <div class="result-block bg-primary-blue/10 p-5 rounded-lg border border-primary-blue/30 shadow-md mb-6">
-                <button class="copy-btn" data-target="formatted-shipping-block" title="Copy Full Address"><i class="far fa-copy"></i> Copy Full</button>
-                <div class="result-content">
-                    <strong class="text-primary-blue block mb-2 text-lg flex items-center">
-                        <i class="fas fa-truck-loading mr-2"></i> Ready-to-Ship Address:
-                    </strong> 
-                    <pre id="formatted-shipping-block" class="text-tf-text-dark font-mono text-base"></pre>
-                </div>
+    <div class="site-spacer" aria-hidden="true"></div>
+
+    <header id="hero" class="pt-20 pb-32 text-center hero-background">
+        <div class="max-w-6xl mx-auto px-6">
+
+            <p class="text-sm font-semibold text-tf-secondary mb-3 uppercase tracking-wider">
+                Powered by Smart AI and Official India Post Data
+            </p>
+            <h1 class="text-5xl md:text-6xl font-extrabold mb-6 leading-tight">
+                Stop RTO. <span class="text-gradient">Guarantee First-Attempt Delivery.</span>
+            </h1>
+
+            <p class="text-xl text-gray-600 mb-14 max-w-3xl mx-auto">
+                The **Smartest AI Address Platform** leveraging **Smart AI** and **India Post** to fix messy data and give you a precise deliverability score.
+            </p>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-4 mb-20">
+                <a href="contact.html" class="btn-primary-adv py-3 px-8 bg-tf-primary text-white rounded-lg font-extrabold transition transform hover:-translate-y-0.5 hover:bg-[#4d2e97]">
+                    Request Demo for Bulk Verification →
+                </a>
+                <a href="single.html" class="py-3 px-8 bg-tf-card-light border border-gray-300 text-tf-text-dark rounded-lg font-bold shadow-lg hover:bg-gray-100 transition">
+                    <i class="fas fa-search mr-2"></i> Try Single Check (Free)
+                </a>
             </div>
 
-            <div class="grid sm:grid-cols-2 gap-4 mb-6">
-                <div id="quality-block" class="result-block p-4 rounded-lg shadow-md flex flex-col justify-center transition-colors duration-300">
-                    <strong class="text-lg flex items-center mb-1">
-                        <span id="quality-icon" class="text-2xl mr-3"></span> Deliverability Score:
-                    </strong> 
-                    <span id="out-quality" class="text-2xl font-extrabold"></span>
+            <div id="process-cards" class="bg-tf-card-light border border-gray-200 shadow-2xl rounded-2xl p-8 md:p-12 -mt-16">
+                <h2 class="text-3xl md:text-4xl font-extrabold mb-10 text-center text-tf-text-dark">3 Steps to 99% Deliverability</h2>
+
+                <div class="grid md:grid-cols-3 gap-10 relative">
+                    
+                    <div class="hidden md:block absolute inset-x-0 top-1/4 h-0.5 bg-gray-200 mx-16 -z-10"></div>
+                    
+                    <div class="text-center p-6 rounded-xl border-t-4 border-tf-primary/80 hover:shadow-xl transition duration-300">
+                        <div class="w-16 h-16 rounded-full bg-tf-primary-light text-tf-primary flex items-center justify-center mx-auto mb-4 text-3xl">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">1. Secure Bulk Upload</h3>
+                        <p class="text-gray-600">Securely upload thousands of raw addresses via API or Client Portal.</p>
+                    </div>
+
+                    <div class="text-center p-6 rounded-xl border-t-4 border-tf-secondary/80 hover:shadow-xl transition duration-300">
+                        <div class="w-16 h-16 rounded-full bg-tf-primary-light text-tf-secondary flex items-center justify-center mx-auto mb-4 text-3xl">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">2. AI Cleaning & Validation</h3>
+                        <p class="text-gray-600">**Smart AI** corrects errors and verifies against **India Post** records.</p>
+                    </div>
+
+                    <div class="text-center p-6 rounded-xl border-t-4 border-tf-text-dark/80 hover:shadow-xl transition duration-300">
+                        <div class="w-16 h-16 rounded-full bg-gray-200 text-tf-text-dark flex items-center justify-center mx-auto mb-4 text-3xl">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">3. Actionable Scorecard</h3>
+                        <p class="text-gray-600">Receive a standardized address and a **Location Suitability Score** for every entry.</p>
+                    </div>
                 </div>
 
-                <div class="result-block bg-success-light p-4 rounded-lg border border-green-300 shadow-sm">
-                    <button class="copy-btn" data-target="out-name" title="Copy Clean Name"><i class="far fa-copy"></i> Copy</button>
-                    <div class="result-content">
-                        <strong class="text-success-dark block mb-1 flex items-center"><i class="fas fa-user-tag mr-2"></i> Clean Name:</strong> 
-                        <span id="out-name" class="text-gray-700 text-xl font-bold"></span>
+            </div>
+        </div>
+    </header>
+
+    <section class="py-12 bg-tf-card-light border-b border-gray-200 overflow-hidden">
+        <div class="text-center">
+            <h3 class="text-lg font-semibold text-gray-500 uppercase tracking-widest mb-8 px-6">
+                Trusted to verify over 10 Million addresses annually
+            </h3>
+            
+            <div class="overflow-hidden whitespace-nowrap"> 
+                
+                <div class="infinite-scroll">
+                    
+                    <div class="logo-group">
+                        
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
+                            <img src="logos/vitaessentials.svg" alt="VitaEssentials logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
+                            <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">VitaEssentials</p>
+                        </div>
+                        
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
+                            <img src="logos/urbanstitchco.svg" alt="Urban Stitch Co. logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
+                            <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">Urban Stitch Co.</p>
+                        </div>
+                        
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
+                            <img src="logos/decosphereindia.svg" alt="DecoSphere India logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
+                            <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">DecoSphere India</p>
+                        </div>
+                        
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
+                            <img src="logos/auricskincare.svg" alt="Auric Skincare logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
+                            <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">Auric Skincare</p>
+                        </div>
+                        
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
+                            <img src="logos/shoptimizehub.svg" alt="Shoptimize Hub logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
+                            <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">Shoptimize Hub</p>
+                        </div>
+                        
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
+                            <img src="logos/techtotonicindia.svg" alt="TechTonic India logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
+                            <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">TechTonic India</p>
+                        </div>
+                    </div>
+                    
+                    <div class="logo-group">
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
+                            <img src="logos/vitaessentials.svg" alt="VitaEssentials logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
+                            <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">VitaEssentials</p>
+                        </div>
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
+                            <img src="logos/urbanstitchco.svg" alt="Urban Stitch Co. logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
+                            <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">Urban Stitch Co.</p>
+                        </div>
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
+                            <img src="logos/decosphereindia.svg" alt="DecoSphere India logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
+                            <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">DecoSphere India</p>
+                        </div>
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
+                            <img src="logos/auricskincare.svg" alt="Auric Skincare logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
+                            <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">Auric Skincare</p>
+                        </div>
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
+                            <img src="logos/shoptimizehub.svg" alt="Shoptimize Hub logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
+                            <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">Shoptimize Hub</p>
+                        </div>
+                        <div class="flex flex-col items-center justify-center min-w-[120px] mx-4">
+                            <img src="logos/techtotonicindia.svg" alt="TechTonic India logo" class="h-14 transition duration-300 hover:scale-105 mb-1">
+                            <p class="text-sm font-semibold text-gray-700 whitespace-nowrap">TechTonic India</p>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <div id="remarks-block" class="result-block remarks-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm mt-6">
-                <strong class="text-gray-600 block mb-1 flex items-center">
-                    <i class="fas fa-exclamation-triangle mr-2"></i> System Remarks & Warnings:
-                </strong> 
-                <span id="out-remarks" class="text-gray-800 italic text-sm"></span>
+                  
+        </div>
+    </section>
+    <section class="py-24 bg-tf-primary-light">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center max-w-4xl mx-auto mb-16">
+                <h2 class="text-4xl font-extrabold text-tf-text-dark mb-4">The True Cost of RTO: How Much Can You Save?</h2>
+                <p class="text-lg text-gray-600">
+                    E-commerce brands lose millions because **22%–45% of RTOs are caused by bad addresses**. 
+Smart Locator fixes them in real-time — reducing RTO, increasing revenue, and improving customer experience.
+                </p>
             </div>
             
+            <div class="grid md:grid-cols-2 gap-10 items-center">
+                <div class="space-y-6">
+                    <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-tf-primary">
+                        <strong class="text-3xl font-extrabold text-tf-primary block">30%</strong>
+                        <p class="text-gray-600 mt-1">Reduction in **Address-Related RTO** for most clients within 90 days.</p>
+                    </div>
+                    <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-tf-secondary">
+                        <strong class="text-3xl font-extrabold text-tf-secondary block">₹120+</strong>
+                        <p class="text-gray-600 mt-1">Average **Cost Savings per Order** by eliminating forward, reverse, and processing fees.</p>
+                    </div>
+                    <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-alert-dark">
+                        <strong class="text-3xl font-extrabold text-alert-dark block">20X ROI</strong>
+                        <p class="text-gray-600 mt-1">Estimated **Return on Investment** on address verification fees for high-volume sellers.</p>
+                    </div>
+                    
+                    <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-tf-primary">
+                        <strong class="text-base font-bold text-tf-primary block mb-1">The Core Problem: Data Ambiguity</strong>
+                        <p class="text-sm text-gray-700">
+                            RTO costs are caused by typos, missing PINs, invalid or wrong PINs, and ambiguous landmarks or locality. We eliminate this data failure point before shipment.
+                        </p>
+                    </div>
+                    
+                </div>
+
+                <div class="p-8 bg-tf-card-light rounded-2xl shadow-2xl">
+                    <h3 class="text-2xl font-bold text-tf-text-dark mb-4">Your Profit is in the Data.</h3>
+                    <p class="text-gray-700 mb-4">
+                        A single failed delivery costs you not just the shipping fees, but also the staff time, inventory holding cost, and loss of customer trust. By verifying addresses at the point of entry, you **convert losses into successful deliveries**.
+                    </p>
+                    <a href="contact.html" class="inline-flex items-center text-tf-primary font-bold hover:text-tf-secondary transition">
+                        Calculate Your Potential Savings <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                    
+                </div>
+            </div>
         </div>
-    </div>
-    
-    <script>
-        const API_ENDPOINT = "/api/public-single-address"; // Your Free API endpoint
-        const REMARKS_ALERT_PREFIX = "CRITICAL_ALERT:";
+    </section>
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const verifyButton = document.getElementById('verifyButton');
-            if (verifyButton) {
-                verifyButton.addEventListener('click', handleSingleVerification);
-            }
+    <section id="whyus" class="py-24 bg-tf-card-light border-t">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+
+            <h2 class="text-4xl md:text-5xl font-extrabold mb-4">Why Deliverability Matters</h2>
+            <p class="text-xl text-gray-600 text-center mb-16 max-w-3xl mx-auto">
+                Stop treating RTO as an unavoidable cost. Turn un-deliverable addresses into guaranteed successful shipments.
+            </p>
             
-            // Add event listener for all copy buttons
-            document.querySelectorAll('.copy-btn').forEach(button => {
-                button.setAttribute('data-original-text', button.textContent); 
-                button.addEventListener('click', (event) => {
-                    const targetId = event.currentTarget.getAttribute('data-target');
-                    copyToClipboard(targetId, event.currentTarget);
-                });
-            });
-        });
 
-        // Copy function
-        function copyToClipboard(elementId, button) {
-            let textToCopy = '';
-            let element = document.getElementById(elementId);
+            <div class="grid md:grid-cols-3 gap-8">
 
-            if (elementId === 'formatted-shipping-block') {
-                textToCopy = element.textContent.trim();
+                <div class="bg-tf-bg-light p-8 rounded-xl shadow-lg hover:shadow-2xl transition duration-300 border-l-4 border-alert-dark">
+                    <i class="fas fa-hand-holding-usd text-5xl mb-4 text-alert-dark"></i>
+                    <h3 class="text-2xl font-bold mb-2">Eliminate 2x RTO Cost</h3>
+                    <p class="text-gray-600">Prevent lost revenue and the double logistics cost incurred by shipments that fail delivery.</p>
+                </div>
+
+                <div class="bg-tf-bg-light p-8 rounded-xl shadow-lg hover:shadow-2xl transition duration-300 border-l-4 border-tf-secondary">
+                    <i class="fas fa-puzzle-piece text-5xl mb-4 text-tf-secondary"></i>
+                    <h3 class="text-2xl font-bold mb-2">Standardization & Fill-In</h3>
+                    <p class="text-gray-600">Our AI completes partial addresses, standardizes phonetic errors, and ensures format compliance.</p>
+                </div>
+
+                <div class="bg-tf-bg-light p-8 rounded-xl shadow-lg hover:shadow-2xl transition duration-300 border-l-4 border-tf-primary">
+                    <i class="fas fa-bolt text-5xl mb-4 text-tf-primary"></i>
+                    <h3 class="text-2xl font-bold mb-2">Instant Dispatch Decisions</h3>
+                    <p class="text-gray-600">Score addresses as **Prime Location, Tier 1/2, or Remote** to select the right courier and shipping method.</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <hr class="border-gray-300">
+
+
+    <section id="features" class="py-24 bg-tf-bg-light">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-4xl font-extrabold text-tf-text-dark mb-4">Under the Hood: Our AI-Powered Engine</h2>
+                <p class="text-lg text-gray-600">
+                    We combine the best of **Advanced AI** models with ground truth data for unprecedented accuracy.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-10">
+                
+                <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-tf-primary">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-magic text-3xl text-tf-primary mr-3"></i>
+                        <h3 class="text-2xl font-bold">Intelligent Error Correction</h3>
+                    </div>
+                    <p class="text-gray-600 mb-3">
+                        Our **Smart AI** model automatically fixes phonetic errors ("Nager" -> "Nagar"), spelling mistakes, and common abbreviations.
+                    </p>
+                    <ul class="text-sm text-gray-700 list-disc list-inside space-y-1">
+                        <li>Standardizes input formats.</li>
+                        <li>Removes filler/meaningless words.</li>
+                        <li>Extracts H.no./Flat No. accurately.</li>
+                    </ul>
+                </div>
+
+                <div class="p-6 bg-tf-card-light rounded-xl shadow-lg border-l-4 border-tf-secondary">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-database text-3xl text-tf-secondary mr-3"></i>
+                        <h3 class="text-2xl font-bold">Official India Post Validation</h3>
+                    </div>
+                    <p class="text-gray-600 mb-3">
+                        Every address is cross-referenced with **India Post** data to ensure the PIN, Post Office, Tehsil, and District are correct and verified.
+                    </p>
+                    <ul class="text-sm text-gray-700 list-disc list-inside space-y-1">
+                        <li>Corrects invalid or wrong PIN codes.</li>
+                        <li>Guarantees official geographical mappings.</li>
+                        <li>Reduces dependence on vague city names.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="border-gray-300">
+
+
+    <section class="py-24 bg-tf-bg-light">
+        <div class="max-w-4xl mx-auto px-6">
+            <h2 class="text-4xl font-extrabold text-center text-tf-text-dark mb-12">Frequently Asked Questions</h2>
+
+            <div class="space-y-4">
+                
+                <div class="bg-tf-card-light p-4 rounded-xl shadow-lg border border-gray-200">
+                    <button class="accordion-header w-full text-left font-bold text-lg text-tf-text-dark py-2 flex justify-between items-center" 
+                            aria-expanded="false" aria-controls="content-1" onclick="toggleAccordion('content-1', this)">
+                        How does the full address verification workflow function?
+                        <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300 chevron"></i>
+                    </button>
+                    <div id="content-1" class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                        <p class="pt-2 pb-4 text-gray-600 border-t border-gray-100 mt-2">
+                            The workflow uses a multi-step process: 1) **AI Parsing**: Smart AI automatically **corrects spelling mistakes**, standardizes abbreviations, and **correctly identifies** crucial components like House No. and Street. 2) **PIN Validation**: The system uses **India Post** API to confirm the PIN code, correcting it if necessary, and fetching the official District and State data. 3) **Scoring**: A final **Location Suitability Score** (e.g., Prime, Remote) is **provided**. 4) **Remarks**: Detailed **remarks for discrepancy** (e.g., "Wrong PIN corrected") guide your logistics team.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-tf-card-light p-4 rounded-xl shadow-lg border border-gray-200">
+                    <button class="accordion-header w-full text-left font-bold text-lg text-tf-text-dark py-2 flex justify-between items-center" 
+                            aria-expanded="false" aria-controls="content-2" onclick="toggleAccordion('content-2', this)">
+                        What specific RTO costs does Smart Locator help me save?
+                        <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300 chevron"></i>
+                    </button>
+                    <div id="content-2" class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                        <p class="pt-2 pb-4 text-gray-600 border-t border-gray-100 mt-2">
+                            You save on three main areas: **Forward Logistics Cost** (the first shipping fee), **Reverse Logistics Cost** (the fee to ship the package back), and **Soft Costs** (staff time processing the return, inventory holding, and customer service escalation). By ensuring first-attempt delivery success, these costs are eliminated.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="bg-tf-card-light p-4 rounded-xl shadow-lg border border-gray-200">
+                    <button class="accordion-header w-full text-left font-bold text-lg text-tf-text-dark py-2 flex justify-between items-center" 
+                            aria-expanded="false" aria-controls="content-3" onclick="toggleAccordion('content-3', this)">
+                        How is your solution better than standard PIN code APIs?
+                        <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300 chevron"></i>
+                    </button>
+                    <div id="content-3" class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                        <p class="pt-2 pb-4 text-gray-600 border-t border-gray-100 mt-2">
+                            Standard APIs only check if a PIN exists. Our system, combining **Smart AI** and **India Post** data, can *correct* missing or wrong data. If an address says 'H-10, Pune, 400001' but the actual address is 'H-10, Mumbai, 400001', the AI will correct the geographical inconsistency and flag the issue. We provide corrected data, not just an error message.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+
+    <section class="py-20 bg-tf-primary text-white">
+        <div class="text-center max-w-4xl mx-auto px-6">
+            <h3 class="text-4xl font-extrabold mb-6">Stop RTO Headaches. Start Your Free Trial Today.</h3>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-6">
+                <a href="contact.html" class="btn-primary-adv py-3 px-10 bg-tf-secondary text-white rounded-lg font-bold transition transform hover:-translate-y-0.5 hover:bg-[#86259d]">
+                    Request Demo for Bulk Verification
+                </a>
+                <a href="contact.html" class="py-3 px-10 bg-whatsapp-green text-white rounded-lg font-bold shadow-xl hover:bg-green-600 transition">
+                    <i class="fab fa-whatsapp mr-2"></i> Contact Support
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-12 bg-gray-200 text-tf-text-dark border-t border-gray-300">
+        <div class="text-center max-w-4xl mx-auto px-6">
+            <div class="flex justify-center space-x-6 mb-4 text-sm">
+                <a href="pricing.html" class="hover:text-tf-primary">Pricing</a>
+                <a href="privacy.html" class="hover:text-tf-primary">Privacy Policy</a>
+                <a href="terms.html" class="hover:text-tf-primary">Terms of Service</a>
+            </div>
+            <p class="text-sm text-gray-500">Powered by **Smart AI** and **India Post**. &copy; 2025 Smart Locator. All rights reserved.</p>
+        </div>
+    </footer>
+    
+    <a href="https://wa.me/919193246219" target="_blank" class="fixed bottom-6 right-6 z-40 p-4 bg-whatsapp-green text-white rounded-full shadow-3xl hover:bg-green-600 transition transform hover:scale-110" aria-label="Contact us on WhatsApp">
+        <i class="fab fa-whatsapp text-3xl"></i>
+    </a>
+
+    <script>
+        function toggleAccordion(contentId, headerElement) {
+            const content = document.getElementById(contentId);
+            const isExpanded = headerElement.getAttribute('aria-expanded') === 'true';
+
+            if (isExpanded) {
+                content.style.maxHeight = null;
+                headerElement.setAttribute('aria-expanded', 'false');
             } else {
-                textToCopy = element ? element.textContent.trim() : '';
+                document.querySelectorAll('.accordion-header[aria-expanded="true"]').forEach(openHeader => {
+                    if (openHeader !== headerElement) {
+                        openHeader.setAttribute('aria-expanded', 'false');
+                        document.getElementById(openHeader.getAttribute('aria-controls')).style.maxHeight = null;
+                    }
+                });
+                
+                content.style.maxHeight = content.scrollHeight + "px";
+                headerElement.setAttribute('aria-expanded', 'true');
             }
-
-            if (!textToCopy || textToCopy === 'N/A' || textToCopy === 'No specific remarks.' || textToCopy === 'INDIA') {
-                flashButton(button, 'No Data', 1000, 'bg-warning-light text-warning-dark border-yellow-300');
-                return;
-            }
-
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                flashButton(button, 'Copied!', 1500, 'bg-success-light text-success-dark border-green-300');
-            }).catch(err => {
-                console.error('Failed to copy text: ', err);
-                flashButton(button, 'Error', 1500, 'bg-alert-light text-alert-dark border-red-300');
-            });
         }
         
-        // Utility function to temporarily change button text and style
-        function flashButton(button, newText, duration, flashClasses) {
-            const originalText = button.getAttribute('data-original-text');
-            
-            button.className = 'copy-btn ' + flashClasses + ' border';
-            button.innerHTML = newText; // Use innerHTML to avoid overriding icon if present
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.accordion-content').forEach(content => {
+                content.style.maxHeight = '0';
+            });
+        });
+    </script>
 
-            setTimeout(() => {
-                button.innerHTML = originalText;
-                button.className = 'copy-btn';
-            }, duration);
-        }
-
-        function showMessage(elementId, text, isError = false) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                element.innerHTML = isError ? `<i class="fas fa-exclamation-circle mr-2"></i> ${text}` : `<i class="fas fa-spinner fa-spin mr-2"></i> ${text}`;
-                
-                element.classList.remove('bg-blue-50', 'text-primary-blue', 'border-blue-200', 'bg-alert-light', 'text-alert-dark', 'border-red-300');
-
-                if (isError) {
-                    element.classList.add('bg-alert-light', 'text-alert-dark', 'border-red-300');
-                } else {
-                    element.classList.add('bg-blue-50', 'text-primary-blue', 'border-blue-200');
-                }
-            }
-        }
-
-        // Renamed to include PO/Tehsil for display
-        async function fetchVerification(rawAddress, customerName) {
-            const payload = { address: rawAddress, customerName }; 
-            const maxRetries = 3;
-            let lastError = null;
-
-            for (let attempt = 0; attempt < maxRetries; attempt++) {
-                try {
-                    const response = await fetch(API_ENDPOINT, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    
-                    if (!response.ok) {
-                        const errorBody = await response.json().catch(() => ({}));
-                        throw new Error(errorBody.error || `Server responded with status ${response.status}`);
-                    }
-                    
-                    return await response.json();
-
-                } catch (error) {
-                    lastError = error;
-                    console.error(`Verification API Attempt ${attempt + 1} failed:`, error);
-                    if (attempt < maxRetries - 1) {
-                        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
-                    }
-                }
-            }
-
-            return { 
-                status: "Error", 
-                error: `Verification failed after ${maxRetries} attempts.`,
-                remarks: `Error during verification: ${lastError ? lastError.message : 'Unknown Network Error'}`
-            };
-        }
-
-        function applyRemarksStyle(remarks) {
-            const remarksBlock = document.getElementById('remarks-block');
-            const remarksSpan = document.getElementById('out-remarks');
-            
-            // Define base classes
-            const baseClasses = 'result-block remarks-block p-4 rounded-lg shadow-sm mt-6';
-            remarksBlock.className = baseClasses;
-            
-            // Set the raw remarks text
-            const cleanRemarks = remarks.replace(new RegExp(REMARKS_ALERT_PREFIX, 'g'), '').trim() || 'No specific remarks.';
-            remarksSpan.textContent = cleanRemarks;
-
-            // Check for Alert
-            const isAlert = remarks.includes(REMARKS_ALERT_PREFIX) || cleanRemarks.toLowerCase().includes('error');
-
-            if (isAlert) {
-                remarksBlock.classList.add('bg-alert-light', 'border-4', 'border-red-300', 'shadow-lg');
-                remarksSpan.classList.add('font-bold', 'text-alert-dark');
-                remarksBlock.classList.remove('border-gray-200'); // Remove default
-            } else {
-                remarksBlock.classList.add('bg-white', 'border', 'border-gray-200');
-                remarksSpan.classList.add('italic', 'text-gray-800');
-            }
-        }
-
-        function updateQualityScoreUI(quality) {
-            const qualityBlock = document.getElementById('quality-block');
-            const qualityText = document.getElementById('out-quality');
-            const qualityIcon = document.getElementById('quality-icon');
-            
-            let colorClasses = '';
-            let icon = '';
-
-            // Clean previous classes
-            qualityBlock.className = 'result-block p-4 rounded-lg shadow-md flex flex-col justify-center transition-colors duration-300';
-            qualityText.className = 'text-2xl font-extrabold';
-            
-            qualityText.textContent = quality;
-
-            if (quality.includes('Very Good') || quality.includes('Prime')) {
-                colorClasses = 'bg-success-light border border-secondary-green text-secondary-green';
-                icon = '⭐';
-            } else if (quality.includes('Good') || quality.includes('Tier 1 & 2')) {
-                colorClasses = 'bg-success-light border border-secondary-green text-secondary-green/70';
-                icon = '👍';
-            } else if (quality.includes('Medium') || quality.includes('Remote')) {
-                colorClasses = 'bg-warning-light border border-warning-dark text-warning-dark';
-                icon = '⚠️';
-            } else if (quality.includes('Bad') || quality.includes('Very Bad') || quality.includes('Non-Serviceable')) {
-                colorClasses = 'bg-alert-light border border-alert-dark text-alert-dark';
-                icon = '🚨';
-            } else {
-                 // Default/N/A state
-                colorClasses = 'bg-gray-100 border border-gray-300 text-gray-500';
-                icon = '❓';
-            }
-
-            qualityBlock.classList.add(...colorClasses.split(' '));
-            qualityIcon.textContent = icon;
-        }
-
-        // FIXED LOGIC: Builds the final string without P.O. duplication
-        function buildFormattedShippingAddress(result) {
-            const name = result.customerCleanName || '';
-            const address = result.addressLine1 || ''; // AI's clean address (NO P.O., Tehsil, Dist, State)
-            const landmark = result.landmark || '';
-            const postOffice = result.postOffice || ''; // Official P.O. name
-            const tehsil = result.tehsil || '';
-            const district = result.district || '';
-            const state = result.state || '';
-            const pin = result.pin || '';
-            const country = 'INDIA';
-
-            // Construct the comprehensive shipping string
-            let formattedString = address;
-            
-            if (landmark) formattedString += `\nLandmark: ${landmark}`;
-            if (postOffice) formattedString += `\nPost Office: ${postOffice}`;
-            if (tehsil) formattedString += `\nTehsil: ${tehsil}`;
-            
-            // Combine District, State, and PIN on the final line
-            formattedString += `\n${district}, ${state} - ${pin}`;
-            formattedString += `\n${country}`;
-            
-            // Add name only if it was provided
-            if (name) {
-                 formattedString = `${name}\n${formattedString}`;
-            }
-
-            document.getElementById('formatted-shipping-block').textContent = formattedString;
-        }
-
-        async function handleSingleVerification() {
-            const rawAddress = document.getElementById('rawAddress').value;
-            const customerName = document.getElementById('customerName').value;
-            const loadingMessage = document.getElementById('loading-message');
-            const resultsContainer = document.getElementById('resultsContainer');
-            const verifyButton = document.getElementById('verifyButton');
-
-            if (rawAddress.trim() === "") {
-                showMessage('loading-message', 'Please enter a raw address to verify.', true);
-                document.getElementById('loading-message').classList.remove('hidden');
-                resultsContainer.classList.add('hidden');
-                return;
-            }
-
-            // Show loading state
-            document.getElementById('loading-message').classList.remove('hidden');
-            resultsContainer.classList.add('hidden');
-            verifyButton.disabled = true;
-            verifyButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Verifying...';
-
-            try {
-                showMessage('loading-message', 'Verifying address using AI...');
-                const verificationResult = await fetchVerification(rawAddress, customerName);
-
-                if (verificationResult.status === "Error") {
-                    showMessage('loading-message', `Verification Error: ${verificationResult.error || 'Unknown Error'}`, true);
-                    return;
-                }
-                
-                // Hide loading message and show results
-                document.getElementById('loading-message').classList.add('hidden');
-                resultsContainer.classList.remove('hidden');
-
-                // Populate individual component results
-                document.getElementById('out-name').textContent = verificationResult.customerCleanName || 'N/A';
-                
-                // Build the main copy block (FIXED LOGIC)
-                buildFormattedShippingAddress(verificationResult);
-                
-                const qualityScore = verificationResult.addressQuality || verificationResult.locationSuitability || 'N/A';
-                
-                // UI UPDATES
-                updateQualityScoreUI(qualityScore); 
-                applyRemarksStyle(verificationResult.remarks || '');
-                
-            } catch (e) {
-                showMessage('loading-message', `An unexpected network error occurred: ${e.message}`, true);
-            } finally {
-                verifyButton.disabled = false;
-                verifyButton.innerHTML = '<i class="fas fa-search mr-2"></i> Verify Address';
-            }
-        }
+    <script>
+      function syncNavSpacer() {
+        const nav = document.querySelector('.site-nav');
+        const spacer = document.querySelector('.site-spacer');
+        if (!nav || !spacer) return;
+        spacer.style.height = nav.offsetHeight + 'px';
+      }
+      document.addEventListener('DOMContentLoaded', syncNavSpacer);
+      window.addEventListener('resize', syncNavSpacer);
     </script>
 </body>
-    </html>
+        </html>
