@@ -1,5 +1,6 @@
 // api/public-single-address.js
-// DEFINITIVE VERSION: Fully prioritized Gemini, fixed all known duplications (including Country).
+// DEFINITIVE VERSION: Fully prioritizes Gemini's contextual verification and output, 
+// ensuring a single, cleaned, comma-separated correspondence address string, and fixing component loss.
 
 const INDIA_POST_API = 'https://api.postalpincode.in/pincode/'; 
 let pincodeCache = {};
@@ -271,10 +272,11 @@ module.exports = async (req, res) => {
             (parsedData['DIST.'] || primaryPostOffice.District),
             (parsedData.State || primaryPostOffice.State),
             finalPin,
-            'INDIA', // Country is a primary target for scrubbing
+            'INDIA', 
             parsedData.Landmark, 
             'P.O.', 'DIST.', 'DISTRICT', 'STATE', 'PIN',
-            'UTTAR PRADESH', 'GAUTAM BUDDHA NAGAR', 'NOIDA'
+            // Add full city/state/district names for scrubbing (Noida specific)
+            'UTTAR PRADESH', 'GAUTAM BUDDHA NAGAR', 'NOIDA', 'DELHI', 'NEW DELHI'
         ].filter(c => c && c.toString().trim() !== '');
 
         // Create a scrubber regex to find and remove *any* of the final components
@@ -300,17 +302,16 @@ module.exports = async (req, res) => {
             district,
             state,
             finalPin,
-            // CRITICAL FIX: Removed the explicit 'INDIA' field here.
+            // CRITICAL FIX: The country name is handled by the front-end logic, which will be fixed below.
         ].filter(c => c && c.toString().trim() !== '');
 
         // 4. Create the final single string
-        // The final string will now rely on the AI's core output for the Country name.
         const singleLineAddress = components.join(', ');
 
         // 5. Build final response (Simplified output)
         const finalResponse = {
             status: "Success",
-            customerRawName: customerName,
+            customerRawName: cleanedName,
             customerCleanName: cleanedName,
             
             // This is the ONLY address field returned
