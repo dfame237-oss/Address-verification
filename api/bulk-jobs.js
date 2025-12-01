@@ -27,7 +27,7 @@ function parseJwtFromHeader(req) {
     }
 }
 
-// --- Helper: CSV parser from public/bulk_verification_logic.js ---
+// --- Helper: CSV parser from public/bulk_verification_logic.js (Uses Comma Delimiter) ---
 function parseCSV(text) {
     const lines = text.split('\n');
     if (lines.length < 2) return [];
@@ -62,13 +62,13 @@ function parseCSV(text) {
     return data;
 }
 
-// --- Helper: CSV result builder (FIXED FOR CONSISTENT SEMICOLON DELIMITER) ---
+// --- Helper: CSV result builder (FIXED FOR CONSISTENT COMMA DELIMITER) ---
 function createCSV(rows) {
-    // Use SEMICOLON (;) consistently for better parsing reliability
-    const CUSTOM_DELIMITER = ";"; 
+    // FIX APPLIED HERE: Use COMMA (,) consistently to match the input parser and template
+    const CUSTOM_DELIMITER = ","; 
     
-    // Header line uses semicolon
-    const header = "ORDER ID;CUSTOMER NAME;CUSTOMER RAW ADDRESS;CLEAN NAME;CLEAN ADDRESS LINE 1;LANDMARK;STATE;DISTRICT;PIN;REMARKS;QUALITY\n";
+    // Header line uses comma
+    const header = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS,CLEAN NAME,CLEAN ADDRESS LINE 1,LANDMARK,STATE,DISTRICT,PIN,REMARKS,QUALITY\n";
     
     const escapeAndQuote = (cell) => {
         // Ensure all fields are quoted and internal quotes are escaped
@@ -76,7 +76,7 @@ function createCSV(rows) {
     };
     
     const outputRows = rows.map(vr => {
-        // Join the fields using the semicolon delimiter
+        // Join the fields using the comma delimiter
         return [
             vr['ORDER ID'],
             vr['CUSTOMER NAME'],
@@ -142,11 +142,11 @@ async function runJobProcessor(db, jobId, client, addresses) {
                 
                 if (geminiResult.error || !geminiResult.text) {
                      verificationResult = {
-                        status: "Error", error: geminiResult.error || 'Gemini API failed.',
-                        remarks: `Error: ${geminiResult.error || 'Gemini Error'}`,
-                        customerCleanName: customerName,
-                        addressLine1: "API Error: See Remarks", landmark: "", state: "", district: "", pin: "", addressQuality: "VERY BAD"
-                    };
+                         status: "Error", error: geminiResult.error || 'Gemini API failed.',
+                         remarks: `Error: ${geminiResult.error || 'Gemini Error'}`,
+                         customerCleanName: customerName,
+                         addressLine1: "API Error: See Remarks", landmark: "", state: "", district: "", pin: "", addressQuality: "VERY BAD"
+                     };
                 } else {
                     // Simplified result structure
                     const jsonText = geminiResult.text.replace(/```json|```/g, '').trim(); 
