@@ -127,10 +127,7 @@ function buildGeminiPrompt(originalAddress, postalData) {
     If multiple landmarks are present, list them comma-separated. **Extract the landmark without any directional words like 'near', 'opposite', 'behind' etc., as this will be handled by the script.**
     9.  "Remaining": A last resort for any text that does not fit into other fields.
     Clean this by removing meaningless words like 'job', 'raw', 'add-', 'tq', 'dist' and country, state, district, or PIN code.
-    10. "FormattedAddress": This is the most important field. Based on your full analysis, create a single, clean, human-readable, and comprehensive shipping-ready address string.
-    It should contain all specific details (H.no., Room No., etc.), followed by locality, street, colony, P.O., Tehsil, and District.
-    DO NOT include the State or PIN in this string. Use commas to separate logical components.
-    Do not invent or "hallucinate" information.
+    10. "FormattedAddress": This is the most important field. Based on your full analysis, create a single, clean, human-readable, and comprehensive shipping-ready address string. It should contain only specific details (H.no., Room No., etc.), followed by locality, street, and colony. **STRICTLY DO NOT include P.O., Tehsil, District, State, or PIN in this string.** Use commas to separate logical components. Do not invent or "hallucinate" information.
     11. "LocationType": Identify the type of location (e.g., "Village", "Town", "City", "Urban Area").
     12. "AddressQuality": Analyze the address completeness and clarity for shipping.
     Categorize it as one of the following: Very Good, Good, Medium, Bad, or Very Bad.
@@ -157,7 +154,6 @@ function processAddress(address, postalData) {
 }
 
 // --- NEW: Reusable Verification Logic Function ---
-// This contains the core post-processing and remark generation.
 async function runVerificationLogic(address, customerName) {
     let remarks = [];
     const cleanedName = (customerName || '').replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim() || null; 
@@ -340,25 +336,52 @@ module.exports = async (req, res) => {
             const client = await clients.findOne({ _id: new ObjectId(clientId) });
             if (!client) return res.status(404).json({ status: 'Error', message: 'Client not found.' }); 
 
-            // Credit Check and Deduction Logic (omitted for brevity, assume it's here)
-            // ... (your existing credit logic)
+            // --- Credit Check and Deduction Logic (must be performed here for single calls) ---
+            const remaining = client.remainingCredits; 
+            const initial = client.initialCredits;
+            const isUnlimited = (remaining === 'Unlimited' || initial === 'Unlimited' || String(initial).toLowerCase() === 'unlimited'); 
+            let reserved = false;
+
+            if (!isUnlimited) {
+                const reserveResult = await clients.findOneAndUpdate(
+                    { _id: client._id, remainingCredits: { $gt: 0 } },
+                    { $inc: { remainingCredits: -1 }, $set: { lastActivityAt: new Date() } },
+                    { returnDocument: 'after' }
+                );
+                if (!reserveResult.value) {
+                    return res.status(200).json({
+                        status: 'QuotaExceeded',
+                        message: 'You have exhausted your verification credits.',
+                        remainingCredits: client.remainingCredits ?? 0
+                    });
+                }
+                reserved = true;
+            } else {
+                await clients.updateOne({ _id: client._id }, { $set: { lastActivityAt: new Date() } });
+            }
 
             // Use the unified logic function
             const finalResponse = await runVerificationLogic(address, customerName);
 
-            // If an error occurred in runVerificationLogic (e.g., Gemini failed)
-            if (finalResponse.status === "Error") {
-                 // You would put your credit refund logic here if needed
+            // If an error occurred in runVerificationLogic, refund the credit
+            if (finalResponse.status === "Error" && reserved) {
+                 try {
+                     await clients.updateOne({ _id: client._id }, { $inc: { remainingCredits: 1 } });
+                 } catch (refundErr) {
+                     console.error('Failed to refund reserved credit after Gemini error:', refundErr);
+                 }
                  return res.status(500).json({ status: finalResponse.status, message: finalResponse.remarks });
             }
 
-            // Determine and return updated remainingCredits (omitted for brevity, assume it's here)
-            // ... (your existing credit logic)
+            // Determine and return updated remainingCredits
+            const updatedClient = isUnlimited
+                ? { remainingCredits: 'Unlimited' } 
+                : await clients.findOne({ _id: client._id }, { projection: { remainingCredits: 1 } });
 
-            // Final API response (no credit info for brevity here, but included in your original)
+            // Final API response
             return res.status(200).json({
                 ...finalResponse,
-                // remainingCredits: isUnlimited ? 'Unlimited' : (updatedClient.remainingCredits ?? 0)
+                remainingCredits: isUnlimited ? 'Unlimited' : (updatedClient.remainingCredits ?? 0)
             });
 
         } catch (e) {
