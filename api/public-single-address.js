@@ -95,14 +95,16 @@ async function getGeminiResponse(prompt) {
     }
 }
 
-// --- Utilities & Prompt Builder (FIXED) ---
+// --- Utilities & Prompt Builder (FIXED P.O. and PIN verification logic) ---
 function extractPin(address) {
     const match = String(address).match(/\b\d{6}\b/); 
     return match ? match[0] : null; 
 }
 
 function buildGeminiPrompt(originalAddress, postalData) {
-    let basePrompt = `You are an expert Indian address verifier and formatter.
+    const initialPin = extractPin(originalAddress); 
+    
+    let basePrompt = `You are an expert Indian address verifier and formatter. Your verification must be highly accurate and cross-referenced.
 Your task is to process a raw address, perform a thorough analysis, and provide a comprehensive response in a single JSON object.
 Provide all responses in English only. Strictly translate all extracted address components to English.
 Correct all common spelling and phonetic errors in the provided address, such as "rd" to "Road", "nager" to "Nagar", and "nd" to "2nd".
@@ -117,8 +119,7 @@ Set to null if not found.
 4.  "Tehsil": The official Tehsil/SubDistrict from the PIN data. Prepend "Tehsil". Example: "Tehsil Pune".
 5.  "DIST.": The official District from the PIN data.
 6.  "State": The official State from the PIN data.
-7.  "PIN": The 6-digit PIN code. Find and verify the correct PIN.
-If a PIN exists in the raw address but is incorrect, find the correct one and provide it.
+7.  "PIN": The 6-digit PIN code. Find and **rigorously verify and correct** the PIN based on the entire location, including the locality and any landmarks. **Before accepting any PIN, search your knowledge base using all available components (e.g., "Noida Sector 49 Bal Bharti School") to find the most accurate 6-digit PIN for that specific location, even if it contradicts the default geographical PIN.**
 8.  "Landmark": A specific, named landmark (e.g., "Apollo Hospital"), not a generic type like "school".
 If multiple landmarks are present, list them comma-separated. **Extract the landmark without any directional words like 'near', 'opposite', 'behind' etc., as this will be handled by the script.**
 9.  "Remaining": A last resort for any text that does not fit into other fields.
@@ -135,11 +136,11 @@ Raw Address: "${originalAddress}"
 `; 
 
     if (postalData.PinStatus === 'Success') {
-        basePrompt += `\nOfficial Postal Data: ${JSON.stringify(postalData.PostOfficeList)}\nUse this list to find the best match for 'P.O.', 'Tehsil', and 'DIST.'
-fields.`; 
+        basePrompt += `\nOfficial Postal Data for PIN ${initialPin}: ${JSON.stringify(postalData.PostOfficeList)}\n**CRITICAL INSTRUCTION:**
+1. **First, verify if the PIN ${initialPin} is the most specific and correct PIN for this locality (e.g., "Sector 49" AND "Bal Bharti School").** If your knowledge suggests a better PIN (e.g., 201304 or 201303), set that corrected PIN in the "PIN" field.
+2. **From the provided Post Office list, analyze the names and choose the single name that is the best geographical and most relevant match for the specific locality in the raw address.** Use this name for 'P.O.', 'Tehsil', and 'DIST.' fields. Do NOT use the first one arbitrarily.`; 
     } else {
-        basePrompt += `\nAddress has no PIN or the PIN is invalid.
-You must find and verify the correct 6-digit PIN. If you cannot find a valid PIN, set "PIN" to null and provide the best available data.`; 
+        basePrompt += `\nAddress has no PIN or the PIN is invalid. You must find and verify the correct 6-digit PIN based on the address components.`; 
     }
 
     basePrompt += `\nYour entire response MUST be a single, valid JSON object starting with { and ending with } and contain ONLY the keys listed above.`; 
@@ -213,12 +214,15 @@ module.exports = async (req, res) => {
             }; 
         }
 
-        // PIN verification/correction logic (Same as original)
+        // PIN verification/correction logic (FIXED: Handles AI-corrected PIN by re-running India Post check)
         let finalPin = String(parsedData.PIN).match(/\b\d{6}\b/) ? 
         parsedData.PIN : initialPin; 
         let primaryPostOffice = postalData.PostOfficeList ? postalData.PostOfficeList[0] : {}; 
+        
+        // Check if AI suggested a new PIN or if the initial API call failed
         if (finalPin) {
             if (postalData.PinStatus !== 'Success' || (initialPin && finalPin !== initialPin)) {
+                // Rerun API with the AI-suggested PIN
                 const aiPostalData = await getIndiaPostData(finalPin); 
                 if (aiPostalData.PinStatus === 'Success') {
                     postalData = aiPostalData; 
@@ -229,7 +233,7 @@ module.exports = async (req, res) => {
                         remarks.push(`Correct PIN (${finalPin}) added by AI.`); 
                     }
                 } else {
-                    remarks.push(`CRITICAL_ALERT: AI-provided PIN (${finalPin}) not verified by API.`); 
+                    remarks.push(`CRITICAL_ALERT: AI-provided PIN (${finalPin}) not verified by API. Reverting to original data.`); 
                     finalPin = initialPin; 
                 }
             } else if (initialPin && postalData.PinStatus === 'Success') {
@@ -266,18 +270,18 @@ module.exports = async (req, res) => {
             remarks.push('Address verified and formatted successfully.'); 
         }
 
-        // Build final response
-        // Note: The P.O./Tehsil fields from India Post are prioritized over AI data here.
+        // Build final response (FIXED: Prioritizes AI's contextual P.O./Tehsil selection)
         const finalResponse = {
             status: "Success",
             customerRawName: customerName,
             customerCleanName: cleanedName,
             addressLine1: parsedData.FormattedAddress || address.replace(meaninglessRegex, '').trim() || '', 
             landmark: finalLandmark, 
-            postOffice: primaryPostOffice.Name || parsedData['P.O.'] || '', 
-            tehsil: primaryPostOffice.Taluk || parsedData.Tehsil || '', 
-            district: primaryPostOffice.District || parsedData['DIST.'] || '', 
-            state: primaryPostOffice.State || parsedData.State || '', 
+            // Prioritize AI's P.O. selection (parsedData['P.O.']) over the India Post API's arbitrary first entry
+            postOffice: parsedData['P.O.']?.replace('P.O. ', '') || primaryPostOffice.Name || '', 
+            tehsil: parsedData.Tehsil?.replace('Tehsil ', '') || primaryPostOffice.Taluk || '', 
+            district: parsedData['DIST.'] || primaryPostOffice.District || '', 
+            state: parsedData.State || primaryPostOffice.State || '', 
             pin: finalPin, 
             addressQuality: parsedData.AddressQuality || 'Medium', 
             locationType: parsedData.LocationType || 'Unknown', 
