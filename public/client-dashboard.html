@@ -413,7 +413,7 @@
         const API_BASE = '/api';
         const API_CLIENT = `${API_BASE}/client/index`;
         const API_ENDPOINT = "/api/verify-single-address"; // used by single verification
-        const API_BULK_JOBS = "/api/bulk-jobs"; // NEW: Used for job management
+        const API_BULK_JOBS = "/api/bulk-jobs"; // NEW: Used for job management (Fixes SyntaxError if previously duplicated)
         const LOGIN_PAGE = "client-login.html";
         
         // Ensure that the plan details are parsed from the correct localStorage key
@@ -428,7 +428,8 @@
 
         let activeJobPollInterval; // Global state for polling (NEW)
 
-        // --- HEARTBEAT FUNCTION ---
+
+        // --- HEARTBEAT FUNCTION (PUBLIC) ---
         async function sendHeartbeat() {
             const currentToken = localStorage.getItem('clientToken');
             if (!currentToken) return;
@@ -439,7 +440,7 @@
             }
         }
 
-        // --- LOGOUT (notify server) ---
+        // --- LOGOUT (PUBLIC) ---
         async function logout() {
             const tokenToNotify = localStorage.getItem('clientToken');
             try {
@@ -447,7 +448,6 @@
                     await fetch(`${API_CLIENT}?action=logout`, {
                         method: 'POST',
                         headers: {
-         
                             'Authorization': `Bearer ${tokenToNotify}`,
                             'Content-Type': 'application/json'
                         }
@@ -461,7 +461,7 @@
             }
         }
 
-        // --- authFetch: keeps behavior for other calls (auto-logout on 401/403) ---
+        // --- authFetch (PUBLIC) ---
         async function authFetch(url, options = {}) {
             const currentToken = localStorage.getItem('clientToken');
             if (!currentToken) {
@@ -483,7 +483,7 @@
             return resp;
         }
 
-        // --- Profile fetch using the new profile action (handles 401 specially) ---
+        // --- Profile fetch (PUBLIC) ---
         async function fetchProfileData() {
             const currentToken = localStorage.getItem('clientToken');
             if (!currentToken) {
@@ -496,7 +496,6 @@
                 const resp = await fetch(`${API_CLIENT}?action=profile`, {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${currentToken}`, 'Content-Type': 'application/json' }
-              
                 });
 
                 if (resp.status === 401) {
@@ -519,21 +518,16 @@
                     return;
                 }
 
-                const pd = json.planDetails ||
-                {};
+                const pd = json.planDetails || {};
                 // Correct assignment of data to planDetails
                 planDetails = Object.assign({}, planDetails, pd);
                 localStorage.setItem('planDetails', JSON.stringify(planDetails));
 
                 const rc = pd.remainingCredits;
-                const creditsDisplay = rc === 'Unlimited' ?
-                'Unlimited' : (rc == null ? 'N/A' : Number(rc).toLocaleString());
+                const creditsDisplay = rc === 'Unlimited' ? 'Unlimited' : (rc == null ? 'N/A' : Number(rc).toLocaleString());
                 
-                // --- FIX: Only update the Plan Card Credit Display ---
                 document.getElementById('plan-remaining-credits').textContent = creditsDisplay;
-                // FIX: Ensure all profile details are updated
-                document.getElementById('client-name-display').textContent = pd.clientName ||
-                CLIENT_NAME;
+                document.getElementById('client-name-display').textContent = pd.clientName || CLIENT_NAME;
                 document.getElementById('profile-username').textContent = pd.username || pd.clientName || CLIENT_NAME;
                 document.getElementById('profile-email').textContent = pd.email || '—';
                 document.getElementById('profile-mobile').textContent = pd.mobile || '—';
@@ -542,8 +536,7 @@
                 document.getElementById('validity-end').textContent = pd.validityEnd ? new Date(pd.validityEnd).toLocaleDateString() : 'N/A';
                 const statusEl = document.getElementById('account-status');
                 const isActive = (typeof pd.isActive === 'undefined') ? true : pd.isActive;
-                statusEl.textContent = isActive ?
-                'Enabled' : 'Disabled';
+                statusEl.textContent = isActive ? 'Enabled' : 'Disabled';
                 statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
 
                 checkPlanValidity();
@@ -553,14 +546,11 @@
             }
         }
 
+        // --- Update UI from Local Plan (PUBLIC) ---
         function updateUIFromLocalPlan() {
-            // This function runs on fallback and uses locally stored planDetails
-            const rc = planDetails.remainingCredits ??
-            'N/A';
+            const rc = planDetails.remainingCredits ?? 'N/A';
             const creditsDisplay = rc === 'Unlimited' ? 'Unlimited' : (rc === 'N/A' ? 'N/A' : Number(rc).toLocaleString());
-            // FIX: Only update the Plan Card Credit Display on fallback
             document.getElementById('plan-remaining-credits').textContent = creditsDisplay;
-            // FIX: Ensure all profile details are updated from planDetails
             document.getElementById('client-name-display').textContent = CLIENT_NAME;
             document.getElementById('profile-username').textContent = planDetails.username || CLIENT_NAME;
             document.getElementById('profile-email').textContent = planDetails.email || '—';
@@ -575,7 +565,221 @@
             statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
         }
 
-        // --- TAB NAVIGATION (UPDATED) ---
+        // --- CHECK PLAN VALIDITY (PUBLIC) ---
+        function checkPlanValidity() {
+            const token = localStorage.getItem('clientToken');
+            const planDetailsString = localStorage.getItem('planDetails');
+
+            if (!token) {
+                showAccessDenied("Please log in to access Bulk Address Verification.");
+                isPlanValid = false;
+                return false;
+            }
+
+            try {
+                const validityEnd = planDetails.validityEnd ? new Date(planDetails.validityEnd) : null;
+                const now = new Date();
+
+                if (planDetails.isActive === false) {
+                    showAccessDenied("Your account has been **disabled** by the administrator. Please contact support.");
+                    isPlanValid = false;
+                    return false;
+                }
+
+                if (validityEnd && validityEnd < now) {
+                    showAccessDenied(`Your bulk plan expired on **${validityEnd.toLocaleDateString()}**. Please contact support to renew.`);
+                    isPlanValid = false;
+                    return false;
+                }
+
+                // OK
+                document.getElementById('bulkContent').classList.remove('hidden');
+                isPlanValid = true;
+                return true;
+
+            } catch (e) {
+                console.error("Error parsing plan details:", e);
+                showAccessDenied("Client authentication data is corrupted. Please log in again.");
+                setTimeout(() => { localStorage.clear(); window.location.href = LOGIN_PAGE; }, 1500);
+                isPlanValid = false;
+                return false;
+            }
+        }
+
+        // --- SHOW ACCESS DENIED (PUBLIC) ---
+        function showAccessDenied(message) {
+            const bulkContent = document.getElementById('bulkContent');
+            const progressContainer = document.querySelector('#bulk-verification .progress-container');
+            if (bulkContent) bulkContent.classList.add('hidden');
+            if (progressContainer) progressContainer.classList.add('hidden');
+
+            const existing = document.querySelector('#bulk-verification .access-denied-block');
+            if (existing) return;
+            const errorBlock = document.createElement('div');
+            errorBlock.className = 'access-denied-block space-y-6 mt-6';
+            errorBlock.innerHTML = `
+                <div class="bg-red-50 p-8 rounded-xl border-l-4 border-alert-dark shadow-lg">
+                    <p class="font-bold text-xl text-alert-dark mb-3 flex items-center">🛑 Access Denied</p>
+                    <p class="text-base text-gray-700 mb-6">${message.replace(/\*\*/g, '<strong>')}</p>
+                </div>
+                <a href="tel:+919193246219" class="block w-full py-3 bg-tf-secondary text-white text-center font-bold rounded-lg hover:bg-[#86259d] transition">Call Support / Renew Plan</a>
+                <a href="https://wa.me/919193246219" target="_blank" class="block w-full py-3 bg-whatsapp-green text-white text-center font-bold rounded-lg hover:bg-green-600">🟢 WhatsApp Support</a>
+            `;
+            document.getElementById('bulk-verification').appendChild(errorBlock);
+        }
+
+        // --- PASSWORD MODAL LOGIC (PUBLIC) ---
+        function openPasswordModal() {
+            document.getElementById('password-modal').style.display = 'flex';
+            document.getElementById('password-update-form').reset();
+            document.getElementById('password-update-status').textContent = '';
+        }
+
+        function closePasswordModal() {
+            document.getElementById('password-modal').style.display = 'none';
+        }
+        
+        // --- FORCE-LOGOUT UI / helpers (PUBLIC) ---
+        function openForceModal() {
+            document.getElementById('force-logout-modal').style.display = 'flex';
+        }
+        function closeForceModal() {
+            document.getElementById('force-logout-modal').style.display = 'none';
+        }
+
+        function getTokenPayload() {
+            const token = localStorage.getItem('clientToken');
+            if (!token) return null;
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return payload;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function forceLogoutOtherDevice() {
+            const payload = getTokenPayload();
+            const clientId = payload && payload.clientId ? payload.clientId : (planDetails.id || planDetails.clientId);
+            if (!clientId) {
+                alert('Cannot determine clientId. Please log in again.');
+                closeForceModal();
+                localStorage.clear();
+                window.location.href = LOGIN_PAGE;
+                return;
+            }
+
+            try {
+                const resp = await fetch(`${API_CLIENT}?action=force-logout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ clientId })
+                });
+                const json = await resp.json().catch(()=>null);
+                if (resp.ok && json && json.status === 'Success') {
+                    closeForceModal();
+                    localStorage.removeItem('clientToken');
+                    alert('Other device logged out. Please log in again here.');
+                    window.location.href = LOGIN_PAGE;
+                } else {
+                    console.warn('force-logout failed', resp.status, json);
+                    alert('Could not force logout other device. Contact support.');
+                    closeForceModal();
+                }
+            } catch (e) {
+                console.error('force-logout error', e);
+                alert('Network error. Try again or contact support.');
+                closeForceModal();
+            }
+        }
+        
+        // --- INBOX FUNCTIONS (PUBLIC) ---
+        async function loadInboxCounts() {
+            try {
+                const response = await authFetch(`${API_BASE}/inbox/message`);
+                const result = await response.json();
+                if (result.status === "Success" && result.unreadCount > 0) {
+                    const badge = document.getElementById('inbox-badge');
+                    badge.textContent = result.unreadCount;
+                    badge.style.display = 'block';
+                } else {
+                    document.getElementById('inbox-badge').style.display = 'none';
+                }
+            } catch (e) {
+                console.error("Failed to load client inbox counts:", e);
+            }
+        }
+
+        async function loadClientInbox() {
+            const msgContainer = document.getElementById('client-inbox-list');
+            const detailView = document.getElementById('full-message-detail');
+            msgContainer.innerHTML = '<p class="text-center text-gray-500 mt-5">Loading messages...</p>';
+            detailView.style.display = 'none';
+            try {
+                const response = await authFetch(`${API_BASE}/inbox/message`);
+                const result = await response.json();
+                if (result.status === "Success") {
+                    msgContainer.innerHTML = '';
+                    if (!result.messages || result.messages.length === 0) {
+                        msgContainer.innerHTML = '<p class="text-center text-gray-500 mt-5">No messages in your inbox.</p>';
+                        return;
+                    }
+                    result.messages.forEach(msg => {
+                        const isUnread = !msg.isRead && msg.senderId === 'admin';
+                        const cardClass = isUnread ? 'unread' : '';
+            
+                        const icon = isUnread ? 'fa-envelope' : 'fa-envelope-open';
+                        const sender = msg.senderId === 'admin' ? 'Admin' : 'You';
+
+                        const messageHtml = `
+                            <div id="msg-${msg._id}" class="msg-card ${cardClass}" onclick="viewClientMessage('${msg._id}', ${JSON.stringify(msg.subject)}, ${JSON.stringify(msg.body)}, ${isUnread}, '${msg.timestamp}')">
+                                <i class="fas ${icon} msg-icon"></i>
+                                <div class="flex-grow">
+                                    <p class="text-md truncate">${msg.subject || '(No Subject)'}</p>
+                                    <small class="text-gray-500 block">From: ${sender} • ${new Date(msg.timestamp).toLocaleDateString()}</small>
+                                </div>
+                            </div>
+                        `;
+                        msgContainer.insertAdjacentHTML('beforeend', messageHtml);
+                    });
+                } else {
+                    msgContainer.innerHTML = `<p class="text-center text-red-500 mt-5">Failed to load inbox: ${result.message}</p>`;
+                }
+            } catch (error) {
+                msgContainer.innerHTML = `<p class="text-center text-red-500 mt-5">Network Error: ${error.message}</p>`;
+            }
+        }
+
+        function toggleInbox() {
+            document.getElementById('inbox-modal').style.display = 'flex';
+            loadClientInbox();
+        }
+
+        function closeInbox() {
+            document.getElementById('inbox-modal').style.display = 'none';
+            loadInboxCounts();
+        }
+
+        function viewClientMessage(messageId, subject, body, isUnread, timestamp) {
+            const detailView = document.getElementById('full-message-detail');
+            document.getElementById('full-message-subject').textContent = subject;
+            document.getElementById('full-message-body').textContent = body;
+            document.getElementById('full-message-date').textContent = new Date(timestamp).toLocaleString();
+            detailView.style.display = 'block';
+            if (isUnread) {
+                authFetch(`${API_BASE}/inbox/message?messageId=${messageId}`, { method: 'PUT' }).catch(()=>{});
+                const card = document.getElementById(`msg-${messageId}`);
+                if (card) {
+                    card.classList.remove('unread');
+                    const iconEl = card.querySelector('.msg-icon');
+                    if (iconEl) iconEl.classList.replace('fa-envelope', 'fa-envelope-open');
+                }
+                setTimeout(loadInboxCounts, 500);
+            }
+        }
+
+        // --- TAB NAVIGATION (UPDATED and PUBLIC) ---
+        // Fixes Uncaught ReferenceError: showTab is not defined
         function showTab(tabId, button) {
             document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -598,7 +802,7 @@
             }
         }
         
-        // --- NEW: JOB POLLING LOGIC (Requirements 2, 3, 4, 5) ---
+        // --- JOB POLLING LOGIC (PUBLIC) ---
         function startJobPolling() {
             if (activeJobPollInterval) clearInterval(activeJobPollInterval);
             fetchAndUpdateJobStatus(); // Initial fetch
@@ -607,6 +811,7 @@
 
         async function fetchAndUpdateJobStatus() {
             try {
+                // Use the new bulk jobs endpoint
                 const resp = await authFetch(API_BULK_JOBS, { method: 'GET' });
                 const result = await resp.json();
 
@@ -627,7 +832,6 @@
                 // Sort by submitted time descending
                 result.jobs.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
                 
-                // Keep only the 10 most recent completed jobs for display
                 const maxCompletedDisplay = 10;
                 let completedDisplayCount = 0;
 
@@ -688,7 +892,7 @@
                 // Requirement 3: Disable 'Start Verification' if max jobs reached
                 const processBtn = document.getElementById('processButton');
                 const bulkTabBtn = document.getElementById('bulk-tab-btn');
-                const csvFileInput = document.getElementById('csvFileInput'); // Need file input state
+                const csvFileInput = document.getElementById('csvFileInput');
 
                 if (activeCount >= 2) {
                     if (processBtn) processBtn.disabled = true;
@@ -723,11 +927,56 @@
                 inProgressList.innerHTML = '<p class="text-red-500 text-center mt-5">Failed to load status. Network error.</p>';
             }
         }
-        // --- END NEW JOB POLLING LOGIC ---
+        
+        // --- PASSWORD UPDATE LISTENER (PUBLIC) ---
+        document.getElementById('password-update-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const statusEl = document.getElementById('password-update-status');
+            const updateBtn = document.getElementById('updatePasswordBtn');
 
-        // ... existing password modal logic ...
-        // ... existing plan validity checks ...
-        // ... existing showAccessDenied, inbox, and force-logout functions ...
+            if (newPassword !== confirmPassword) {
+                statusEl.textContent = 'Passwords do not match.';
+                statusEl.className = 'text-red-600 mt-3';
+                return;
+            }
+            if (newPassword.length < 6) {
+                statusEl.textContent = 'Password must be at least 6 characters.';
+                statusEl.className = 'text-red-600 mt-3';
+                return;
+            }
+
+            updateBtn.disabled = true;
+            updateBtn.textContent = 'Processing...';
+            statusEl.textContent = 'Sending request to server...';
+            statusEl.className = 'text-tf-primary mt-3';
+
+            try {
+                const resp = await authFetch(`${API_CLIENT}?action=update-password`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ newPassword })
+                });
+                const result = await resp.json();
+
+                if (resp.ok && result.status === 'Success') {
+                    statusEl.textContent = 'Password changed successfully! Redirecting to login...';
+                    statusEl.className = 'text-green-600 mt-3';
+                    setTimeout(logout, 1500); 
+                } else {
+                    statusEl.textContent = result.message || 'Update failed.';
+                    statusEl.className = 'text-red-600 mt-3';
+                }
+            } catch (error) {
+                statusEl.textContent = 'Network error or session expired.';
+                statusEl.className = 'text-red-600 mt-3';
+                console.error('Password Update Error:', error);
+            } finally {
+                updateBtn.disabled = false;
+                updateBtn.textContent = 'Update & Log Out';
+            }
+        });
+
 
         // --- INITIALIZATION ---
         window.onload = () => {
