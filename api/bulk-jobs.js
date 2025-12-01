@@ -62,19 +62,21 @@ function parseCSV(text) {
     return data;
 }
 
-// --- Helper: CSV result builder (FIXED FOR SEMICOLON DELIMITER) ---
+// --- Helper: CSV result builder (FIXED FOR CONSISTENT SEMICOLON DELIMITER) ---
 function createCSV(rows) {
-    // Use SEMICOLON (;) for better auto-detection in international spreadsheet programs
+    // Use SEMICOLON (;) consistently for better parsing reliability
     const CUSTOM_DELIMITER = ";"; 
     
-    // Updated header line to use the semicolon delimiter
+    // Header line uses semicolon
     const header = "ORDER ID;CUSTOMER NAME;CUSTOMER RAW ADDRESS;CLEAN NAME;CLEAN ADDRESS LINE 1;LANDMARK;STATE;DISTRICT;PIN;REMARKS;QUALITY\n";
+    
     const escapeAndQuote = (cell) => {
-        // Encapsulate data in quotes and escape any internal quotes
+        // Ensure all fields are quoted and internal quotes are escaped
         return `\"${String(cell || '').replace(/\"/g, '\"\"')}\"`;
     };
     
     const outputRows = rows.map(vr => {
+        // Join the fields using the semicolon delimiter
         return [
             vr['ORDER ID'],
             vr['CUSTOMER NAME'],
@@ -87,7 +89,7 @@ function createCSV(rows) {
             vr.pin,
             vr.remarks,
             vr.addressQuality
-        ].map(escapeAndQuote).join(CUSTOM_DELIMITER); // Use semicolon here
+        ].map(escapeAndQuote).join(CUSTOM_DELIMITER); 
     });
     
     return header + outputRows.join('\n');
