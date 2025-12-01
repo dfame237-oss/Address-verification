@@ -95,7 +95,7 @@ async function getGeminiResponse(prompt) {
     }
 }
 
-// --- Utilities & Prompt Builder (same as original) ---
+// --- Utilities & Prompt Builder (FIXED) ---
 function extractPin(address) {
     const match = String(address).match(/\b\d{6}\b/); 
     return match ? match[0] : null; 
@@ -123,9 +123,8 @@ If a PIN exists in the raw address but is incorrect, find the correct one and pr
 If multiple landmarks are present, list them comma-separated. **Extract the landmark without any directional words like 'near', 'opposite', 'behind' etc., as this will be handled by the script.**
 9.  "Remaining": A last resort for any text that does not fit into other fields.
 Clean this by removing meaningless words like 'job', 'raw', 'add-', 'tq', 'dist' and country, state, district, or PIN code.
-10. "FormattedAddress": This is the most important field. Based on your full analysis, create a single, clean, human-readable, and comprehensive shipping-ready address string.
-It should contain all specific details (H.no., Room No., etc.), followed by locality, street, colony, P.O., Tehsil, and District.
-DO NOT include the State or PIN in this string. Use commas to separate logical components.
+10. **"FormattedAddress": This is the most important field. Based on your full analysis, create a single, clean, human-readable address string that contains the detailed house/street/locality/colony information.**
+**STRICTLY DO NOT INCLUDE P.O. NAME, TEHSIL, DISTRICT, STATE, or PIN in this field.** Use commas to separate logical components.
 Do not invent or "hallucinate" information.
 11. "LocationType": Identify the type of location (e.g., "Village", "Town", "City", "Urban Area").
 12. "AddressQuality": Analyze the address completeness and clarity for shipping.
@@ -268,6 +267,7 @@ module.exports = async (req, res) => {
         }
 
         // Build final response
+        // Note: The P.O./Tehsil fields from India Post are prioritized over AI data here.
         const finalResponse = {
             status: "Success",
             customerRawName: customerName,
