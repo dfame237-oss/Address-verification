@@ -1,5 +1,5 @@
 // api/verify-single-address.js
-// Final Merged Script: Optimized, Authenticated, GAS-Aligned, and Remarks Cleaned
+// FINAL VERSION: MAX PARITY WITH GAS SCRIPT
 
 const INDIA_POST_API = 'https://api.postalpincode.in/pincode/';
 let pincodeCache = {}; 
@@ -69,14 +69,14 @@ async function getGeminiResponse(prompt) {
     }
 }
 
-// --- UTILITIES & PROMPT BUILDER (MODIFIED FOR COMBINED CALLS) ---
+// --- UTILITIES & PROMPT BUILDER (REVERTED TO ORIGINAL STRUCTURE) ---
 function extractPin(address) {
     const match = String(address).match(/\b\d{6}\b/);  return match ? match[0] : null; 
 }
 
-// MODIFIED: Takes customerName to include name cleaning in the prompt
-function buildGeminiPrompt(originalAddress, customerName, postalData) {
-    let basePrompt = `You are an expert Indian address verifier and formatter. Your task is to process a raw address, perform a thorough analysis, and provide a comprehensive response in a single JSON object. Provide all responses in English only. Strictly translate all extracted address components to English. Correct all common spelling and phonetic errors in the provided address, such as "rd" to "Road", "nager" to "Nagar", and "nd" to "2nd". Analyze common short forms and phonetic spellings, such as "lean" for "Lane", and use your best judgment to correct them. Be strict about ensuring the output is a valid, single, and complete address for shipping. Use your advanced knowledge to identify and remove any duplicate address components that are present consecutively (e.g., 'Gandhi Street Gandhi Street' should be 'Gandhi Street'). Your response must contain the following keys: 1.  "H.no.", "Flat No.", "Plot No.", "Room No.", "Building No.", "Block No.", "Ward No.", "Gali No.", "Zone No.": Extract only the number or alphanumeric sequence (e.g., '1-26', 'A/25', '10'). Set to null if not found. 2.  "Colony", "Street", "Locality", "Building Name", "House Name", "Floor": Extract the name. 3.  "P.O.": The official Post Office name from the PIN data. Prepend "P.O." to the name. Example: "P.O. Boduppal". 4.  "Tehsil": The official Tehsil/SubDistrict from the PIN data. Prepend "Tehsil". Example: "Tehsil Pune". 5.  "DIST.": The official District from the PIN data. 6.  "State": The official State from the PIN data. 7.  "PIN": The 6-digit PIN code. Find and verify the correct PIN. If a PIN exists in the raw address but is incorrect, find the correct one and provide it. 8.  "Landmark": A specific, named landmark (e.g., "Apollo Hospital"), not a generic type like "school". If multiple landmarks are present, list them comma-separated. **Extract the landmark without any directional words like 'near', 'opposite', 'behind' etc., as this will be handled by the script.** 9.  "Remaining": A last resort for any text that does not fit into other fields. Clean this by removing meaningless words like 'job', 'raw', 'add-', 'tq', 'dist' and country, state, district, or PIN code. 10. "FormattedAddress": This is the most important field. Based on your full analysis, create a single, clean, human-readable, and comprehensive shipping-ready address string. It should contain all specific details (H.no., Room No., etc.), followed by locality, street, colony, P.O., Tehsil, and District. DO NOT include the State or PIN in this string. Use commas to separate logical components. Do not invent or "hallucinate" information. 11. "LocationType": Identify the type of location (e.g., "Village", "Town", "City", "Urban Area"). 12. "AddressQuality": Analyze the address completeness and clarity for shipping. Categorize it as one of the following: Very Good, Good, Medium, Bad, or Very Bad. 13. "LocationSuitability": Analyze the location based on its State, District, and PIN to determine courier-friendliness in India. Categorize it as one of the following: Prime Location, Tier 1 & 2 Cities, Remote/Difficult Location, or Non-Serviceable Location. 14. **"CustomerCleanName"**: Clean and correct the customer name provided below. Remove any numbers or special characters. Raw Address: "${originalAddress}" Customer Name: "${customerName}"`; 
+// Reverted to original prompt builder (does NOT include customer name)
+function buildGeminiPrompt(originalAddress, postalData) {
+    let basePrompt = `You are an expert Indian address verifier and formatter. Your task is to process a raw address, perform a thorough analysis, and provide a comprehensive response in a single JSON object. Provide all responses in English only. Strictly translate all extracted address components to English. Correct all common spelling and phonetic errors in the provided address, such as "rd" to "Road", "nager" to "Nagar", and "nd" to "2nd". Analyze common short forms and phonetic spellings, such as "lean" for "Lane", and use your best judgment to correct them. Be strict about ensuring the output is a valid, single, and complete address for shipping. Use your advanced knowledge to identify and remove any duplicate address components that are present consecutively (e.g., 'Gandhi Street Gandhi Street' should be 'Gandhi Street'). Your response must contain the following keys: 1.  "H.no.", "Flat No.", "Plot No.", "Room No.", "Building No.", "Block No.", "Ward No.", "Gali No.", "Zone No.": Extract only the number or alphanumeric sequence (e.g., '1-26', 'A/25', '10'). Set to null if not found. 2.  "Colony", "Street", "Locality", "Building Name", "House Name", "Floor": Extract the name. 3.  "P.O.": The official Post Office name from the PIN data. Prepend "P.O." to the name. Example: "P.O. Boduppal". 4.  "Tehsil": The official Tehsil/SubDistrict from the PIN data. Prepend "Tehsil". Example: "Tehsil Pune". 5.  "DIST.": The official District from the PIN data. 6.  "State": The official State from the PIN data. 7.  "PIN": The 6-digit PIN code. Find and verify the correct PIN. If a PIN exists in the raw address but is incorrect, find the correct one and provide it. 8.  "Landmark": A specific, named landmark (e.g., "Apollo Hospital"), not a generic type like "school". If multiple landmarks are present, list them comma-separated. **Extract the landmark without any directional words like 'near', 'opposite', 'behind' etc., as this will be handled by the script.** 9.  "Remaining": A last resort for any text that does not fit into other fields. Clean this by removing meaningless words like 'job', 'raw', 'add-', 'tq', 'dist' and country, state, district, or PIN code. 10. "FormattedAddress": This is the most important field. Based on your full analysis, create a single, clean, human-readable, and comprehensive shipping-ready address string. It should contain all specific details (H.no., Room No., etc.), followed by locality, street, colony, P.O., Tehsil, and District. DO NOT include the State or PIN in this string. Use commas to separate logical components. Do not invent or "hallucinate" information. 11. "LocationType": Identify the type of location (e.g., "Village", "Town", "City", "Urban Area"). 12. "AddressQuality": Analyze the address completeness and clarity for shipping. Categorize it as one of the following: Very Good, Good, Medium, Bad, or Very Bad. 13. "LocationSuitability": Analyze the location based on its State, District, and PIN to determine courier-friendliness in India. Categorize it as one of the following: Prime Location, Tier 1 & 2 Cities, Remote/Difficult Location, or Non-Serviceable Location. Raw Address: "${originalAddress}"`; 
     if (postalData.PinStatus === 'Success') { basePrompt += `\nOfficial Postal Data: ${JSON.stringify(postalData.PostOfficeList)}\nUse this list to find the best match for 'P.O.', 'Tehsil', and 'DIST.' fields.`; } 
     else { basePrompt += `\nAddress has no PIN or the PIN is invalid. You must find and verify the correct 6-digit PIN. If you cannot find a valid PIN, set "PIN" to null and provide the best available data.`; }
     basePrompt += `\nYour entire response MUST be a single, valid JSON object starting with { and ending with } and contain ONLY the keys listed above.`; 
@@ -84,7 +84,10 @@ function buildGeminiPrompt(originalAddress, customerName, postalData) {
 }
 
 // --- NEW GAS LOGIC FUNCTIONS ---
-async function translateToEnglish(text) { return text; } // Placeholder
+async function translateToEnglish(text) { 
+    // This function must exist to match the GAS script structure, but is a NO-OP in Node.js
+    return text; 
+}
 function removeAdjacentDuplicates(str) {
     if (!str) return str;
     const words = str.split(' ');
@@ -102,6 +105,7 @@ function getPostalDataByLocality(locality) {
     return lookupTable[locality.toLowerCase()] || null;
 }
 function verifyAndCorrectAddress(geminiData, remarks) {
+    // This logic must match the GAS script's 'verifyAndCorrectAddress' which CALLS getPostalDataByLocality
     const aiLocality = geminiData["Locality"] || geminiData["Colony"] || '';
     const aiPo = geminiData["P.O."];
     if (aiLocality && aiPo && aiLocality.toLowerCase() !== (aiPo.toLowerCase().startsWith('p.o. ') ? aiPo.toLowerCase().substring(5) : aiPo.toLowerCase())) {
@@ -121,6 +125,33 @@ function verifyAndCorrectAddress(geminiData, remarks) {
             }
         }
     }
+}
+function cleanUpGeminiData(geminiData) {
+    // This cleanup function is called in the GAS script AFTER verifyAndCorrectAddress
+    // It's mainly used to remove PIN/State/District from the Remaining text.
+    if (geminiData["Remaining"]) {
+        let remainingText = geminiData["Remaining"].toString().trim();
+        const pinRegex = /\b\d{6}\b/;
+        const state = geminiData["State"] || '';
+        const district = geminiData["DIST."] || '';
+
+        remainingText = remainingText.replace(meaninglessRegex, '').replace(/\s+/g, ' ').trim();
+
+        const remainingPinMatch = remainingText.match(pinRegex);
+        if (remainingPinMatch && geminiData["PIN"] && remainingPinMatch[0] === geminiData["PIN"].toString().trim()) {
+            remainingText = remainingText.replace(remainingPinMatch[0], '').trim();
+        }
+
+        if (state && remainingText.toLowerCase().includes(state.toLowerCase())) {
+            remainingText = remainingText.toLowerCase().replace(state.toLowerCase(), '').trim();
+        }
+
+        if (district && remainingText.toLowerCase().includes(district.toLowerCase())) {
+            remainingText = remainingText.toLowerCase().replace(district.toLowerCase(), '').trim();
+        }
+
+        geminiData["Remaining"] = remainingText;
+    }
 }
 
 
@@ -160,12 +191,7 @@ module.exports = async (req, res) => {
         try {
             const client = await clients.findOne({ _id: new ObjectId(jwtPayload.clientId) }, { projection: { remainingCredits: 1, initialCredits: 1, planName: 1 } }); 
             if (!client) return res.status(404).json({ status: 'Error', message: 'Client not found.' }); 
-            return res.status(200).json({
-                status: 'Success',
-                remainingCredits: client.remainingCredits ?? 0,
-                initialCredits: client.initialCredits ?? 0,
-                planName: client.planName ?? null
-            }); 
+            return res.status(200).json({ status: 'Success', remainingCredits: client.remainingCredits ?? 0, initialCredits: client.initialCredits ?? 0, planName: client.planName ?? null }); 
         } catch (e) {
             console.error('GET /api/verify-single-address error:', e); 
             return res.status(500).json({ status: 'Error', message: 'Internal server error.' }); 
@@ -183,10 +209,10 @@ module.exports = async (req, res) => {
         if (!address) { return res.status(400).json({ status: 'Error', error: 'Address is required.' }); }
 
         try {
-            const originalAddress = address; // Keep a pure, raw copy
+            const originalAddress = address; 
             const initialPin = extractPin(originalAddress);
 
-            // 1. PARALLEL INITIAL LOOKUPS (SPEED FIX)
+            // 1. PARALLEL INITIAL LOOKUPS (SPEED FIX preserved)
             const [client, postalData] = await Promise.all([
                 clients.findOne({ _id: new ObjectId(clientId) }),
                 initialPin ? getIndiaPostData(initialPin) : Promise.resolve({ PinStatus: 'Error' })
@@ -211,11 +237,24 @@ module.exports = async (req, res) => {
             
             // --- CORE VERIFICATION LOGIC (GAS-ALIGNED) ---
             let remarks = []; 
-            const translatedAddress = await translateToEnglish(originalAddress);
-            
-            // 2. COMBINED GEMINI CALL (SPEED FIX: MERGING NAME + ADDRESS)
-            const geminiPrompt = buildGeminiPrompt(translatedAddress, customerName, postalData); 
-            const geminiResult = await getGeminiResponse(geminiPrompt);
+            const translatedAddress = await translateToEnglish(originalAddress); // Placeholder
+
+            // Check for email/testing words (GAS logic)
+            const isEmailAddress = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i.test(originalAddress);
+            const isTestingOrder = testingKeywords.some(keyword =>
+                (customerName && customerName.toString().toLowerCase().includes(keyword)) ||
+                (originalAddress.toString().toLowerCase().includes(keyword))
+            );
+            if (isEmailAddress || isTestingOrder) {
+                // If you want to skip processing this, refund the credit and return immediately
+                if (reserved) { await clients.updateOne({ _id: client._id }, { $inc: { remainingCredits: 1 } }); }
+                const message = isEmailAddress ? 'Invalid Address: Contains an email.' : 'Testing Order';
+                return res.status(200).json({ status: 'Skipped', message: message, addressQuality: 'Very Bad', pin: extractPin(address) || '', customerCleanName: customerName, addressLine1: originalAddress });
+            }
+
+            // 2. FIRST GEMINI CALL: ADDRESS VERIFICATION (Like GAS script)
+            const geminiPrompt = buildGeminiPrompt(translatedAddress, postalData); 
+            let geminiResult = await getGeminiResponse(geminiPrompt);
 
             if (geminiResult.error || !geminiResult.text) {
                 if (reserved) { try { await clients.updateOne({ _id: client._id }, { $inc: { remainingCredits: 1 } }); } catch (refundErr) { console.error('Refund failed:', refundErr); } }
@@ -227,13 +266,14 @@ module.exports = async (req, res) => {
                 const jsonText = geminiResult.text.replace(/```json|```/g, '').trim(); 
                 parsedData = JSON.parse(jsonText); 
                 
-                // GAS Step: Post-Gemini Translation 
-                for (const key in parsedData) {
-                    if (typeof parsedData[key] === 'string') { parsedData[key] = await translateToEnglish(parsedData[key]); }
-                }
+                // GAS Step: Post-Gemini Translation (on output fields - NO-OP in Node.js)
+                for (const key in parsedData) { if (typeof parsedData[key] === 'string') { parsedData[key] = await translateToEnglish(parsedData[key]); } }
 
                 // GAS Step: Hardcoded Correction Lookup
                 verifyAndCorrectAddress(parsedData, remarks);
+                
+                // GAS Step: Clean up Gemini Data (Removes noise from 'Remaining' field)
+                cleanUpGeminiData(parsedData); 
 
             } catch (e) {
                 console.error('JSON Parsing Error:', e.message); 
@@ -241,11 +281,22 @@ module.exports = async (req, res) => {
                 parsedData = {
                     FormattedAddress: originalAddress, // FIX: Use original address
                     Landmark: '', State: '', DIST: '', PIN: initialPin, 
-                    AddressQuality: 'Very Bad', Remaining: remarks[0], CustomerCleanName: customerName,
+                    AddressQuality: 'Very Bad', Remaining: remarks[0]
                 }; 
             }
 
-            // PIN verification/correction logic 
+            // 3. SECOND GEMINI CALL: NAME CLEANING (Like GAS script)
+            let cleanedName = customerName; // Start with raw name
+            const namePrompt = `Clean and correct the following customer name. Remove any numbers or special characters and translate the name to English if needed. Provide only the cleaned name. Provide only the name with no other text. Name: "${customerName}"`;
+            const cleanedNameResponse = await getGeminiResponse(namePrompt);
+            if (cleanedNameResponse.text) {
+                cleanedName = cleanedNameResponse.text.trim();
+            } else {
+                remarks.push("Warning: Name cleaning failed, using raw name.");
+            }
+
+
+            // PIN verification/correction logic (Original logic maintained)
             let finalPin = String(parsedData.PIN).match(/\b\d{6}\b/) ? parsedData.PIN : initialPin; 
             let primaryPostOffice = postalData.PostOfficeList ? postalData.PostOfficeList[0] : {}; 
             if (finalPin) { 
@@ -299,7 +350,7 @@ module.exports = async (req, res) => {
             const finalResponse = {
                 status: "Success",
                 customerRawName: customerName,
-                customerCleanName: parsedData.CustomerCleanName || customerName,
+                customerCleanName: cleanedName, // Uses result of second AI call
                 addressLine1: finalFormattedAddress, 
                 landmark: finalLandmark, 
                 postOffice: primaryPostOffice.Name || parsedData['P.O.'] || '',
@@ -314,7 +365,7 @@ module.exports = async (req, res) => {
             }; 
             
             // Credit Reporting
-            const updatedClient = isUnlimited ? { remainingCredits: 'Unlimited' } : await clients.findOne({ _id: client._id }, { projection: { remainingCredits: 1 } }); 
+            const updatedClient = isUnlimited ? { remainingCredits: 'Unlimited' } : await clients.findOne({ _id: client.id }, { projection: { remainingCredits: 1 } }); 
                 
             return res.status(200).json({ ...finalResponse, remainingCredits: isUnlimited ? 'Unlimited' : (updatedClient.remainingCredits ?? 0) }); 
         } catch (e) {
