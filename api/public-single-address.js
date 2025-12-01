@@ -21,7 +21,7 @@ const directionalKeywords = ['near', 'opposite', 'back side', 'front side', 'beh
 // --- Gemini API Key (still needed for the core service) ---
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'REPLACE_WITH_YOUR_KEY'; 
 
-// --- India Post helper (unchanged) ---
+// --- India Post helper ---
 async function getIndiaPostData(pin) {
     if (!pin) return { PinStatus: 'Error' }; 
     if (pincodeCache[pin]) return pincodeCache[pin]; 
@@ -54,7 +54,7 @@ async function getIndiaPostData(pin) {
     }
 }
 
-// --- Gemini helper (unchanged) ---
+// --- Gemini helper ---
 async function getGeminiResponse(prompt) {
     const apiKey = GEMINI_API_KEY; 
     if (!apiKey) {
@@ -94,7 +94,7 @@ async function getGeminiResponse(prompt) {
     }
 }
 
-// --- Utilities & Prompt Builder (FIXED) ---
+// --- Utilities & Prompt Builder (FINAL FIXES) ---
 function extractPin(address) {
     const match = String(address).match(/\b\d{6}\b/); 
     return match ? match[0] : null; 
@@ -122,7 +122,7 @@ Set to null if not found.
 8.  "Landmark": A specific, named landmark (e.g., "Apollo Hospital"), not a generic type like "school". **If multiple landmarks are present, extract ONLY the most specific/primary landmark.** **Extract the landmark without any directional words like 'near', 'opposite', 'behind' etc., as this will be handled by the script.**
 9.  "Remaining": A last resort for any text that does not fit into other fields.
 Clean this by removing meaningless words like 'job', 'raw', 'add-', 'tq', 'dist' and country, state, district, or PIN code.
-10. **"FormattedAddress": This is the most important field.** Based on your analysis, create a single, clean, human-readable address string containing the **detailed house/street/locality/colony information**. **STRICTLY DO NOT INCLUDE P.O. NAME, TEHSIL, DISTRICT, STATE, or PIN in this field.** Use commas to separate logical components.
+10. **"FormattedAddress": This is the most important field.** Based on your analysis, create a single, clean, human-readable address string containing the **detailed house/street/locality/colony information.** **STRICTLY DO NOT INCLUDE ANY LANDMARK NAME, P.O. NAME, TEHSIL, DISTRICT, STATE, or PIN in this field.** Use commas to separate logical components.
 11. "LocationType": Identify the type of location (e.g., "Village", "Town", "City", "Urban Area").
 12. "AddressQuality": Analyze the address completeness and clarity for shipping.
 Categorize it as one of the following: Very Good, Good, Medium, Bad, or Very Bad.
@@ -268,16 +268,17 @@ module.exports = async (req, res) => {
 
         // --- FINAL SINGLE-LINE ADDRESS CONSTRUCTION ---
         // 1. Get cleaned components
+        // NOTE: FormattedAddress now only contains the street/house details, excluding landmark/PO/PIN.
         const primaryAddress = parsedData.FormattedAddress || address.replace(meaninglessRegex, '').trim() || ''; 
         const postOffice = parsedData['P.O.']?.replace('P.O. ', '') || primaryPostOffice.Name || ''; 
         const tehsil = parsedData.Tehsil?.replace('Tehsil ', '') || primaryPostOffice.Taluk || ''; 
         const district = parsedData['DIST.'] || primaryPostOffice.District || ''; 
         const state = parsedData.State || primaryPostOffice.State || ''; 
         
-        // 2. Filter out empty components
+        // 2. Filter out empty components and concatenate into a single string.
         const components = [
             primaryAddress,
-            finalLandmark,
+            finalLandmark, // The prefixed landmark (Near X)
             postOffice ? `P.O. ${postOffice}` : null,
             tehsil,
             district,
@@ -298,7 +299,7 @@ module.exports = async (req, res) => {
             // CRITICAL CHANGE: The primary address line is now the single, concatenated string.
             addressLine1: singleLineAddress, 
             
-            // The following fields are still returned for data integrity but are not meant to be displayed separately by the client.
+            // The following fields are returned for data integrity but are not meant to be displayed separately by the client.
             landmark: finalLandmark, 
             postOffice: postOffice, 
             tehsil: tehsil, 
