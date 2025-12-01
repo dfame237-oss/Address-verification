@@ -1,6 +1,5 @@
 // api/public-single-address.js
-// FINAL AND MOST ACCURATE VERSION: Generates a single, comma-separated correspondence address line, 
-// fixing all final remaining duplication issues (District, State, PIN).
+// FINAL AND MOST SIMPLIFIED VERSION: Provides only the single, concatenated, and corrected address string.
 
 const INDIA_POST_API = 'https://api.postalpincode.in/pincode/'; 
 let pincodeCache = {};
@@ -271,19 +270,17 @@ module.exports = async (req, res) => {
         
         // Get all postal and landmark names/values that might be present in the final string
         const postalNames = [
-            // List all components to be scrubbed, including possible prefixes
             (parsedData['P.O.']?.replace('P.O. ', '') || primaryPostOffice.Name),
             (parsedData.Tehsil?.replace('Tehsil ', '') || primaryPostOffice.Taluk),
             (parsedData['DIST.'] || primaryPostOffice.District),
             (parsedData.State || primaryPostOffice.State),
             finalPin,
-            'INDIA', 'INDIA', 'INDIA', // Handle country duplication
+            'INDIA', 'INDIA', // Handle country duplication
             parsedData.Landmark, // Use the clean landmark name for scrubbing
             'P.O.', 'DIST.', 'DISTRICT', 'STATE', 'PIN' // Add common field names as keywords
         ].filter(c => c && c.toString().trim() !== '');
 
         // Create a scrubber regex to find and remove *any* of the final components
-        // Escaping is crucial for regex safety
         const scrubberRegex = new RegExp(`(?:${postalNames.map(name => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
 
         // Scrape the primary address line: remove duplicates, remove double commas, and trim.
@@ -292,7 +289,6 @@ module.exports = async (req, res) => {
                                      .trim().replace(/,$/, '').trim();
         
         // 2. Get cleaned components for concatenation (FULLY RELYING ON AI'S PARSED DATA)
-        // Note: No fallback to primaryPostOffice.Name/Taluk/District is used here, relying on AI's contextual choice.
         const postOffice = parsedData['P.O.']?.replace('P.O. ', '') || '';
         const tehsil = parsedData.Tehsil?.replace('Tehsil ', '') || '';
         const district = parsedData['DIST.'] || '';
@@ -313,23 +309,16 @@ module.exports = async (req, res) => {
         // 4. Create the final single string
         const singleLineAddress = components.join(', ');
 
-        // 5. Build final response
+        // 5. Build final response (Simplified output)
         const finalResponse = {
             status: "Success",
             customerRawName: customerName,
             customerCleanName: cleanedName,
             
-            // CRITICAL CHANGE: The primary address line is now the single, concatenated string.
+            // This is the ONLY address field returned
             addressLine1: singleLineAddress, 
             
-            // The following fields are returned for data integrity.
-            landmark: finalLandmark, 
-            postOffice: postOffice, 
-            tehsil: tehsil, 
-            district: district, 
-            state: state, 
-            pin: finalPin, 
-            
+            // Only return metadata fields
             addressQuality: parsedData.AddressQuality || 'Medium', 
             locationType: parsedData.LocationType || 'Unknown', 
             locationSuitability: parsedData.LocationSuitability || 'Unknown', 
