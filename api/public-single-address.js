@@ -1,6 +1,6 @@
 // api/public-single-address.js
-// Handles free, unauthenticated single address verification.
-// FINAL VERSION: Generates a single, comma-separated correspondence address line.
+// FINAL AND MOST ACCURATE VERSION: Generates a single, comma-separated correspondence address line, 
+// fixing all previous duplication issues (Landmark, P.O., District, State, PIN).
 
 const INDIA_POST_API = 'https://api.postalpincode.in/pincode/'; 
 let pincodeCache = {};
@@ -21,7 +21,7 @@ const directionalKeywords = ['near', 'opposite', 'back side', 'front side', 'beh
 // --- Gemini API Key (still needed for the core service) ---
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'REPLACE_WITH_YOUR_KEY'; 
 
-// --- India Post helper ---
+// --- India Post helper (unchanged) ---
 async function getIndiaPostData(pin) {
     if (!pin) return { PinStatus: 'Error' }; 
     if (pincodeCache[pin]) return pincodeCache[pin]; 
@@ -54,7 +54,7 @@ async function getIndiaPostData(pin) {
     }
 }
 
-// --- Gemini helper ---
+// --- Gemini helper (unchanged) ---
 async function getGeminiResponse(prompt) {
     const apiKey = GEMINI_API_KEY; 
     if (!apiKey) {
@@ -94,7 +94,7 @@ async function getGeminiResponse(prompt) {
     }
 }
 
-// --- Utilities & Prompt Builder (FINAL FIXES) ---
+// --- Utilities & Prompt Builder (FIXED) ---
 function extractPin(address) {
     const match = String(address).match(/\b\d{6}\b/); 
     return match ? match[0] : null; 
@@ -119,7 +119,7 @@ Set to null if not found.
 5.  "DIST.": The official District from the PIN data.
 6.  "State": The official State from the PIN data.
 7.  "PIN": The 6-digit PIN code. Find and **rigorously verify and correct** the PIN based on the entire location, including the locality and any landmarks. **Before accepting any PIN, search your knowledge base using all available components to find the most accurate 6-digit PIN for that specific location, even if it contradicts the default geographical PIN.**
-8.  "Landmark": A specific, named landmark (e.g., "Apollo Hospital"), not a generic type like "school". **If multiple landmarks are present, extract ONLY the most specific/primary landmark.** **Extract the landmark without any directional words like 'near', 'opposite', 'behind' etc., as this will be handled by the script.**
+8.  "Landmark": A specific, named landmark (e.g., "Apollo Hospital"), not a generic type like "school"). **If multiple landmarks are present, extract ONLY the most specific/primary landmark.** **Extract the landmark without any directional words like 'near', 'opposite', 'behind' etc., as this will be handled by the script.**
 9.  "Remaining": A last resort for any text that does not fit into other fields.
 Clean this by removing meaningless words like 'job', 'raw', 'add-', 'tq', 'dist' and country, state, district, or PIN code.
 10. **"FormattedAddress": This is the most important field.** Based on your analysis, create a single, clean, human-readable address string containing the **detailed house/street/locality/colony information.** **STRICTLY DO NOT INCLUDE ANY LANDMARK NAME, P.O. NAME, TEHSIL, DISTRICT, STATE, or PIN in this field.** Use commas to separate logical components.
@@ -266,16 +266,35 @@ module.exports = async (req, res) => {
             remarks.push('Address verified and formatted successfully.'); 
         }
 
-        // --- FINAL SINGLE-LINE ADDRESS CONSTRUCTION ---
-        // 1. Get cleaned components
-        // NOTE: FormattedAddress now only contains the street/house details, excluding landmark/PO/PIN.
-        const primaryAddress = parsedData.FormattedAddress || address.replace(meaninglessRegex, '').trim() || ''; 
+        // --- 1. CLEAN AI OUTPUT BEFORE CONCATENATION (THE FINAL DUPLICATION FIX) ---
+        let primaryAddress = parsedData.FormattedAddress || address.replace(meaninglessRegex, '').trim() || ''; 
+        
+        // Get all postal and landmark names/values that might be present in the final string
+        const postalNames = [
+            (parsedData['P.O.']?.replace('P.O. ', '') || primaryPostOffice.Name),
+            (parsedData.Tehsil?.replace('Tehsil ', '') || primaryPostOffice.Taluk),
+            (parsedData['DIST.'] || primaryPostOffice.District),
+            (parsedData.State || primaryPostOffice.State),
+            finalPin,
+            'INDIA',
+            parsedData.Landmark // Use the clean landmark name for scrubbing
+        ].filter(c => c && c.toString().trim() !== '');
+
+        // Create a scrubber regex to find and remove *any* of the final components if the AI mistakenly added them to FormattedAddress
+        const scrubberRegex = new RegExp(`(?:${postalNames.map(name => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
+
+        // Scrape the primary address line: remove duplicates, remove double commas, and trim.
+        primaryAddress = primaryAddress.replace(scrubberRegex, '')
+                                     .replace(/,\s*,/g, ',')
+                                     .trim().replace(/,$/, '').trim();
+        
+        // 2. Get cleaned components for concatenation
         const postOffice = parsedData['P.O.']?.replace('P.O. ', '') || primaryPostOffice.Name || ''; 
         const tehsil = parsedData.Tehsil?.replace('Tehsil ', '') || primaryPostOffice.Taluk || ''; 
         const district = parsedData['DIST.'] || primaryPostOffice.District || ''; 
         const state = parsedData.State || primaryPostOffice.State || ''; 
         
-        // 2. Filter out empty components and concatenate into a single string.
+        // 3. Filter out empty components and concatenate into a single string.
         const components = [
             primaryAddress,
             finalLandmark, // The prefixed landmark (Near X)
@@ -287,10 +306,10 @@ module.exports = async (req, res) => {
             'INDIA'
         ].filter(c => c && c.toString().trim() !== '');
 
-        // 3. Create the final single string
+        // 4. Create the final single string
         const singleLineAddress = components.join(', ');
 
-        // 4. Build final response
+        // 5. Build final response
         const finalResponse = {
             status: "Success",
             customerRawName: customerName,
@@ -299,7 +318,7 @@ module.exports = async (req, res) => {
             // CRITICAL CHANGE: The primary address line is now the single, concatenated string.
             addressLine1: singleLineAddress, 
             
-            // The following fields are returned for data integrity but are not meant to be displayed separately by the client.
+            // The following fields are returned for data integrity.
             landmark: finalLandmark, 
             postOffice: postOffice, 
             tehsil: tehsil, 
