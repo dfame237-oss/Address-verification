@@ -1,6 +1,5 @@
 // api/verify-single-address.js
-// Merged: your original Gemini + IndiaPost logic + credits handling + auth + GET remainingCredits
-// NOTE: This file is for AUTHENTICATED/PAID USE ONLY.
+// Final Logic Source for both single and bulk verification.
 const INDIA_POST_API = 'https://api.postalpincode.in/pincode/'; 
 let pincodeCache = {};
 
@@ -13,14 +12,15 @@ const coreMeaningfulWords = [
     "tq", "job", "dist"
 ];
 const meaningfulWords = [...coreMeaningfulWords, ...testingKeywords]; 
-const meaninglessRegex = new RegExp(`\\b(?:${meaningfulWords.join('|')})\\b`, 'gi');
+const meaninglessRegex = new RegExp(`\\b(?:${meaningWords.join('|')})\\b`, 'gi');
 const directionalKeywords = ['near', 'opposite', 'back side', 'front side', 'behind', 'opp'];
 // --- DB helper and auth ---
 const { connectToDatabase } = require('../utils/db');
 const jwt = require('jsonwebtoken'); 
 const { ObjectId } = require('mongodb'); 
-
 const JWT_SECRET = process.env.JWT_SECRET || 'replace_with_env_jwt_secret';
+
+
 // --- India Post helper ---
 async function getIndiaPostData(pin) {
     if (!pin) return { PinStatus: 'Error' };
@@ -54,8 +54,8 @@ async function getIndiaPostData(pin) {
     }
 }
 
-// --- Gemini helper (unchanged) ---
-async function getGeminiResponse(prompt) {
+// --- Gemini helper ---
+async function getGeminiResponse(prompt) { 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
         return { text: null, error: "Gemini API key not set in environment variables."
@@ -208,8 +208,7 @@ async function runVerificationLogic(address, customerName) {
                 finalPin = initialPin; 
             }
         } 
-        // REMOVED THE MISLEADING else if (initialPin && postalData.PinStatus === 'Success') { remarks.push(`PIN (${initialPin}) verified successfully.`); }
-        // Now, a success/no-issue is handled by the final remarks check.
+        // NOTE: Misleading 'PIN verified successfully' remark removed here.
     } else {
         remarks.push('CRITICAL_ALERT: PIN not found after verification attempts. Manual check needed.');
         finalPin = initialPin || null; 
@@ -268,8 +267,6 @@ async function runVerificationLogic(address, customerName) {
 
 // --- Main Handler (AUTHENTICATED POST & GET) ---
 module.exports = async (req, res) => {
-    // ... (omitted Main Handler logic, as it primarily handles credits/auth and calls runVerificationLogic) ...
-
     // CORS & Auth Setup
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', 'https://dfame237-oss.github.io/Address-verification'); 
