@@ -207,9 +207,9 @@ async function runVerificationLogic(address, customerName) {
                 remarks.push(`CRITICAL_ALERT: AI-provided PIN (${finalPin}) not verified by API.`);
                 finalPin = initialPin; 
             }
-        } else if (initialPin && postalData.PinStatus === 'Success') {
-            remarks.push(`PIN (${initialPin}) verified successfully.`);
-        }
+        } 
+        // REMOVED THE MISLEADING else if (initialPin && postalData.PinStatus === 'Success') { remarks.push(`PIN (${initialPin}) verified successfully.`); }
+        // Now, a success/no-issue is handled by the final remarks check.
     } else {
         remarks.push('CRITICAL_ALERT: PIN not found after verification attempts. Manual check needed.');
         finalPin = initialPin || null; 
@@ -237,7 +237,10 @@ async function runVerificationLogic(address, customerName) {
 
     if (parsedData.Remaining && parsedData.Remaining.trim() !== '') {
         remarks.push(`Remaining/Ambiguous Text: ${parsedData.Remaining.trim()}`);
-    } else if (remarks.length === 0) {
+    } 
+    
+    // Final default message: only added if no specific alerts/corrections were found
+    if (remarks.length === 0) {
         remarks.push('Address verified and formatted successfully.');
     }
 
@@ -265,6 +268,8 @@ async function runVerificationLogic(address, customerName) {
 
 // --- Main Handler (AUTHENTICATED POST & GET) ---
 module.exports = async (req, res) => {
+    // ... (omitted Main Handler logic, as it primarily handles credits/auth and calls runVerificationLogic) ...
+
     // CORS & Auth Setup
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', 'https://dfame237-oss.github.io/Address-verification'); 
@@ -336,7 +341,7 @@ module.exports = async (req, res) => {
             const client = await clients.findOne({ _id: new ObjectId(clientId) });
             if (!client) return res.status(404).json({ status: 'Error', message: 'Client not found.' }); 
 
-            // --- Credit Check and Deduction Logic (must be performed here for single calls) ---
+            // --- Credit Check and Deduction Logic ---
             const remaining = client.remainingCredits; 
             const initial = client.initialCredits;
             const isUnlimited = (remaining === 'Unlimited' || initial === 'Unlimited' || String(initial).toLowerCase() === 'unlimited'); 
