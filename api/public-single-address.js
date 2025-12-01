@@ -1,6 +1,6 @@
 // api/public-single-address.js
 // DEFINITIVE VERSION: Fully prioritizes Gemini's contextual verification and output, 
-// and removes the "short address" length check condition.
+// ensures a single, cleaned, comma-separated correspondence address string, and removes the short address check.
 
 const INDIA_POST_API = 'https://api.postalpincode.in/pincode/'; 
 let pincodeCache = {};
@@ -240,11 +240,6 @@ module.exports = async (req, res) => {
             finalPin = initialPin || null; 
         }
 
-        // --- REMOVED SHORT ADDRESS LENGTH CHECK CONDITION ---
-        // if (parsedData.FormattedAddress && parsedData.FormattedAddress.length < 35 && parsedData.AddressQuality !== 'Very Good' && parsedData.AddressQuality !== 'Good') {
-        //     remarks.push(`CRITICAL_ALERT: Formatted address is short (${parsedData.FormattedAddress.length} chars). Manual verification recommended.`); 
-        // }
-
         // Landmark directional prefix logic (Returns PREFIXED landmark)
         let landmarkValue = parsedData.Landmark || ''; 
         const originalAddressLower = address.toLowerCase(); 
@@ -277,7 +272,7 @@ module.exports = async (req, res) => {
             (parsedData['DIST.'] || primaryPostOffice.District),
             (parsedData.State || primaryPostOffice.State),
             finalPin,
-            'INDIA', 'INDIA', 
+            'INDIA', 
             parsedData.Landmark, 
             'P.O.', 'DIST.', 'DISTRICT', 'STATE', 'PIN',
             'UTTAR PRADESH', 'GAUTAM BUDDHA NAGAR', 'NOIDA'
@@ -306,7 +301,7 @@ module.exports = async (req, res) => {
             district,
             state,
             finalPin,
-            'INDIA'
+            'INDIA' // This is necessary for the front-end to display the Country
         ].filter(c => c && c.toString().trim() !== '');
 
         // 4. Create the final single string
