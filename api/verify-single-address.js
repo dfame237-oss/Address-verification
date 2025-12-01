@@ -111,6 +111,9 @@ function buildGeminiPrompt(originalAddress, postalData) {
     Analyze common short forms and phonetic spellings, such as "lean" for "Lane", and use your best judgment to correct them.
     Be strict about ensuring the output is a valid, single, and complete address for shipping.
     Use your advanced knowledge to identify and remove any duplicate address components that are present consecutively (e.g., 'Gandhi Street Gandhi Street' should be 'Gandhi Street').
+    
+    CRITICAL INSTRUCTION: If official Postal Data (State/District/PIN) is provided, you MUST ensure that your formatted address and extracted fields align perfectly with this official data. Remove any conflicting city, state, or district names from the raw address (e.g., if the raw address says 'Mumbai' but the PIN is for 'Delhi', you MUST remove 'Mumbai' from the FormattedAddress and set 'State'/'DIST.' to the official Delhi data).
+
     Your response must contain the following keys:
     1.  "H.no.", "Flat No.", "Plot No.", "Room No.", "Building No.", "Block No.", "Ward No.", "Gali No.", "Zone No.": Extract only the number or alphanumeric sequence (e.g., '1-26', 'A/25', '10').
     Set to null if not found.
