@@ -314,21 +314,22 @@
             qualityIcon.textContent = icon;
         }
 
+        // ⭐ NEW FIXED LOGIC: Displays the single, concatenated addressLine1 from the API ⭐
         function buildFormattedShippingAddress(result) {
             const name = result.customerCleanName || '';
-            const address = result.addressLine1 || '';
-            const landmark = result.landmark || '';
-            const postOffice = result.postOffice || '';
-            const district = result.district || '';
+            const singleLineAddress = result.addressLine1 || ''; // This is the FULL, single line string from the API
             const state = result.state || '';
             const pin = result.pin || '';
             const country = 'INDIA';
 
-            // Construct the comprehensive shipping string
-            let formattedString = address;
-            if (landmark) formattedString += `\nLandmark: ${landmark}`;
-            if (postOffice) formattedString += `\nPost Office: ${postOffice}`;
-            formattedString += `\n${district}, ${state} - ${pin}`;
+            // Construct the final multi-line string for shipping label presentation
+            // The first line is the comprehensive address details from addressLine1
+            let formattedString = singleLineAddress;
+            
+            // Add State/PIN/Country on separate lines for standard shipping display format
+            // We use the separated State and Pin for neatness here, even though they're in addressLine1
+            // You can remove these lines if you prefer the one single line
+            formattedString += `\n${state} - ${pin}`;
             formattedString += `\n${country}`;
             
             // Add name only if it was provided
@@ -375,7 +376,7 @@
                 // Populate individual component results
                 document.getElementById('out-name').textContent = verificationResult.customerCleanName || 'N/A';
                 
-                // Build the main copy block
+                // Build the main copy block (Now uses the single line from the API)
                 buildFormattedShippingAddress(verificationResult);
                 
                 const qualityScore = verificationResult.addressQuality || verificationResult.locationSuitability || 'N/A';
