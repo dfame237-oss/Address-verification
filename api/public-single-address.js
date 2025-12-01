@@ -1,13 +1,12 @@
 // api/public-single-address.js
 // Handles free, unauthenticated single address verification.
-// IMPORTANT: This version implements the final, fixed Gemini prompt for maximum accuracy.
+// FINAL VERSION: Generates a single, comma-separated correspondence address line.
 
 const INDIA_POST_API = 'https://api.postalpincode.in/pincode/'; 
 let pincodeCache = {};
 
-// NOTE: We do not require('../db') or use any authentication/credit logic here.
+// NOTE: No authentication, credit logic, or database access is included.
 
-// Removed 'testingKeywords' as requested.
 const coreMeaningfulWords = [
     "ddadu", "ddadu", "ai", "add", "add-", "raw", "dumping", "grand", "dumping grand",
     "chd", "chd-", "chandigarh", "chandigarh-", "chandigarh", "west", "sector", "sector-",
@@ -15,7 +14,6 @@ const coreMeaningfulWords = [
     "majra", "colony", "dadu", "dadu majra", "shop", "wine", "wine shop", "house", "number",
     "tq", "job", "dist"
 ]; 
-// meaningfulWords list is now only core meaningful words, excluding testing keywords
 const meaningfulWords = [...coreMeaningfulWords]; 
 const meaninglessRegex = new RegExp(`\\b(?:${meaningfulWords.join('|')})\\b`, 'gi'); 
 const directionalKeywords = ['near', 'opposite', 'back side', 'front side', 'behind', 'opp']; 
@@ -23,7 +21,7 @@ const directionalKeywords = ['near', 'opposite', 'back side', 'front side', 'beh
 // --- Gemini API Key (still needed for the core service) ---
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'REPLACE_WITH_YOUR_KEY'; 
 
-// --- India Post helper ---
+// --- India Post helper (unchanged) ---
 async function getIndiaPostData(pin) {
     if (!pin) return { PinStatus: 'Error' }; 
     if (pincodeCache[pin]) return pincodeCache[pin]; 
@@ -56,7 +54,7 @@ async function getIndiaPostData(pin) {
     }
 }
 
-// --- Gemini helper ---
+// --- Gemini helper (unchanged) ---
 async function getGeminiResponse(prompt) {
     const apiKey = GEMINI_API_KEY; 
     if (!apiKey) {
@@ -120,14 +118,11 @@ Set to null if not found.
 4.  "Tehsil": The official Tehsil/SubDistrict from the PIN data. Prepend "Tehsil". Example: "Tehsil Pune".
 5.  "DIST.": The official District from the PIN data.
 6.  "State": The official State from the PIN data.
-7.  "PIN": The 6-digit PIN code. Find and **rigorously verify and correct** the PIN based on the entire location, including the locality and any landmarks. **Before accepting any PIN, search your knowledge base using all available components (e.g., "Noida Sector 49 Bal Bharti School") to find the most accurate 6-digit PIN for that specific location, even if it contradicts the default geographical PIN.**
-8.  "Landmark": A specific, named landmark (e.g., "Apollo Hospital"), not a generic type like "school".
-If multiple landmarks are present, list them comma-separated. **Extract the landmark without any directional words like 'near', 'opposite', 'behind' etc., as this will be handled by the script.**
+7.  "PIN": The 6-digit PIN code. Find and **rigorously verify and correct** the PIN based on the entire location, including the locality and any landmarks. **Before accepting any PIN, search your knowledge base using all available components to find the most accurate 6-digit PIN for that specific location, even if it contradicts the default geographical PIN.**
+8.  "Landmark": A specific, named landmark (e.g., "Apollo Hospital"), not a generic type like "school". **If multiple landmarks are present, extract ONLY the most specific/primary landmark.** **Extract the landmark without any directional words like 'near', 'opposite', 'behind' etc., as this will be handled by the script.**
 9.  "Remaining": A last resort for any text that does not fit into other fields.
 Clean this by removing meaningless words like 'job', 'raw', 'add-', 'tq', 'dist' and country, state, district, or PIN code.
-10. **"FormattedAddress": This is the most important field. Based on your full analysis, create a single, clean, human-readable address string that contains the detailed house/street/locality/colony information.**
-**STRICTLY DO NOT INCLUDE P.O. NAME, TEHSIL, DISTRICT, STATE, or PIN in this field.** Use commas to separate logical components.
-Do not invent or "hallucinate" information.
+10. **"FormattedAddress": This is the most important field.** Based on your analysis, create a single, clean, human-readable address string containing the **detailed house/street/locality/colony information**. **STRICTLY DO NOT INCLUDE P.O. NAME, TEHSIL, DISTRICT, STATE, or PIN in this field.** Use commas to separate logical components.
 11. "LocationType": Identify the type of location (e.g., "Village", "Town", "City", "Urban Area").
 12. "AddressQuality": Analyze the address completeness and clarity for shipping.
 Categorize it as one of the following: Very Good, Good, Medium, Bad, or Very Bad.
@@ -138,7 +133,7 @@ Raw Address: "${originalAddress}"
 
     if (postalData.PinStatus === 'Success') {
         basePrompt += `\nOfficial Postal Data for PIN ${initialPin}: ${JSON.stringify(postalData.PostOfficeList)}\n**CRITICAL INSTRUCTION:**
-1. **First, verify if the PIN ${initialPin} is the most specific and correct PIN for this locality (e.g., "Sector 49" AND "Bal Bharti School").** If your knowledge suggests a better PIN (e.g., 201304 or 201303), set that corrected PIN in the "PIN" field.
+1. **First, verify if the PIN ${initialPin} is the most specific and correct PIN for this locality.** If your knowledge suggests a better PIN, set that corrected PIN in the "PIN" field.
 2. **From the provided Post Office list, analyze the names and choose the single name that is the best geographical and most relevant match for the specific locality in the raw address.** Use this name for 'P.O.', 'Tehsil', and 'DIST.' fields. Do NOT use the first one arbitrarily.`; 
     } else {
         basePrompt += `\nAddress has no PIN or the PIN is invalid. You must find and verify the correct 6-digit PIN based on the address components.`; 
@@ -249,7 +244,7 @@ module.exports = async (req, res) => {
             remarks.push(`CRITICAL_ALERT: Formatted address is short (${parsedData.FormattedAddress.length} chars). Manual verification recommended.`); 
         }
 
-        // Landmark directional prefix logic 
+        // Landmark directional prefix logic (Returns PREFIXED landmark)
         let landmarkValue = parsedData.Landmark || ''; 
         const originalAddressLower = address.toLowerCase(); 
         let finalLandmark = ''; 
@@ -264,26 +259,53 @@ module.exports = async (req, res) => {
                 finalLandmark = `Near ${landmarkValue.toString().trim()}`; 
             }
         }
-
+        
         if (parsedData.Remaining && parsedData.Remaining.trim() !== '') {
             remarks.push(`Remaining/Ambiguous Text: ${parsedData.Remaining.trim()}`); 
         } else if (remarks.length === 0) {
             remarks.push('Address verified and formatted successfully.'); 
         }
 
-        // Build final response (Prioritizes AI's contextual P.O./Tehsil selection)
+        // --- FINAL SINGLE-LINE ADDRESS CONSTRUCTION ---
+        // 1. Get cleaned components
+        const primaryAddress = parsedData.FormattedAddress || address.replace(meaninglessRegex, '').trim() || ''; 
+        const postOffice = parsedData['P.O.']?.replace('P.O. ', '') || primaryPostOffice.Name || ''; 
+        const tehsil = parsedData.Tehsil?.replace('Tehsil ', '') || primaryPostOffice.Taluk || ''; 
+        const district = parsedData['DIST.'] || primaryPostOffice.District || ''; 
+        const state = parsedData.State || primaryPostOffice.State || ''; 
+        
+        // 2. Filter out empty components
+        const components = [
+            primaryAddress,
+            finalLandmark,
+            postOffice ? `P.O. ${postOffice}` : null,
+            tehsil,
+            district,
+            state,
+            finalPin,
+            'INDIA'
+        ].filter(c => c && c.toString().trim() !== '');
+
+        // 3. Create the final single string
+        const singleLineAddress = components.join(', ');
+
+        // 4. Build final response
         const finalResponse = {
             status: "Success",
             customerRawName: customerName,
             customerCleanName: cleanedName,
-            addressLine1: parsedData.FormattedAddress || address.replace(meaninglessRegex, '').trim() || '', 
+            
+            // CRITICAL CHANGE: The primary address line is now the single, concatenated string.
+            addressLine1: singleLineAddress, 
+            
+            // The following fields are still returned for data integrity but are not meant to be displayed separately by the client.
             landmark: finalLandmark, 
-            // CRITICAL FIX: Prioritize AI's P.O. selection (parsedData['P.O.'])
-            postOffice: parsedData['P.O.']?.replace('P.O. ', '') || primaryPostOffice.Name || '', 
-            tehsil: parsedData.Tehsil?.replace('Tehsil ', '') || primaryPostOffice.Taluk || '', 
-            district: parsedData['DIST.'] || primaryPostOffice.District || '', 
-            state: parsedData.State || primaryPostOffice.State || '', 
+            postOffice: postOffice, 
+            tehsil: tehsil, 
+            district: district, 
+            state: state, 
             pin: finalPin, 
+            
             addressQuality: parsedData.AddressQuality || 'Medium', 
             locationType: parsedData.LocationType || 'Unknown', 
             locationSuitability: parsedData.LocationSuitability || 'Unknown', 
