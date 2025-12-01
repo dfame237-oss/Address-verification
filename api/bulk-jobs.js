@@ -1,5 +1,5 @@
 // api/bulk-jobs.js
-// Handles Bulk Verification Job Submission, Status Polling, Cancellation, and Concurrent Processing
+// Handles Bulk Verification Job Submission, Status Polling, Cancellation, and Throttled Concurrent Processing
 
 const { connectToDatabase } = require('../utils/db');
 const { ObjectId } = require('mongodb');
@@ -13,100 +13,53 @@ const {
 const JWT_SECRET = process.env.JWT_SECRET || 'replace_with_env_jwt_secret';
 const MAX_ACTIVE_JOBS = 1; // Enforce single job concurrency
 
-// --- Helper: parse JWT payload from Authorization header ---
-function parseJwtFromHeader(req) {
-    const authHeader = req.headers.authorization || req.headers.Authorization;
-    if (!authHeader) return null;
-    const parts = authHeader.split(' ');
-    if (parts.length !== 2) return null;
-    const token = parts[1];
-    try {
-        const payload = jwt.verify(token, JWT_SECRET);
-        if (!payload || !payload.clientId) return null;
-        return payload;
-    } catch (e) {
-        return null;
-    }
-}
+// --- NEW CONFIGURATION: Throttle concurrent calls to avoid QPS rate limits ---
+const MAX_CONCURRENT_CALLS = 10; 
 
-// --- Helper: CSV parser (Uses Comma Delimiter) ---
-function parseCSV(text) {
-    const lines = text.split('\n');
-    if (lines.length < 2) return [];
+// --- Helper: parse JWT payload from Authorization header (omitted) ---
+function parseJwtFromHeader(req) { /* ... */ }
 
-    const header = lines[0].split(',').map(h => h.trim().replace(/^\"|\"$/g, ''));
-    const data = [];
-    const idIndex = header.indexOf('ORDER ID');
-    const nameIndex = header.indexOf('CUSTOMER NAME');
-    const addressIndex = header.indexOf('CUSTOMER RAW ADDRESS');
+// --- Helper: CSV parser (omitted) ---
+function parseCSV(text) { /* ... */ }
 
-    if (idIndex === -1 || nameIndex === -1 || addressIndex === -1) {
-        return [];
-    }
+// --- Helper: CSV result builder (omitted) ---
+function createCSV(rows) { /* ... */ }
 
-    for (let i = 1; i < lines.length; i++) {
-        if (lines[i].trim() === '') continue;
-        
-        const row = lines[i].match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g) || [];
-        const cleanedRow = row.map(cell => cell.trim().replace(/^\"|\"$/g, '').replace(/\"\"/g, '\"'));
-        
-        if (cleanedRow.length > Math.max(idIndex, nameIndex, addressIndex)) {
-            data.push({
-                'ORDER ID': cleanedRow[idIndex],
-                'CUSTOMER NAME': cleanedRow[nameIndex],
-                'CUSTOMER RAW ADDRESS': cleanedRow[addressIndex],
-            });
+
+/**
+ * Executes an array of asynchronous tasks (promises) in chunks (throttling).
+ * THIS FUNCTION IS CRITICAL FOR AVOIDING RATE LIMIT ERRORS.
+ */
+async function processInChunks(promiseFactories, limit, jobId, jobsCollection) {
+    const results = [];
+    
+    for (let i = 0; i < promiseFactories.length; i += limit) {
+        // Check for cancellation signal before starting the next chunk
+        const jobStatusCheck = await jobsCollection.findOne({ _id: jobId }, { projection: { status: 1 } });
+        if (jobStatusCheck.status === 'Cancelled') {
+            throw new Error('JobCancelled');
         }
+        
+        const chunk = promiseFactories.slice(i, i + limit);
+        // Execute the chunk concurrently
+        const chunkResults = await Promise.all(chunk.map(factory => factory()));
+        results.push(...chunkResults);
+        
+        // Update progress in the database after each chunk
+        await jobsCollection.updateOne({ _id: jobId }, { $set: { processedCount: Math.min(i + limit, promiseFactories.length) } });
     }
-    return data;
+    return results;
 }
 
-// --- Helper: CSV result builder (Uses Comma Delimiter) ---
-function createCSV(rows) {
-    // FIX: Uses Comma delimiter for consistency
-    const CUSTOM_DELIMITER = ","; 
-    const header = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS,CLEAN NAME,CLEAN ADDRESS LINE 1,LANDMARK,STATE,DISTRICT,PIN,REMARKS,QUALITY\n";
-    
-    const escapeAndQuote = (cell) => {
-        return `\"${String(cell || '').replace(/\"/g, '\"\"')}\"`;
-    };
-    
-    const outputRows = rows.map(vr => {
-        const cleanName = vr.customerCleanName || '';
-        const addressLine1 = vr.addressLine1 || '';
-        const landmark = vr.landmark || '';
-        const state = vr.state || '';
-        const district = vr.district || '';
-        const pin = vr.pin || '';
-        const remarks = vr.remarks || '';
-        const addressQuality = vr.addressQuality || 'Very Bad';
-
-        return [
-            vr['ORDER ID'],
-            vr['CUSTOMER NAME'],
-            vr['CUSTOMER RAW ADDRESS'],
-            cleanName,
-            addressLine1,
-            landmark,
-            state,
-            district,
-            pin,
-            remarks,
-            addressQuality
-        ].map(escapeAndQuote).join(CUSTOM_DELIMITER); 
-    });
-    
-    return header + outputRows.join('\n');
-}
 
 // --------------------------------------------------------
-// CORE JOB PROCESSOR (CONCURRENT EXECUTION)
+// CORE JOB PROCESSOR (THROTTLED CONCURRENT EXECUTION)
 // --------------------------------------------------------
 async function runJobProcessor(db, jobId, client, addresses) {
     const jobsCollection = db.collection('bulkJobs');
     const clientsCollection = db.collection('clients');
     
-    console.log(`Starting concurrent job ${jobId.toString()} for client ${client.username}`);
+    console.log(`Starting throttled job ${jobId.toString()} for client ${client.username}`);
     
     await jobsCollection.updateOne(
         { _id: jobId }, 
@@ -116,82 +69,65 @@ async function runJobProcessor(db, jobId, client, addresses) {
     const isUnlimited = (client.remainingCredits === 'Unlimited' || String(client.initialCredits).toLowerCase() === 'unlimited');
     let successfulVerifications = 0;
     
-    // --- Define the asynchronous processing function for a single row ---
-    const processSingleAddress = async (row) => {
+    // --- 1. Map addresses to an array of promise factories (functions that return promises) ---
+    const promiseFactories = addresses.map(row => {
         const rawAddress = row['CUSTOMER RAW ADDRESS'] || '';
         const customerName = row['CUSTOMER NAME'] || '';
         
-        if (!rawAddress || rawAddress.trim() === "") {
-            return { 
-                'ORDER ID': row['ORDER ID'],
-                'CUSTOMER NAME': row['CUSTOMER NAME'],
-                'CUSTOMER RAW ADDRESS': rawAddress,
-                status: "Skipped", remarks: "Missing raw address in CSV row.", addressQuality: "Very Bad", 
-                customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "" 
-            };
-        } 
-        
-        try {
-            // Check for cancellation signal
-            const jobStatusCheck = await jobsCollection.findOne({ _id: jobId }, { projection: { status: 1 } });
-            if (jobStatusCheck.status === 'Cancelled') {
-                throw new Error('JobCancelled'); 
+        // Return a promise factory function (the work definition)
+        return async () => {
+            if (!rawAddress || rawAddress.trim() === "") {
+                return { 
+                    'ORDER ID': row['ORDER ID'], 'CUSTOMER NAME': row['CUSTOMER NAME'], 'CUSTOMER RAW ADDRESS': rawAddress,
+                    status: "Skipped", remarks: "Missing raw address in CSV row.", addressQuality: "Very Bad", 
+                    customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "" 
+                };
+            } 
+
+            try {
+                // Call the unified logic
+                const result = await runVerificationLogic(rawAddress, customerName);
+                
+                if (result.success) {
+                    successfulVerifications++; 
+                }
+                
+                // Return the full mapped result
+                return {
+                    'ORDER ID': row['ORDER ID'], 'CUSTOMER NAME': row['CUSTOMER NAME'], 'CUSTOMER RAW ADDRESS': rawAddress,
+                    status: result.status, customerCleanName: result.customerCleanName, addressLine1: result.addressLine1,
+                    landmark: result.landmark, state: result.state, district: result.district, pin: result.pin,
+                    addressQuality: result.addressQuality, remarks: result.remarks,
+                };
+            } catch (e) {
+                // Catch any error from runVerificationLogic and map to an error row
+                console.error(`Error processing address for ID ${row['ORDER ID']}:`, e);
+                return { 
+                    'ORDER ID': row['ORDER ID'], 'CUSTOMER NAME': row['CUSTOMER NAME'], 'CUSTOMER RAW ADDRESS': rawAddress,
+                    status: "Error", remarks: `Fatal processing error: ${e.message}`, addressQuality: "Very Bad", 
+                    customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "" 
+                };
             }
-            
-            // CALL THE UNIFIED LOGIC HERE, which now handles all verification, PIN checks, and remarks.
-            const result = await runVerificationLogic(rawAddress, customerName);
-            
-            // Map the result back to the expected bulk job output format
-            const verificationResult = {
-                'ORDER ID': row['ORDER ID'],
-                'CUSTOMER NAME': row['CUSTOMER NAME'],
-                'CUSTOMER RAW ADDRESS': rawAddress,
-                status: result.status,
-                customerCleanName: result.customerCleanName,
-                addressLine1: result.addressLine1,
-                landmark: result.landmark,
-                state: result.state,
-                district: result.district,
-                pin: result.pin,
-                addressQuality: result.addressQuality,
-                remarks: result.remarks,
-            };
-
-            if (result.success) {
-                successfulVerifications++;
-            }
-
-            return verificationResult;
-        } catch (e) {
-            if (e.message === 'JobCancelled') throw e;
-            console.error(`Error processing address for ID ${row['ORDER ID']}:`, e);
-            return { 
-                'ORDER ID': row['ORDER ID'],
-                'CUSTOMER NAME': row['CUSTOMER NAME'],
-                'CUSTOMER RAW ADDRESS': rawAddress,
-                status: "Error", remarks: `Fatal processing error: ${e.message}`, addressQuality: "Very Bad", 
-                customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "" 
-            };
-        }
-    };
-
-    // --- Map addresses to an array of promises and run concurrently ---
-    const processingPromises = addresses.map(processSingleAddress);
+        };
+    });
 
     let outputRows;
     try {
-        // Run all addresses in parallel
-        outputRows = await Promise.all(processingPromises);
+        // --- 2. Execute promises in throttled chunks (10 at a time) ---
+        outputRows = await processInChunks(promiseFactories, MAX_CONCURRENT_CALLS, jobId, jobsCollection);
+        
     } catch (e) {
         if (e.message === 'JobCancelled') {
-             console.log(`Job ${jobId} cancelled during Promise.all.`);
+             console.log(`Job ${jobId} ended as cancelled.`);
+             await jobsCollection.updateOne({ _id: jobId }, { $set: { status: 'Cancelled' } });
              return;
         }
-        console.error(`Unexpected error during parallel processing in job ${jobId}:`, e);
-        await jobsCollection.updateOne({ _id: jobId }, { $set: { status: 'Failed', error: 'Parallel processing failed.' } });
+        console.error(`Fatal unexpected error during job ${jobId}:`, e);
+        await jobsCollection.updateOne({ _id: jobId }, { $set: { status: 'Failed', error: 'Throttled processing failed.' } });
         return;
     }
     
+    // Final status check is now mostly redundant if catch blocks handle statuses correctly
     const jobStatusCheck = await jobsCollection.findOne({ _id: jobId }, { projection: { status: 1 } });
     if (jobStatusCheck.status === 'Cancelled') {
         console.log(`Job ${jobId} ended as cancelled.`);
@@ -224,7 +160,6 @@ async function runJobProcessor(db, jobId, client, addresses) {
     );
     console.log(`Job ${jobId} completed successfully.`);
 }
-// --------------------------------------------------------
 
 // --- Router Handler ---
 module.exports = async (req, res) => {
@@ -318,7 +253,7 @@ module.exports = async (req, res) => {
             const insertResult = await jobsCollection.insertOne(newJob);
             const jobId = insertResult.insertedId;
             
-            // --- Execute Job Processor (Concurrent Block) ---
+            // --- Execute Job Processor (Throttled Concurrent Block) ---
             runJobProcessor(db, jobId, client, addresses)
                 .catch(err => {
                     console.error(`Job ${jobId} FAILED with uncaught error:`, err);

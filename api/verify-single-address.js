@@ -12,7 +12,7 @@ const coreMeaningfulWords = [
     "tq", "job", "dist"
 ];
 const meaningfulWords = [...coreMeaningfulWords, ...testingKeywords]; 
-const meaninglessRegex = new RegExp(`\\b(?:${meaningfulWords.join('|')})\\b`, 'gi');
+const meaninglessRegex = new RegExp(`\\b(?:${meaningWords.join('|')})\\b`, 'gi');
 const directionalKeywords = ['near', 'opposite', 'back side', 'front side', 'behind', 'opp'];
 // --- DB helper and auth ---
 const { connectToDatabase } = require('../utils/db');
@@ -136,7 +136,7 @@ function buildGeminiPrompt(originalAddress, postalData) {
     If multiple landmarks are present, list them comma-separated. **Extract the landmark without any directional words like 'near', 'opposite', 'behind' etc., as this will be handled by the script.**
     9.  "Remaining": A last resort for any text that does not fit into other fields.
     Clean this by removing meaningless words like 'job', 'raw', 'add-', 'tq', 'dist' and country, state, district, or PIN code.
-    10. "FormattedAddress": This is the most important field. Based on your full analysis, create a single, clean, human-readable, and comprehensive shipping-ready address string. It should contain only specific details (H.no., Room No., etc.), followed by locality, street, and colony. **STRICTLY DO NOT include P.O., Tehsil, District, State, or PIN in this string.** Use commas to separate logical components. Do not invent or "hallucinate" information.
+    10. "FormattedAddress": This is the most important field. Based on your full analysis, create a single, clean, human-readable, and comprehensive shipping-ready address string. It should contain all specific details (H.no., Room No., etc.), followed by locality, street, colony, P.O., and Tehsil. **STRICTLY DO NOT include District, State, or PIN in this string.** Use commas to separate logical components. Do not invent or "hallucinate" information.
     11. "LocationType": Identify the type of location (e.g., "Village", "Town", "City", "Urban Area").
     12. "AddressQuality": Analyze the address completeness and clarity for shipping.
     Categorize it as one of the following: Very Good, Good, Medium, Bad, or Very Bad.
@@ -227,7 +227,7 @@ async function runVerificationLogic(address, customerName) {
     let currentQuality = parsedData.AddressQuality;
     const rawAddressLower = address.toLowerCase();
 
-    // --- 4. RULE: Missing Locality/Specifics Check ---
+    // --- 4. RULE: Missing Locality/Specifics Check (Quality Downgrade) ---
     const hasHouseOrFlat = parsedData['H.no.'] || parsedData['Flat No.'] || parsedData['Plot No.'];
     const hasStreetOrColony = parsedData.Street || parsedData.Colony || parsedData.Locality;
 
@@ -236,10 +236,10 @@ async function runVerificationLogic(address, customerName) {
         if (currentQuality === 'Very Good' || currentQuality === 'Good' || currentQuality === 'Medium') {
             parsedData.AddressQuality = 'Bad';
         }
-        currentQuality = parsedData.AddressQuality; // Update for next check
+        currentQuality = parsedData.AddressQuality; 
     }
 
-    // --- 5. RULE: Location Conflict Downgrade Check ---
+    // --- 5. RULE: Location Conflict Downgrade Check (Quality Downgrade) ---
     if (verifiedState) {
         const verifiedStateLower = verifiedState.toLowerCase();
         for (const city in MAJOR_CITY_CONFLICTS) {
@@ -249,7 +249,7 @@ async function runVerificationLogic(address, customerName) {
                 remarks.push(`CRITICAL_ALERT: Major location conflict found. Raw address mentioned '${city.toUpperCase()}' but verified state is '${verifiedState}'. Quality severely penalized.`);
                 
                 parsedData.AddressQuality = 'Very Bad';
-                currentQuality = parsedData.AddressQuality; // Update for next check
+                currentQuality = parsedData.AddressQuality; 
                 break; 
             }
         }
