@@ -1,408 +1,397 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Single Address Verification Demo</title>
-    
-    <link rel="stylesheet" href="style.css"> 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        // Custom colors matching your overall palette (tf-primary is indigo)
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'primary-blue': '#6366F1', // tf-primary (Indigo)
-                        'secondary-green': '#059669', // Dark Green
-                        'neutral-gray': '#F9FAFB', 
-                        'success-light': '#D1FAE5',
-                        'success-dark': '#065F46',
-                        'alert-light': '#FEE2E2',
-                        'alert-dark': '#991B1B',
-                        'warning-light': '#FEF3C7',
-                        'warning-dark': '#92400E',
-                        'copy-neutral-border': '#D1D5DB',
-                        'tf-cyan': '#06B6D4',
-                        // Re-defining for clean use
-                        'tf-text-dark': '#1E293B', 
-                        'tf-primary': '#6366F1',
-                        'tf-secondary': '#06B6D4',
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                }
-            }
-        }
-    </script>
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .result-block { position: relative; }
-        /* Style for the copy button */
-        .copy-btn {
-            position: absolute; top: 0.5rem; right: 0.5rem; padding: 0.25rem 0.5rem; 
-            font-size: 0.75rem; line-height: 1rem; background-color: transparent; 
-            color: #4B5563; border: 1px solid var(--copy-neutral-border); 
-            border-radius: 0.375rem; transition: all 0.15s; cursor: pointer; z-index: 10;
-        }
-        .copy-btn:hover { background-color: #F3F4F6; color: #1F2937; }
-        .result-content { padding-right: 3.5rem; }
-        .form-input {
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .form-input:focus {
-            border-color: #6366F1;
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.4);
-        }
-        /* Style for the main copy block */
-        #formatted-shipping-block {
-            line-height: 1.4;
-            white-space: pre-wrap; /* Ensures line breaks are respected */
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Single Address Verification Demo</title>
+    
+    <link rel="stylesheet" href="style.css"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Custom colors matching your overall palette (tf-primary is indigo)
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#6366F1', // tf-primary (Indigo)
+                        'secondary-green': '#059669', // Dark Green
+                        'neutral-gray': '#F9FAFB', 
+                        'success-light': '#D1FAE5',
+                        'success-dark': '#065F46',
+                        'alert-light': '#FEE2E2',
+                        'alert-dark': '#991B1B',
+                        'warning-light': '#FEF3C7',
+                        'warning-dark': '#92400E',
+                        'copy-neutral-border': '#D1D5DB',
+                        'tf-cyan': '#06B6D4',
+                        // Re-defining for clean use
+                        'tf-text-dark': '#1E293B', 
+                        'tf-primary': '#6366F1',
+                        'tf-secondary': '#06B6D4',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .result-block { position: relative; }
+        /* Style for the copy button */
+        .copy-btn {
+            position: absolute; top: 0.5rem; right: 0.5rem; padding: 0.25rem 0.5rem; 
+            font-size: 0.75rem; line-height: 1rem; background-color: transparent; 
+            color: #4B5563; border: 1px solid var(--copy-neutral-border); 
+            border-radius: 0.375rem; transition: all 0.15s; cursor: pointer; z-index: 10;
+        }
+        .copy-btn:hover { background-color: #F3F4F6; color: #1F2937; }
+        .result-content { padding-right: 3.5rem; }
+        .form-input {
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-input:focus {
+            border-color: #6366F1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.4);
+        }
+        /* Style for the main copy block */
+        #formatted-shipping-block {
+            line-height: 1.4;
+            white-space: pre-wrap; /* Ensures line breaks are respected */
+        }
+    </style>
 </head>
 <body class="bg-neutral-gray min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-4xl bg-white p-8 sm:p-10 rounded-xl shadow-2xl border-t-4 border-primary-blue">
+    <div class="w-full max-w-4xl bg-white p-8 sm:p-10 rounded-xl shadow-2xl border-t-4 border-primary-blue">
 
-        <a href="index.html" class="text-gray-500 hover:text-primary-blue font-medium mb-6 inline-flex items-center transition duration-150">
-            <i class="fas fa-arrow-left w-4 h-4 mr-2"></i>
-            Back to Home
-        </a>
+        <a href="index.html" class="text-gray-500 hover:text-primary-blue font-medium mb-6 inline-flex items-center transition duration-150">
+            <i class="fas fa-arrow-left w-4 h-4 mr-2"></i>
+            Back to Home
+        </a>
 
-        <header class="text-center mb-8">
-            <h1 class="text-3xl font-extrabold text-gray-900 mb-2">
-                <span class="text-tf-cyan">Single Address</span> Verification
-            </h1>
-            <p class="text-gray-600">Free, unauthenticated check powered by **Smart AI** and **India Post** data.</p>
-        </header>
-        
-        <div class="space-y-6">
-            <div class="p-4 bg-blue-50/50 border border-blue-100 rounded-lg text-sm text-gray-700 font-medium">
-                <i class="fas fa-info-circle mr-2 text-primary-blue"></i> This is a **live, free demo**. For bulk processing and API access, please use the Client Login or Request Demo.
-            </div>
-            
-            <div class="grid sm:grid-cols-2 gap-4">
-                <div>
-                    <label for="customerName" class="block text-sm font-medium text-gray-700 mb-1">Customer Name (Optional)</label>
-                    <input type="text" id="customerName" placeholder="e.g., Pankaj Rawat" class="form-input w-full p-3 border border-gray-300 rounded-lg shadow-sm">
-                </div>
-                <div>
-                    <label for="rawAddress" class="block text-sm font-medium text-gray-700 mb-1">Raw Address to Verify *</label>
-                    <textarea id="rawAddress" rows="4" placeholder="e.g., H.No. 123, Sector 40B, near bus stand, Chandigarh" class="form-input w-full p-3 border border-gray-300 rounded-lg shadow-sm resize-none"></textarea>
-                </div>
-            </div>
-
-            <button id="verifyButton" class="w-full py-3 bg-secondary-green text-white font-bold rounded-lg shadow-lg hover:bg-green-700 transition duration-200 transform hover:scale-[1.005] focus:outline-none focus:ring-4 focus:ring-secondary-green focus:ring-opacity-50">
-                <i class="fas fa-search mr-2"></i> Verify Address
-            </button>
-            
-            <div id="loading-message" class="hidden text-center text-primary-blue font-semibold py-3 border border-blue-200 bg-blue-50 rounded-lg">
-                <i class="fas fa-spinner fa-spin mr-2"></i> Verifying address using AI...
-            </div>
-        </div>
-
-        <div id="resultsContainer" class="hidden mt-10">
-            <h3 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">Verified & Standardized Output</h3>
-            
-            <div class="result-block bg-primary-blue/10 p-5 rounded-lg border border-primary-blue/30 shadow-md mb-6">
-                <button class="copy-btn" data-target="formatted-shipping-block" title="Copy Full Address"><i class="far fa-copy"></i> Copy Full</button>
-                <div class="result-content">
-                    <strong class="text-primary-blue block mb-2 text-lg flex items-center">
-                        <i class="fas fa-truck-loading mr-2"></i> Ready-to-Ship Address:
-                    </strong> 
-                    <pre id="formatted-shipping-block" class="text-tf-text-dark font-mono text-base"></pre>
-                </div>
-            </div>
-
-            <div class="grid sm:grid-cols-2 gap-4 mb-6">
-                <div id="quality-block" class="result-block p-4 rounded-lg shadow-md flex flex-col justify-center transition-colors duration-300">
-                    <strong class="text-lg flex items-center mb-1">
-                        <span id="quality-icon" class="text-2xl mr-3"></span> Deliverability Score:
-                    </strong> 
-                    <span id="out-quality" class="text-2xl font-extrabold"></span>
-                </div>
-
-                <div class="result-block bg-success-light p-4 rounded-lg border border-green-300 shadow-sm">
-                    <button class="copy-btn" data-target="out-name" title="Copy Clean Name"><i class="far fa-copy"></i> Copy</button>
-                    <div class="result-content">
-                        <strong class="text-success-dark block mb-1 flex items-center"><i class="fas fa-user-tag mr-2"></i> Clean Name:</strong> 
-                        <span id="out-name" class="text-gray-700 text-xl font-bold"></span>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="remarks-block" class="result-block remarks-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm mt-6">
-                <strong class="text-gray-600 block mb-1 flex items-center">
-                    <i class="fas fa-exclamation-triangle mr-2"></i> System Remarks & Warnings:
-                </strong> 
-                <span id="out-remarks" class="text-gray-800 italic text-sm"></span>
-            </div>
-            
-        </div>
-    </div>
-    
-    <script>
-        const API_ENDPOINT = "/api/public-single-address"; // Your Free API endpoint
-        const REMARKS_ALERT_PREFIX = "CRITICAL_ALERT:";
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const verifyButton = document.getElementById('verifyButton');
-            if (verifyButton) {
-                verifyButton.addEventListener('click', handleSingleVerification);
-            }
-            
-            // Add event listener for all copy buttons
-            document.querySelectorAll('.copy-btn').forEach(button => {
-                button.setAttribute('data-original-text', button.textContent); 
-                button.addEventListener('click', (event) => {
-                    const targetId = event.currentTarget.getAttribute('data-target');
-                    copyToClipboard(targetId, event.currentTarget);
-                });
-            });
-        });
-
-        // Copy function
-        function copyToClipboard(elementId, button) {
-            let textToCopy = '';
-            let element = document.getElementById(elementId);
-
-            if (elementId === 'formatted-shipping-block') {
-                textToCopy = element.textContent.trim();
-            } else {
-                textToCopy = element ? element.textContent.trim() : '';
-            }
-
-            if (!textToCopy || textToCopy === 'N/A' || textToCopy === 'No specific remarks.' || textToCopy === 'INDIA') {
-                flashButton(button, 'No Data', 1000, 'bg-warning-light text-warning-dark border-yellow-300');
-                return;
-            }
-
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                flashButton(button, 'Copied!', 1500, 'bg-success-light text-success-dark border-green-300');
-            }).catch(err => {
-                console.error('Failed to copy text: ', err);
-                flashButton(button, 'Error', 1500, 'bg-alert-light text-alert-dark border-red-300');
-            });
-        }
-        
-        // Utility function to temporarily change button text and style
-        function flashButton(button, newText, duration, flashClasses) {
-            const originalText = button.getAttribute('data-original-text');
-            
-            button.className = 'copy-btn ' + flashClasses + ' border';
-            button.innerHTML = newText; // Use innerHTML to avoid overriding icon if present
-
-            setTimeout(() => {
-                button.innerHTML = originalText;
-                button.className = 'copy-btn';
-            }, duration);
-        }
-
-        function showMessage(elementId, text, isError = false) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                element.innerHTML = isError ? `<i class="fas fa-exclamation-circle mr-2"></i> ${text}` : `<i class="fas fa-spinner fa-spin mr-2"></i> ${text}`;
-                
-                element.classList.remove('bg-blue-50', 'text-primary-blue', 'border-blue-200', 'bg-alert-light', 'text-alert-dark', 'border-red-300');
-
-                if (isError) {
-                    element.classList.add('bg-alert-light', 'text-alert-dark', 'border-red-300');
-                } else {
-                    element.classList.add('bg-blue-50', 'text-primary-blue', 'border-blue-200');
-                }
-            }
-        }
-
-        // Renamed to include PO/Tehsil for display
-        async function fetchVerification(rawAddress, customerName) {
-            const payload = { address: rawAddress, customerName }; 
-            const maxRetries = 3;
-            let lastError = null;
-
-            for (let attempt = 0; attempt < maxRetries; attempt++) {
-                try {
-                    const response = await fetch(API_ENDPOINT, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    
-                    if (!response.ok) {
-                        const errorBody = await response.json().catch(() => ({}));
-                        throw new Error(errorBody.error || `Server responded with status ${response.status}`);
-                    }
-                    
-                    return await response.json();
-
-                } catch (error) {
-                    lastError = error;
-                    console.error(`Verification API Attempt ${attempt + 1} failed:`, error);
-                    if (attempt < maxRetries - 1) {
-                        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
-                    }
-                }
-            }
-
-            return { 
-                status: "Error", 
-                error: `Verification failed after ${maxRetries} attempts.`,
-                remarks: `Error during verification: ${lastError ? lastError.message : 'Unknown Network Error'}`
-            };
-        }
-
-        function applyRemarksStyle(remarks) {
-            const remarksBlock = document.getElementById('remarks-block');
-            const remarksSpan = document.getElementById('out-remarks');
-            
-            // Define base classes
-            const baseClasses = 'result-block remarks-block p-4 rounded-lg shadow-sm mt-6';
-            remarksBlock.className = baseClasses;
-            
-            // Set the raw remarks text
-            const cleanRemarks = remarks.replace(new RegExp(REMARKS_ALERT_PREFIX, 'g'), '').trim() || 'No specific remarks.';
-            remarksSpan.textContent = cleanRemarks;
-
-            // Check for Alert
-            const isAlert = remarks.includes(REMARKS_ALERT_PREFIX) || cleanRemarks.toLowerCase().includes('error');
-
-            if (isAlert) {
-                remarksBlock.classList.add('bg-alert-light', 'border-4', 'border-red-300', 'shadow-lg');
-                remarksSpan.classList.add('font-bold', 'text-alert-dark');
-                remarksBlock.classList.remove('border-gray-200'); // Remove default
-            } else {
-                remarksBlock.classList.add('bg-white', 'border', 'border-gray-200');
-                remarksSpan.classList.add('italic', 'text-gray-800');
-            }
-        }
-
-        function updateQualityScoreUI(quality) {
-            const qualityBlock = document.getElementById('quality-block');
-            const qualityText = document.getElementById('out-quality');
-            const qualityIcon = document.getElementById('quality-icon');
-            
-            let colorClasses = '';
-            let icon = '';
-
-            // Clean previous classes
-            qualityBlock.className = 'result-block p-4 rounded-lg shadow-md flex flex-col justify-center transition-colors duration-300';
-            qualityText.className = 'text-2xl font-extrabold';
-            
-            qualityText.textContent = quality;
-
-            if (quality.includes('Very Good') || quality.includes('Prime')) {
-                colorClasses = 'bg-success-light border border-secondary-green text-secondary-green';
-                icon = '⭐';
-            } else if (quality.includes('Good') || quality.includes('Tier 1 & 2')) {
-                colorClasses = 'bg-success-light border border-secondary-green text-secondary-green/70';
-                icon = '👍';
-            } else if (quality.includes('Medium') || quality.includes('Remote')) {
-                colorClasses = 'bg-warning-light border border-warning-dark text-warning-dark';
-                icon = '⚠️';
-            } else if (quality.includes('Bad') || quality.includes('Very Bad') || quality.includes('Non-Serviceable')) {
-                colorClasses = 'bg-alert-light border border-alert-dark text-alert-dark';
-                icon = '🚨';
-            } else {
-                 // Default/N/A state
-                colorClasses = 'bg-gray-100 border border-gray-300 text-gray-500';
-                icon = '❓';
-            }
-
-            qualityBlock.classList.add(...colorClasses.split(' '));
-            qualityIcon.textContent = icon;
-        }
-
-        // ⭐ NEW FIXED LOGIC: Displays the single, concatenated addressLine1 from the API ⭐
-        function buildFormattedShippingAddress(result) {
-            const name = result.customerCleanName || '';
-            const singleLineAddress = result.addressLine1 || ''; // This is the FULL, single line string from the API
-            const state = result.state || '';
-            const pin = result.pin || '';
-            const country = 'INDIA';
-
-            // Construct the final multi-line string for shipping label presentation
-            // The API now outputs a fully concatenated line. We just need to break it for display.
-            let formattedString = singleLineAddress;
-            
-            // The API output (addressLine1) is already long. We split off the PIN/Country to new lines for readability.
-            // We use string replacement to move the PIN/Country to new lines.
-            // This is a stylistic choice to make the single address string look like a shipping label.
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-gray-900 mb-2">
+                <span class="text-tf-cyan">Single Address</span> Verification
+            </h1>
+            <p class="text-gray-600">Free, unauthenticated check powered by **Smart AI** and **India Post** data.</p>
+        </header>
+        
+        <div class="space-y-6">
+            <div class="p-4 bg-blue-50/50 border border-blue-100 rounded-lg text-sm text-gray-700 font-medium">
+                <i class="fas fa-info-circle mr-2 text-primary-blue"></i> This is a **live, free demo**. For bulk processing and API access, please use the Client Login or Request Demo.
+            </div>
             
-            // 1. Find the PIN (e.g., 201301) and move the rest of the string after it to a new line.
-            const pinMatch = formattedString.match(/(\d{6})/);
-            if (pinMatch) {
-                const pinIndex = formattedString.lastIndexOf(pinMatch[1]);
-                if (pinIndex !== -1) {
-                    const line1 = formattedString.substring(0, pinIndex + pinMatch[1].length);
-                    const line2 = formattedString.substring(pinIndex + pinMatch[1].length).trim().replace(/^,/, '').trim();
+            <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="customerName" class="block text-sm font-medium text-gray-700 mb-1">Customer Name (Optional)</label>
+                    <input type="text" id="customerName" placeholder="e.g., Pankaj Rawat" class="form-input w-full p-3 border border-gray-300 rounded-lg shadow-sm">
+                </div>
+                <div>
+                    <label for="rawAddress" class="block text-sm font-medium text-gray-700 mb-1">Raw Address to Verify *</label>
+                    <textarea id="rawAddress" rows="4" placeholder="e.g., H.No. 123, Sector 40B, near bus stand, Chandigarh" class="form-input w-full p-3 border border-gray-300 rounded-lg shadow-sm resize-none"></textarea>
+                </div>
+            </div>
+
+            <button id="verifyButton" class="w-full py-3 bg-secondary-green text-white font-bold rounded-lg shadow-lg hover:bg-green-700 transition duration-200 transform hover:scale-[1.005] focus:outline-none focus:ring-4 focus:ring-secondary-green focus:ring-opacity-50">
+                <i class="fas fa-search mr-2"></i> Verify Address
+            </button>
+            
+            <div id="loading-message" class="hidden text-center text-primary-blue font-semibold py-3 border border-blue-200 bg-blue-50 rounded-lg">
+                <i class="fas fa-spinner fa-spin mr-2"></i> Verifying address using AI...
+            </div>
+        </div>
+
+        <div id="resultsContainer" class="hidden mt-10">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">Verified & Standardized Output</h3>
+            
+            <div class="result-block bg-primary-blue/10 p-5 rounded-lg border border-primary-blue/30 shadow-md mb-6">
+                <button class="copy-btn" data-target="formatted-shipping-block" title="Copy Full Address"><i class="far fa-copy"></i> Copy Full</button>
+                <div class="result-content">
+                    <strong class="text-primary-blue block mb-2 text-lg flex items-center">
+                        <i class="fas fa-truck-loading mr-2"></i> Ready-to-Ship Address:
+                    </strong> 
+                    <pre id="formatted-shipping-block" class="text-tf-text-dark font-mono text-base"></pre>
+                </div>
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-4 mb-6">
+                <div id="quality-block" class="result-block p-4 rounded-lg shadow-md flex flex-col justify-center transition-colors duration-300">
+                    <strong class="text-lg flex items-center mb-1">
+                        <span id="quality-icon" class="text-2xl mr-3"></span> Deliverability Score:
+                    </strong> 
+                    <span id="out-quality" class="text-2xl font-extrabold"></span>
+                </div>
+
+                <div class="result-block bg-success-light p-4 rounded-lg border border-green-300 shadow-sm">
+                    <button class="copy-btn" data-target="out-name" title="Copy Clean Name"><i class="far fa-copy"></i> Copy</button>
+                    <div class="result-content">
+                        <strong class="text-success-dark block mb-1 flex items-center"><i class="fas fa-user-tag mr-2"></i> Clean Name:</strong> 
+                        <span id="out-name" class="text-gray-700 text-xl font-bold"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="remarks-block" class="result-block remarks-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm mt-6">
+                <strong class="text-gray-600 block mb-1 flex items-center">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> System Remarks & Warnings:
+                </strong> 
+                <span id="out-remarks" class="text-gray-800 italic text-sm"></span>
+            </div>
+            
+        </div>
+    </div>
+    
+    <script>
+        const API_ENDPOINT = "/api/public-single-address"; // Your Free API endpoint
+        const REMARKS_ALERT_PREFIX = "CRITICAL_ALERT:";
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const verifyButton = document.getElementById('verifyButton');
+            if (verifyButton) {
+                verifyButton.addEventListener('click', handleSingleVerification);
+            }
+            
+            // Add event listener for all copy buttons
+            document.querySelectorAll('.copy-btn').forEach(button => {
+                button.setAttribute('data-original-text', button.textContent); 
+                button.addEventListener('click', (event) => {
+                    const targetId = event.currentTarget.getAttribute('data-target');
+                    copyToClipboard(targetId, event.currentTarget);
+                });
+            });
+        });
+
+        // Copy function
+        function copyToClipboard(elementId, button) {
+            let textToCopy = '';
+            let element = document.getElementById(elementId);
+
+            if (elementId === 'formatted-shipping-block') {
+                textToCopy = element.textContent.trim();
+            } else {
+                textToCopy = element ? element.textContent.trim() : '';
+            }
+
+            if (!textToCopy || textToCopy === 'N/A' || textToCopy === 'No specific remarks.' || textToCopy === 'INDIA') {
+                flashButton(button, 'No Data', 1000, 'bg-warning-light text-warning-dark border-yellow-300');
+                return;
+            }
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                flashButton(button, 'Copied!', 1500, 'bg-success-light text-success-dark border-green-300');
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                flashButton(button, 'Error', 1500, 'bg-alert-light text-alert-dark border-red-300');
+            });
+        }
+        
+        // Utility function to temporarily change button text and style
+        function flashButton(button, newText, duration, flashClasses) {
+            const originalText = button.getAttribute('data-original-text');
+            
+            button.className = 'copy-btn ' + flashClasses + ' border';
+            button.innerHTML = newText; // Use innerHTML to avoid overriding icon if present
+
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.className = 'copy-btn';
+            }, duration);
+        }
+
+        function showMessage(elementId, text, isError = false) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = isError ? `<i class="fas fa-exclamation-circle mr-2"></i> ${text}` : `<i class="fas fa-spinner fa-spin mr-2"></i> ${text}`;
+                
+                element.classList.remove('bg-blue-50', 'text-primary-blue', 'border-blue-200', 'bg-alert-light', 'text-alert-dark', 'border-red-300');
+
+                if (isError) {
+                    element.classList.add('bg-alert-light', 'text-alert-dark', 'border-red-300');
+                } else {
+                    element.classList.add('bg-blue-50', 'text-primary-blue', 'border-blue-200');
+                }
+            }
+        }
+
+        // Renamed to include PO/Tehsil for display
+        async function fetchVerification(rawAddress, customerName) {
+            const payload = { address: rawAddress, customerName }; 
+            const maxRetries = 3;
+            let lastError = null;
+
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+                try {
+                    const response = await fetch(API_ENDPOINT, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
                     
-                    formattedString = line1;
-                    if (line2) formattedString += `\n${line2}`;
+                    if (!response.ok) {
+                        const errorBody = await response.json().catch(() => ({}));
+                        throw new Error(errorBody.error || `Server responded with status ${response.status}`);
+                    }
+                    
+                    return await response.json();
+
+                } catch (error) {
+                    lastError = error;
+                    console.error(`Verification API Attempt ${attempt + 1} failed:`, error);
+                    if (attempt < maxRetries - 1) {
+                        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+                    }
                 }
             }
 
-            // 2. Add the clean name if present
-            if (name) {
-                 formattedString = `${name}\n${formattedString}`;
-            }
+            return { 
+                status: "Error", 
+                error: `Verification failed after ${maxRetries} attempts.`,
+                remarks: `Error during verification: ${lastError ? lastError.message : 'Unknown Network Error'}`
+            };
+        }
 
-            document.getElementById('formatted-shipping-block').textContent = formattedString;
-        }
+        function applyRemarksStyle(remarks) {
+            const remarksBlock = document.getElementById('remarks-block');
+            const remarksSpan = document.getElementById('out-remarks');
+            
+            // Define base classes
+            const baseClasses = 'result-block remarks-block p-4 rounded-lg shadow-sm mt-6';
+            remarksBlock.className = baseClasses;
+            
+            // Set the raw remarks text
+            const cleanRemarks = remarks.replace(new RegExp(REMARKS_ALERT_PREFIX, 'g'), '').trim() || 'No specific remarks.';
+            remarksSpan.textContent = cleanRemarks;
 
-        async function handleSingleVerification() {
-            const rawAddress = document.getElementById('rawAddress').value;
-            const customerName = document.getElementById('customerName').value;
-            const loadingMessage = document.getElementById('loading-message');
-            const resultsContainer = document.getElementById('resultsContainer');
-            const verifyButton = document.getElementById('verifyButton');
+            // Check for Alert
+            const isAlert = remarks.includes(REMARKS_ALERT_PREFIX) || cleanRemarks.toLowerCase().includes('error');
 
-            if (rawAddress.trim() === "") {
-                showMessage('loading-message', 'Please enter a raw address to verify.', true);
-                document.getElementById('loading-message').classList.remove('hidden');
-                resultsContainer.classList.add('hidden');
-                return;
-            }
+            if (isAlert) {
+                remarksBlock.classList.add('bg-alert-light', 'border-4', 'border-red-300', 'shadow-lg');
+                remarksSpan.classList.add('font-bold', 'text-alert-dark');
+                remarksBlock.classList.remove('border-gray-200'); // Remove default
+            } else {
+                remarksBlock.classList.add('bg-white', 'border', 'border-gray-200');
+                remarksSpan.classList.add('italic', 'text-gray-800');
+            }
+        }
 
-            // Show loading state
-            document.getElementById('loading-message').classList.remove('hidden');
-            resultsContainer.classList.add('hidden');
-            verifyButton.disabled = true;
-            verifyButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Verifying...';
+        function updateQualityScoreUI(quality) {
+            const qualityBlock = document.getElementById('quality-block');
+            const qualityText = document.getElementById('out-quality');
+            const qualityIcon = document.getElementById('quality-icon');
+            
+            let colorClasses = '';
+            let icon = '';
 
-            try {
-                showMessage('loading-message', 'Verifying address using AI...');
-                const verificationResult = await fetchVerification(rawAddress, customerName);
+            // Clean previous classes
+            qualityBlock.className = 'result-block p-4 rounded-lg shadow-md flex flex-col justify-center transition-colors duration-300';
+            qualityText.className = 'text-2xl font-extrabold';
+            
+            qualityText.textContent = quality;
 
-                if (verificationResult.status === "Error") {
-                    showMessage('loading-message', `Verification Error: ${verificationResult.error || 'Unknown Error'}`, true);
-                    return;
-                }
-                
-                // Hide loading message and show results
-                document.getElementById('loading-message').classList.add('hidden');
-                resultsContainer.classList.remove('hidden');
+            if (quality.includes('Very Good') || quality.includes('Prime')) {
+                colorClasses = 'bg-success-light border border-secondary-green text-secondary-green';
+                icon = '⭐';
+            } else if (quality.includes('Good') || quality.includes('Tier 1 & 2')) {
+                colorClasses = 'bg-success-light border border-secondary-green text-secondary-green/70';
+                icon = '👍';
+            } else if (quality.includes('Medium') || quality.includes('Remote')) {
+                colorClasses = 'bg-warning-light border border-warning-dark text-warning-dark';
+                icon = '⚠️';
+            } else if (quality.includes('Bad') || quality.includes('Very Bad') || quality.includes('Non-Serviceable')) {
+                colorClasses = 'bg-alert-light border border-alert-dark text-alert-dark';
+                icon = '🚨';
+            } else {
+                 // Default/N/A state
+                colorClasses = 'bg-gray-100 border border-gray-300 text-gray-500';
+                icon = '❓';
+            }
 
-                // Populate individual component results
-                document.getElementById('out-name').textContent = verificationResult.customerCleanName || 'N/A';
-                
-                // Build the main copy block (Now uses the single line from the API)
-                buildFormattedShippingAddress(verificationResult);
-                
-                const qualityScore = verificationResult.addressQuality || verificationResult.locationSuitability || 'N/A';
-                
-                // UI UPDATES
-                updateQualityScoreUI(qualityScore); 
-                applyRemarksStyle(verificationResult.remarks || '');
-                
-            } catch (e) {
-                showMessage('loading-message', `An unexpected network error occurred: ${e.message}`, true);
-            } finally {
-                verifyButton.disabled = false;
-                verifyButton.innerHTML = '<i class="fas fa-search mr-2"></i> Verify Address';
-            }
-        }
-    </script>
+            qualityBlock.classList.add(...colorClasses.split(' '));
+            qualityIcon.textContent = icon;
+        }
+
+        // ⭐ NEW FIXED LOGIC: Displays the single, concatenated addressLine1 from the API ⭐
+        function buildFormattedShippingAddress(result) {
+            const name = result.customerCleanName || '';
+            const singleLineAddress = result.addressLine1 || ''; // This is the FULL, single line string from the API
+            const state = result.state || '';
+            const pin = result.pin || '';
+            const country = 'INDIA';
+
+            // Construct the final multi-line string for shipping label presentation
+            // The first line is the comprehensive address details from addressLine1
+            let formattedString = singleLineAddress;
+            
+            // Add State/PIN/Country on separate lines for standard shipping display format
+            // We use the separated State and Pin for neatness here, even though they're in addressLine1
+            // You can remove these lines if you prefer the one single line
+            formattedString += `\n${state} - ${pin}`;
+            formattedString += `\n${country}`;
+            
+            // Add name only if it was provided
+            if (name) {
+                 formattedString = `${name}\n${formattedString}`;
+            }
+
+            document.getElementById('formatted-shipping-block').textContent = formattedString;
+        }
+
+        async function handleSingleVerification() {
+            const rawAddress = document.getElementById('rawAddress').value;
+            const customerName = document.getElementById('customerName').value;
+            const loadingMessage = document.getElementById('loading-message');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const verifyButton = document.getElementById('verifyButton');
+
+            if (rawAddress.trim() === "") {
+                showMessage('loading-message', 'Please enter a raw address to verify.', true);
+                document.getElementById('loading-message').classList.remove('hidden');
+                resultsContainer.classList.add('hidden');
+                return;
+            }
+
+            // Show loading state
+            document.getElementById('loading-message').classList.remove('hidden');
+            resultsContainer.classList.add('hidden');
+            verifyButton.disabled = true;
+            verifyButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Verifying...';
+
+            try {
+                showMessage('loading-message', 'Verifying address using AI...');
+                const verificationResult = await fetchVerification(rawAddress, customerName);
+
+                if (verificationResult.status === "Error") {
+                    showMessage('loading-message', `Verification Error: ${verificationResult.error || 'Unknown Error'}`, true);
+                    return;
+                }
+                
+                // Hide loading message and show results
+                document.getElementById('loading-message').classList.add('hidden');
+                resultsContainer.classList.remove('hidden');
+
+                // Populate individual component results
+                document.getElementById('out-name').textContent = verificationResult.customerCleanName || 'N/A';
+                
+                // Build the main copy block (Now uses the single line from the API)
+                buildFormattedShippingAddress(verificationResult);
+                
+                const qualityScore = verificationResult.addressQuality || verificationResult.locationSuitability || 'N/A';
+                
+                // UI UPDATES
+                updateQualityScoreUI(qualityScore); 
+                applyRemarksStyle(verificationResult.remarks || '');
+                
+            } catch (e) {
+                showMessage('loading-message', `An unexpected network error occurred: ${e.message}`, true);
+            } finally {
+                verifyButton.disabled = false;
+                verifyButton.innerHTML = '<i class="fas fa-search mr-2"></i> Verify Address';
+            }
+        }
+    </script>
 </body>
-            </html>
+                                                                                  </html>
