@@ -16,14 +16,91 @@ const MAX_ACTIVE_JOBS = 1; // Enforce single job concurrency
 // --- NEW CONFIGURATION: Throttle concurrent calls to avoid QPS rate limits ---
 const MAX_CONCURRENT_CALLS = 10; 
 
-// --- Helper: parse JWT payload from Authorization header (omitted) ---
-function parseJwtFromHeader(req) { /* ... */ }
+// --- Helper: parse JWT payload from Authorization header ---
+function parseJwtFromHeader(req) {
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    if (!authHeader) return null;
+    const parts = authHeader.split(' ');
+    if (parts.length !== 2) return null;
+    const token = parts[1];
+    try {
+        const payload = jwt.verify(token, JWT_SECRET);
+        if (!payload || !payload.clientId) return null;
+        return payload;
+    } catch (e) {
+        return null;
+    }
+}
 
-// --- Helper: CSV parser (omitted) ---
-function parseCSV(text) { /* ... */ }
+// --- Helper: CSV parser (Uses Comma Delimiter) ---
+function parseCSV(text) {
+    const lines = text.split('\n');
+    if (lines.length < 2) return [];
 
-// --- Helper: CSV result builder (omitted) ---
-function createCSV(rows) { /* ... */ }
+    const header = lines[0].split(',').map(h => h.trim().replace(/^\"|\"$/g, ''));
+    const data = [];
+    const idIndex = header.indexOf('ORDER ID');
+    const nameIndex = header.indexOf('CUSTOMER NAME');
+    const addressIndex = header.indexOf('CUSTOMER RAW ADDRESS');
+
+    if (idIndex === -1 || nameIndex === -1 || addressIndex === -1) {
+        return [];
+    }
+
+    for (let i = 1; i < lines.length; i++) {
+        if (lines[i].trim() === '') continue;
+        
+        const row = lines[i].match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g) || [];
+        const cleanedRow = row.map(cell => cell.trim().replace(/^\"|\"$/g, '').replace(/\"\"/g, '\"'));
+        
+        if (cleanedRow.length > Math.max(idIndex, nameIndex, addressIndex)) {
+            data.push({
+                'ORDER ID': cleanedRow[idIndex],
+                'CUSTOMER NAME': cleanedRow[nameIndex],
+                'CUSTOMER RAW ADDRESS': cleanedRow[addressIndex],
+            });
+        }
+    }
+    return data;
+}
+
+// --- Helper: CSV result builder (Uses Comma Delimiter) ---
+function createCSV(rows) {
+    // FIX: Uses Comma delimiter for consistency
+    const CUSTOM_DELIMITER = ","; 
+    const header = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS,CLEAN NAME,CLEAN ADDRESS LINE 1,LANDMARK,STATE,DISTRICT,PIN,REMARKS,QUALITY\n";
+    
+    const escapeAndQuote = (cell) => {
+        return `\"${String(cell || '').replace(/\"/g, '\"\"')}\"`;
+    };
+    
+    const outputRows = rows.map(vr => {
+        const cleanName = vr.customerCleanName || '';
+        const addressLine1 = vr.addressLine1 || '';
+        const landmark = vr.landmark || '';
+        const state = vr.state || '';
+        const district = vr.district || '';
+        const pin = vr.pin || '';
+        const remarks = vr.remarks || '';
+        const addressQuality = vr.addressQuality || 'Very Bad';
+
+        return [
+            vr['ORDER ID'],
+            vr['CUSTOMER NAME'],
+            vr['CUSTOMER RAW ADDRESS'],
+            cleanName,
+            addressLine1,
+            landmark,
+            state,
+            district,
+            pin,
+            remarks,
+            addressQuality
+        ].map(escapeAndQuote).join(CUSTOM_DELIMITER); 
+    });
+    
+    return header + outputRows.join('\n');
+}
 
 
 /**
