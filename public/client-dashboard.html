@@ -204,7 +204,7 @@
 
             
             
-     
+
             <div id="bulkContent" class="space-y-8">
                 <div class="bg-tf-light p-8 rounded-xl border-l-4 border-tf-primary shadow-lg">
                     <p class="font-bold text-xl text-tf-primary mb-3 flex items-center">
@@ -332,7 +332,7 @@
                 </a>
 
                 <a href="tel:+919193246219" 
- 
+     
                 class="block w-full py-4 bg-tf-primary text-white font-bold rounded-lg hover:bg-[#4d2e97] transition transform hover:scale-[1.005] flex items-center justify-center">
                     <i class="fas fa-phone mr-3"></i> Call Support (+91 9193246219)
                 </a>
@@ -341,7 +341,7 @@
     </div>
 
     
- 
+
     <div id="inbox-modal" class="modal">
         
         <div class="modal-content w-full max-w-lg rounded-xl shadow-2xl p-6 bg-white relative">
@@ -861,7 +861,7 @@
                                         <i class="fas fa-times"></i> Cancel
                                     </button>` 
                                 : isCompleted ? `
-                                    <button class="py-1 px-3 bg-tf-primary text-white text-sm rounded hover:bg-[#4d2e97] transition" onclick="handleAuthenticatedDownload('${job._id}', '${job.filename.replace(/'/g, "\\'").replace(/"/g, '')}')">
+                                    <button class="py-1 px-3 bg-tf-primary text-white text-sm rounded hover:bg-[#4d2e97] transition" onclick="handleAuthenticatedDownload('${job._1d || job._id}', '${job.filename.replace(/'/g, "\\'").replace(/"/g, '')}')">
                                         <i class="fas fa-download"></i> Download
                                     </button>`
                                 : isFailed ? `<span class="text-red-500 text-sm italic">${job.error || 'Check server logs.'}</span>`
@@ -941,12 +941,24 @@
                 // Use authFetch to ensure JWT is included in the header
                 const resp = await authFetch(downloadUrl, { method: 'GET' });
 
+                // Check Content-Type first; if server returned JSON, show it instead of saving it as CSV
+                const contentType = (resp.headers.get && resp.headers.get('content-type') || '').toLowerCase();
+                if (contentType.includes('application/json')) {
+                    // parse and show JSON error message
+                    let json = null;
+                    try { json = await resp.json(); } catch (e) { /* ignore parse error */ }
+                    const msg = (json && (json.message || json.error)) ? (json.message || json.error) : 'Server returned JSON instead of CSV.';
+                    alert('Download failed: ' + msg);
+                    return;
+                }
+
                 if (!resp.ok) {
                     const errorText = await resp.text();
-                    if (errorText.startsWith('{') && errorText.endsWith('}')) {
-                         const errorJson = JSON.parse(errorText);
-                         alert('Download failed: ' + (errorJson.message || 'File unavailable.'));
-                    } else {
+                    // attempt to parse JSON-like error text (fallback)
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        alert('Download failed: ' + (errorJson.message || errorJson.error || 'File unavailable.'));
+                    } catch (e) {
                         alert('Download failed. Please try again later.');
                     }
                     return;
