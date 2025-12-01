@@ -1,18 +1,17 @@
 // api/bulk-jobs.js
-// Handles Bulk Verification Job Submission, Status Polling, Cancellation, and Asynchronous Processing
+// Handles Bulk Verification Job Submission, Status Polling, Cancellation, and Concurrent Processing
 
 const { connectToDatabase } = require('../utils/db');
 const { ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
 
-// Import core verification logic from verify-single-address.js to use internally
-const { getIndiaPostData, processAddress, extractPin, meaninglessRegex } = require('./verify-single-address');
-
-// ADDED FOR DETAILED REMARKS LOGIC:
-const directionalKeywords = ['near', 'opposite', 'back side', 'front side', 'behind', 'opp']; 
+// FIX: Correctly import the reusable core verification function from the single-address file
+const { 
+    runVerificationLogic 
+} = require('./verify-single-address'); 
 
 const JWT_SECRET = process.env.JWT_SECRET || 'replace_with_env_jwt_secret';
-const MAX_ACTIVE_JOBS = 1; // FIX: Set to 1 to enforce single job concurrency
+const MAX_ACTIVE_JOBS = 1; // Enforce single job concurrency
 
 // --- Helper: parse JWT payload from Authorization header ---
 function parseJwtFromHeader(req) {
@@ -30,12 +29,11 @@ function parseJwtFromHeader(req) {
     }
 }
 
-// --- Helper: CSV parser from public/bulk_verification_logic.js (Uses Comma Delimiter) ---
+// --- Helper: CSV parser (Uses Comma Delimiter) ---
 function parseCSV(text) {
     const lines = text.split('\n');
     if (lines.length < 2) return [];
 
-    // Simple header parsing (assuming fixed order for server-side simplicity)
     const header = lines[0].split(',').map(h => h.trim().replace(/^\"|\"$/g, ''));
     const data = [];
     const idIndex = header.indexOf('ORDER ID');
@@ -46,11 +44,9 @@ function parseCSV(text) {
         return [];
     }
 
-    // Simplified row parser for server-side (handles basic quotes)
     for (let i = 1; i < lines.length; i++) {
         if (lines[i].trim() === '') continue;
         
-        // This regex attempts to handle quoted fields in a CSV row
         const row = lines[i].match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g) || [];
         const cleanedRow = row.map(cell => cell.trim().replace(/^\"|\"$/g, '').replace(/\"\"/g, '\"'));
         
@@ -65,33 +61,38 @@ function parseCSV(text) {
     return data;
 }
 
-// --- Helper: CSV result builder (FIXED FOR CONSISTENT COMMA DELIMITER) ---
+// --- Helper: CSV result builder (Uses Comma Delimiter) ---
 function createCSV(rows) {
-    // FIX APPLIED: Use COMMA (,) consistently for CSV format
+    // FIX: Uses Comma delimiter for consistency
     const CUSTOM_DELIMITER = ","; 
-    
-    // Header line uses comma
     const header = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS,CLEAN NAME,CLEAN ADDRESS LINE 1,LANDMARK,STATE,DISTRICT,PIN,REMARKS,QUALITY\n";
     
     const escapeAndQuote = (cell) => {
-        // Ensure all fields are quoted and internal quotes are escaped
         return `\"${String(cell || '').replace(/\"/g, '\"\"')}\"`;
     };
     
     const outputRows = rows.map(vr => {
-        // Join the fields using the comma delimiter
+        const cleanName = vr.customerCleanName || '';
+        const addressLine1 = vr.addressLine1 || '';
+        const landmark = vr.landmark || '';
+        const state = vr.state || '';
+        const district = vr.district || '';
+        const pin = vr.pin || '';
+        const remarks = vr.remarks || '';
+        const addressQuality = vr.addressQuality || 'Very Bad';
+
         return [
             vr['ORDER ID'],
             vr['CUSTOMER NAME'],
             vr['CUSTOMER RAW ADDRESS'],
-            vr.customerCleanName,
-            vr.addressLine1,
-            vr.landmark,
-            vr.state,
-            vr.district,
-            vr.pin,
-            vr.remarks,
-            vr.addressQuality
+            cleanName,
+            addressLine1,
+            landmark,
+            state,
+            district,
+            pin,
+            remarks,
+            addressQuality
         ].map(escapeAndQuote).join(CUSTOM_DELIMITER); 
     });
     
@@ -99,15 +100,14 @@ function createCSV(rows) {
 }
 
 // --------------------------------------------------------
-// CORE JOB PROCESSOR (Synchronous Execution)
+// CORE JOB PROCESSOR (CONCURRENT EXECUTION)
 // --------------------------------------------------------
 async function runJobProcessor(db, jobId, client, addresses) {
     const jobsCollection = db.collection('bulkJobs');
     const clientsCollection = db.collection('clients');
     
-    console.log(`Starting job ${jobId.toString()} for client ${client.username}`);
+    console.log(`Starting concurrent job ${jobId.toString()} for client ${client.username}`);
     
-    // Set status to In Progress
     await jobsCollection.updateOne(
         { _id: jobId }, 
         { $set: { status: 'In Progress', startTime: new Date(), processedCount: 0 } }
@@ -115,148 +115,81 @@ async function runJobProcessor(db, jobId, client, addresses) {
     
     const isUnlimited = (client.remainingCredits === 'Unlimited' || String(client.initialCredits).toLowerCase() === 'unlimited');
     let successfulVerifications = 0;
-    const outputRows = [];
-
-    for (let i = 0; i < addresses.length; i++) {
-        const row = addresses[i];
+    
+    // --- Define the asynchronous processing function for a single row ---
+    const processSingleAddress = async (row) => {
         const rawAddress = row['CUSTOMER RAW ADDRESS'] || '';
         const customerName = row['CUSTOMER NAME'] || '';
         
-        let verificationResult;
-        
         if (!rawAddress || rawAddress.trim() === "") {
-            verificationResult = { 
+            return { 
+                'ORDER ID': row['ORDER ID'],
+                'CUSTOMER NAME': row['CUSTOMER NAME'],
+                'CUSTOMER RAW ADDRESS': rawAddress,
                 status: "Skipped", remarks: "Missing raw address in CSV row.", addressQuality: "Very Bad", 
                 customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "" 
             };
-        } else {
-            try {
-                // Check for cancellation signal
-                const jobStatusCheck = await jobsCollection.findOne({ _id: jobId }, { projection: { status: 1 } });
-                if (jobStatusCheck.status === 'Cancelled') {
-                    console.log(`Job ${jobId} cancelled mid-run.`);
-                    break; 
-                }
-                
-                // --- Core Verification Logic ---
-                const initialPin = extractPin(rawAddress);
-                let postalData = initialPin ? await getIndiaPostData(initialPin) : { PinStatus: 'Error' };
-                const geminiResult = await processAddress(rawAddress, postalData); 
-                
-                if (geminiResult.error || !geminiResult.text) {
-                     verificationResult = {
-                         status: "Error", error: geminiResult.error || 'Gemini API failed.',
-                         remarks: `Error: ${geminiResult.error || 'Gemini Error'}`,
-                         customerCleanName: customerName,
-                         addressLine1: "API Error: See Remarks", landmark: "", state: "", district: "", pin: "", addressQuality: "VERY BAD"
-                     };
-                } else {
-                    let remarks = [];
-                    successfulVerifications++;
-
-                    // Parse Gemini JSON output
-                    const jsonText = geminiResult.text.replace(/```json|```/g, '').trim(); 
-                    let parsedData;
-                    try {
-                        parsedData = JSON.parse(jsonText);
-                    } catch (e) {
-                        console.error('JSON Parsing Error in bulk job:', e.message);
-                        remarks.push(`CRITICAL_ALERT: JSON parse failed. Raw Gemini Output: ${String(geminiResult.text || '').substring(0, 50)}...`);
-                        parsedData = {
-                            FormattedAddress: rawAddress.replace(meaninglessRegex, '').trim(),
-                            Landmark: '', State: '', 'DIST.': '', PIN: initialPin, 
-                            AddressQuality: 'Very Bad', Remaining: remarks[0],
-                        };
-                    }
-
-                    // --- PIN verification/correction logic (copied from verify-single-address.js) ---
-                    let finalPin = String(parsedData.PIN).match(/\b\d{6}\b/) ? parsedData.PIN : initialPin; 
-                    let primaryPostOffice = postalData.PostOfficeList ? postalData.PostOfficeList[0] : {};
-                    
-                    if (finalPin) {
-                        if (postalData.PinStatus !== 'Success' || (initialPin && finalPin !== initialPin)) {
-                            const aiPostalData = await getIndiaPostData(finalPin);
-                            if (aiPostalData.PinStatus === 'Success') {
-                                postalData = aiPostalData;
-                                primaryPostOffice = postalData.PostOfficeList[0] || {}; 
-                                if (initialPin && initialPin !== finalPin) {
-                                    remarks.push(`CRITICAL_ALERT: Wrong PIN (${initialPin}) corrected to (${finalPin}).`);
-                                } else if (!initialPin) {
-                                    remarks.push(`Correct PIN (${finalPin}) added by AI.`);
-                                }
-                            } else {
-                                remarks.push(`CRITICAL_ALERT: AI-provided PIN (${finalPin}) not verified by API.`);
-                                finalPin = initialPin; 
-                            }
-                        } else if (initialPin && postalData.PinStatus === 'Success') {
-                            remarks.push(`PIN (${initialPin}) verified successfully.`);
-                        }
-                    } else {
-                        remarks.push('CRITICAL_ALERT: PIN not found after verification attempts. Manual check needed.');
-                        finalPin = initialPin || null; 
-                    }
-
-                    if (parsedData.FormattedAddress && parsedData.FormattedAddress.length < 35 && parsedData.AddressQuality !== 'Very Good' && parsedData.AddressQuality !== 'Good') {
-                        remarks.push(`CRITICAL_ALERT: Formatted address is short (${parsedData.FormattedAddress.length} chars). Manual verification recommended.`);
-                    }
-
-                    // --- Landmark directional prefix logic ---
-                    let landmarkValue = parsedData.Landmark || ''; 
-                    const originalAddressLower = rawAddress.toLowerCase(); 
-                    let finalLandmark = ''; 
-                    if (landmarkValue.toString().trim() !== '') {
-                        const foundDirectionalWord = directionalKeywords.find(keyword => originalAddressLower.includes(keyword));
-                        if (foundDirectionalWord) {
-                            const originalDirectionalWordMatch = rawAddress.match(new RegExp(`\\b${foundDirectionalWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i'));
-                            const originalDirectionalWord = originalDirectionalWordMatch ? originalDirectionalWordMatch[0] : foundDirectionalWord; 
-                            const prefixedWord = originalDirectionalWord.charAt(0).toUpperCase() + originalDirectionalWord.slice(1); 
-                            finalLandmark = `${prefixedWord} ${landmarkValue.toString().trim()}`;
-                        } else {
-                            finalLandmark = `Near ${landmarkValue.toString().trim()}`;
-                        }
-                    }
-
-                    if (parsedData.Remaining && parsedData.Remaining.trim() !== '') {
-                        remarks.push(`Remaining/Ambiguous Text: ${parsedData.Remaining.trim()}`);
-                    } 
-                    
-                    // Final default remark if nothing critical was logged
-                    if (remarks.length === 0) {
-                        remarks.push('Address verified and formatted successfully.');
-                    }
-                    
-                    // --- Construct final verificationResult object ---
-                    verificationResult = {
-                        status: "Success",
-                        customerCleanName: (customerName || '').replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim() || null,
-                        addressLine1: parsedData.FormattedAddress || rawAddress,
-                        landmark: finalLandmark,
-                        state: primaryPostOffice.State || parsedData.State || '',
-                        district: primaryPostOffice.District || parsedData['DIST.'] || '',
-                        pin: finalPin,
-                        addressQuality: parsedData.AddressQuality || 'Medium',
-                        remarks: remarks.join('; ').trim(), // This now includes all detailed remarks
-                    };
-                }
-            } catch (error) {
-                console.error(`Error processing row ${i} in job ${jobId}:`, error);
-                verificationResult = { 
-                    status: "Error", remarks: `Fatal processing error: ${error.message}`, addressQuality: "Very Bad", 
-                    customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "" 
-                };
+        } 
+        
+        try {
+            // Check for cancellation signal
+            const jobStatusCheck = await jobsCollection.findOne({ _id: jobId }, { projection: { status: 1 } });
+            if (jobStatusCheck.status === 'Cancelled') {
+                throw new Error('JobCancelled'); 
             }
+            
+            // CALL THE UNIFIED LOGIC HERE, which now handles all verification, PIN checks, and remarks.
+            const result = await runVerificationLogic(rawAddress, customerName);
+            
+            // Map the result back to the expected bulk job output format
+            const verificationResult = {
+                'ORDER ID': row['ORDER ID'],
+                'CUSTOMER NAME': row['CUSTOMER NAME'],
+                'CUSTOMER RAW ADDRESS': rawAddress,
+                status: result.status,
+                customerCleanName: result.customerCleanName,
+                addressLine1: result.addressLine1,
+                landmark: result.landmark,
+                state: result.state,
+                district: result.district,
+                pin: result.pin,
+                addressQuality: result.addressQuality,
+                remarks: result.remarks,
+            };
+
+            if (result.success) {
+                successfulVerifications++;
+            }
+
+            return verificationResult;
+        } catch (e) {
+            if (e.message === 'JobCancelled') throw e;
+            console.error(`Error processing address for ID ${row['ORDER ID']}:`, e);
+            return { 
+                'ORDER ID': row['ORDER ID'],
+                'CUSTOMER NAME': row['CUSTOMER NAME'],
+                'CUSTOMER RAW ADDRESS': rawAddress,
+                status: "Error", remarks: `Fatal processing error: ${e.message}`, addressQuality: "Very Bad", 
+                customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "" 
+            };
         }
-        
-        verificationResult['ORDER ID'] = row['ORDER ID'];
-        verificationResult['CUSTOMER NAME'] = row['CUSTOMER NAME'];
-        verificationResult['CUSTOMER RAW ADDRESS'] = rawAddress;
-        
-        outputRows.push(verificationResult);
-        
-        // Update progress every 10 rows or at the end
-        if ((i + 1) % 10 === 0 || i === addresses.length - 1) {
-            await jobsCollection.updateOne({ _id: jobId }, { $set: { processedCount: i + 1 } });
+    };
+
+    // --- Map addresses to an array of promises and run concurrently ---
+    const processingPromises = addresses.map(processSingleAddress);
+
+    let outputRows;
+    try {
+        // Run all addresses in parallel
+        outputRows = await Promise.all(processingPromises);
+    } catch (e) {
+        if (e.message === 'JobCancelled') {
+             console.log(`Job ${jobId} cancelled during Promise.all.`);
+             return;
         }
+        console.error(`Unexpected error during parallel processing in job ${jobId}:`, e);
+        await jobsCollection.updateOne({ _id: jobId }, { $set: { status: 'Failed', error: 'Parallel processing failed.' } });
+        return;
     }
     
     const jobStatusCheck = await jobsCollection.findOne({ _id: jobId }, { projection: { status: 1 } });
@@ -265,7 +198,7 @@ async function runJobProcessor(db, jobId, client, addresses) {
         return; 
     }
     
-    // --- CRITICAL STEP: FINAL CREDIT DEDUCTION (Requirement 1) ---
+    // --- CRITICAL STEP: FINAL CREDIT DEDUCTION ---
     if (!isUnlimited && successfulVerifications > 0) {
         const deductionAmount = successfulVerifications; 
         try {
@@ -274,7 +207,7 @@ async function runJobProcessor(db, jobId, client, addresses) {
                 { $inc: { remainingCredits: -deductionAmount } }
             );
             if (deductionResult.matchedCount === 0) {
-                console.warn(`Client ${client.username} used credits but deduction failed (likely due to concurrent admin change).`);
+                console.warn(`Client ${client.username} used credits but deduction failed.`);
             } else {
                 console.log(`Successfully deducted ${deductionAmount} credits for job ${jobId}.`);
             }
@@ -385,14 +318,13 @@ module.exports = async (req, res) => {
             const insertResult = await jobsCollection.insertOne(newJob);
             const jobId = insertResult.insertedId;
             
-            // --- Execute Job Processor (Synchronous Block) ---
-            // Run it immediately, blocking the request until done (or serverless times out).
+            // --- Execute Job Processor (Concurrent Block) ---
             runJobProcessor(db, jobId, client, addresses)
                 .catch(err => {
                     console.error(`Job ${jobId} FAILED with uncaught error:`, err);
                     jobsCollection.updateOne({ _id: jobId }, { $set: { status: 'Failed', error: 'Internal processing error.' } });
                 });
-            // --- End Synchronous Block ---
+            // --- End Concurrent Block ---
 
             return res.status(200).json({ status: 'Success', message: 'Job submitted and started.', jobId: jobId.toString() });
         } catch (e) {
@@ -431,7 +363,7 @@ module.exports = async (req, res) => {
     // --------------------------------------------------------
     if (req.method === 'GET' && action === 'download') {
         const jobId = url.searchParams.get('jobId');
-        const filenameHint = url.searchParams.get('filename'); // Get filename hint from client
+        const filenameHint = url.searchParams.get('filename'); 
         
         if (!jobId) return res.status(400).json({ status: 'Error', message: 'jobId is required for download.' });
         
@@ -439,27 +371,21 @@ module.exports = async (req, res) => {
             const job = await jobsCollection.findOne({ _id: new ObjectId(jobId), clientId: jwtPayload.clientId, status: 'Completed' });
             
             if (!job) {
-                // If job not found/completed, send JSON error response
                 return res.status(404).json({ status: 'Error', message: 'Job not found or not completed.' });
             }
             if (!job.outputData) {
-                // If output is missing, send JSON error response
                 return res.status(404).json({ status: 'Error', message: 'No output data found.' });
             }
             
-            // Determine final filename: prefer the hint from the client, fallback to stored job filename
             const finalFilename = filenameHint || `${job.filename.replace('.csv', '')}_verified.csv`;
             
-            // Send CSV data with correct headers
             res.setHeader('Content-Type', 'text/csv; charset=utf-8');
             res.setHeader('Content-Disposition', `attachment; filename="${finalFilename}"`);
             
-            // Use res.send() for sending raw CSV content.
             return res.status(200).send(job.outputData);
             
         } catch (e) {
             console.error('GET /api/bulk-jobs?action=download error:', e);
-            // Send generic server error JSON response
             return res.status(500).json({ status: 'Error', message: `Download failed: ${e.message}` });
         }
     }
