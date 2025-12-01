@@ -39,8 +39,7 @@ function handleTemplateDownload() {
     document.body.removeChild(link);
 }
 
-// --- CSV parsing (unchanged, but moved to server in the new arch) ---
-// This is kept here for local row counting before submission
+// --- CSV parsing (for local row counting) ---
 function parseCSV(text) {
     const lines = text.split('\n');
     if (lines.length < 2) return [];
@@ -71,7 +70,7 @@ function parseCSV(text) {
     return data;
 }
 
-// --- Credit helper: GET remaining credits (unchanged, still calls verify-single-address GET) ---
+// --- Credit helper: GET remaining credits ---
 async function getRemainingCredits() {
     let responseText = null;
     try {
@@ -99,7 +98,7 @@ async function getRemainingCredits() {
 // --- NEW: Check Active Job Count (Requirement 3) ---
 async function getActiveJobCount() {
     try {
-        // Use the new client profile endpoint to get job status
+        // Calls the new /api/client/index?action=active-jobs endpoint
         const resp = await authFetch('/api/client/index?action=active-jobs', { method: 'GET' });
         const json = await resp.json();
         if (json.status === 'Success' && typeof json.activeJobsCount === 'number') {
@@ -129,8 +128,8 @@ async function handleBulkVerification() {
 
     // Requirement 3 Check: Max 1 active job
     const activeJobs = await getActiveJobCount();
-    if (activeJobs >= 1) { // Changed check from >= 2 to >= 1
-        // Updated message for single job limit
+    if (activeJobs >= 1) { 
+        // FIX: Updated user message for single job limit
         updateStatusMessage("Maximum 1 file is already processing. Please wait for completion.", true);
         return;
     }
@@ -168,8 +167,7 @@ async function handleBulkVerification() {
             });
             const result = await resp.json();
 
-            if (resp.status === 429) { // Req 3: Server rejected due to max jobs
-                // Updated message to reflect 1/1 limit
+            if (resp.status === 429) { // Server rejected due to max jobs (now 1)
                 updateStatusMessage(`Maximum 1 job is already processing. Please wait for completion.`, true);
             } else if (!resp.ok && resp.status !== 429) { // General HTTP/Credit Error
                 updateStatusMessage(result.message || `Job submission failed (Status: ${resp.status}).`, true);
@@ -180,7 +178,7 @@ async function handleBulkVerification() {
                 const inProgressBtn = document.getElementById('in-progress-tab-btn');
                 if (inProgressBtn) showTab('in-progress-jobs', inProgressBtn); 
                 
-                // Refresh credit UI after submission (to show potential large deduction isn't live yet)
+                // Refresh credit UI after submission
                 const afterCreditsResp = await getRemainingCredits();
                 if (afterCreditsResp.ok) {
                     const rc = afterCreditsResp.remainingCredits;

@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken');
 const { getIndiaPostData, processAddress, extractPin, meaninglessRegex } = require('./verify-single-address');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'replace_with_env_jwt_secret';
-const MAX_ACTIVE_JOBS = 1; // FIX: CHANGED to 1 to restrict concurrency
+const MAX_ACTIVE_JOBS = 1; // FIX: Set to 1 to enforce single job concurrency
 
 // --- Helper: parse JWT payload from Authorization header ---
 function parseJwtFromHeader(req) {
@@ -266,7 +266,7 @@ module.exports = async (req, res) => {
             const client = await clientsCollection.findOne({ _id: clientId });
             if (!client) return res.status(404).json({ status: 'Error', message: 'Client not found.' });
 
-            // Check Max Active Jobs (Requirement 3)
+            // Check Max Active Jobs (Requirement 3 - Now 1)
             const activeJobsCount = await jobsCollection.countDocuments({ clientId: jwtPayload.clientId, status: { $in: ['Queued', 'In Progress'] } });
             if (activeJobsCount >= MAX_ACTIVE_JOBS) {
                 return res.status(429).json({ 
@@ -305,7 +305,7 @@ module.exports = async (req, res) => {
             const jobId = insertResult.insertedId;
             
             // --- Execute Job Processor (Synchronous Block) ---
-            // We run it immediately, blocking the request until done (or serverless times out).
+            // Run it immediately, blocking the request until done (or serverless times out).
             runJobProcessor(db, jobId, client, addresses)
                 .catch(err => {
                     console.error(`Job ${jobId} FAILED with uncaught error:`, err);
