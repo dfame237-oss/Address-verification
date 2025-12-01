@@ -258,11 +258,11 @@
         </div>
         
         <div id="in-progress-jobs" class="tab-content" style="display:none;">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Active Jobs (<span id="active-job-count">0</span>/2)</h2>
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Active Jobs (<span id="active-job-count">0</span>/1)</h2>
             <div id="in-progress-list" class="space-y-4">
                 <p class="text-gray-500 text-center">Loading active jobs...</p>
             </div>
-            <p id="max-jobs-message" class="text-red-600 font-bold mt-4" style="display:none;">Maximum 2 jobs are running. Please wait or cancel one.</p>
+            <p id="max-jobs-message" class="text-red-600 font-bold mt-4" style="display:none;">Maximum 1 job is running. Please wait for completion.</p>
         </div>
         
         <div id="completed-jobs" class="tab-content" style="display:none;">
@@ -893,12 +893,13 @@
                 const bulkTabBtn = document.getElementById('bulk-tab-btn');
                 const csvFileInput = document.getElementById('csvFileInput');
 
-                if (activeCount >= 2) {
+                if (activeCount >= 1) { // Changed check to 1
                     if (processBtn) processBtn.disabled = true;
                     if (bulkTabBtn) bulkTabBtn.style.borderBottom = '2px solid #EF4444';
                     maxJobsMsgEl.style.display = 'block';
+                    maxJobsMsgEl.textContent = `Maximum ${activeCount} job is running. Please wait for completion.`; // Updated message
                 } else {
-                    // Only enable if fewer than 2 jobs AND a file is selected
+                    // Only enable if fewer than 1 job AND a file is selected
                      if (processBtn && csvFileInput) {
                          processBtn.disabled = !csvFileInput.files.length;
                      } 

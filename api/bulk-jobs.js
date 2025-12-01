@@ -1,8 +1,5 @@
 // api/bulk-jobs.js
 // Handles Bulk Verification Job Submission, Status Polling, Cancellation, and Asynchronous Processing
-// NOTE: This implementation runs the heavy verification process SYNCHRONOUSLY 
-// within the POST handler. For large files, this will hit serverless function timeouts.
-// A production solution requires a separate worker process or queue.
 
 const { connectToDatabase } = require('../utils/db');
 const { ObjectId } = require('mongodb');
@@ -12,7 +9,7 @@ const jwt = require('jsonwebtoken');
 const { getIndiaPostData, processAddress, extractPin, meaninglessRegex } = require('./verify-single-address');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'replace_with_env_jwt_secret';
-const MAX_ACTIVE_JOBS = 2; // Requirement 3
+const MAX_ACTIVE_JOBS = 1; // FIX: CHANGED to 1 to restrict concurrency
 
 // --- Helper: parse JWT payload from Authorization header ---
 function parseJwtFromHeader(req) {
@@ -90,7 +87,7 @@ function createCSV(rows) {
 }
 
 // --------------------------------------------------------
-// CORE JOB PROCESSOR (Synchronous Execution - see Note above)
+// CORE JOB PROCESSOR (Synchronous Execution)
 // --------------------------------------------------------
 async function runJobProcessor(db, jobId, client, addresses) {
     const jobsCollection = db.collection('bulkJobs');
@@ -108,7 +105,6 @@ async function runJobProcessor(db, jobId, client, addresses) {
     let successfulVerifications = 0;
     const outputRows = [];
 
-    // The entire processing loop happens here (simulating an async worker)
     for (let i = 0; i < addresses.length; i++) {
         const row = addresses[i];
         const rawAddress = row['CUSTOMER RAW ADDRESS'] || '';
@@ -123,7 +119,7 @@ async function runJobProcessor(db, jobId, client, addresses) {
             };
         } else {
             try {
-                // Check for cancellation signal before running expensive AI call
+                // Check for cancellation signal
                 const jobStatusCheck = await jobsCollection.findOne({ _id: jobId }, { projection: { status: 1 } });
                 if (jobStatusCheck.status === 'Cancelled') {
                     console.log(`Job ${jobId} cancelled mid-run.`);
@@ -133,7 +129,7 @@ async function runJobProcessor(db, jobId, client, addresses) {
                 // --- Core Verification Logic ---
                 const initialPin = extractPin(rawAddress);
                 let postalData = initialPin ? await getIndiaPostData(initialPin) : { PinStatus: 'Error' };
-                const geminiResult = await processAddress(rawAddress, postalData); // calls Gemini
+                const geminiResult = await processAddress(rawAddress, postalData); 
                 
                 if (geminiResult.error || !geminiResult.text) {
                      verificationResult = {
@@ -143,7 +139,7 @@ async function runJobProcessor(db, jobId, client, addresses) {
                         addressLine1: "API Error: See Remarks", landmark: "", state: "", district: "", pin: "", addressQuality: "VERY BAD"
                     };
                 } else {
-                    // NOTE: For this simulation, we are using a simplified verification result structure.
+                    // Simplified result structure
                     const jsonText = geminiResult.text.replace(/```json|```/g, '').trim(); 
                     let parsedData;
                     try { parsedData = JSON.parse(jsonText); } catch(e) { parsedData = {}; }
@@ -170,7 +166,6 @@ async function runJobProcessor(db, jobId, client, addresses) {
             }
         }
         
-        // Add required fields for CSV mapping
         verificationResult['ORDER ID'] = row['ORDER ID'];
         verificationResult['CUSTOMER NAME'] = row['CUSTOMER NAME'];
         verificationResult['CUSTOMER RAW ADDRESS'] = rawAddress;
@@ -179,20 +174,18 @@ async function runJobProcessor(db, jobId, client, addresses) {
         
         // Update progress every 10 rows or at the end
         if ((i + 1) % 10 === 0 || i === addresses.length - 1) {
-             await jobsCollection.updateOne({ _id: jobId }, { $set: { processedCount: i + 1 } });
+            await jobsCollection.updateOne({ _id: jobId }, { $set: { processedCount: i + 1 } });
         }
     }
     
     const jobStatusCheck = await jobsCollection.findOne({ _id: jobId }, { projection: { status: 1 } });
     if (jobStatusCheck.status === 'Cancelled') {
         console.log(`Job ${jobId} ended as cancelled.`);
-        // Note: No refund needed as credit was never deducted.
         return; 
     }
     
     // --- CRITICAL STEP: FINAL CREDIT DEDUCTION (Requirement 1) ---
     if (!isUnlimited && successfulVerifications > 0) {
-        // Deduct credits for successful verification attempts only
         const deductionAmount = successfulVerifications; 
         try {
             const deductionResult = await clientsCollection.updateOne(
@@ -200,9 +193,9 @@ async function runJobProcessor(db, jobId, client, addresses) {
                 { $inc: { remainingCredits: -deductionAmount } }
             );
             if (deductionResult.matchedCount === 0) {
-                 console.warn(`Client ${client.username} used credits but deduction failed (likely due to concurrent admin change).`);
+                console.warn(`Client ${client.username} used credits but deduction failed (likely due to concurrent admin change).`);
             } else {
-                 console.log(`Successfully deducted ${deductionAmount} credits for job ${jobId}.`);
+                console.log(`Successfully deducted ${deductionAmount} credits for job ${jobId}.`);
             }
         } catch (e) {
             console.error(`Failed to perform final bulk credit deduction for job ${jobId}:`, e);
@@ -276,16 +269,16 @@ module.exports = async (req, res) => {
             // Check Max Active Jobs (Requirement 3)
             const activeJobsCount = await jobsCollection.countDocuments({ clientId: jwtPayload.clientId, status: { $in: ['Queued', 'In Progress'] } });
             if (activeJobsCount >= MAX_ACTIVE_JOBS) {
-                 return res.status(429).json({ 
+                return res.status(429).json({ 
                     status: 'Error', 
-                    message: `Maximum ${MAX_ACTIVE_JOBS} jobs already in progress. Please wait or cancel one.` 
+                    message: `Maximum ${MAX_ACTIVE_JOBS} job is already in progress. Please wait for completion.` 
                 });
             }
 
             // Check Credits (Requirement 6 - Pre-check)
             const remaining = client.remainingCredits;
             if (remaining !== 'Unlimited' && Number(remaining) < totalRows) {
-                 return res.status(400).json({ 
+                return res.status(400).json({ 
                     status: 'Error', 
                     message: `Insufficient Credits. You have ${remaining} credits but require ${totalRows}.` 
                 });
@@ -312,8 +305,7 @@ module.exports = async (req, res) => {
             const jobId = insertResult.insertedId;
             
             // --- Execute Job Processor (Synchronous Block) ---
-            // In a production async environment, you would trigger a message queue here.
-            // Here, we run it immediately, blocking the request until done (or serverless times out).
+            // We run it immediately, blocking the request until done (or serverless times out).
             runJobProcessor(db, jobId, client, addresses)
                 .catch(err => {
                     console.error(`Job ${jobId} FAILED with uncaught error:`, err);
@@ -354,7 +346,7 @@ module.exports = async (req, res) => {
     }
     
     // --------------------------------------------------------
-    // GET: DOWNLOAD CSV
+    // GET: DOWNLOAD CSV (FIXED)
     // --------------------------------------------------------
     if (req.method === 'GET' && action === 'download') {
         const jobId = url.searchParams.get('jobId');
@@ -366,11 +358,11 @@ module.exports = async (req, res) => {
             const job = await jobsCollection.findOne({ _id: new ObjectId(jobId), clientId: jwtPayload.clientId, status: 'Completed' });
             
             if (!job) {
-                // Send JSON error response if job is not found/completed
+                // If job not found/completed, send JSON error response
                 return res.status(404).json({ status: 'Error', message: 'Job not found or not completed.' });
             }
             if (!job.outputData) {
-                // Send JSON error response if output is missing (e.g., failed processing)
+                // If output is missing, send JSON error response
                 return res.status(404).json({ status: 'Error', message: 'No output data found.' });
             }
             
@@ -381,7 +373,7 @@ module.exports = async (req, res) => {
             res.setHeader('Content-Type', 'text/csv; charset=utf-8');
             res.setHeader('Content-Disposition', `attachment; filename="${finalFilename}"`);
             
-            // Use res.send() for sending binary/raw text data (CSV)
+            // Use res.send() for sending raw CSV content.
             return res.status(200).send(job.outputData);
             
         } catch (e) {
