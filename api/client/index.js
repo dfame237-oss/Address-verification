@@ -1,5 +1,5 @@
 // api/client/index.js
-// Combined client router: login | logout | force-logout | activity | profile | update-password
+// Combined client router: login | logout | force-logout | activity | profile | update-password | active-jobs (NEW)
 
 const { connectToDatabase } = require('../../utils/db');
 const bcrypt = require('bcryptjs');
@@ -47,6 +47,7 @@ module.exports = async (req, res) => {
     return sendJSON(res, 500, { status: 'Error', message: 'Database connection failed' });
   }
   const clients = db.collection('clients');
+  const bulkJobs = db.collection('bulkJobs'); // NEW: Reference for job status
 
   try {
     // -------------------------
@@ -234,9 +235,28 @@ module.exports = async (req, res) => {
 
       return sendJSON(res, 200, { status: 'Success', planDetails });
     }
+    
+    // -------------------------
+    // ACTION: active-jobs (GET) - NEW (Requirement 3 helper)
+    // -------------------------
+    if (action === 'active-jobs') {
+        if (req.method !== 'GET') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
+
+        try {
+            const activeJobsCount = await bulkJobs.countDocuments({ 
+                clientId: clientId.toString(), // Use string ID from JWT for query
+                status: { $in: ['Queued', 'In Progress'] } 
+            });
+
+            return sendJSON(res, 200, { status: 'Success', activeJobsCount });
+        } catch (e) {
+            console.error('Error fetching active job count:', e);
+            return sendJSON(res, 500, { status: 'Error', message: 'Internal server error fetching job count.' });
+        }
+    }
 
     // no action matched
-    return sendJSON(res, 400, { status: 'Error', message: 'Unknown action. Use ?action=login|logout|activity|profile|update-password.' });
+    return sendJSON(res, 400, { status: 'Error', message: 'Unknown action. Use ?action=login|logout|activity|profile|update-password|active-jobs.' });
   } catch (err) {
     console.error('UNCAUGHT in /api/client/index.js', err && (err.stack || err.message));
     return sendJSON(res, 500, { status: 'Error', message: 'Internal server error' });

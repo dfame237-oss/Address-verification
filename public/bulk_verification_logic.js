@@ -1,6 +1,8 @@
 // public/bulk_verification_logic.js
-// Bulk verification logic with credit checks and UI updates.
-// Relies on global: API_ENDPOINT, isPlanValid, checkPlanValidity, authFetch, LOGIN_PAGE
+// Bulk verification logic refactored to handle ASYNCHRONOUS JOB SUBMISSION and client-side helpers.
+// Relies on global: API_ENDPOINT (for single), API_BULK_JOBS (NEW), isPlanValid, checkPlanValidity, authFetch, LOGIN_PAGE
+
+const API_BULK_JOBS = '/api/bulk-jobs'; // New constant for the bulk job endpoint
 
 // --- UI helpers (existing) ---
 function updateStatusMessage(message, isError = false) {
@@ -9,14 +11,13 @@ function updateStatusMessage(message, isError = false) {
 
     statusMessage.textContent = message;
 
-    statusMessage.classList.remove('text-red-700', 'bg-red-100', 'text-gray-600');
+    statusMessage.classList.remove('text-red-700', 'bg-red-100', 'text-gray-600', 'bg-tf-light', 'font-bold');
     statusMessage.classList.add('p-2', 'rounded');
-
     if (isError) {
         statusMessage.classList.add('text-red-700', 'bg-red-100', 'font-bold');
-        statusMessage.classList.remove('text-gray-600');
+        statusMessage.classList.remove('text-gray-600', 'bg-tf-light');
     } else {
-        statusMessage.classList.add('text-gray-600');
+        statusMessage.classList.add('text-gray-600', 'bg-tf-light');
         statusMessage.classList.remove('bg-red-100', 'font-bold');
     }
 }
@@ -27,7 +28,6 @@ function handleTemplateDownload() {
     const templateData =
         "1,\"John Doe\",\"H.No. 123, Sector 40B, near bus stand, Chandigarh\"\n" +
         "2,\"Jane Smith\",\"5th Floor, Alpha Tower, Mumbai 400001\"\n";
-
     const csvContent = templateHeaders + templateData;
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -39,30 +39,27 @@ function handleTemplateDownload() {
     document.body.removeChild(link);
 }
 
-// --- CSV parsing (unchanged) ---
+// --- CSV parsing (unchanged, but moved to server in the new arch) ---
+// This is kept here for local row counting before submission
 function parseCSV(text) {
     const lines = text.split('\n');
     if (lines.length < 2) return [];
 
     const header = lines[0].split(',').map(h => h.trim().replace(/^\"|\"$/g, ''));
     const data = [];
-
     const idIndex = header.indexOf('ORDER ID');
     const nameIndex = header.indexOf('CUSTOMER NAME');
     const addressIndex = header.indexOf('CUSTOMER RAW ADDRESS');
 
     if (idIndex === -1 || nameIndex === -1 || addressIndex === -1) {
-        console.error("CSV header is missing one of the required columns.");
         return [];
     }
 
     for (let i = 1; i < lines.length; i++) {
         if (lines[i].trim() === '') continue;
-
         const row = lines[i].match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g) || [];
 
         const cleanedRow = row.map(cell => cell.trim().replace(/^\"|\"$/g, '').replace(/\"\"/g, '\"'));
-
         if (cleanedRow.length > Math.max(idIndex, nameIndex, addressIndex)) {
             data.push({
                 'ORDER ID': cleanedRow[idIndex],
@@ -74,139 +71,66 @@ function parseCSV(text) {
     return data;
 }
 
-// --- Credit helper: GET remaining credits (no consumption) ---
-// NOTE: We call your verify-single-address GET endpoint since your backend returns credit info there.
-// If your backend exposes profile via client router, update the URL accordingly.
+// --- Credit helper: GET remaining credits (unchanged, still calls verify-single-address GET) ---
 async function getRemainingCredits() {
     let responseText = null;
     try {
         const resp = await authFetch('/api/verify-single-address', { method: 'GET' });
-        
-        // Always attempt to get text first, in case .json() fails
         responseText = await resp.text();
-
-        // Attempt to parse JSON
         let json;
         try {
             json = JSON.parse(responseText);
         } catch (e) {
-            // If JSON parsing fails, this is the root error
             console.error('getRemainingCredits JSON Parse Error:', responseText, e);
-            // Return an error object showing the raw response text
             return { ok: false, error: `Invalid JSON. Server responded with: "${responseText.substring(0, 50)}..."` };
         }
 
-        // Handle server-reported error statuses
         if (!resp.ok || json.status === 'Error') {
             return { ok: false, error: json.message || `Server error (Status ${resp.status})` };
         }
 
-        // Success
         return { ok: true, remainingCredits: json.remainingCredits, initialCredits: json.initialCredits, planName: json.planName };
     } catch (e) {
         console.error('getRemainingCredits network/authFetch error:', e);
-        // If authFetch throws an error (e.g., due to 401/403 redirection), the client-dashboard script handles it.
-        // We return a fallback error here.
         return { ok: false, error: e.message || `Network error. Raw text: ${responseText ? responseText.substring(0, 50) : 'N/A'}` };
     }
 }
 
-// --- Server verification call (consumes a credit on success) ---
-// Retries kept small because each attempt may consume a credit server-side.
-async function fetchVerification(rawAddress, customerName) {
-    const payload = { address: rawAddress, customerName };
-    const maxRetries = 2;
-    let lastError = null;
-
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-        try {
-            const response = await authFetch(API_ENDPOINT, {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-
-            // Parse JSON regardless of ok flag
-            const json = await response.json().catch(() => ({ status: 'Error', message: 'Invalid JSON from server' }));
-
-            // Handle quota exhausted specially (server uses status: 'QuotaExceeded')
-            if (json.status === 'QuotaExceeded') {
-                return { status: 'QuotaExceeded', message: json.message || 'Credits exhausted', remainingCredits: json.remainingCredits ?? 0 };
-            }
-
-            if (!response.ok || json.status === 'Error') {
-                // server reported an error (non-credit related)
-                throw new Error(json.message || `Server error (status ${response.status})`);
-            }
-
-            // Success: server returns verification result and remainingCredits (we expect that)
-            return json;
-
-        } catch (error) {
-            lastError = error;
-            // If session expired or authFetch bubbled that, rethrow to force login redirect
-            if (error.message && error.message.toLowerCase().includes('session')) {
-                throw error;
-            }
-            console.error(`Verification API attempt ${attempt + 1} failed:`, error);
-            if (attempt < maxRetries - 1) {
-                await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
-            }
+// --- NEW: Check Active Job Count (Requirement 3) ---
+async function getActiveJobCount() {
+    try {
+        // Use the new client profile endpoint to get job status
+        const resp = await authFetch('/api/client/index?action=active-jobs', { method: 'GET' });
+        const json = await resp.json();
+        if (json.status === 'Success' && typeof json.activeJobsCount === 'number') {
+            return json.activeJobsCount;
         }
+        return 0;
+    } catch (e) {
+        console.error('Failed to get active job count:', e);
+        return 0;
     }
-
-    // If all retries failed, return an error object compatible with original code
-    return {
-        status: "Error",
-        error: `Verification failed after ${maxRetries} attempts.`,
-        remarks: `Error: ${lastError ? lastError.message : 'Unknown Network Error'}`,
-        customerCleanName: customerName,
-        addressLine1: "API Error: See Remarks",
-        landmark: "",
-        state: "",
-        district: "",
-        pin: "",
-        addressQuality: "VERY BAD"
-    };
 }
 
-// --- CSV result builder (unchanged) ---
-function createAndDownloadCSV(rows, filename) {
-    const header = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS,CLEAN NAME,CLEAN ADDRESS LINE 1,LANDMARK,STATE,DISTRICT,PIN,REMARKS,QUALITY\n";
-    const csvContent = header + rows.join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const downloadLink = document.getElementById('downloadLink');
-    downloadLink.href = URL.createObjectURL(blob);
-    downloadLink.classList.remove('hidden');
-}
-
-// --- Main bulk handler (credit-aware) ---
+// --- Main bulk handler (refactored for job submission) ---
 async function handleBulkVerification() {
     if (!checkPlanValidity() || !isPlanValid) {
         updateStatusMessage("Access denied. Plan is expired or disabled.", true);
         return;
     }
 
-    // Check remaining credits before starting
-    const creditCheck = await getRemainingCredits();
-    if (!creditCheck.ok) {
-        updateStatusMessage(`Could not verify credits: ${creditCheck.error}`, true);
-        return;
-    }
-
-    const remainingBefore = creditCheck.remainingCredits;
-    if (remainingBefore !== 'Unlimited' && Number(remainingBefore) <= 0) {
-        updateStatusMessage("You have no remaining verification credits. Contact support to purchase more credits.", true);
-        return;
-    }
-
     const fileInput = document.getElementById('csvFileInput');
     const processButton = document.getElementById('processButton');
-    const progressBarFill = document.getElementById('progressBarFill');
-    const downloadLink = document.getElementById('downloadLink');
 
     if (!fileInput.files.length) {
         updateStatusMessage("Please select a CSV file first.", true);
+        return;
+    }
+
+    // Requirement 3 Check: Max 2 active jobs
+    const activeJobs = await getActiveJobCount();
+    if (activeJobs >= 2) {
+        updateStatusMessage("Maximum 2 files are already processing. Please wait for one to finish or cancel it.", true);
         return;
     }
 
@@ -215,9 +139,7 @@ async function handleBulkVerification() {
 
     processButton.disabled = true;
     fileInput.disabled = true;
-    downloadLink.classList.add('hidden');
-    progressBarFill.style.width = '0%';
-    updateStatusMessage('Reading file...');
+    updateStatusMessage('Reading file and performing credit check...');
 
     reader.onload = async function (e) {
         const text = e.target.result;
@@ -230,93 +152,49 @@ async function handleBulkVerification() {
             return;
         }
 
-        const totalAddresses = addresses.length;
-        let processedCount = 0;
-        const outputRows = [];
+        const totalRows = addresses.length;
+        
+        // --- NEW: POST JOB TO SERVER ---
+        try {
+            updateStatusMessage(`Submitting job for ${totalRows} addresses...`);
+            const resp = await authFetch(API_BULK_JOBS, {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    filename: file.name,
+                    csvData: text,
+                    totalRows: totalRows
+                })
+            });
+            const result = await resp.json();
 
-        updateStatusMessage(`Starting verification of ${totalAddresses} addresses...`);
+            if (resp.status === 429) { // Req 3: Server rejected due to max jobs
+                 updateStatusMessage(result.message, true);
+            } else if (!resp.ok && resp.status !== 429) { // General HTTP/Credit Error
+                 updateStatusMessage(result.message || `Job submission failed (Status: ${resp.status}).`, true);
+            } else if (result.status === 'Success' && result.jobId) {
+                updateStatusMessage(`Verification job submitted (ID: ${result.jobId}). Processing started asynchronously.`);
+                
+                // Requirement 2: Switch to 'In Progress' tab
+                const inProgressBtn = document.getElementById('in-progress-tab-btn');
+                if (inProgressBtn) showTab('in-progress-jobs', inProgressBtn); 
+                
+                // Refresh credit UI after submission (to show potential large deduction isn't live yet)
+                const afterCreditsResp = await getRemainingCredits();
+                if (afterCreditsResp.ok) {
+                    const rc = afterCreditsResp.remainingCredits;
+                    const remEl = document.getElementById('plan-remaining-credits'); // Update plan card
+                    if (remEl) remEl.textContent = rc === 'Unlimited' ? 'Unlimited' : Number(rc).toLocaleString();
+                }
 
-        for (const row of addresses) {
-            const orderId = row['ORDER ID'] || '';
-            const customerName = row['CUSTOMER NAME'] || '';
-            const rawAddress = row['CUSTOMER RAW ADDRESS'] || '';
-
-            // Mid-run credit check to avoid starting a request we know will be rejected
-            const midCredit = await getRemainingCredits();
-            if (!midCredit.ok) {
-                updateStatusMessage(`Could not verify credits mid-run: ${midCredit.error}`, true);
-                break;
-            }
-            const nowRemaining = midCredit.remainingCredits;
-            if (nowRemaining !== 'Unlimited' && Number(nowRemaining) <= 0) {
-                updateStatusMessage("Processing stopped — credits exhausted. Contact support to purchase more credits.", true);
-                break;
-            }
-
-            let verificationResult;
-            if (!rawAddress || rawAddress.trim() === "") {
-                verificationResult = { status: "Skipped", remarks: "Missing raw address in CSV row.", addressQuality: "Poor", customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "" };
             } else {
-                try {
-                    verificationResult = await fetchVerification(rawAddress, customerName);
-                } catch (err) {
-                    // authFetch likely threw session error — redirect to login
-                    console.error('Session/auth error during verification:', err);
-                    updateStatusMessage('Session expired. Redirecting to login...', true);
-                    setTimeout(() => {
-                        try { localStorage.removeItem('clientToken'); } catch (e) {}
-                        window.location.href = (typeof LOGIN_PAGE !== 'undefined' ? LOGIN_PAGE : 'client-login.html');
-                    }, 1200);
-                    return; // stop processing
-                }
+                 updateStatusMessage(result.message || 'Job submission failed due to unknown server response.', true);
             }
-
-            // If server indicates quota exhausted during the API call, stop and inform user
-            if (verificationResult && verificationResult.status === 'QuotaExceeded') {
-                updateStatusMessage(verificationResult.message || "Credits exhausted during processing. Processing stopped.", true);
-                break;
-            }
-
-            // Build CSV output row
-            const escapeAndQuote = (cell) => `\"${String(cell || '').replace(/\"/g, '\"\"')}\"`;
-
-            const outputRow = [
-                orderId,
-                customerName,
-                rawAddress,
-                verificationResult.customerCleanName,
-                verificationResult.addressLine1,
-                verificationResult.landmark,
-                verificationResult.state,
-                verificationResult.district,
-                verificationResult.pin,
-                verificationResult.remarks,
-                verificationResult.addressQuality
-            ].map(escapeAndQuote).join(',');
-
-            outputRows.push(outputRow);
-
-            processedCount++;
-            const progress = (processedCount / totalAddresses) * 100;
-            progressBarFill.style.width = `${progress}%`;
-
-            updateStatusMessage(`Processing... ${processedCount} of ${totalAddresses} addresses completed.`);
-
-            // Update remaining credits UI (server truth)
-            const afterCreditsResp = await getRemainingCredits();
-            if (afterCreditsResp.ok) {
-                const rc = afterCreditsResp.remainingCredits;
-                const remEl = document.getElementById('remaining-credits');
-                if (remEl) {
-                    remEl.textContent = rc === 'Unlimited' ? 'Unlimited' : Number(rc).toLocaleString();
-                }
-            }
+        } catch (error) {
+            updateStatusMessage(`Network error during job submission: ${error.message}`, true);
+        } finally {
+            processButton.disabled = false;
+            fileInput.disabled = false;
         }
-
-        updateStatusMessage(`Processing finished. ${processedCount} of ${totalAddresses} addresses processed. Click 'Download Verified CSV'.`, false);
-        createAndDownloadCSV(outputRows, "verified_addresses.csv");
-        processButton.disabled = false;
-        fileInput.disabled = false;
     };
 
     reader.onerror = function () {
@@ -326,6 +204,27 @@ async function handleBulkVerification() {
     };
 
     reader.readAsText(file);
+}
+
+// --- NEW: Handle Job Cancellation (Requirement 4) ---
+async function handleCancelJob(jobId) {
+    if (!confirm(`Are you sure you want to cancel Job ID: ${jobId}?`)) return;
+
+    try {
+        const resp = await authFetch(API_BULK_JOBS + '?action=cancel', {
+            method: 'PUT',
+            body: JSON.stringify({ jobId })
+        });
+        const result = await resp.json();
+
+        if (result.status === 'Success') {
+            updateStatusMessage(`Cancellation request sent for Job ${jobId}. Status will update shortly.`, false);
+        } else {
+            updateStatusMessage(`Failed to cancel Job ${jobId}: ${result.message}`, true);
+        }
+    } catch (e) {
+        updateStatusMessage(`Network error during cancellation: ${e.message}`, true);
+    }
 }
 
 // --- Init listeners (call from client-dashboard on load) ---
@@ -350,5 +249,8 @@ function initBulkListeners() {
         if (processButton) {
             processButton.addEventListener('click', handleBulkVerification);
         }
+        
+        // Expose function globally for the polling logic in client-dashboard.html
+        window.handleCancelJob = handleCancelJob;
     }
 }
