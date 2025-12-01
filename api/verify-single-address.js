@@ -74,6 +74,7 @@ function extractPin(address) {
     const match = String(address).match(/\b\d{6}\b/);  return match ? match[0] : null; 
 }
 
+// MODIFIED: Takes customerName to include name cleaning in the prompt
 function buildGeminiPrompt(originalAddress, customerName, postalData) {
     let basePrompt = `You are an expert Indian address verifier and formatter. Your task is to process a raw address, perform a thorough analysis, and provide a comprehensive response in a single JSON object. Provide all responses in English only. Strictly translate all extracted address components to English. Correct all common spelling and phonetic errors in the provided address, such as "rd" to "Road", "nager" to "Nagar", and "nd" to "2nd". Analyze common short forms and phonetic spellings, such as "lean" for "Lane", and use your best judgment to correct them. Be strict about ensuring the output is a valid, single, and complete address for shipping. Use your advanced knowledge to identify and remove any duplicate address components that are present consecutively (e.g., 'Gandhi Street Gandhi Street' should be 'Gandhi Street'). Your response must contain the following keys: 1.  "H.no.", "Flat No.", "Plot No.", "Room No.", "Building No.", "Block No.", "Ward No.", "Gali No.", "Zone No.": Extract only the number or alphanumeric sequence (e.g., '1-26', 'A/25', '10'). Set to null if not found. 2.  "Colony", "Street", "Locality", "Building Name", "House Name", "Floor": Extract the name. 3.  "P.O.": The official Post Office name from the PIN data. Prepend "P.O." to the name. Example: "P.O. Boduppal". 4.  "Tehsil": The official Tehsil/SubDistrict from the PIN data. Prepend "Tehsil". Example: "Tehsil Pune". 5.  "DIST.": The official District from the PIN data. 6.  "State": The official State from the PIN data. 7.  "PIN": The 6-digit PIN code. Find and verify the correct PIN. If a PIN exists in the raw address but is incorrect, find the correct one and provide it. 8.  "Landmark": A specific, named landmark (e.g., "Apollo Hospital"), not a generic type like "school". If multiple landmarks are present, list them comma-separated. **Extract the landmark without any directional words like 'near', 'opposite', 'behind' etc., as this will be handled by the script.** 9.  "Remaining": A last resort for any text that does not fit into other fields. Clean this by removing meaningless words like 'job', 'raw', 'add-', 'tq', 'dist' and country, state, district, or PIN code. 10. "FormattedAddress": This is the most important field. Based on your full analysis, create a single, clean, human-readable, and comprehensive shipping-ready address string. It should contain all specific details (H.no., Room No., etc.), followed by locality, street, colony, P.O., Tehsil, and District. DO NOT include the State or PIN in this string. Use commas to separate logical components. Do not invent or "hallucinate" information. 11. "LocationType": Identify the type of location (e.g., "Village", "Town", "City", "Urban Area"). 12. "AddressQuality": Analyze the address completeness and clarity for shipping. Categorize it as one of the following: Very Good, Good, Medium, Bad, or Very Bad. 13. "LocationSuitability": Analyze the location based on its State, District, and PIN to determine courier-friendliness in India. Categorize it as one of the following: Prime Location, Tier 1 & 2 Cities, Remote/Difficult Location, or Non-Serviceable Location. 14. **"CustomerCleanName"**: Clean and correct the customer name provided below. Remove any numbers or special characters. Raw Address: "${originalAddress}" Customer Name: "${customerName}"`; 
     if (postalData.PinStatus === 'Success') { basePrompt += `\nOfficial Postal Data: ${JSON.stringify(postalData.PostOfficeList)}\nUse this list to find the best match for 'P.O.', 'Tehsil', and 'DIST.' fields.`; } 
@@ -139,10 +140,37 @@ module.exports = async (req, res) => {
     catch (e) { console.error('DB connection failed:', e); return res.status(500).json({ status: 'Error', error: 'Database connection failed.' }); }
     const clients = db.collection('clients'); 
     
-    function parseJwtFromHeader(req) { /* ... Auth logic ... */ return null; } // Placeholder
+    function parseJwtFromHeader(req) {
+        const authHeader = req.headers.authorization || req.headers.Authorization; 
+        if (!authHeader) return null; 
+        const parts = authHeader.split(' '); 
+        if (parts.length !== 2) return null; 
+        const token = parts[1]; 
+        try {
+            const payload = jwt.verify(token, JWT_SECRET); 
+            if (!payload || !payload.clientId) { console.warn("JWT Payload missing 'clientId'."); return null; }
+            return payload; 
+        } catch (e) { return null; }
+    }
     
     // GET: return remaining credits (unchanged)
-    if (req.method === 'GET') { /* ... (Your existing GET handler logic) ... */ }
+    if (req.method === 'GET') {
+        const jwtPayload = parseJwtFromHeader(req); 
+        if (!jwtPayload || !jwtPayload.clientId) { return res.status(401).json({ status: 'Error', message: 'Authentication required.' }); }
+        try {
+            const client = await clients.findOne({ _id: new ObjectId(jwtPayload.clientId) }, { projection: { remainingCredits: 1, initialCredits: 1, planName: 1 } }); 
+            if (!client) return res.status(404).json({ status: 'Error', message: 'Client not found.' }); 
+            return res.status(200).json({
+                status: 'Success',
+                remainingCredits: client.remainingCredits ?? 0,
+                initialCredits: client.initialCredits ?? 0,
+                planName: client.planName ?? null
+            }); 
+        } catch (e) {
+            console.error('GET /api/verify-single-address error:', e); 
+            return res.status(500).json({ status: 'Error', message: 'Internal server error.' }); 
+        }
+    }
 
     // POST: process verification
     if (req.method === 'POST') {
@@ -181,7 +209,7 @@ module.exports = async (req, res) => {
                 reserved = true; 
             } else { await clients.updateOne({ _id: client._id }, { $set: { lastActivityAt: new Date() } }); }
             
-            // --- CORE VERIFICATION LOGIC ---
+            // --- CORE VERIFICATION LOGIC (GAS-ALIGNED) ---
             let remarks = []; 
             const translatedAddress = await translateToEnglish(originalAddress);
             
@@ -211,7 +239,7 @@ module.exports = async (req, res) => {
                 console.error('JSON Parsing Error:', e.message); 
                 remarks.push(`CRITICAL_ALERT: JSON parse failed. Raw Gemini Output: ${String(geminiResult.text || '').substring(0, 50)}...`); 
                 parsedData = {
-                    FormattedAddress: originalAddress, // FIX APPLIED HERE
+                    FormattedAddress: originalAddress, // FIX: Use original address
                     Landmark: '', State: '', DIST: '', PIN: initialPin, 
                     AddressQuality: 'Very Bad', Remaining: remarks[0], CustomerCleanName: customerName,
                 }; 
@@ -220,8 +248,19 @@ module.exports = async (req, res) => {
             // PIN verification/correction logic 
             let finalPin = String(parsedData.PIN).match(/\b\d{6}\b/) ? parsedData.PIN : initialPin; 
             let primaryPostOffice = postalData.PostOfficeList ? postalData.PostOfficeList[0] : {}; 
-            if (finalPin) { /* ... existing PIN logic ... */ } 
-            else { remarks.push('CRITICAL_ALERT: PIN not found after verification attempts. Manual check needed.'); finalPin = initialPin || null; }
+            if (finalPin) { 
+                if (postalData.PinStatus !== 'Success' || (initialPin && finalPin !== initialPin)) {
+                    const aiPostalData = await getIndiaPostData(finalPin); 
+                    if (aiPostalData.PinStatus === 'Success') {
+                        postalData = aiPostalData; primaryPostOffice = postalData.PostOfficeList[0] || {}; 
+                        if (initialPin && initialPin !== finalPin) { remarks.push(`CRITICAL_ALERT: Wrong PIN (${initialPin}) corrected to (${finalPin}).`); } 
+                        else if (!initialPin) { remarks.push(`Correct PIN (${finalPin}) added by AI.`); }
+                    } else {
+                        remarks.push(`CRITICAL_ALERT: AI-provided PIN (${finalPin}) not verified by API.`); 
+                        finalPin = initialPin; 
+                    }
+                } else if (initialPin && postalData.PinStatus === 'Success') { remarks.push(`PIN (${initialPin}) verified successfully.`); }
+            } else { remarks.push('CRITICAL_ALERT: PIN not found after verification attempts. Manual check needed.'); finalPin = initialPin || null; }
 
             if (parsedData.FormattedAddress && parsedData.FormattedAddress.length < 35 && parsedData.AddressQuality !== 'Very Good' && parsedData.AddressQuality !== 'Good') {
                 remarks.push(`CRITICAL_ALERT: Formatted address is short (${parsedData.FormattedAddress.length} chars). Manual verification recommended.`); 
@@ -251,7 +290,7 @@ module.exports = async (req, res) => {
                  finalFormattedAddress = `Village ${finalFormattedAddress}`;
             }
 
-            // REMARK LOGIC MODIFIED: ONLY ADD SUCCESS IF NO OTHER REMARK EXISTS
+            // REMARK LOGIC MODIFIED: ONLY ADD SUCCESS IF NO OTHER REMARK EXISTS (Removed Remaining/Ambiguous Text)
             if (remarks.length === 0) {
                 remarks.push('Address verified and formatted successfully.'); 
             }
@@ -280,7 +319,7 @@ module.exports = async (req, res) => {
             return res.status(200).json({ ...finalResponse, remainingCredits: isUnlimited ? 'Unlimited' : (updatedClient.remainingCredits ?? 0) }); 
         } catch (e) {
             console.error('POST /api/verify-single-address error:', e); 
-            return res.status(500).json({ status: 'Error', error: `Internal Server Error: ${e.message}` }); 
+            return res.status(500).json({ status: 'Error', message: `Internal Server Error: ${e.message}` }); 
         }
     }
     return res.status(405).json({ status: 'Error', error: 'Method Not Allowed' }); 
