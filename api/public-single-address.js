@@ -1,6 +1,6 @@
 // api/public-single-address.js
-// FINAL AND MOST ACCURATE VERSION: Generates a single, comma-separated correspondence address line, 
-// fixing all previous duplication issues (Landmark, P.O., District, State, PIN).
+// FINAL AND MOST ACCURATE VERSION: Fully prioritizes Gemini's contextual verification, 
+// fixing P.O. selection issues.
 
 const INDIA_POST_API = 'https://api.postalpincode.in/pincode/'; 
 let pincodeCache = {};
@@ -288,11 +288,11 @@ module.exports = async (req, res) => {
                                      .replace(/,\s*,/g, ',')
                                      .trim().replace(/,$/, '').trim();
         
-        // 2. Get cleaned components for concatenation
-        const postOffice = parsedData['P.O.']?.replace('P.O. ', '') || primaryPostOffice.Name || ''; 
-        const tehsil = parsedData.Tehsil?.replace('Tehsil ', '') || primaryPostOffice.Taluk || ''; 
-        const district = parsedData['DIST.'] || primaryPostOffice.District || ''; 
-        const state = parsedData.State || primaryPostOffice.State || ''; 
+        // 2. Get cleaned components for concatenation (FULLY RELYING ON AI'S PARSED DATA)
+        const postOffice = parsedData['P.O.']?.replace('P.O. ', '') || ''; // No fallback to primaryPostOffice.Name
+        const tehsil = parsedData.Tehsil?.replace('Tehsil ', '') || '';
+        const district = parsedData['DIST.'] || '';
+        const state = parsedData.State || '';
         
         // 3. Filter out empty components and concatenate into a single string.
         const components = [
