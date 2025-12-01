@@ -532,7 +532,7 @@
                 document.getElementById('profile-email').textContent = pd.email || '—';
                 document.getElementById('profile-mobile').textContent = pd.mobile || '—';
                 document.getElementById('profile-bulk-code').textContent = pd.bulkAccessCode || 'N/A';
-                document.getElementById('plan-name').textContent = (pd.planName || 'Not Set').split('_')[0];
+                document.getElementById('plan-name').textContent = (planDetails.planName || 'Not Set').split('_')[0];
                 document.getElementById('validity-end').textContent = pd.validityEnd ? new Date(pd.validityEnd).toLocaleDateString() : 'N/A';
                 const statusEl = document.getElementById('account-status');
                 const isActive = (typeof pd.isActive === 'undefined') ? true : pd.isActive;
@@ -556,7 +556,7 @@
             document.getElementById('profile-email').textContent = planDetails.email || '—';
             document.getElementById('profile-mobile').textContent = planDetails.mobile || '—';
             document.getElementById('profile-bulk-code').textContent = planDetails.bulkAccessCode || 'N/A';
-            document.getElementById('plan-name').textContent = (planDetails.planName || 'Not Set').split('_')[0'];
+            document.getElementById('plan-name').textContent = (planDetails.planName || 'Not Set').split('_')[0];
             document.getElementById('validity-end').textContent = planDetails.validityEnd ? new Date(planDetails.validityEnd).toLocaleDateString() : 'N/A';
 
             const statusEl = document.getElementById('account-status');
@@ -861,7 +861,7 @@
                                         <i class="fas fa-times"></i> Cancel
                                     </button>` 
                                 : isCompleted ? `
-                                    <button class="py-1 px-3 bg-tf-primary text-white text-sm rounded hover:bg-[#4d2e97] transition" onclick="handleAuthenticatedDownload('${job._id}', '${job.filename.replace(/'/g, "\\'").replace(/"/g, '')}')">
+                                    <button class="py-1 px-3 bg-tf-primary text-white text-sm rounded hover:bg-[#4d2e97] transition" onclick="handleAuthenticatedDownload('${job._1d || job._id}', '${job.filename.replace(/'/g, "\\'").replace(/"/g, '')}')">
                                         <i class="fas fa-download"></i> Download
                                     </button>`
                                 : isFailed ? `<span class="text-red-500 text-sm italic">${job.error || 'Check server logs.'}</span>`
@@ -933,7 +933,7 @@
         // This function must be defined globally to be used in fetchAndUpdateJobStatus
         async function handleAuthenticatedDownload(jobId, jobFilename) {
             // Ensure filename is clean and safe
-            const safeFilename = `${(jobFilename || 'verified').replace('.csv', '').replace(/'/g, '').replace(/"/g, '')}_verified.csv`;
+            const safeFilename = `${jobFilename.replace('.csv', '').replace(/'/g, '').replace(/"/g, '')}_verified.csv`;
             // API_BULK_JOBS is available globally from bulk_verification_logic.js
             const downloadUrl = `${API_BULK_JOBS}?action=download&jobId=${jobId}`; 
 
@@ -942,7 +942,7 @@
                 const resp = await authFetch(downloadUrl, { method: 'GET' });
 
                 // Check Content-Type first; if server returned JSON, show it instead of saving it as CSV
-                const contentType = (resp.headers && resp.headers.get ? (resp.headers.get('content-type') || '') : (resp.headers || '')).toLowerCase();
+                const contentType = (resp.headers.get && resp.headers.get('content-type') || '').toLowerCase();
                 if (contentType.includes('application/json')) {
                     // parse and show JSON error message
                     let json = null;
