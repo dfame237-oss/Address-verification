@@ -779,7 +779,6 @@
         }
 
         // --- TAB NAVIGATION (UPDATED and PUBLIC) ---
-        // Fixes Uncaught ReferenceError: showTab is not defined
         function showTab(tabId, button) {
             document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
