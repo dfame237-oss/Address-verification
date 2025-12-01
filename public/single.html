@@ -314,31 +314,36 @@
             qualityIcon.textContent = icon;
         }
 
-        // ⭐ FINAL CORRECTED HTML LOGIC ⭐
+        // ⭐ NEW FIXED LOGIC: Displays the single, concatenated addressLine1 from the API ⭐
         function buildFormattedShippingAddress(result) {
             const name = result.customerCleanName || '';
-            const singleLineAddress = result.addressLine1 || ''; // FULL, single line from API
-            
+            const singleLineAddress = result.addressLine1 || ''; // This is the FULL, single line string from the API
+            const state = result.state || '';
+            const pin = result.pin || '';
+            const country = 'INDIA';
+
+            // Construct the final multi-line string for shipping label presentation
+            // The API now outputs a fully concatenated line. We just need to break it for display.
             let formattedString = singleLineAddress;
             
-            // Remove the final ", INDIA" which is redundant/duplicated by the next step.
-            // We use regex to find ", INDIA" at the end and remove it.
-            formattedString = formattedString.replace(/,?\s*INDIA\s*$/i, '').trim();
+            // The API output (addressLine1) is already long. We split off the PIN/Country to new lines for readability.
+            // We use string replacement to move the PIN/Country to new lines.
+            // This is a stylistic choice to make the single address string look like a shipping label.
+            
+            // 1. Find the PIN (e.g., 201301) and move the rest of the string after it to a new line.
+            const pinMatch = formattedString.match(/(\d{6})/);
+            if (pinMatch) {
+                const pinIndex = formattedString.lastIndexOf(pinMatch[1]);
+                if (pinIndex !== -1) {
+                    const line1 = formattedString.substring(0, pinIndex + pinMatch[1].length);
+                    const line2 = formattedString.substring(pinIndex + pinMatch[1].length).trim().replace(/^,/, '').trim();
+                    
+                    formattedString = line1;
+                    if (line2) formattedString += `\n${line2}`;
+                }
+            }
 
-            // Split the remaining string to separate the pin/geo for multi-line display
-            // Look for the last comma before the PIN/District for a clean break.
-            const lastCommaIndex = formattedString.lastIndexOf(',');
-            
-            if (lastCommaIndex !== -1) {
-                const line1 = formattedString.substring(0, lastCommaIndex).trim();
-                const line2 = formattedString.substring(lastCommaIndex + 1).trim();
-                formattedString = line1 + `\n` + line2;
-            }
-            
-            // FINAL FIX: Add INDIA once and correctly on a new line
-            formattedString += `\nINDIA`;
-
-            // Add name only if it was provided
+            // 2. Add the clean name if present
             if (name) {
                  formattedString = `${name}\n${formattedString}`;
             }
@@ -400,4 +405,4 @@
         }
     </script>
 </body>
-                    </html>
+            </html>
