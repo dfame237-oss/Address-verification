@@ -1,6 +1,5 @@
 // api/public-single-address.js
-// DEFINITIVE VERSION: Fully prioritizes Gemini's contextual verification and output, 
-// ensures a single, cleaned, comma-separated correspondence address string, and removes the short address check.
+// DEFINITIVE VERSION: Fully prioritized Gemini, fixed all known duplications (including Country).
 
 const INDIA_POST_API = 'https://api.postalpincode.in/pincode/'; 
 let pincodeCache = {};
@@ -272,7 +271,7 @@ module.exports = async (req, res) => {
             (parsedData['DIST.'] || primaryPostOffice.District),
             (parsedData.State || primaryPostOffice.State),
             finalPin,
-            'INDIA', 
+            'INDIA', // Country is a primary target for scrubbing
             parsedData.Landmark, 
             'P.O.', 'DIST.', 'DISTRICT', 'STATE', 'PIN',
             'UTTAR PRADESH', 'GAUTAM BUDDHA NAGAR', 'NOIDA'
@@ -301,10 +300,11 @@ module.exports = async (req, res) => {
             district,
             state,
             finalPin,
-            'INDIA' // This is necessary for the front-end to display the Country
+            // CRITICAL FIX: Removed the explicit 'INDIA' field here.
         ].filter(c => c && c.toString().trim() !== '');
 
         // 4. Create the final single string
+        // The final string will now rely on the AI's core output for the Country name.
         const singleLineAddress = components.join(', ');
 
         // 5. Build final response (Simplified output)
