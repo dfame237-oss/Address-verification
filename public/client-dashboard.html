@@ -413,7 +413,7 @@
         const API_BASE = '/api';
         const API_CLIENT = `${API_BASE}/client/index`;
         const API_ENDPOINT = "/api/verify-single-address"; // used by single verification
-        const API_BULK_JOBS = "/api/bulk-jobs"; // NEW: Used for job management (Fixes SyntaxError if previously duplicated)
+        // const API_BULK_JOBS = "/api/bulk-jobs"; // <-- REMOVED: This constant is already defined and loaded via bulk_verification_logic.js
         const LOGIN_PAGE = "client-login.html";
         
         // Ensure that the plan details are parsed from the correct localStorage key
