@@ -1,6 +1,5 @@
 // public/bulk_verification_logic.js
 // Bulk verification logic refactored to handle ASYNCHRONOUS JOB SUBMISSION and client-side helpers.
-// Relies on global: API_ENDPOINT (for single), API_BULK_JOBS (NEW), isPlanValid, checkPlanValidity, authFetch, LOGIN_PAGE
 
 const API_BULK_JOBS = '/api/bulk-jobs'; // New constant for the bulk job endpoint
 
