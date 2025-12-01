@@ -1,397 +1,338 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Single Address Verification Demo</title>
-    
-    <link rel="stylesheet" href="style.css"> 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        // Custom colors matching your overall palette (tf-primary is indigo)
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'primary-blue': '#6366F1', // tf-primary (Indigo)
-                        'secondary-green': '#059669', // Dark Green
-                        'neutral-gray': '#F9FAFB', 
-                        'success-light': '#D1FAE5',
-                        'success-dark': '#065F46',
-                        'alert-light': '#FEE2E2',
-                        'alert-dark': '#991B1B',
-                        'warning-light': '#FEF3C7',
-                        'warning-dark': '#92400E',
-                        'copy-neutral-border': '#D1D5DB',
-                        'tf-cyan': '#06B6D4',
-                        // Re-defining for clean use
-                        'tf-text-dark': '#1E293B', 
-                        'tf-primary': '#6366F1',
-                        'tf-secondary': '#06B6D4',
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                }
-            }
-        }
-    </script>
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .result-block { position: relative; }
-        /* Style for the copy button */
-        .copy-btn {
-            position: absolute; top: 0.5rem; right: 0.5rem; padding: 0.25rem 0.5rem; 
-            font-size: 0.75rem; line-height: 1rem; background-color: transparent; 
-            color: #4B5563; border: 1px solid var(--copy-neutral-border); 
-            border-radius: 0.375rem; transition: all 0.15s; cursor: pointer; z-index: 10;
-        }
-        .copy-btn:hover { background-color: #F3F4F6; color: #1F2937; }
-        .result-content { padding-right: 3.5rem; }
-        .form-input {
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .form-input:focus {
-            border-color: #6366F1;
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.4);
-        }
-        /* Style for the main copy block */
-        #formatted-shipping-block {
-            line-height: 1.4;
-            white-space: pre-wrap; /* Ensures line breaks are respected */
-        }
-    </style>
-</head>
-<body class="bg-neutral-gray min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-4xl bg-white p-8 sm:p-10 rounded-xl shadow-2xl border-t-4 border-primary-blue">
+// api/public-single-address.js
+// DEFINITIVE VERSION: Fully prioritizes Gemini's contextual verification and output, 
+// and removes the "short address" length check condition.
 
-        <a href="index.html" class="text-gray-500 hover:text-primary-blue font-medium mb-6 inline-flex items-center transition duration-150">
-            <i class="fas fa-arrow-left w-4 h-4 mr-2"></i>
-            Back to Home
-        </a>
+const INDIA_POST_API = 'https://api.postalpincode.in/pincode/'; 
+let pincodeCache = {};
 
-        <header class="text-center mb-8">
-            <h1 class="text-3xl font-extrabold text-gray-900 mb-2">
-                <span class="text-tf-cyan">Single Address</span> Verification
-            </h1>
-            <p class="text-gray-600">Free, unauthenticated check powered by **Smart AI** and **India Post** data.</p>
-        </header>
+// NOTE: No authentication, credit logic, or database access is included.
+
+const coreMeaningfulWords = [
+    "ddadu", "ddadu", "ai", "add", "add-", "raw", "dumping", "grand", "dumping grand",
+    "chd", "chd-", "chandigarh", "chandigarh-", "chandigarh", "west", "sector", "sector-",
+    "house", "no", "no#", "house no", "house no#", "floor", "first", "first floor",
+    "majra", "colony", "dadu", "dadu majra", "shop", "wine", "wine shop", "house", "number",
+    "tq", "job", "dist"
+]; 
+const meaningfulWords = [...coreMeaningfulWords]; 
+const meaninglessRegex = new RegExp(`\\b(?:${meaningfulWords.join('|')})\\b`, 'gi'); 
+const directionalKeywords = ['near', 'opposite', 'back side', 'front side', 'behind', 'opp']; 
+
+// --- Gemini API Key (still needed for the core service) ---
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'REPLACE_WITH_YOUR_KEY'; 
+
+// --- India Post helper (unchanged) ---
+async function getIndiaPostData(pin) {
+    if (!pin) return { PinStatus: 'Error' }; 
+    if (pincodeCache[pin]) return pincodeCache[pin]; 
+
+    try {
+        const response = await fetch(INDIA_POST_API + pin); 
+        const data = await response.json(); 
+        const postData = data[0]; 
+
+        if (response.status !== 200 || postData.Status !== 'Success') {
+            pincodeCache[pin] = { PinStatus: 'Error' }; 
+            return pincodeCache[pin]; 
+        }
+
+        const postOffices = postData.PostOffice.map(po => ({
+            Name: po.Name || '',
+            Taluk: po.Taluk || po.SubDistrict || '',
+            District: po.District || '',
+            State: po.State || ''
+        })); 
+        pincodeCache[pin] = {
+            PinStatus: 'Success',
+            PostOfficeList: postOffices,
+        }; 
+        return pincodeCache[pin]; 
+    } catch (e) {
+        console.error("India Post API Error:", e.message); 
+        pincodeCache[pin] = { PinStatus: 'Error' }; 
+        return pincodeCache[pin]; 
+    }
+}
+
+// --- Gemini helper (unchanged) ---
+async function getGeminiResponse(prompt) {
+    const apiKey = GEMINI_API_KEY; 
+    if (!apiKey) {
+        return { text: null, error: "Gemini API key not set in environment variables." }; 
+    }
+
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`; 
+
+    const requestBody = {
+        contents: [{ parts: [{ text: prompt }] }],
+    }; 
+    const options = {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody)
+    }; 
+    try {
+        const response = await fetch(apiUrl, options); 
+        const result = await response.json(); 
+        if (response.status !== 200) {
+            const errorMessage = `Gemini API Error: ${result.error?.message || "Unknown error."}`; 
+            console.error(errorMessage); 
+            return { text: null, error: errorMessage }; 
+        }
+
+        if (result.candidates && result.candidates.length > 0) {
+            return { text: result.candidates[0].content.parts[0].text, error: null }; 
+        } else {
+            const errorMessage = "Gemini API Error: No candidates found in response."; 
+            console.error(errorMessage); 
+            return { text: null, error: errorMessage }; 
+        }
+    } catch (e) {
+        const errorMessage = `Error during Gemini API call: ${e.message}`; 
+        console.error(errorMessage); 
+        return { text: null, error: errorMessage }; 
+    }
+}
+
+// --- Utilities & Prompt Builder (FIXED) ---
+function extractPin(address) {
+    const match = String(address).match(/\b\d{6}\b/); 
+    return match ? match[0] : null; 
+}
+
+function buildGeminiPrompt(originalAddress, postalData) {
+    const initialPin = extractPin(originalAddress); 
+    
+    let basePrompt = `You are an expert Indian address verifier and formatter. Your verification must be highly accurate and cross-referenced.
+Your task is to process a raw address, perform a thorough analysis, and provide a comprehensive response in a single JSON object.
+Provide all responses in English only. Strictly translate all extracted address components to English.
+Correct all common spelling and phonetic errors in the provided address, such as "rd" to "Road", "nager" to "Nagar", and "nd" to "2nd".
+Analyze common short forms and phonetic spellings, such as "lean" for "Lane", and use your best judgment to correct them.
+Be strict about ensuring the output is a valid, single, and complete address for shipping.
+Use your advanced knowledge to identify and remove any duplicate address components that are present consecutively (e.g., 'Gandhi Street Gandhi Street' should be 'Gandhi Street').
+Your response must contain the following keys:
+1.  "H.no.", "Flat No.", "Plot No.", "Room No.", "Building No.", "Block No.", "Ward No.", "Gali No.", "Zone No.": Extract only the number or alphanumeric sequence (e.g., '1-26', 'A/25', '10').
+Set to null if not found.
+2.  "Colony", "Street", "Locality", "Building Name", "House Name", "Floor": Extract the name.
+3.  "P.O.": The official Post Office name from the PIN data. Prepend "P.O." to the name. Example: "P.O. Boduppal".
+4.  "Tehsil": The official Tehsil/SubDistrict from the PIN data. Prepend "Tehsil". Example: "Tehsil Pune".
+5.  "DIST.": The official District from the PIN data.
+6.  "State": The official State from the PIN data.
+7.  "PIN": The 6-digit PIN code. Find and **rigorously verify and correct** the PIN based on the entire location, including the locality and any landmarks. **Before accepting any PIN, search your knowledge base using all available components to find the most accurate 6-digit PIN for that specific location, even if it contradicts the default geographical PIN.**
+8.  "Landmark": A specific, named landmark (e.g., "Apollo Hospital"), not a generic type like "school"). **If multiple landmarks are present, extract ONLY the most specific/primary landmark.** **Extract the landmark without any directional words like 'near', 'opposite', 'behind' etc., as this will be handled by the script.**
+9.  "Remaining": A last resort for any text that does not fit into other fields.
+Clean this by removing meaningless words like 'job', 'raw', 'add-', 'tq', 'dist' and country, state, district, or PIN code.
+10. **"FormattedAddress": This is the most important field.** Based on your analysis, create a single, clean, human-readable address string containing the **detailed house/street/locality/colony information.** **STRICTLY DO NOT INCLUDE ANY LANDMARK NAME, P.O. NAME, TEHSIL, DISTRICT, STATE, or PIN in this field.** Use commas to separate logical components.
+11. "LocationType": Identify the type of location (e.g., "Village", "Town", "City", "Urban Area").
+12. "AddressQuality": Analyze the address completeness and clarity for shipping.
+Categorize it as one of the following: Very Good, Good, Medium, Bad, or Very Bad.
+13. "LocationSuitability": Analyze the location based on its State, District, and PIN to determine courier-friendliness in India.
+Categorize it as one of the following: Prime Location, Tier 1 & 2 Cities, Remote/Difficult Location, or Non-Serviceable Location.
+Raw Address: "${originalAddress}"
+`; 
+
+    if (postalData.PinStatus === 'Success') {
+        basePrompt += `\nOfficial Postal Data for PIN ${initialPin}: ${JSON.stringify(postalData.PostOfficeList)}\n**CRITICAL INSTRUCTION:**
+1. **First, verify if the PIN ${initialPin} is the most specific and correct PIN for this locality.** If your knowledge suggests a better PIN, set that corrected PIN in the "PIN" field.
+2. **From the provided Post Office list, analyze the names and choose the single name that is the best geographical and most relevant match for the specific locality in the raw address.** Use this name for 'P.O.', 'Tehsil', and 'DIST.' fields. Do NOT use the first one arbitrarily.`; 
+    } else {
+        basePrompt += `\nAddress has no PIN or the PIN is invalid. You must find and verify the correct 6-digit PIN based on the address components.`; 
+    }
+
+    basePrompt += `\nYour entire response MUST be a single, valid JSON object starting with { and ending with } and contain ONLY the keys listed above.`; 
+    return basePrompt;
+}
+
+function processAddress(address, postalData) {
+    const prompt = buildGeminiPrompt(address, postalData); 
+    return getGeminiResponse(prompt); 
+}
+
+// --- Main Handler (FREE POST ONLY) ---
+module.exports = async (req, res) => {
+    // CORS Setup for public access
+    res.setHeader('Access-Control-Allow-Credentials', true); 
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins for public access
+    res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS'); 
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type'); 
+
+    if (req.method === 'OPTIONS') {
+        res.status(200).end(); 
+        return; 
+    }
+    if (req.method !== 'POST') {
+        return res.status(405).json({ status: 'Error', error: 'Method Not Allowed' }); 
+    }
+
+    // Parse request body
+    let body = req.body; 
+    if (typeof body === 'string') {
+        try { body = JSON.parse(body); 
+        } catch (e) { /* keep original */ }
+    }
+    const { address, customerName } = body || {}; 
+    if (!address) {
+        return res.status(400).json({ status: 'Error', error: 'Address is required.' }); 
+    }
+
+    try {
+        const initialPin = extractPin(address); 
+        let postalData = { PinStatus: 'Error' }; 
+        if (initialPin) postalData = await getIndiaPostData(initialPin); 
         
-        <div class="space-y-6">
-            <div class="p-4 bg-blue-50/50 border border-blue-100 rounded-lg text-sm text-gray-700 font-medium">
-                <i class="fas fa-info-circle mr-2 text-primary-blue"></i> This is a **live, free demo**. For bulk processing and API access, please use the Client Login or Request Demo.
-            </div>
-            
-            <div class="grid sm:grid-cols-2 gap-4">
-                <div>
-                    <label for="customerName" class="block text-sm font-medium text-gray-700 mb-1">Customer Name (Optional)</label>
-                    <input type="text" id="customerName" placeholder="e.g., Pankaj Rawat" class="form-input w-full p-3 border border-gray-300 rounded-lg shadow-sm">
-                </div>
-                <div>
-                    <label for="rawAddress" class="block text-sm font-medium text-gray-700 mb-1">Raw Address to Verify *</label>
-                    <textarea id="rawAddress" rows="4" placeholder="e.g., H.No. 123, Sector 40B, near bus stand, Chandigarh" class="form-input w-full p-3 border border-gray-300 rounded-lg shadow-sm resize-none"></textarea>
-                </div>
-            </div>
-
-            <button id="verifyButton" class="w-full py-3 bg-secondary-green text-white font-bold rounded-lg shadow-lg hover:bg-green-700 transition duration-200 transform hover:scale-[1.005] focus:outline-none focus:ring-4 focus:ring-secondary-green focus:ring-opacity-50">
-                <i class="fas fa-search mr-2"></i> Verify Address
-            </button>
-            
-            <div id="loading-message" class="hidden text-center text-primary-blue font-semibold py-3 border border-blue-200 bg-blue-50 rounded-lg">
-                <i class="fas fa-spinner fa-spin mr-2"></i> Verifying address using AI...
-            </div>
-        </div>
-
-        <div id="resultsContainer" class="hidden mt-10">
-            <h3 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">Verified & Standardized Output</h3>
-            
-            <div class="result-block bg-primary-blue/10 p-5 rounded-lg border border-primary-blue/30 shadow-md mb-6">
-                <button class="copy-btn" data-target="formatted-shipping-block" title="Copy Full Address"><i class="far fa-copy"></i> Copy Full</button>
-                <div class="result-content">
-                    <strong class="text-primary-blue block mb-2 text-lg flex items-center">
-                        <i class="fas fa-truck-loading mr-2"></i> Ready-to-Ship Address:
-                    </strong> 
-                    <pre id="formatted-shipping-block" class="text-tf-text-dark font-mono text-base"></pre>
-                </div>
-            </div>
-
-            <div class="grid sm:grid-cols-2 gap-4 mb-6">
-                <div id="quality-block" class="result-block p-4 rounded-lg shadow-md flex flex-col justify-center transition-colors duration-300">
-                    <strong class="text-lg flex items-center mb-1">
-                        <span id="quality-icon" class="text-2xl mr-3"></span> Deliverability Score:
-                    </strong> 
-                    <span id="out-quality" class="text-2xl font-extrabold"></span>
-                </div>
-
-                <div class="result-block bg-success-light p-4 rounded-lg border border-green-300 shadow-sm">
-                    <button class="copy-btn" data-target="out-name" title="Copy Clean Name"><i class="far fa-copy"></i> Copy</button>
-                    <div class="result-content">
-                        <strong class="text-success-dark block mb-1 flex items-center"><i class="fas fa-user-tag mr-2"></i> Clean Name:</strong> 
-                        <span id="out-name" class="text-gray-700 text-xl font-bold"></span>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="remarks-block" class="result-block remarks-block bg-white p-4 rounded-lg border border-gray-200 shadow-sm mt-6">
-                <strong class="text-gray-600 block mb-1 flex items-center">
-                    <i class="fas fa-exclamation-triangle mr-2"></i> System Remarks & Warnings:
-                </strong> 
-                <span id="out-remarks" class="text-gray-800 italic text-sm"></span>
-            </div>
-            
-        </div>
-    </div>
-    
-    <script>
-        const API_ENDPOINT = "/api/public-single-address"; // Your Free API endpoint
-        const REMARKS_ALERT_PREFIX = "CRITICAL_ALERT:";
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const verifyButton = document.getElementById('verifyButton');
-            if (verifyButton) {
-                verifyButton.addEventListener('click', handleSingleVerification);
-            }
-            
-            // Add event listener for all copy buttons
-            document.querySelectorAll('.copy-btn').forEach(button => {
-                button.setAttribute('data-original-text', button.textContent); 
-                button.addEventListener('click', (event) => {
-                    const targetId = event.currentTarget.getAttribute('data-target');
-                    copyToClipboard(targetId, event.currentTarget);
-                });
-            });
-        });
-
-        // Copy function
-        function copyToClipboard(elementId, button) {
-            let textToCopy = '';
-            let element = document.getElementById(elementId);
-
-            if (elementId === 'formatted-shipping-block') {
-                textToCopy = element.textContent.trim();
-            } else {
-                textToCopy = element ? element.textContent.trim() : '';
-            }
-
-            if (!textToCopy || textToCopy === 'N/A' || textToCopy === 'No specific remarks.' || textToCopy === 'INDIA') {
-                flashButton(button, 'No Data', 1000, 'bg-warning-light text-warning-dark border-yellow-300');
-                return;
-            }
-
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                flashButton(button, 'Copied!', 1500, 'bg-success-light text-success-dark border-green-300');
-            }).catch(err => {
-                console.error('Failed to copy text: ', err);
-                flashButton(button, 'Error', 1500, 'bg-alert-light text-alert-dark border-red-300');
-            });
-        }
+        // NO AUTH OR CREDIT CHECK HERE
         
-        // Utility function to temporarily change button text and style
-        function flashButton(button, newText, duration, flashClasses) {
-            const originalText = button.getAttribute('data-original-text');
-            
-            button.className = 'copy-btn ' + flashClasses + ' border';
-            button.innerHTML = newText; // Use innerHTML to avoid overriding icon if present
-
-            setTimeout(() => {
-                button.innerHTML = originalText;
-                button.className = 'copy-btn';
-            }, duration);
+        // Run verification workflow
+        let remarks = []; 
+        const cleanedName = (customerName || '').replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim() || null; 
+        const geminiResult = await processAddress(address, postalData); 
+        
+        if (geminiResult.error || !geminiResult.text) {
+            return res.status(500).json({ status: 'Error', error: geminiResult.error || 'Gemini API failed to return text.' }); 
         }
 
-        function showMessage(elementId, text, isError = false) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                element.innerHTML = isError ? `<i class="fas fa-exclamation-circle mr-2"></i> ${text}` : `<i class="fas fa-spinner fa-spin mr-2"></i> ${text}`;
-                
-                element.classList.remove('bg-blue-50', 'text-primary-blue', 'border-blue-200', 'bg-alert-light', 'text-alert-dark', 'border-red-300');
+        // Parse Gemini JSON output
+        let parsedData; 
+        try {
+            const jsonText = geminiResult.text.replace(/```json|```/g, '').trim(); 
+            parsedData = JSON.parse(jsonText); 
+        } catch (e) {
+            console.error('JSON Parsing Error:', e.message); 
+            remarks.push(`CRITICAL_ALERT: JSON parse failed. Raw Gemini Output: ${String(geminiResult.text || '').substring(0, 50)}...`); 
+            parsedData = {
+                FormattedAddress: address.replace(meaninglessRegex, '').trim(),
+                Landmark: '',
+                State: '',
+                DIST: '',
+                PIN: initialPin, 
+                AddressQuality: 'Very Bad',
+                Remaining: remarks[0],
+            }; 
+        }
 
-                if (isError) {
-                    element.classList.add('bg-alert-light', 'text-alert-dark', 'border-red-300');
+        // PIN verification/correction logic 
+        let finalPin = String(parsedData.PIN).match(/\b\d{6}\b/) ? 
+        parsedData.PIN : initialPin; 
+        let primaryPostOffice = postalData.PostOfficeList ? postalData.PostOfficeList[0] : {}; 
+        
+        // Check if AI suggested a new PIN or if the initial API call failed
+        if (finalPin) {
+            if (postalData.PinStatus !== 'Success' || (initialPin && finalPin !== initialPin)) {
+                // Rerun API with the AI-suggested PIN
+                const aiPostalData = await getIndiaPostData(finalPin); 
+                if (aiPostalData.PinStatus === 'Success') {
+                    postalData = aiPostalData; 
+                    primaryPostOffice = postalData.PostOfficeList[0] || {}; 
+                    if (initialPin && initialPin !== finalPin) {
+                        remarks.push(`CRITICAL_ALERT: Wrong PIN (${initialPin}) corrected to (${finalPin}).`); 
+                    } else if (!initialPin) {
+                        remarks.push(`Correct PIN (${finalPin}) added by AI.`); 
+                    }
                 } else {
-                    element.classList.add('bg-blue-50', 'text-primary-blue', 'border-blue-200');
+                    remarks.push(`CRITICAL_ALERT: AI-provided PIN (${finalPin}) not verified by API. Reverting to original data.`); 
+                    finalPin = initialPin; 
                 }
+            } else if (initialPin && postalData.PinStatus === 'Success') {
+                remarks.push(`PIN (${initialPin}) verified successfully.`); 
             }
+        } else {
+            remarks.push('CRITICAL_ALERT: PIN not found after verification attempts. Manual check needed.'); 
+            finalPin = initialPin || null; 
         }
 
-        // Renamed to include PO/Tehsil for display
-        async function fetchVerification(rawAddress, customerName) {
-            const payload = { address: rawAddress, customerName }; 
-            const maxRetries = 3;
-            let lastError = null;
+        // --- REMOVED SHORT ADDRESS LENGTH CHECK CONDITION ---
+        // if (parsedData.FormattedAddress && parsedData.FormattedAddress.length < 35 && parsedData.AddressQuality !== 'Very Good' && parsedData.AddressQuality !== 'Good') {
+        //     remarks.push(`CRITICAL_ALERT: Formatted address is short (${parsedData.FormattedAddress.length} chars). Manual verification recommended.`); 
+        // }
 
-            for (let attempt = 0; attempt < maxRetries; attempt++) {
-                try {
-                    const response = await fetch(API_ENDPOINT, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    
-                    if (!response.ok) {
-                        const errorBody = await response.json().catch(() => ({}));
-                        throw new Error(errorBody.error || `Server responded with status ${response.status}`);
-                    }
-                    
-                    return await response.json();
-
-                } catch (error) {
-                    lastError = error;
-                    console.error(`Verification API Attempt ${attempt + 1} failed:`, error);
-                    if (attempt < maxRetries - 1) {
-                        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
-                    }
-                }
-            }
-
-            return { 
-                status: "Error", 
-                error: `Verification failed after ${maxRetries} attempts.`,
-                remarks: `Error during verification: ${lastError ? lastError.message : 'Unknown Network Error'}`
-            };
-        }
-
-        function applyRemarksStyle(remarks) {
-            const remarksBlock = document.getElementById('remarks-block');
-            const remarksSpan = document.getElementById('out-remarks');
-            
-            // Define base classes
-            const baseClasses = 'result-block remarks-block p-4 rounded-lg shadow-sm mt-6';
-            remarksBlock.className = baseClasses;
-            
-            // Set the raw remarks text
-            const cleanRemarks = remarks.replace(new RegExp(REMARKS_ALERT_PREFIX, 'g'), '').trim() || 'No specific remarks.';
-            remarksSpan.textContent = cleanRemarks;
-
-            // Check for Alert
-            const isAlert = remarks.includes(REMARKS_ALERT_PREFIX) || cleanRemarks.toLowerCase().includes('error');
-
-            if (isAlert) {
-                remarksBlock.classList.add('bg-alert-light', 'border-4', 'border-red-300', 'shadow-lg');
-                remarksSpan.classList.add('font-bold', 'text-alert-dark');
-                remarksBlock.classList.remove('border-gray-200'); // Remove default
+        // Landmark directional prefix logic (Returns PREFIXED landmark)
+        let landmarkValue = parsedData.Landmark || ''; 
+        const originalAddressLower = address.toLowerCase(); 
+        let finalLandmark = ''; 
+        if (landmarkValue.toString().trim() !== '') {
+            const foundDirectionalWord = directionalKeywords.find(keyword => originalAddressLower.includes(keyword)); 
+            if (foundDirectionalWord) {
+                const originalDirectionalWordMatch = address.match(new RegExp(`\\b${foundDirectionalWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i')); 
+                const originalDirectionalWord = originalDirectionalWordMatch ? originalDirectionalWordMatch[0] : foundDirectionalWord; 
+                const prefixedWord = originalDirectionalWord.charAt(0).toUpperCase() + originalDirectionalWord.slice(1); 
+                finalLandmark = `${prefixedWord} ${landmarkValue.toString().trim()}`; 
             } else {
-                remarksBlock.classList.add('bg-white', 'border', 'border-gray-200');
-                remarksSpan.classList.add('italic', 'text-gray-800');
+                finalLandmark = `Near ${landmarkValue.toString().trim()}`; 
             }
         }
-
-        function updateQualityScoreUI(quality) {
-            const qualityBlock = document.getElementById('quality-block');
-            const qualityText = document.getElementById('out-quality');
-            const qualityIcon = document.getElementById('quality-icon');
-            
-            let colorClasses = '';
-            let icon = '';
-
-            // Clean previous classes
-            qualityBlock.className = 'result-block p-4 rounded-lg shadow-md flex flex-col justify-center transition-colors duration-300';
-            qualityText.className = 'text-2xl font-extrabold';
-            
-            qualityText.textContent = quality;
-
-            if (quality.includes('Very Good') || quality.includes('Prime')) {
-                colorClasses = 'bg-success-light border border-secondary-green text-secondary-green';
-                icon = '⭐';
-            } else if (quality.includes('Good') || quality.includes('Tier 1 & 2')) {
-                colorClasses = 'bg-success-light border border-secondary-green text-secondary-green/70';
-                icon = '👍';
-            } else if (quality.includes('Medium') || quality.includes('Remote')) {
-                colorClasses = 'bg-warning-light border border-warning-dark text-warning-dark';
-                icon = '⚠️';
-            } else if (quality.includes('Bad') || quality.includes('Very Bad') || quality.includes('Non-Serviceable')) {
-                colorClasses = 'bg-alert-light border border-alert-dark text-alert-dark';
-                icon = '🚨';
-            } else {
-                 // Default/N/A state
-                colorClasses = 'bg-gray-100 border border-gray-300 text-gray-500';
-                icon = '❓';
-            }
-
-            qualityBlock.classList.add(...colorClasses.split(' '));
-            qualityIcon.textContent = icon;
+        
+        if (parsedData.Remaining && parsedData.Remaining.trim() !== '') {
+            remarks.push(`Remaining/Ambiguous Text: ${parsedData.Remaining.trim()}`); 
+        } else if (remarks.length === 0) {
+            remarks.push('Address verified and formatted successfully.'); 
         }
 
-        // ⭐ NEW FIXED LOGIC: Displays the single, concatenated addressLine1 from the API ⭐
-        function buildFormattedShippingAddress(result) {
-            const name = result.customerCleanName || '';
-            const singleLineAddress = result.addressLine1 || ''; // This is the FULL, single line string from the API
-            const state = result.state || '';
-            const pin = result.pin || '';
-            const country = 'INDIA';
+        // --- 1. CLEAN AI OUTPUT BEFORE CONCATENATION (THE FINAL DUPLICATION FIX) ---
+        let primaryAddress = parsedData.FormattedAddress || address.replace(meaninglessRegex, '').trim() || ''; 
+        
+        // Get all postal and landmark names/values that might be present in the final string
+        const postalNames = [
+            (parsedData['P.O.']?.replace('P.O. ', '') || primaryPostOffice.Name),
+            (parsedData.Tehsil?.replace('Tehsil ', '') || primaryPostOffice.Taluk),
+            (parsedData['DIST.'] || primaryPostOffice.District),
+            (parsedData.State || primaryPostOffice.State),
+            finalPin,
+            'INDIA', 'INDIA', 
+            parsedData.Landmark, 
+            'P.O.', 'DIST.', 'DISTRICT', 'STATE', 'PIN',
+            'UTTAR PRADESH', 'GAUTAM BUDDHA NAGAR', 'NOIDA'
+        ].filter(c => c && c.toString().trim() !== '');
 
-            // Construct the final multi-line string for shipping label presentation
-            // The first line is the comprehensive address details from addressLine1
-            let formattedString = singleLineAddress;
+        // Create a scrubber regex to find and remove *any* of the final components
+        const scrubberRegex = new RegExp(`(?:${postalNames.map(name => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
+
+        // Scrape the primary address line: remove duplicates, remove double commas, and trim.
+        primaryAddress = primaryAddress.replace(scrubberRegex, '')
+                                     .replace(/,\s*,/g, ',')
+                                     .trim().replace(/,$/, '').trim();
+        
+        // 2. Get cleaned components for concatenation (FULLY RELYING ON AI'S PARSED DATA)
+        const postOffice = parsedData['P.O.']?.replace('P.O. ', '') || '';
+        const tehsil = parsedData.Tehsil?.replace('Tehsil ', '') || '';
+        const district = parsedData['DIST.'] || '';
+        const state = parsedData.State || '';
+        
+        // 3. Filter out empty components and concatenate into a single string.
+        const components = [
+            primaryAddress,
+            finalLandmark, // The prefixed landmark (Near X)
+            postOffice ? `P.O. ${postOffice}` : null,
+            tehsil,
+            district,
+            state,
+            finalPin,
+            'INDIA'
+        ].filter(c => c && c.toString().trim() !== '');
+
+        // 4. Create the final single string
+        const singleLineAddress = components.join(', ');
+
+        // 5. Build final response (Simplified output)
+        const finalResponse = {
+            status: "Success",
+            customerRawName: customerName,
+            customerCleanName: cleanedName,
             
-            // Add State/PIN/Country on separate lines for standard shipping display format
-            // We use the separated State and Pin for neatness here, even though they're in addressLine1
-            // You can remove these lines if you prefer the one single line
-            formattedString += `\n${state} - ${pin}`;
-            formattedString += `\n${country}`;
+            // This is the ONLY address field returned
+            addressLine1: singleLineAddress, 
             
-            // Add name only if it was provided
-            if (name) {
-                 formattedString = `${name}\n${formattedString}`;
-            }
+            // Only return metadata fields
+            addressQuality: parsedData.AddressQuality || 'Medium', 
+            locationType: parsedData.LocationType || 'Unknown', 
+            locationSuitability: parsedData.LocationSuitability || 'Unknown', 
+            remarks: remarks.join('; ').trim(), 
+        }; 
 
-            document.getElementById('formatted-shipping-block').textContent = formattedString;
-        }
+        // NO remainingCredits returned here
+        return res.status(200).json(finalResponse); 
 
-        async function handleSingleVerification() {
-            const rawAddress = document.getElementById('rawAddress').value;
-            const customerName = document.getElementById('customerName').value;
-            const loadingMessage = document.getElementById('loading-message');
-            const resultsContainer = document.getElementById('resultsContainer');
-            const verifyButton = document.getElementById('verifyButton');
-
-            if (rawAddress.trim() === "") {
-                showMessage('loading-message', 'Please enter a raw address to verify.', true);
-                document.getElementById('loading-message').classList.remove('hidden');
-                resultsContainer.classList.add('hidden');
-                return;
-            }
-
-            // Show loading state
-            document.getElementById('loading-message').classList.remove('hidden');
-            resultsContainer.classList.add('hidden');
-            verifyButton.disabled = true;
-            verifyButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Verifying...';
-
-            try {
-                showMessage('loading-message', 'Verifying address using AI...');
-                const verificationResult = await fetchVerification(rawAddress, customerName);
-
-                if (verificationResult.status === "Error") {
-                    showMessage('loading-message', `Verification Error: ${verificationResult.error || 'Unknown Error'}`, true);
-                    return;
-                }
-                
-                // Hide loading message and show results
-                document.getElementById('loading-message').classList.add('hidden');
-                resultsContainer.classList.remove('hidden');
-
-                // Populate individual component results
-                document.getElementById('out-name').textContent = verificationResult.customerCleanName || 'N/A';
-                
-                // Build the main copy block (Now uses the single line from the API)
-                buildFormattedShippingAddress(verificationResult);
-                
-                const qualityScore = verificationResult.addressQuality || verificationResult.locationSuitability || 'N/A';
-                
-                // UI UPDATES
-                updateQualityScoreUI(qualityScore); 
-                applyRemarksStyle(verificationResult.remarks || '');
-                
-            } catch (e) {
-                showMessage('loading-message', `An unexpected network error occurred: ${e.message}`, true);
-            } finally {
-                verifyButton.disabled = false;
-                verifyButton.innerHTML = '<i class="fas fa-search mr-2"></i> Verify Address';
-            }
-        }
-    </script>
-</body>
-                </html>
+    } catch (e) {
+        console.error('POST /api/public-single-address error:', e); 
+        return res.status(500).json({ status: 'Error', message: `Internal Server Error: ${e.message}` }); 
+    }
+};
