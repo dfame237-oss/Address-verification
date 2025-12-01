@@ -130,7 +130,7 @@
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .dashboard-container { padding: 15px;
-                margin: 10px auto; w-width: 95%; box-shadow: none; }
+                margin: 10px auto; width: 95%; box-shadow: none; }
             .header { flex-direction: column;
                 align-items: flex-start; margin-bottom: 20px; }
             .header h1 { font-size: 1.75rem;
@@ -894,11 +894,11 @@
                 const bulkTabBtn = document.getElementById('bulk-tab-btn');
                 const csvFileInput = document.getElementById('csvFileInput');
 
-                if (activeCount >= 1) { 
+                if (activeCount >= 1) { // Changed check to 1
                     if (processBtn) processBtn.disabled = true;
                     if (bulkTabBtn) bulkTabBtn.style.borderBottom = '2px solid #EF4444';
                     maxJobsMsgEl.style.display = 'block';
-                    maxJobsMsgEl.textContent = `Maximum ${activeCount} job is running. Please wait for completion.`; 
+                    maxJobsMsgEl.textContent = `Maximum ${activeCount} job is running. Please wait for completion.`; // Updated message
                 } else {
                     // Only enable if fewer than 1 job AND a file is selected
                      if (processBtn && csvFileInput) {
@@ -929,11 +929,13 @@
             }
         }
         
-        // --- AUTHENTICATED DOWNLOAD FUNCTION (FIX for "Needs Authorisation") ---
+        // --- AUTHENTICATED DOWNLOAD FUNCTION (FIX for "Needs Authorisation" 401) ---
+        // This function must be defined globally to be used in fetchAndUpdateJobStatus
         async function handleAuthenticatedDownload(jobId, jobFilename) {
             // Ensure filename is clean and safe
             const safeFilename = `${jobFilename.replace('.csv', '').replace(/'/g, '').replace(/"/g, '')}_verified.csv`;
-            const downloadUrl = `${API_BULK_JOBS}?action=download&jobId=${jobId}`;
+            // API_BULK_JOBS is available globally from bulk_verification_logic.js
+            const downloadUrl = `${API_BULK_JOBS}?action=download&jobId=${jobId}`; 
 
             try {
                 // Use authFetch to ensure JWT is included in the header
@@ -941,12 +943,10 @@
 
                 if (!resp.ok) {
                     const errorText = await resp.text();
-                    // If the response is an expected JSON error (from the server's 404/500 handlers), display it.
                     if (errorText.startsWith('{') && errorText.endsWith('}')) {
                          const errorJson = JSON.parse(errorText);
                          alert('Download failed: ' + (errorJson.message || 'File unavailable.'));
                     } else {
-                        // General network/stream error
                         alert('Download failed. Please try again later.');
                     }
                     return;

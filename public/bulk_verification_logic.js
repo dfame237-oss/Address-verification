@@ -129,8 +129,9 @@ async function handleBulkVerification() {
     // Requirement 3 Check: Max 1 active job
     const activeJobs = await getActiveJobCount();
     if (activeJobs >= 1) { 
-        // FIX: Updated user message for single job limit
-        updateStatusMessage("Maximum 1 file is already processing. Please wait for completion.", true);
+        // FIX: Using alert() for clear, immediate pop-up message as requested
+        alert("⚠️ A job is already in progress. Please wait for completion before submitting a new file.");
+        updateStatusMessage("Job submission blocked. One job is already running.", true);
         return;
     }
 
@@ -168,7 +169,9 @@ async function handleBulkVerification() {
             const result = await resp.json();
 
             if (resp.status === 429) { // Server rejected due to max jobs (now 1)
-                updateStatusMessage(`Maximum 1 job is already processing. Please wait for completion.`, true);
+                // FIX: Using alert() for server-side concurrency block
+                alert("⚠️ A job is already in progress on the server. Please wait for completion.");
+                updateStatusMessage(`Job submission blocked. Server busy.`, true);
             } else if (!resp.ok && resp.status !== 429) { // General HTTP/Credit Error
                 updateStatusMessage(result.message || `Job submission failed (Status: ${resp.status}).`, true);
             } else if (result.status === 'Success' && result.jobId) {

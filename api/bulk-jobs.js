@@ -66,13 +66,13 @@ function parseCSV(text) {
 function createCSV(rows) {
     // Use SEMICOLON (;) for better auto-detection in international spreadsheet programs
     const CUSTOM_DELIMITER = ";"; 
-    
-    // Updated header line to use the semicolon delimiter
+    
+    // Updated header line to use the semicolon delimiter
     const header = "ORDER ID;CUSTOMER NAME;CUSTOMER RAW ADDRESS;CLEAN NAME;CLEAN ADDRESS LINE 1;LANDMARK;STATE;DISTRICT;PIN;REMARKS;QUALITY\n";
     const escapeAndQuote = (cell) => {
-        // Encapsulate data in quotes and escape any internal quotes
+        // Encapsulate data in quotes and escape any internal quotes
         return `\"${String(cell || '').replace(/\"/g, '\"\"')}\"`;
-    };
+    };
     
     const outputRows = rows.map(vr => {
         return [
