@@ -1,13 +1,13 @@
 // api/public-single-address.js
 // Handles free, unauthenticated single address verification.
-// Logic derived from the original verify-single-address.js, but with ALL authentication/credit logic REMOVED.
+// IMPORTANT: This version implements the final, fixed Gemini prompt for maximum accuracy.
 
 const INDIA_POST_API = 'https://api.postalpincode.in/pincode/'; 
 let pincodeCache = {};
 
-// NOTE: We do not require('../db') or use the clients collection here.
+// NOTE: We do not require('../db') or use any authentication/credit logic here.
 
-const testingKeywords = ['test', 'testing', 'asdf', 'qwer', 'zxcv', 'random', 'gjnj', 'fgjnj']; 
+// Removed 'testingKeywords' as requested.
 const coreMeaningfulWords = [
     "ddadu", "ddadu", "ai", "add", "add-", "raw", "dumping", "grand", "dumping grand",
     "chd", "chd-", "chandigarh", "chandigarh-", "chandigarh", "west", "sector", "sector-",
@@ -15,7 +15,8 @@ const coreMeaningfulWords = [
     "majra", "colony", "dadu", "dadu majra", "shop", "wine", "wine shop", "house", "number",
     "tq", "job", "dist"
 ]; 
-const meaningfulWords = [...coreMeaningfulWords, ...testingKeywords]; 
+// meaningfulWords list is now only core meaningful words, excluding testing keywords
+const meaningfulWords = [...coreMeaningfulWords]; 
 const meaninglessRegex = new RegExp(`\\b(?:${meaningfulWords.join('|')})\\b`, 'gi'); 
 const directionalKeywords = ['near', 'opposite', 'back side', 'front side', 'behind', 'opp']; 
 
@@ -95,7 +96,7 @@ async function getGeminiResponse(prompt) {
     }
 }
 
-// --- Utilities & Prompt Builder (FIXED P.O. and PIN verification logic) ---
+// --- Utilities & Prompt Builder (FIXED) ---
 function extractPin(address) {
     const match = String(address).match(/\b\d{6}\b/); 
     return match ? match[0] : null; 
@@ -154,7 +155,7 @@ function processAddress(address, postalData) {
 
 // --- Main Handler (FREE POST ONLY) ---
 module.exports = async (req, res) => {
-    // CORS Setup
+    // CORS Setup for public access
     res.setHeader('Access-Control-Allow-Credentials', true); 
     res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins for public access
     res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS'); 
@@ -214,7 +215,7 @@ module.exports = async (req, res) => {
             }; 
         }
 
-        // PIN verification/correction logic (FIXED: Handles AI-corrected PIN by re-running India Post check)
+        // PIN verification/correction logic 
         let finalPin = String(parsedData.PIN).match(/\b\d{6}\b/) ? 
         parsedData.PIN : initialPin; 
         let primaryPostOffice = postalData.PostOfficeList ? postalData.PostOfficeList[0] : {}; 
@@ -248,7 +249,7 @@ module.exports = async (req, res) => {
             remarks.push(`CRITICAL_ALERT: Formatted address is short (${parsedData.FormattedAddress.length} chars). Manual verification recommended.`); 
         }
 
-        // Landmark directional prefix logic (Same as original)
+        // Landmark directional prefix logic 
         let landmarkValue = parsedData.Landmark || ''; 
         const originalAddressLower = address.toLowerCase(); 
         let finalLandmark = ''; 
@@ -270,14 +271,14 @@ module.exports = async (req, res) => {
             remarks.push('Address verified and formatted successfully.'); 
         }
 
-        // Build final response (FIXED: Prioritizes AI's contextual P.O./Tehsil selection)
+        // Build final response (Prioritizes AI's contextual P.O./Tehsil selection)
         const finalResponse = {
             status: "Success",
             customerRawName: customerName,
             customerCleanName: cleanedName,
             addressLine1: parsedData.FormattedAddress || address.replace(meaninglessRegex, '').trim() || '', 
             landmark: finalLandmark, 
-            // Prioritize AI's P.O. selection (parsedData['P.O.']) over the India Post API's arbitrary first entry
+            // CRITICAL FIX: Prioritize AI's P.O. selection (parsedData['P.O.'])
             postOffice: parsedData['P.O.']?.replace('P.O. ', '') || primaryPostOffice.Name || '', 
             tehsil: parsedData.Tehsil?.replace('Tehsil ', '') || primaryPostOffice.Taluk || '', 
             district: parsedData['DIST.'] || primaryPostOffice.District || '', 
