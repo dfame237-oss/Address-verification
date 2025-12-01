@@ -12,7 +12,7 @@ const coreMeaningfulWords = [
     "tq", "job", "dist"
 ];
 const meaningfulWords = [...coreMeaningfulWords, ...testingKeywords]; 
-const meaninglessRegex = new RegExp(`\\b(?:${meaningWords.join('|')})\\b`, 'gi');
+const meaninglessRegex = new RegExp(`\\b(?:${meaningfulWords.join('|')})\\b`, 'gi');
 const directionalKeywords = ['near', 'opposite', 'back side', 'front side', 'behind', 'opp'];
 // --- DB helper and auth ---
 const { connectToDatabase } = require('../utils/db');
