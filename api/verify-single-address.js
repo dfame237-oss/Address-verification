@@ -20,6 +20,15 @@ const jwt = require('jsonwebtoken');
 const { ObjectId } = require('mongodb'); 
 const JWT_SECRET = process.env.JWT_SECRET || 'replace_with_env_jwt_secret';
 
+// --- Static Map for Location Conflict Check (New) ---
+const MAJOR_CITY_CONFLICTS = {
+    'mumbai': 'Maharashtra',
+    'delhi': 'Delhi',
+    'chennai': 'Tamil Nadu',
+    'bangalore': 'Karnataka',
+    'kolkata': 'West Bengal',
+};
+
 
 // --- India Post helper ---
 async function getIndiaPostData(pin) {
@@ -214,13 +223,45 @@ async function runVerificationLogic(address, customerName) {
         finalPin = initialPin || null; 
     }
 
-    if (parsedData.FormattedAddress && parsedData.FormattedAddress.length < 35 && parsedData.AddressQuality !== 'Very Good' && parsedData.AddressQuality !== 'Good') {
+    const verifiedState = primaryPostOffice.State || parsedData.State || '';
+    let currentQuality = parsedData.AddressQuality;
+    const rawAddressLower = address.toLowerCase();
+
+    // --- 4. RULE: Missing Locality/Specifics Check ---
+    const hasHouseOrFlat = parsedData['H.no.'] || parsedData['Flat No.'] || parsedData['Plot No.'];
+    const hasStreetOrColony = parsedData.Street || parsedData.Colony || parsedData.Locality;
+
+    if (!hasHouseOrFlat && !hasStreetOrColony) {
+        remarks.push(`CRITICAL_ALERT: Raw address lacks street/house/colony details. Quality penalized.`);
+        if (currentQuality === 'Very Good' || currentQuality === 'Good' || currentQuality === 'Medium') {
+            parsedData.AddressQuality = 'Bad';
+        }
+        currentQuality = parsedData.AddressQuality; // Update for next check
+    }
+
+    // --- 5. RULE: Location Conflict Downgrade Check ---
+    if (verifiedState) {
+        const verifiedStateLower = verifiedState.toLowerCase();
+        for (const city in MAJOR_CITY_CONFLICTS) {
+            const expectedStateLower = MAJOR_CITY_CONFLICTS[city].toLowerCase();
+
+            if (rawAddressLower.includes(city) && !verifiedStateLower.includes(expectedStateLower)) {
+                remarks.push(`CRITICAL_ALERT: Major location conflict found. Raw address mentioned '${city.toUpperCase()}' but verified state is '${verifiedState}'. Quality severely penalized.`);
+                
+                parsedData.AddressQuality = 'Very Bad';
+                currentQuality = parsedData.AddressQuality; // Update for next check
+                break; 
+            }
+        }
+    }
+
+    // 6. --- Short Address Check ---
+    if (parsedData.FormattedAddress && parsedData.FormattedAddress.length < 35 && currentQuality !== 'Very Good' && currentQuality !== 'Good') {
         remarks.push(`CRITICAL_ALERT: Formatted address is short (${parsedData.FormattedAddress.length} chars). Manual verification recommended.`);
     }
 
-    // 4. --- Landmark directional prefix logic ---
+    // 7. --- Landmark directional prefix logic ---
     let landmarkValue = parsedData.Landmark || ''; 
-    const originalAddressLower = address.toLowerCase(); 
     let finalLandmark = ''; 
     if (landmarkValue.toString().trim() !== '') {
         const foundDirectionalWord = directionalKeywords.find(keyword => originalAddressLower.includes(keyword));
