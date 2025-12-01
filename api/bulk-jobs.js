@@ -8,6 +8,9 @@ const jwt = require('jsonwebtoken');
 // Import core verification logic from verify-single-address.js to use internally
 const { getIndiaPostData, processAddress, extractPin, meaninglessRegex } = require('./verify-single-address');
 
+// ADDED FOR DETAILED REMARKS LOGIC:
+const directionalKeywords = ['near', 'opposite', 'back side', 'front side', 'behind', 'opp']; 
+
 const JWT_SECRET = process.env.JWT_SECRET || 'replace_with_env_jwt_secret';
 const MAX_ACTIVE_JOBS = 1; // FIX: Set to 1 to enforce single job concurrency
 
@@ -64,7 +67,7 @@ function parseCSV(text) {
 
 // --- Helper: CSV result builder (FIXED FOR CONSISTENT COMMA DELIMITER) ---
 function createCSV(rows) {
-    // FIX APPLIED HERE: Use COMMA (,) consistently to match the input parser and template
+    // FIX APPLIED: Use COMMA (,) consistently for CSV format
     const CUSTOM_DELIMITER = ","; 
     
     // Header line uses comma
@@ -148,23 +151,92 @@ async function runJobProcessor(db, jobId, client, addresses) {
                          addressLine1: "API Error: See Remarks", landmark: "", state: "", district: "", pin: "", addressQuality: "VERY BAD"
                      };
                 } else {
-                    // Simplified result structure
+                    let remarks = [];
+                    successfulVerifications++;
+
+                    // Parse Gemini JSON output
                     const jsonText = geminiResult.text.replace(/```json|```/g, '').trim(); 
                     let parsedData;
-                    try { parsedData = JSON.parse(jsonText); } catch(e) { parsedData = {}; }
+                    try {
+                        parsedData = JSON.parse(jsonText);
+                    } catch (e) {
+                        console.error('JSON Parsing Error in bulk job:', e.message);
+                        remarks.push(`CRITICAL_ALERT: JSON parse failed. Raw Gemini Output: ${String(geminiResult.text || '').substring(0, 50)}...`);
+                        parsedData = {
+                            FormattedAddress: rawAddress.replace(meaninglessRegex, '').trim(),
+                            Landmark: '', State: '', 'DIST.': '', PIN: initialPin, 
+                            AddressQuality: 'Very Bad', Remaining: remarks[0],
+                        };
+                    }
 
+                    // --- PIN verification/correction logic (copied from verify-single-address.js) ---
+                    let finalPin = String(parsedData.PIN).match(/\b\d{6}\b/) ? parsedData.PIN : initialPin; 
+                    let primaryPostOffice = postalData.PostOfficeList ? postalData.PostOfficeList[0] : {};
+                    
+                    if (finalPin) {
+                        if (postalData.PinStatus !== 'Success' || (initialPin && finalPin !== initialPin)) {
+                            const aiPostalData = await getIndiaPostData(finalPin);
+                            if (aiPostalData.PinStatus === 'Success') {
+                                postalData = aiPostalData;
+                                primaryPostOffice = postalData.PostOfficeList[0] || {}; 
+                                if (initialPin && initialPin !== finalPin) {
+                                    remarks.push(`CRITICAL_ALERT: Wrong PIN (${initialPin}) corrected to (${finalPin}).`);
+                                } else if (!initialPin) {
+                                    remarks.push(`Correct PIN (${finalPin}) added by AI.`);
+                                }
+                            } else {
+                                remarks.push(`CRITICAL_ALERT: AI-provided PIN (${finalPin}) not verified by API.`);
+                                finalPin = initialPin; 
+                            }
+                        } else if (initialPin && postalData.PinStatus === 'Success') {
+                            remarks.push(`PIN (${initialPin}) verified successfully.`);
+                        }
+                    } else {
+                        remarks.push('CRITICAL_ALERT: PIN not found after verification attempts. Manual check needed.');
+                        finalPin = initialPin || null; 
+                    }
+
+                    if (parsedData.FormattedAddress && parsedData.FormattedAddress.length < 35 && parsedData.AddressQuality !== 'Very Good' && parsedData.AddressQuality !== 'Good') {
+                        remarks.push(`CRITICAL_ALERT: Formatted address is short (${parsedData.FormattedAddress.length} chars). Manual verification recommended.`);
+                    }
+
+                    // --- Landmark directional prefix logic ---
+                    let landmarkValue = parsedData.Landmark || ''; 
+                    const originalAddressLower = rawAddress.toLowerCase(); 
+                    let finalLandmark = ''; 
+                    if (landmarkValue.toString().trim() !== '') {
+                        const foundDirectionalWord = directionalKeywords.find(keyword => originalAddressLower.includes(keyword));
+                        if (foundDirectionalWord) {
+                            const originalDirectionalWordMatch = rawAddress.match(new RegExp(`\\b${foundDirectionalWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i'));
+                            const originalDirectionalWord = originalDirectionalWordMatch ? originalDirectionalWordMatch[0] : foundDirectionalWord; 
+                            const prefixedWord = originalDirectionalWord.charAt(0).toUpperCase() + originalDirectionalWord.slice(1); 
+                            finalLandmark = `${prefixedWord} ${landmarkValue.toString().trim()}`;
+                        } else {
+                            finalLandmark = `Near ${landmarkValue.toString().trim()}`;
+                        }
+                    }
+
+                    if (parsedData.Remaining && parsedData.Remaining.trim() !== '') {
+                        remarks.push(`Remaining/Ambiguous Text: ${parsedData.Remaining.trim()}`);
+                    } 
+                    
+                    // Final default remark if nothing critical was logged
+                    if (remarks.length === 0) {
+                        remarks.push('Address verified and formatted successfully.');
+                    }
+                    
+                    // --- Construct final verificationResult object ---
                     verificationResult = {
                         status: "Success",
                         customerCleanName: (customerName || '').replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim() || null,
                         addressLine1: parsedData.FormattedAddress || rawAddress,
-                        landmark: parsedData.Landmark || '',
-                        state: parsedData.State || '',
-                        district: parsedData['DIST.'] || '',
-                        pin: parsedData.PIN || initialPin,
+                        landmark: finalLandmark,
+                        state: primaryPostOffice.State || parsedData.State || '',
+                        district: primaryPostOffice.District || parsedData['DIST.'] || '',
+                        pin: finalPin,
                         addressQuality: parsedData.AddressQuality || 'Medium',
-                        remarks: 'Processed by AI.', // Simplified remark
+                        remarks: remarks.join('; ').trim(), // This now includes all detailed remarks
                     };
-                    successfulVerifications++;
                 }
             } catch (error) {
                 console.error(`Error processing row ${i} in job ${jobId}:`, error);
