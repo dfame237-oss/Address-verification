@@ -1,52 +1,42 @@
-// public/bulk_verification_logic.js
-// Bulk verification logic refactored for Enterprise UX (Drag & Drop, Preview, Filtering)
+// api/bulk-jobs.js
+// Handles Bulk Verification Job Submission, Status Polling, Cancellation, and Throttled Concurrent Processing
 
-// NOTE: Assumes API_BULK_JOBS, authFetch, checkPlanValidity, showTab are global from client-dashboard.html
+const { connectToDatabase } = require('../utils/db');
+const { ObjectId } = require('mongodb');
+const jwt = require('jsonwebtoken');
 
-// --- FIX: REMOVED CONFLICTING DECLARATION ---
-// const API_BULK_JOBS = '/api/bulk-jobs'; 
+// FIX: Correctly import the reusable core verification function from the single-address file
+const { 
+    runVerificationLogic 
+} = require('./verify-single-address'); 
 
-// --- UI helpers (existing) ---
-function updateStatusMessage(message, isError = false) {
-    const statusMessage = document.getElementById('status-message');
-    if (!statusMessage) return;
+const JWT_SECRET = process.env.JWT_SECRET || 'replace_with_env_jwt_secret';
+const MAX_ACTIVE_JOBS = 1; // Enforce single job concurrency
 
-    statusMessage.textContent = message;
+// --- NEW CONFIGURATION: Throttle concurrent calls to avoid QPS rate limits ---
+const MAX_CONCURRENT_CALLS = 10; 
 
-    statusMessage.classList.remove('text-red-700', 'bg-red-100', 'text-gray-600', 'bg-tf-light', 'font-bold');
-    statusMessage.classList.add('p-2', 'rounded');
-    if (isError) {
-        statusMessage.classList.add('text-red-700', 'bg-red-100', 'font-bold');
-        statusMessage.classList.remove('text-gray-600', 'bg-tf-light');
-    } else {
-        statusMessage.classList.add('text-gray-600', 'bg-tf-light');
-        statusMessage.classList.remove('bg-red-100', 'font-bold');
+// --- Helper: parse JWT payload from Authorization header ---
+function parseJwtFromHeader(req) {
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    if (!authHeader) return null;
+    const parts = authHeader.split(' ');
+    if (parts.length !== 2) return null;
+    const token = parts[1];
+    try {
+        const payload = jwt.verify(token, JWT_SECRET);
+        if (!payload || !payload.clientId) return null;
+        return payload;
+    } catch (e) {
+        return null;
     }
 }
 
-// --- Template download (unchanged) ---
-function handleTemplateDownload() {
-    const templateHeaders = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS\n";
-    const templateData =
-        "1,\"John Doe\",\"H.No. 123, Sector 40B, near bus stand, Chandigarh\"\n" +
-        "2,\"Jane Smith\",\"5th Floor, Alpha Tower, Mumbai 400001\"\n";
-    const csvContent = templateHeaders + templateData;
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', 'address_verification_template.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-// --- CSV parsing (for local row counting and preview) ---
+// --- Helper: CSV parser (Uses Comma Delimiter) ---
 function parseCSV(text) {
     const lines = text.split('\n');
-    if (lines.length < 2) return { rows: [], header: [] };
+    if (lines.length < 2) return [];
 
-    // Enterprise Improvement: Use proper CSV parsing logic (simplified here)
     const header = lines[0].split(',').map(h => h.trim().replace(/^\"|\"$/g, ''));
     const data = [];
     const idIndex = header.indexOf('ORDER ID');
@@ -54,14 +44,15 @@ function parseCSV(text) {
     const addressIndex = header.indexOf('CUSTOMER RAW ADDRESS');
 
     if (idIndex === -1 || nameIndex === -1 || addressIndex === -1) {
-        return { rows: [], header: [] };
+        return [];
     }
 
     for (let i = 1; i < lines.length; i++) {
         if (lines[i].trim() === '') continue;
+        
         const row = lines[i].match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g) || [];
-
         const cleanedRow = row.map(cell => cell.trim().replace(/^\"|\"$/g, '').replace(/\"\"/g, '\"'));
+        
         if (cleanedRow.length > Math.max(idIndex, nameIndex, addressIndex)) {
             data.push({
                 'ORDER ID': cleanedRow[idIndex],
@@ -70,273 +61,373 @@ function parseCSV(text) {
             });
         }
     }
-    return { rows: data, header: header };
+    return data;
 }
 
-// --- Enterprise Improvement: CSV Preview Generator ---
-function generatePreview(data) {
-    const tableEl = document.getElementById('preview-table');
-    const previewSection = document.getElementById('preview-section');
+// --- Helper: CSV result builder (Uses Comma Delimiter) ---
+function createCSV(rows) {
+    // FIX: Uses Comma delimiter for consistency
+    const CUSTOM_DELIMITER = ","; 
+    const header = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS,CLEAN NAME,CLEAN ADDRESS LINE 1,LANDMARK,STATE,DISTRICT,PIN,REMARKS,QUALITY\n";
     
-    if (data.rows.length === 0) {
-        previewSection.classList.add('hidden');
-        return;
-    }
+    const escapeAndQuote = (cell) => {
+        return `\"${String(cell || '').replace(/\"/g, '\"\"')}\"`;
+    };
     
-    // Create Header Row
-    let html = '<thead><tr>';
-    // Use only the required headers for clarity
-    const requiredHeaders = ['ORDER ID', 'CUSTOMER NAME', 'CUSTOMER RAW ADDRESS']; 
-    requiredHeaders.forEach(h => {
-        html += `<th>${h}</th>`;
-    });
-    html += '</tr></thead><tbody>';
+    const outputRows = rows.map(vr => {
+        const cleanName = vr.customerCleanName || '';
+        const addressLine1 = vr.addressLine1 || '';
+        const landmark = vr.landmark || '';
+        const state = vr.state || '';
+        const district = vr.district || '';
+        const pin = vr.pin || '';
+        const remarks = vr.remarks || '';
+        const addressQuality = vr.addressQuality || 'Very Bad';
 
-    // Add up to 5 rows for preview
-    const rowsToDisplay = data.rows.slice(0, 5);
-    rowsToDisplay.forEach(row => {
-        html += '<tr>';
-        requiredHeaders.forEach(h => {
-            // Truncate long addresses for the preview display
-            const cellContent = row[h].length > 40 ? row[h].substring(0, 37) + '...' : row[h];
-            html += `<td>${cellContent}</td>`;
-        });
-        html += '</tr>';
+        return [
+            vr['ORDER ID'],
+            vr['CUSTOMER NAME'],
+            vr['CUSTOMER RAW ADDRESS'],
+            cleanName,
+            addressLine1,
+            landmark,
+            state,
+            district,
+            pin,
+            remarks,
+            addressQuality
+        ].map(escapeAndQuote).join(CUSTOM_DELIMITER); 
     });
-
-    html += '</tbody>';
-    tableEl.innerHTML = html;
-    previewSection.classList.remove('hidden');
+    
+    return header + outputRows.join('\n');
 }
 
 
-// --- NEW: Check Active Job Count (Replaces function in HTML) ---
-async function getActiveJobCount() {
-    // NOTE: authFetch is a global function assumed to be available
-    try {
-        const resp = await authFetch('/api/client/index?action=active-jobs', { method: 'GET' });
-        const json = await resp.json();
-        if (json.status === 'Success' && typeof json.activeJobsCount === 'number') {
-            return json.activeJobsCount;
+/**
+ * Executes an array of asynchronous tasks (promises) in chunks (throttling).
+ * THIS FUNCTION IS CRITICAL FOR AVOIDING RATE LIMIT ERRORS.
+ */
+async function processInChunks(promiseFactories, limit, jobId, jobsCollection) {
+    const results = [];
+    
+    for (let i = 0; i < promiseFactories.length; i += limit) {
+        // Check for cancellation signal before starting the next chunk
+        const jobStatusCheck = await jobsCollection.findOne({ _id: jobId }, { projection: { status: 1 } });
+        if (jobStatusCheck.status === 'Cancelled') {
+            throw new Error('JobCancelled');
         }
-        return 0;
-    } catch (e) {
-        console.error('Failed to get active job count:', e);
-        return 0;
-    }
-}
-
-// --- Main bulk handler (refactored for job submission) ---
-async function handleBulkVerification() {
-    // Note: API_BULK_JOBS is assumed global
-    if (!checkPlanValidity() || !isPlanValid) {
-        updateStatusMessage("Access denied. Plan is expired or disabled.", true);
-        return;
-    }
-
-    const fileInput = document.getElementById('csvFileInput');
-    const processButton = document.getElementById('processButton');
-
-    if (!fileInput.files.length) {
-        updateStatusMessage("Please select a CSV file first.", true);
-        return;
-    }
-
-    // Requirement 3 Check: Max 1 active job
-    const activeJobs = await getActiveJobCount();
-    if (activeJobs >= 1) { 
-        alert("⚠️ A job is already in progress. Please wait for completion before submitting a new file.");
-        updateStatusMessage("Job submission blocked. One job is already running.", true);
-        return;
-    }
-
-    const file = fileInput.files[0];
-    const reader = new FileReader();
-
-    processButton.disabled = true;
-    fileInput.disabled = true;
-    updateStatusMessage('Reading file and performing credit check...');
-
-    reader.onload = async function (e) {
-        const text = e.target.result;
-        const { rows: addresses } = parseCSV(text);
-
-        if (addresses.length === 0) {
-            updateStatusMessage("Error: No valid addresses found in CSV. Check format and required columns.", true);
-            processButton.disabled = false;
-            fileInput.disabled = false;
-            return;
-        }
-
-        const totalRows = addresses.length;
         
-        // --- NEW: POST JOB TO SERVER ---
-        try {
-            updateStatusMessage(`Submitting job for ${totalRows} addresses...`);
-            // API_BULK_JOBS is accessed as a global variable defined elsewhere (in client-dashboard.html)
-            const resp = await authFetch(API_BULK_JOBS, {
-                method: 'POST',
-                body: JSON.stringify({ 
-                    filename: file.name,
-                    csvData: text,
-                    totalRows: totalRows
-                })
-            });
-            const result = await resp.json();
+        const chunk = promiseFactories.slice(i, i + limit);
+        // Execute the chunk concurrently
+        const chunkResults = await Promise.all(chunk.map(factory => factory()));
+        results.push(...chunkResults);
+        
+        // Update progress in the database after each chunk
+        await jobsCollection.updateOne({ _id: jobId }, { $set: { processedCount: Math.min(i + limit, promiseFactories.length) } });
+    }
+    return results;
+}
 
-            if (resp.status === 429) { // Server rejected due to max jobs (now 1)
-                alert("⚠️ A job is already in progress on the server. Please wait for completion.");
-                updateStatusMessage(`Job submission blocked. Server busy.`, true);
-            } else if (!resp.ok && resp.status !== 429) { // General HTTP/Credit Error
-                updateStatusMessage(result.message || `Job submission failed (Status: ${resp.status}).`, true);
-            } else if (result.status === 'Success' && result.jobId) {
-                updateStatusMessage(`Verification job submitted (ID: ${result.jobId}). Processing started asynchronously.`);
+// --------------------------------------------------------
+// NEW: Cleanup Old Jobs Helper (Runs on status check)
+// --------------------------------------------------------
+async function cleanupOldJobs(jobsCollection) {
+    // Defines the time 24 hours ago
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000); 
+    
+    try {
+        // *** CRITICAL CHANGE: Only delete jobs where status is 'Completed' 
+        // AND completedTime is less than 24 hours ago. ***
+        const result = await jobsCollection.deleteMany({
+            status: 'Completed',
+            completedTime: { $lt: twentyFourHoursAgo }
+        });
+        // You can log this for debugging on the server
+        // console.log(`Cleanup ran. Deleted ${result.deletedCount} old completed jobs.`);
+        return result.deletedCount;
+    } catch (e) {
+        console.error('Failed to cleanup old jobs:', e);
+        return 0;
+    }
+}
+
+
+// --------------------------------------------------------
+// CORE JOB PROCESSOR (THROTTLED CONCURRENT EXECUTION)
+// --------------------------------------------------------
+async function runJobProcessor(db, jobId, client, addresses) {
+    const jobsCollection = db.collection('bulkJobs');
+    const clientsCollection = db.collection('clients');
+    
+    console.log(`Starting throttled job ${jobId.toString()} for client ${client.username}`);
+    
+    await jobsCollection.updateOne(
+        { _id: jobId }, 
+        { $set: { status: 'In Progress', startTime: new Date(), processedCount: 0 } }
+    );
+    
+    const isUnlimited = (client.remainingCredits === 'Unlimited' || String(client.initialCredits).toLowerCase() === 'unlimited');
+    let successfulVerifications = 0;
+    
+    // --- 1. Map addresses to an array of promise factories (functions that return promises) ---
+    const promiseFactories = addresses.map(row => {
+        const rawAddress = row['CUSTOMER RAW ADDRESS'] || '';
+        const customerName = row['CUSTOMER NAME'] || '';
+        
+        // Return a promise factory function (the work definition)
+        return async () => {
+            if (!rawAddress || rawAddress.trim() === "") {
+                return { 
+                    'ORDER ID': row['ORDER ID'], 'CUSTOMER NAME': row['CUSTOMER NAME'], 'CUSTOMER RAW ADDRESS': rawAddress,
+                    status: "Skipped", remarks: "Missing raw address in CSV row.", addressQuality: "Very Bad", 
+                    customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "" 
+                };
+            } 
+
+            try {
+                // Call the unified logic
+                const result = await runVerificationLogic(rawAddress, customerName);
                 
-                // Requirement 2: Switch to 'In Progress' tab
-                // NOTE: showTab is defined globally in the HTML.
-                const inProgressBtn = document.getElementById('in-progress-tab-btn');
-                if (inProgressBtn) showTab('in-progress-jobs', inProgressBtn); 
-                
-                // Refresh credit UI after submission
-                const afterCreditsResp = await getRemainingCredits();
-                if (afterCreditsResp.ok) {
-                    const rc = afterCreditsResp.remainingCredits;
-                    const remEl = document.getElementById('plan-remaining-credits'); // Update plan card
-                    if (remEl) remEl.textContent = rc === 'Unlimited' ? 'Unlimited' : Number(rc).toLocaleString();
+                if (result.success) {
+                    successfulVerifications++; 
                 }
-
-            } else {
-                updateStatusMessage(result.message || 'Job submission failed due to unknown server response.', true);
+                
+                // Return the full mapped result
+                return {
+                    'ORDER ID': row['ORDER ID'], 'CUSTOMER NAME': row['CUSTOMER NAME'], 'CUSTOMER RAW ADDRESS': rawAddress,
+                    status: result.status, customerCleanName: result.customerCleanName, addressLine1: result.addressLine1,
+                    landmark: result.landmark, state: result.state, district: result.district, pin: result.pin,
+                    addressQuality: result.addressQuality, remarks: result.remarks,
+                };
+            } catch (e) {
+                // Catch any error from runVerificationLogic and map to an error row
+                console.error(`Error processing address for ID ${row['ORDER ID']}:`, e);
+                return { 
+                    'ORDER ID': row['ORDER ID'], 'CUSTOMER NAME': row['CUSTOMER NAME'], 'CUSTOMER RAW ADDRESS': rawAddress,
+                    status: "Error", remarks: `Fatal processing error: ${e.message}`, addressQuality: "Very Bad", 
+                    customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "" 
+                };
             }
-        } catch (error) {
-            updateStatusMessage(`Network error during job submission: ${error.message}`, true);
-        } finally {
-            processButton.disabled = false;
-            fileInput.disabled = false;
-        }
-    };
-
-    reader.onerror = function () {
-        updateStatusMessage("Error reading file.", true);
-        processButton.disabled = false;
-        fileInput.disabled = false;
-    };
-
-    reader.readAsText(file);
-}
-
-// --- NEW: Handle Job Cancellation (Requirement 4) ---
-async function handleCancelJob(jobId) {
-    if (!confirm(`Are you sure you want to cancel Job ID: ${jobId}?`)) return;
-
-    // Note: authFetch and API_BULK_JOBS are assumed global
-    try {
-        const resp = await authFetch(API_BULK_JOBS + '?action=cancel', {
-            method: 'PUT',
-            body: JSON.stringify({ jobId })
-        });
-        const result = await resp.json();
-
-        if (result.status === 'Success') {
-            updateStatusMessage(`Cancellation request sent for Job ${jobId}. Status will update shortly.`, false);
-        } else {
-            updateStatusMessage(`Failed to cancel Job ${jobId}: ${result.message}`, true);
-        }
-    } catch (e) {
-        updateStatusMessage(`Network error during cancellation: ${e.message}`, true);
-    }
-}
-
-// --- Enterprise Improvement: Drag & Drop Handlers ---
-function setupDragDropListeners() {
-    const dropZone = document.getElementById('drop-zone');
-    const fileInput = document.getElementById('csvFileInput');
-    const fileNameDisplay = document.getElementById('file-name-display');
-    const processButton = document.getElementById('processButton');
-    
-    // Prevent default drag behaviors
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, preventDefaults, false);
-    });
-
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
-    // Highlight drop zone when item is dragged over it
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
-    });
-
-    // Handle dropped files
-    dropZone.addEventListener('drop', handleDrop, false);
-
-    function handleDrop(e) {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        
-        if (files.length) {
-            fileInput.files = files; // Assign files to the hidden input
-            handleFileSelection(files[0]);
-        }
-    }
-    
-    // Handle file selection via click/drag
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length) {
-            handleFileSelection(e.target.files[0]);
-        } else {
-            fileNameDisplay.textContent = 'No file chosen';
-            processButton.disabled = true;
-            document.getElementById('preview-section').classList.add('hidden');
-        }
-    });
-    
-    function handleFileSelection(file) {
-        fileNameDisplay.textContent = file.name;
-        processButton.disabled = false;
-        
-        // Read file content for preview
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const text = e.target.result;
-            const previewData = parseCSV(text);
-            generatePreview(previewData);
         };
-        reader.readAsText(file);
-    }
-}
+    });
 
-
-// --- Init listeners (call from client-dashboard on load) ---
-function initBulkListeners() {
-    // Export core functions needed by client-dashboard.html
-    window.handleCancelJob = handleCancelJob; 
-
-    if (isPlanValid) {
-        const downloadTemplateButton = document.getElementById('downloadTemplateButton');
-        const csvFileInput = document.getElementById('csvFileInput');
-        const processButton = document.getElementById('processButton');
-
-        // Setup Drag & Drop and manual file change listeners (NEW)
-        setupDragDropListeners(); 
+    let outputRows;
+    try {
+        // --- 2. Execute promises in throttled chunks (10 at a time) ---
+        outputRows = await processInChunks(promiseFactories, MAX_CONCURRENT_CALLS, jobId, jobsCollection);
         
-        // Setup Search/Filtering listeners (NEW)
-        // NOTE: window.filterJobsList is defined in client-dashboard.html
-        document.getElementById('in-progress-search')?.addEventListener('input', window.filterJobsList);
-        document.getElementById('completed-search')?.addEventListener('input', window.filterJobsList);
-
-        if (downloadTemplateButton) {
-            downloadTemplateButton.addEventListener('click', handleTemplateDownload);
+    } catch (e) {
+        if (e.message === 'JobCancelled') {
+             console.log(`Job ${jobId} ended as cancelled.`);
+             await jobsCollection.updateOne({ _id: jobId }, { $set: { status: 'Cancelled' } });
+             return;
         }
-
-        if (processButton) {
-            processButton.addEventListener('click', handleBulkVerification);
+        console.error(`Fatal unexpected error during job ${jobId}:`, e);
+        await jobsCollection.updateOne({ _id: jobId }, { $set: { status: 'Failed', error: 'Throttled processing failed.' } });
+        return;
+    }
+    
+    // Final status check is now mostly redundant if catch blocks handle statuses correctly
+    const jobStatusCheck = await jobsCollection.findOne({ _id: jobId }, { projection: { status: 1 } });
+    if (jobStatusCheck.status === 'Cancelled') {
+        console.log(`Job ${jobId} ended as cancelled.`);
+        return; 
+    }
+    
+    // --- CRITICAL STEP: FINAL CREDIT DEDUCTION ---
+    if (!isUnlimited && successfulVerifications > 0) {
+        const deductionAmount = successfulVerifications; 
+        try {
+            const deductionResult = await clientsCollection.updateOne(
+                { _id: client._id, remainingCredits: { $ne: 'Unlimited' } },
+                { $inc: { remainingCredits: -deductionAmount } }
+            );
+            if (deductionResult.matchedCount === 0) {
+                console.warn(`Client ${client.username} used credits but deduction failed.`);
+            } else {
+                console.log(`Successfully deducted ${deductionAmount} credits for job ${jobId}.`);
+            }
+        } catch (e) {
+            console.error(`Failed to perform final bulk credit deduction for job ${jobId}:`, e);
         }
     }
+    
+    // Finalize Job
+    const finalCSV = createCSV(outputRows);
+    await jobsCollection.updateOne(
+        { _id: jobId }, 
+        // *** CRITICAL: Ensure completedTime is set on completion ***
+        { $set: { status: 'Completed', completedTime: new Date(), outputData: finalCSV, processedCount: addresses.length } } 
+    );
+    console.log(`Job ${jobId} completed successfully.`);
 }
+
+// --- Router Handler ---
+module.exports = async (req, res) => {
+    // CORS & Auth Setup
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+    if (req.method === 'OPTIONS') return res.status(200).end();
+
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const action = url.searchParams.get('action') || '';
+    
+    const jwtPayload = parseJwtFromHeader(req);
+    if (!jwtPayload || !jwtPayload.clientId) {
+        return res.status(401).json({ status: 'Error', message: 'Authentication required.' });
+    }
+    
+    let db;
+    try {
+        db = (await connectToDatabase()).db;
+    } catch (e) {
+        return res.status(500).json({ status: 'Error', message: 'Database connection failed.' });
+    }
+    const clientsCollection = db.collection('clients');
+    const jobsCollection = db.collection('bulkJobs');
+    const clientId = new ObjectId(jwtPayload.clientId);
+
+    let body = req.body;
+    if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { /* ignore */ } }
+    
+    // --------------------------------------------------------
+    // GET: LIST STATUS (Runs Cleanup)
+    // --------------------------------------------------------
+    if (req.method === 'GET' && (!action || action === 'list')) {
+        try {
+            // *** CRITICAL: Run cleanup before fetching the list ***
+            await cleanupOldJobs(jobsCollection); 
+            
+            const jobs = await jobsCollection.find({ clientId: jwtPayload.clientId }).sort({ submittedAt: -1 }).toArray();
+            return res.status(200).json({ status: 'Success', jobs });
+        } catch (e) {
+            console.error('GET /api/bulk-jobs error:', e);
+            return res.status(500).json({ status: 'Error', message: 'Failed to retrieve jobs.' });
+        }
+    }
+    
+    // --------------------------------------------------------
+    // POST: SUBMIT JOB (Requirements 3, 6)
+    // --------------------------------------------------------
+    if (req.method === 'POST') {
+        const { filename, csvData, totalRows } = body || {};
+        if (!csvData || !totalRows || !filename) return res.status(400).json({ status: 'Error', message: 'Missing file data.' });
+        
+        try {
+            const client = await clientsCollection.findOne({ _id: clientId });
+            if (!client) return res.status(404).json({ status: 'Error', message: 'Client not found.' });
+
+            // Check Max Active Jobs (Requirement 3 - Now 1)
+            const activeJobsCount = await jobsCollection.countDocuments({ clientId: jwtPayload.clientId, status: { $in: ['Queued', 'In Progress'] } });
+            if (activeJobsCount >= MAX_ACTIVE_JOBS) {
+                return res.status(429).json({ 
+                    status: 'Error', 
+                    message: `Maximum ${MAX_ACTIVE_JOBS} job is already in progress. Please wait for completion.` 
+                });
+            }
+
+            // Check Credits (Requirement 6 - Pre-check)
+            const remaining = client.remainingCredits;
+            if (remaining !== 'Unlimited' && Number(remaining) < totalRows) {
+                return res.status(400).json({ 
+                    status: 'Error', 
+                    message: `Insufficient Credits. You have ${remaining} credits but require ${totalRows}.` 
+                });
+            }
+
+            // Parse CSV for processing
+            const addresses = parseCSV(csvData);
+            if (addresses.length === 0) return res.status(400).json({ status: 'Error', message: 'No valid rows found in CSV.' });
+
+            // Create Job Document
+            const newJob = {
+                clientId: jwtPayload.clientId,
+                filename,
+                totalRows: addresses.length,
+                processedCount: 0,
+                status: 'Queued',
+                submittedAt: new Date(),
+                startTime: null,
+                completedTime: null,
+                outputData: null,
+                error: null,
+            };
+            const insertResult = await jobsCollection.insertOne(newJob);
+            const jobId = insertResult.insertedId;
+            
+            // --- Execute Job Processor (Throttled Concurrent Block) ---
+            runJobProcessor(db, jobId, client, addresses)
+                .catch(err => {
+                    console.error(`Job ${jobId} FAILED with uncaught error:`, err);
+                    jobsCollection.updateOne({ _id: jobId }, { $set: { status: 'Failed', error: 'Internal processing error.' } });
+                });
+            // --- End Concurrent Block ---
+
+            return res.status(200).json({ status: 'Success', message: 'Job submitted and started.', jobId: jobId.toString() });
+        } catch (e) {
+            console.error('POST /api/bulk-jobs error:', e);
+            return res.status(500).json({ status: 'Error', message: `Internal Server Error: ${e.message}` });
+        }
+    }
+
+    // --------------------------------------------------------
+    // PUT: CANCEL JOB (Requirement 4)
+    // --------------------------------------------------------
+    if (req.method === 'PUT' && action === 'cancel') {
+        const { jobId } = body || {};
+        if (!jobId) return res.status(400).json({ status: 'Error', message: 'jobId is required for cancellation.' });
+        
+        try {
+            const jobObjectId = new ObjectId(jobId);
+            const result = await jobsCollection.updateOne(
+                { _id: jobObjectId, clientId: jwtPayload.clientId, status: { $in: ['Queued', 'In Progress'] } },
+                { $set: { status: 'Cancelled', cancelledAt: new Date(), remarks: 'Cancelled by client.' } }
+            );
+            
+            if (result.matchedCount === 0) {
+                return res.status(404).json({ status: 'Error', message: 'Job not found, or it is already completed/failed.' });
+            }
+            
+            return res.status(200).json({ status: 'Success', message: 'Job cancellation successful.' });
+        } catch (e) {
+            console.error('PUT /api/bulk-jobs?action=cancel error:', e);
+            return res.status(500).json({ status: 'Error', message: `Cancellation failed: ${e.message}` });
+        }
+    }
+    
+    // --------------------------------------------------------
+    // GET: DOWNLOAD CSV (FIXED)
+    // --------------------------------------------------------
+    if (req.method === 'GET' && action === 'download') {
+        const jobId = url.searchParams.get('jobId');
+        const filenameHint = url.searchParams.get('filename'); 
+        
+        if (!jobId) return res.status(400).json({ status: 'Error', message: 'jobId is required for download.' });
+        
+        try {
+            const job = await jobsCollection.findOne({ _id: new ObjectId(jobId), clientId: jwtPayload.clientId, status: 'Completed' });
+            
+            if (!job) {
+                return res.status(404).json({ status: 'Error', message: 'Job not found or not completed.' });
+            }
+            if (!job.outputData) {
+                return res.status(404).json({ status: 'Error', message: 'No output data found.' });
+            }
+            
+            const finalFilename = filenameHint || `${job.filename.replace('.csv', '')}_verified.csv`;
+            
+            res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+            res.setHeader('Content-Disposition', `attachment; filename="${finalFilename}"`);
+            
+            return res.status(200).send(job.outputData);
+            
+        } catch (e) {
+            console.error('GET /api/bulk-jobs?action=download error:', e);
+            return res.status(500).json({ status: 'Error', message: `Download failed: ${e.message}` });
+        }
+    }
+
+    return res.status(405).json({ status: 'Error', error: 'Method Not Allowed' });
+};
