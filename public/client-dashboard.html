@@ -977,7 +977,6 @@
             fetchAndUpdateJobStatus(); // Initial fetch
             activeJobPollInterval = setInterval(fetchAndUpdateJobStatus, 5000); // Poll every 5 seconds
             
-            // Add listeners for filtering (NEW)
             document.getElementById('in-progress-search')?.addEventListener('input', filterJobsList);
             document.getElementById('completed-search')?.addEventListener('input', filterJobsList);
         }
@@ -1003,9 +1002,9 @@
         
         // --- Enterprise Improvement: KPI Data Logic (Placeholder) ---
         async function loadKpiData() {
-            // NOTE: This simulates fetching real data for a newly created account.
+            // ACTION: Hardcoded placeholders for the Bulk Verification KPIs
             document.getElementById('success-rate-kpi').textContent = '—%';
-            document.getElementById('total-volume-kpi').textContent = '0';
+            document.getElementById('total-volume-kpi').textContent = '0'; 
         }
 
         // --- AUTHENTICATED DOWNLOAD FUNCTION ---
@@ -1188,6 +1187,10 @@
 
         /* -------------------------
             Fallback helper (tiny)
+            Enables/disables Start Verification button based on:
+            - a) whether a file is selected
+            - b) whether there is currently an active job (uses active job count element)
+            This is safe — it only manipulates the button UI state and does not change any process logic.
             ------------------------- */
         function ensureProcessButtonFallback() {
             const fileInput = document.getElementById('csvFileInput');
