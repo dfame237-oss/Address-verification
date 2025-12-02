@@ -58,7 +58,7 @@
         .nav-tabs { display: flex; border-bottom: 2px solid #E5E7EB; margin-bottom: 30px;
         }
         .tab-button { padding: 12px 20px; cursor: pointer; border: none; background: none;
-            font-weight: 600; color: #64748B; border-bottom: 2遜 solid transparent; transition: color 0.3s, border-bottom 0.3s;
+            font-weight: 600; color: #64748B; border-bottom: 2px solid transparent; transition: color 0.3s, border-bottom 0.3s;
         }
         .tab-button.active { color: #5F3DC4; border-bottom: 2px solid #5F3DC4;
         }
@@ -94,6 +94,7 @@
         }
         
         /* ENTERPRISE IMPROVEMENT & FIX 3 (Invisible Button Fix): Force colors via CSS */
+        /* This ensures ALL buttons using custom colors are visible immediately */
         .action-btn { 
             background-color: #5F3DC4 !important; /* FIX: Force primary color on action buttons */
             color: white; padding: 10px 20px; border-radius: 8px;
@@ -107,7 +108,7 @@
         }
         .action-btn.logout:hover { background-color: #B91C1C;
         }
-        /* Definitive Fix for Bulk Upload Buttons (Download/Start Verification) visibility */
+        /* Definitive Fix for Bulk Upload/Renewal Buttons visibility */
         .bg-tf-primary {
             background-color: #5F3DC4 !important;
         }
