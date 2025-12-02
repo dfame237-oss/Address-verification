@@ -47,6 +47,7 @@
         /* Base styles adapted for new brand colors */
         body { font-family: 'Inter', sans-serif;
             background-color: #F1F5F9; }
+        /* FIX 1: Added text-gray-800 to ensure default text color is dark on white background */
         .dashboard-container { max-width: 1200px; margin: 30px auto; padding: 35px;
             background-color: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
         .header { display: flex;
@@ -217,7 +218,12 @@
                         <i class="fas fa-download mr-3"></i> 1. Download Template
                     
                     </p>
-                    <p class="text-sm text-gray-600 mb-4">Use this template to ensure your CSV file has the required columns: <code class="bg-gray-200 px-1 rounded font-mono">ORDER ID</code>, <code class="bg-gray-200 px-1 rounded font-mono">CUSTOMER NAME</code>, <code class="bg-gray-200 px-1 rounded font-mono">CUSTOMER RAW ADDRESS</code>.</p>
+                    <p class="text-sm text-gray-600 mb-4">
+                        Use this template to ensure your CSV file has the required columns: 
+                        <code class="bg-gray-200 px-1 rounded font-mono text-gray-900">ORDER ID</code>, 
+                        <code class="bg-gray-200 px-1 rounded font-mono text-gray-900">CUSTOMER NAME</code>, 
+                        <code class="bg-gray-200 px-1 rounded font-mono text-gray-900">CUSTOMER RAW ADDRESS</code>.
+                    </p>
                     
                     <button id="downloadTemplateButton" class="w-full py-3 bg-tf-primary text-white font-semibold rounded-lg hover:bg-[#4d2e97] transition duration-200 focus:outline-none focus:ring-4 focus:ring-tf-primary focus:ring-opacity-50">
     
