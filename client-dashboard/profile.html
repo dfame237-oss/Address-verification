@@ -18,7 +18,7 @@
             </aside>
             
             <main id="main-content" class="tab-content-area">
-                <div id="profile-plan" class="tab-content" role="tabpanel" aria-labelledby="profile-tab-btn">
+                <div id="profile-plan" class="tab-content active" role="tabpanel">
                     <h2 class="text-2xl font-bold text-gray-800 mb-6">Account Overview</h2>
                     
                     <div class="info-grid">
@@ -50,12 +50,12 @@
     </div>
     <script src="../bulk_verification_logic.js"></script>
     <script>
-        // ... (Full JS block from root, ensuring window.onload calls fetchProfileData) ...
+        // ... (Paste full JS block from root HTML here) ...
         window.onload = () => {
             // ... (initialization logic) ...
-            fetchProfileData(); // LOAD PROFILE DATA
+            if (typeof fetchProfileData === 'function') fetchProfileData(); // LOAD PROFILE DATA
         };
-        // ... (rest of functions, including fetchProfileData, updateUIFromLocalPlan) ...
+        // ... (rest of functions) ...
     </script>
 </body>
 </html>

@@ -18,26 +18,27 @@
             </aside>
             
             <main id="main-content" class="tab-content-area">
-                <div id="metrics-reports" class="tab-content" role="tabpanel" aria-labelledby="metrics-tab-btn">
+                <div id="metrics-reports" class="tab-content active" role="tabpanel">
                     <h2 class="text-2xl font-bold text-gray-800 mb-6">Key Metrics & Usage Reports</h2>
                     
                     <div class="profile-card mb-8">
                         <h3 class="text-xl font-semibold text-tf-primary mb-4 flex items-center"><i class="fas fa-chart-area mr-2"></i> Last 30 Days Usage Trend</h3>
                         <canvas id="usage-chart" role="img" aria-label="Line chart showing credits used over the past 30 days."></canvas>
                     </div>
-                </div>
+                    
+                    </div>
             </main>
         </div>
     </div>
     <script src="../bulk_verification_logic.js"></script>
     <script>
-        // ... (Full JS block from root, ensuring fetchProfileData loads chart) ...
+        // ... (Paste full JS block from root HTML here) ...
         window.onload = () => {
             // ... (initialization logic) ...
-            // This relies on fetchProfileData calling fetchUsageData/renderUsageChart
-            fetchProfileData(); 
+            // Only call fetchProfileData/fetchUsageData/renderUsageChart here:
+            if (typeof fetchProfileData === 'function') fetchProfileData();
         };
-        // ... (rest of functions, including fetchProfileData, renderUsageChart) ...
+        // ... (rest of functions) ...
     </script>
 </body>
 </html>

@@ -8,16 +8,9 @@
     <link rel="stylesheet" href="../style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
-    <script>
-        window.tailwind = { /* ... (Tailwind config goes here, copied from root HTML) ... */ };
-    </script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* All necessary common CSS (sidebar, action-btn fixes, etc.) should be copied here or kept in external style.css */
-        /* For brevity, assume common CSS from root HTML style block is either here or linked correctly. */
-    </style>
-</head>
+    
+    </head>
 <body>
     <div class="dashboard-container text-gray-800">
         <header class="header">
@@ -26,7 +19,9 @@
                 <div class="text-sm text-gray-500 mt-1">Manage your address verifications and plan here.</div>
             </div>
             <div class="controls">
-                <button id="inbox-header-btn" onclick="toggleInbox()" aria-label="Open Inbox" role="button">...</button>
+                <button id="inbox-header-btn" onclick="toggleInbox()" aria-label="Open Inbox" role="button">
+                    <i class="fas fa-envelope-open-text"></i><span id="inbox-badge" class="badge" style="display:none;">0</span>
+                </button>
                 <button onclick="logout()" class="action-btn logout" aria-label="Logout" role="button">Logout</button>
             </div>
         </header>
@@ -47,10 +42,10 @@
             </aside>
             
             <main id="main-content" class="tab-content-area">
-                <div id="in-progress-jobs" class="tab-content" role="tabpanel" aria-labelledby="in-progress-tab-btn">
+                <div id="in-progress-jobs" class="tab-content active" role="tabpanel">
                     <h2 class="text-2xl font-bold text-gray-800 mb-6">Active Jobs (<span id="active-job-count">0</span>/1)</h2>
                     <input type="text" id="in-progress-search" class="w-full p-3 border rounded mb-4" placeholder="Filter jobs by Filename or Job ID">
-                    <p class="text-xs text-gray-500 mb-4" id="in-progress-status-timestamp">Last refreshed: Just now.</p>
+                    <p class="text-xs text-gray-500 mb-4" id="in-progress-status-timestamp">Last refreshed: Loading...</p>
 
                     <div id="in-progress-list" class="space-y-4">
                         <p class="text-gray-500 text-center">Loading active jobs...</p>
@@ -63,26 +58,21 @@
     
     <script src="../bulk_verification_logic.js"></script>
     <script>
-        // NOTE: The entire JS block from the root HTML must be copied here, 
-        // with two adjustments for modularity:
-
-        // 1. All paths must be relative (e.g., const LOGIN_PAGE = "../client-login.html";)
-        // 2. The window.onload logic must immediately call startJobPolling() for this page.
-
-        // --- FULL JAVASCRIPT BLOCK (from root HTML) ---
-        // I will omit the full content here for brevity, but you must paste the entire 
-        // JS block from the root client-dashboard.html here, ensuring all global 
-        // functions (authFetch, logout, toggleInbox, etc.) are available. 
-        // Then, ensure window.onload calls startJobPolling:
+        // Copy the entire JavaScript logic block from the root client-dashboard.html here, 
+        // ensuring window.onload calls startJobPolling() for this page.
         
+        // --- NOTE: PATHS MUST BE CORRECTED IN YOUR COPIED JS BLOCK ---
+        // Example path correction in JS: const LOGIN_PAGE = "../client-login.html";
+
         window.onload = () => {
-            // ... (rest of the initialization logic) ...
+            // Initialization logic (e.g., fetchProfileData, loadInboxCounts)
+            if (typeof fetchProfileData === 'function') fetchProfileData(); 
+            if (typeof loadInboxCounts === 'function') loadInboxCounts();
             
             // START POLLING IMMEDIATELY FOR THIS PAGE
-            startJobPolling();
+            if (typeof startJobPolling === 'function') startJobPolling();
         };
-
-        // ... (Paste all other functions: fetchProfileData, updateUIFromLocalPlan, etc.) ...
+        // ... (Paste all other functions: authFetch, fetchProfileData, startJobPolling, filterJobsList, etc.) ...
     </script>
 </body>
 </html>
