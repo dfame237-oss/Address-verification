@@ -765,8 +765,12 @@
                         const icon = isUnread ? 'fa-envelope' : 'fa-envelope-open';
                         const sender = msg.senderId === 'admin' ? 'Admin' : 'You';
     
+                        // FIX: Use JSON.stringify for subject/body when passing to onclick to handle quotes/special characters
+                        const subjectSafe = JSON.stringify(msg.subject || '(No Subject)');
+                        const bodySafe = JSON.stringify(msg.body || '');
+
                         const messageHtml = `
-                            <div id="msg-${msg._id}" class="msg-card ${cardClass}" onclick="viewClientMessage('${msg._id}', '${msg.subject.replace(/'/g, "\\'") || '(No Subject)'}', '${msg.body.replace(/'/g, "\\'")}', ${isUnread}, '${msg.timestamp}')">
+                            <div id="msg-${msg._id}" class="msg-card ${cardClass}" onclick="viewClientMessage('${msg._id}', ${subjectSafe}, ${bodySafe}, ${isUnread}, '${msg.timestamp}')">
                                 <i class="fas ${icon} msg-icon"></i>
                                 <div class="flex-grow">
                                     <p class="text-md truncate">${msg.subject || '(No Subject)'}</p>
@@ -797,7 +801,8 @@
         function viewClientMessage(messageId, subject, body, isUnread, timestamp) {
             const detailView = document.getElementById('full-message-detail');
             document.getElementById('full-message-subject').textContent = subject;
-            document.getElementById('full-message-body').textContent = body;
+            // FIX: Use innerText for body to avoid injection and respect whitespace
+            document.getElementById('full-message-body').innerText = body;
             document.getElementById('full-message-date').textContent = new Date(timestamp).toLocaleString();
             detailView.style.display = 'block';
             if (isUnread) {
