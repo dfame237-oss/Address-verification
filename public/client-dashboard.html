@@ -320,24 +320,24 @@
                         <i class="fas fa-file-upload mr-2"></i> Bulk Verification
                     </a>
                     
-                    <a href="client dashboard/in-progress.html" class="nav-link" role="tab" aria-selected="false">
+                    <a href="client-dashboard/in-progress.html" class="nav-link" role="tab" aria-selected="false">
                         <i class="fas fa-hourglass-half mr-2"></i> In Progress
                     </a>
-                    <a href="client dashboard/completed.html" class="nav-link" role="tab" aria-selected="false">
+                    <a href="client-dashboard/completed.html" class="nav-link" role="tab" aria-selected="false">
                         <i class="fas fa-check-circle mr-2"></i> Completed
                     </a>
                     
                     <h5 class="sidebar-section-title">Analytics & Account</h5>
                     
-                    <a href="client dashboard/reports.html" class="nav-link" role="tab" aria-selected="false">
+                    <a href="client-dashboard/reports.html" class="nav-link" role="tab" aria-selected="false">
                         <i class="fas fa-chart-bar mr-2"></i> Key Metrics & Usage
                     </a>
                     
-                    <a href="client dashboard/profile.html" class="nav-link" role="tab" aria-selected="false">
+                    <a href="client-dashboard/profile.html" class="nav-link" role="tab" aria-selected="false">
                         <i class="fas fa-user-circle mr-2"></i> Profile & Plan Status
                     </a>
                     
-                    <a href="client dashboard/support.html" class="nav-link" role="tab" aria-selected="false">
+                    <a href="client-dashboard/support.html" class="nav-link" role="tab" aria-selected="false">
                         <i class="fas fa-headset mr-2"></i> Support
                     </a>
                 </div>
@@ -451,7 +451,7 @@
             
             </h2>
 
-            <div id="client-inbox-list" class="mt-4 max-h-96 overflow-y-auto space-y-3">
+            <div id="client-inbox-list" class="mt-4 max-h96 overflow-y-auto space-y-3">
     
                 <p class="text-center text-gray-500 mt-5">Loading messages...</p>
             </div>
@@ -626,23 +626,27 @@
                 const rc = pd.remainingCredits;
                 const creditsDisplay = rc === 'Unlimited' ? 'Unlimited' : (rc == null ? 'N/A' : Number(rc).toLocaleString());
                 
+                // --- FIX 1: Apply optional chaining to avoid crashing when elements don't exist (e.g., on Bulk page) ---
                 document.getElementById('plan-remaining-credits')?.textContent = creditsDisplay;
-                document.getElementById('client-name-display').textContent = pd.clientName || CLIENT_NAME;
-                document.getElementById('profile-username').textContent = pd.username || pd.clientName || CLIENT_NAME;
-                document.getElementById('profile-email').textContent = pd.email || '—';
-                document.getElementById('profile-mobile').textContent = pd.mobile || '—';
-                document.getElementById('profile-bulk-code').textContent = pd.bulkAccessCode || 'N/A';
-                document.getElementById('plan-name').textContent = (pd.planName || 'Not Set').split('_')[0];
-                document.getElementById('validity-end').textContent = pd.validityEnd ? new Date(pd.validityEnd).toLocaleDateString() : 'N/A';
+                document.getElementById('client-name-display').textContent = pd.clientName || CLIENT_NAME; // ALWAYS EXISTS IN HEADER
+                document.getElementById('profile-username')?.textContent = pd.username || pd.clientName || CLIENT_NAME;
+                document.getElementById('profile-email')?.textContent = pd.email || '—';
+                document.getElementById('profile-mobile')?.textContent = pd.mobile || '—';
+                document.getElementById('profile-bulk-code')?.textContent = pd.bulkAccessCode || 'N/A';
+                document.getElementById('plan-name')?.textContent = (pd.planName || 'Not Set').split('_')[0];
+                document.getElementById('validity-end')?.textContent = pd.validityEnd ? new Date(pd.validityEnd).toLocaleDateString() : 'N/A';
                 const statusEl = document.getElementById('account-status');
-                const isActive = (typeof pd.isActive === 'undefined') ? true : pd.isActive;
-                statusEl.textContent = isActive ? 'Enabled' : 'Disabled';
-                statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
+                if (statusEl) {
+                    const isActive = (typeof pd.isActive === 'undefined') ? true : pd.isActive;
+                    statusEl.textContent = isActive ? 'Enabled' : 'Disabled';
+                    statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
+                }
+                // --- END FIX 1 ---
 
                 checkPlanValidity();
                 
                 // --- Enterprise Improvement: Load Chart Data (Placeholder API) ---
-                // NOTE: This will run only if the user navigates to the profile page.
+                // NOTE: This will run only if the user navigates to the reports page.
                 // if (document.getElementById('usage-chart')) {
                 //     fetchUsageData().then(data => {
                 //         if (data) {
@@ -653,7 +657,8 @@
 
             } catch (e) {
                 console.error('fetchProfileData error:', e);
-                updateUIFromLocalPlan();
+                // Catch error during fetch itself, but still try to render local data
+                updateUIFromLocalPlan(); 
             }
         }
         
@@ -721,20 +726,25 @@
         function updateUIFromLocalPlan() {
             const rc = planDetails.remainingCredits ?? 'N/A';
             const creditsDisplay = rc === 'Unlimited' ? 'Unlimited' : (rc === 'N/A' ? 'N/A' : Number(rc).toLocaleString());
+            
+            // --- FIX 2: Apply optional chaining to all lookups ---
             document.getElementById('plan-remaining-credits')?.textContent = creditsDisplay;
-            document.getElementById('client-name-display').textContent = CLIENT_NAME;
-            document.getElementById('profile-username').textContent = planDetails.username || CLIENT_NAME;
-            document.getElementById('profile-email').textContent = planDetails.email || '—';
-            document.getElementById('profile-mobile').textContent = planDetails.mobile || '—';
-            document.getElementById('profile-bulk-code').textContent = planDetails.bulkAccessCode || 'N/A';
-            document.getElementById('plan-name').textContent = (planDetails.planName || 'Not Set').split('_')[0];
-            document.getElementById('validity-end').textContent = planDetails.validityEnd ? new Date(planDetails.validityEnd).toLocaleDateString() : 'N/A';
+            document.getElementById('client-name-display').textContent = CLIENT_NAME; // ALWAYS EXISTS IN HEADER
+            document.getElementById('profile-username')?.textContent = planDetails.username || CLIENT_NAME;
+            document.getElementById('profile-email')?.textContent = planDetails.email || '—';
+            document.getElementById('profile-mobile')?.textContent = planDetails.mobile || '—';
+            document.getElementById('profile-bulk-code')?.textContent = planDetails.bulkAccessCode || 'N/A';
+            document.getElementById('plan-name')?.textContent = (planDetails.planName || 'Not Set').split('_')[0];
+            document.getElementById('validity-end')?.textContent = planDetails.validityEnd ? new Date(planDetails.validityEnd).toLocaleDateString() : 'N/A';
 
             const statusEl = document.getElementById('account-status');
-            const isActive = (typeof pd.isActive === 'undefined') ? true : pd.isActive;
-            statusEl.textContent = isActive ? 'Enabled' : 'Disabled';
-            statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
+            if (statusEl) {
+                const isActive = (typeof planDetails.isActive === 'undefined') ? true : planDetails.isActive;
+                statusEl.textContent = isActive ? 'Enabled' : 'Disabled';
+                statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
+            }
         }
+        // --- END FIX 2 ---
 
         // --- CHECK PLAN VALIDITY (PUBLIC) ---
         function checkPlanValidity() {
@@ -974,7 +984,8 @@
         // NOTE: This should now only be called from in-progress.html/completed.html
         function startJobPolling() {
             if (activeJobPollInterval) clearInterval(activeJobPollInterval);
-            fetchAndUpdateJobStatus(); // Initial fetch
+            // NOTE: fetchAndUpdateJobStatus is assumed to be defined in bulk_verification_logic.js
+            fetchAndUpdateJobStatus(); 
             activeJobPollInterval = setInterval(fetchAndUpdateJobStatus, 5000); // Poll every 5 seconds
             
             document.getElementById('in-progress-search')?.addEventListener('input', filterJobsList);
@@ -1010,6 +1021,7 @@
         // --- AUTHENTICATED DOWNLOAD FUNCTION ---
         async function handleAuthenticatedDownload(jobId, jobFilename) {
             const safeFilename = `${jobFilename.replace('.csv', '').replace(/'/g, '').replace(/"/g, '')}_verified.csv`;
+            // NOTE: API_BULK_JOBS is assumed global from the external JS file
             const downloadUrl = `${API_BULK_JOBS}?action=download&jobId=${jobId}`; 
 
             try {
