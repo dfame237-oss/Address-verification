@@ -95,6 +95,7 @@
         }
         
         /* ENTERPRISE IMPROVEMENT & FIX 3 (Invisible Button Fix): Force colors via CSS */
+        /* This ensures ALL buttons using custom colors are visible immediately */
         .action-btn { 
             background-color: #5F3DC4 !important; /* FIX: Force primary color on action buttons (Logout button base) */
             color: white; padding: 10px 20px; border-radius: 8px;
@@ -517,7 +518,7 @@
         const API_BASE = '/api';
         const API_CLIENT = `${API_BASE}/client/index`;
         const API_ENDPOINT = "/api/verify-single-address"; // used by single verification
-        const API_BULK_JOBS = '/api/bulk-jobs'; // Defined globally for JS use
+        const API_BULK_JOBS = '/api/bulk-jobs'; // Defined globally here (SAFE)
         const LOGIN_PAGE = "client-login.html";
         
         let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
@@ -733,7 +734,7 @@
             document.getElementById('validity-end').textContent = planDetails.validityEnd ? new Date(planDetails.validityEnd).toLocaleDateString() : 'N/A';
 
             const statusEl = document.getElementById('account-status');
-            const isActive = (typeof planDetails.isActive === 'undefined') ? true : planDetails.isActive;
+            const isActive = (typeof pd.isActive === 'undefined') ? true : pd.isActive;
             statusEl.textContent = isActive ? 'Enabled' : 'Disabled';
             statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
         }
@@ -1051,11 +1052,11 @@
                         ` : ''}
                         <div class="mt-3 flex gap-2 justify-end">
                             ${job.status === 'In Progress' || job.status === 'Queued' ? `
-                                <button class="py-1 px-3 bg-red-500 text-white text-sm rounded hover:bg-red-600" onclick="handleCancelJob('${job._id}')" role="button" aria-label="Cancel Job ${job.filename}">
+                                <button class="py-1 px-3 bg-red-500 text-white text-sm rounded hover:bg-red-600" onclick="handleCancelJob('${job._id}')">
                                     <i class="fas fa-times"></i> Cancel
                                 </button>` 
                             : isCompleted ? `
-                                <button class="py-1 px-3 bg-tf-primary text-white text-sm rounded hover:bg-[#4d2e97] transition" onclick="handleAuthenticatedDownload('${job._id}', '${job.filename.replace(/'/g, "\\'").replace(/"/g, '')}')" role="button" aria-label="Download verified file for Job ${job.filename}">
+                                <button class="py-1 px-3 bg-tf-primary text-white text-sm rounded hover:bg-[#4d2e97] transition" onclick="handleAuthenticatedDownload('${job._id}', '${job.filename.replace(/'/g, "\\'").replace(/"/g, '')}')">
                                     <i class="fas fa-download"></i> Download
                                 </button>`
                             : isFailed ? `<span class="text-red-500 text-sm italic">${job.error || 'Check server logs.'}</span>`
@@ -1071,7 +1072,7 @@
             container.innerHTML = html || `<p class="text-gray-500 text-center mt-5">No jobs found matching the filter.</p>`;
             
             // Only update the active job counter if we are rendering the in-progress list without filtering.
-            if (containerId === 'in-progress-list' && !searchTerm) {
+            if (containerId === 'in-progress-list' && !document.getElementById('in-progress-search')?.value) {
                 document.getElementById('active-job-count').textContent = activeCount;
                 
                 // Update bulk button state based on actual total active jobs (NEW)
@@ -1093,7 +1094,7 @@
             }
 
             // Update refresh timestamp (NEW)
-            document.getElementById(containerId + '-status-timestamp').textContent = `Last refreshed: ${new Date().toLocaleTimeString()}`;
+            document.getElementById(containerId.replace('-list', '-status-timestamp')).textContent = `Last refreshed: ${new Date().toLocaleTimeString()}`;
         }
         
         async function fetchAndUpdateJobStatus() {
@@ -1182,9 +1183,9 @@
             }
         }
         
-        // Make core functions available globally for HTML onclick events
+        // FIX: Expose global functions to window object
         window.showTab = showTab;
-        window.logout = logout;
+        window.logout = logout; 
         window.openPasswordModal = openPasswordModal;
         window.closePasswordModal = closePasswordModal;
         window.closeForceModal = closeForceModal;
@@ -1248,9 +1249,7 @@
 
         // --- INITIALIZATION ---
         window.onload = () => {
-            // Enterprise Improvement: Initialize Chart when appropriate tab is selected.
-            // Enterprise Improvement: Load KPI data immediately.
-            
+            // Try to fetch profile and then init bulk listeners (external)
             fetchProfileData().then(()=> {
                 if (typeof initBulkListeners === 'function') {
                     initBulkListeners();
@@ -1270,7 +1269,9 @@
             showTab('bulk-verification', document.getElementById('bulk-tab-btn'));
 
             /* --- SMALL SAFE FALLBACK (non-invasive) ---
-            If the external bulk_verification_logic.js did not attach listeners...
+            If the external bulk_verification_logic.js did not attach listeners
+            (missing or errored), make sure the process button enables when a file
+            is selected and disables otherwise. This does NOT change logic.
             */
             try {
                 ensureProcessButtonFallback();
@@ -1310,29 +1311,38 @@
 
         /* -------------------------
             Fallback helper (tiny)
+            Enables/disables Start Verification button based on:
+            - a) whether a file is selected
+            - b) whether there is currently an active job (uses active job count element)
+            This is safe — it only manipulates the button UI state and does not change any process logic.
             ------------------------- */
         function ensureProcessButtonFallback() {
             const fileInput = document.getElementById('csvFileInput');
             const processBtn = document.getElementById('processButton');
             const activeJobCountEl = document.getElementById('active-job-count');
-            const MAX_ACTIVE = 1;
+            const MAX_ACTIVE = 1; // consistency with your logic
 
             if (!fileInput || !processBtn) return;
 
             function updateButtonState() {
+                // read active job count (fallback to 0)
                 const active = Number(activeJobCountEl?.textContent || 0);
+                // enable only if file selected AND no active jobs
                 const hasFile = fileInput.files && fileInput.files.length > 0;
                 processBtn.disabled = !(hasFile && active < MAX_ACTIVE);
             }
 
+            // attach listener (safe, won't conflict if external script also uses this input)
             fileInput.addEventListener('change', updateButtonState, { passive: true });
 
+            // also observe changes to active job count (in case polling updates it later)
             const observerTarget = activeJobCountEl;
             if (observerTarget) {
                 const mo = new MutationObserver(updateButtonState);
                 mo.observe(observerTarget, { childList: true, subtree: true, characterData: true });
             }
 
+            // initial sync (in case file was preselected)
             updateButtonState();
         }
     </script>
