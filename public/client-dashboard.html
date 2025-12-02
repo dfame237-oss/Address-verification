@@ -302,8 +302,6 @@
                     
                         <div class="info-item"><p><strong>Status:</strong> <span id="account-status"></span></p></div>
                         <div class="info-item"><p><strong>Valid Until:</strong> <span id="validity-end"></span></p></div>
-  
-         
                         <div class="info-item"><p><strong>Remaining Credits:</strong> <span id="plan-remaining-credits" class="font-bold text-tf-secondary">N/A</span></p></div>
                     </div>
                  
@@ -403,6 +401,8 @@
                 <button id="forceConfirmBtn" class="py-2 px-4 bg-red-600 text-white rounded-lg" onclick="forceLogoutOtherDevice()">Logout other device & Continue</button>
             </div>
         </div>
+        
+        
     </div>
 
  
@@ -1059,6 +1059,19 @@
         // --- INITIALIZATION ---
         window.onload = () => {
             fetchProfileData().then(()=> {
+                // FIX: Expose necessary functions globally for use in HTML attributes like onclick=""
+                // These functions were already defined earlier in the script block or imported from bulk_verification_logic.js
+                window.showTab = showTab;
+                window.logout = logout;
+                window.openPasswordModal = openPasswordModal;
+                window.closePasswordModal = closePasswordModal;
+                window.closeForceModal = closeForceModal;
+                window.forceLogoutOtherDevice = forceLogoutOtherDevice;
+                window.toggleInbox = toggleInbox;
+                window.closeInbox = closeInbox;
+                window.viewClientMessage = viewClientMessage;
+                window.handleAuthenticatedDownload = handleAuthenticatedDownload;
+                
                 if (typeof initBulkListeners === 'function') {
                     initBulkListeners();
                 } else {
