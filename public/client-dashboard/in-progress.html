@@ -152,9 +152,9 @@
         // --- CONSTANTS AND STATE (Corrected for modularity) ---
         const API_BASE = '/api';
         const API_CLIENT = `${API_BASE}/client/index`;
-        const API_ENDPOINT = "/api/verify-single-address"; 
+        const API_ENDPOINT = "/api/verify-single-address"; // used by single verification
         const LOGIN_PAGE = "../client-login.html"; // Corrected relative path for login page
-        // API_BULK_JOBS is assumed to be defined globally in bulk_verification_logic.js
+        // API_BULK_JOBS is assumed to be defined globally in bulk_verification_logic.js.
         
         let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
         const CLIENT_NAME = localStorage.getItem('clientName') || planDetails.clientName || planDetails.username || 'Client';
@@ -264,7 +264,7 @@
                 const rc = pd.remainingCredits;
                 const creditsDisplay = rc === 'Unlimited' ? 'Unlimited' : (rc == null ? 'N/A' : Number(rc).toLocaleString());
                 
-                // --- FIX: Apply optional chaining to avoid crashing when elements don't exist ---
+                // --- Safe updates for elements that might not exist on this modular page (e.g., Bulk or Reports) ---
                 document.getElementById('plan-remaining-credits')?.textContent = creditsDisplay;
                 document.getElementById('client-name-display').textContent = pd.clientName || CLIENT_NAME; 
                 document.getElementById('profile-username')?.textContent = pd.username || pd.clientName || CLIENT_NAME;
@@ -278,6 +278,13 @@
                     const isActive = (typeof pd.isActive === 'undefined') ? true : pd.isActive;
                     statusEl.textContent = isActive ? 'Enabled' : 'Disabled';
                     statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
+                }
+                
+                // NOTE: Fetch usage data and render chart only if the canvas exists on the REPORTS page.
+                if (document.getElementById('usage-chart')) { 
+                    fetchUsageData().then(data => {
+                        if (data) renderUsageChart(data);
+                    }).catch(console.error);
                 }
 
                 checkPlanValidity();
@@ -293,9 +300,9 @@
             const rc = planDetails.remainingCredits ?? 'N/A';
             const creditsDisplay = rc === 'Unlimited' ? 'Unlimited' : (rc === 'N/A' ? 'N/A' : Number(rc).toLocaleString());
             
-            // --- FIX: Apply optional chaining to all lookups ---
+            // --- Safe updates for elements that might not exist on this modular page ---
             document.getElementById('plan-remaining-credits')?.textContent = creditsDisplay;
-            document.getElementById('client-name-display').textContent = CLIENT_NAME;
+            document.getElementById('client-name-display').textContent = CLIENT_NAME; 
             document.getElementById('profile-username')?.textContent = planDetails.username || CLIENT_NAME;
             document.getElementById('profile-email')?.textContent = planDetails.email || '—';
             document.getElementById('profile-mobile')?.textContent = planDetails.mobile || '—';
@@ -339,7 +346,7 @@
                 }
 
                 // OK
-                document.getElementById('bulkContent').classList.remove('hidden');
+                document.getElementById('bulkContent')?.classList.remove('hidden');
                 isPlanValid = true;
                 return true;
 
@@ -371,7 +378,7 @@
                 <a href="tel:+919193246219" class="block w-full py-3 bg-tf-secondary text-white text-center font-bold rounded-lg hover:bg-[#86259d] transition">Call Support / Renew Plan</a>
                 <a href="https://wa.me/919193246219" target="_blank" class="block w-full py-3 bg-whatsapp-green text-white text-center font-bold rounded-lg hover:bg-green-600">🟢 WhatsApp Support</a>
             `;
-            document.getElementById('bulk-verification').appendChild(errorBlock);
+            document.getElementById('bulk-verification')?.appendChild(errorBlock);
         }
 
         // --- PASSWORD MODAL LOGIC (PUBLIC) ---
@@ -410,7 +417,6 @@
             if (!clientId) {
                 alert('Cannot determine clientId. Please log in again.');
                 closeForceModal();
-                localStorage.clear();
                 window.location.href = LOGIN_PAGE;
                 return;
             }
@@ -501,12 +507,12 @@
         }
 
         function toggleInbox() {
-            document.getElementById('inbox-modal').style.display = 'flex';
+            document.getElementById('inbox-modal')?.style.display = 'flex';
             loadClientInbox();
         }
 
         function closeInbox() {
-            document.getElementById('inbox-modal').style.display = 'none';
+            document.getElementById('inbox-modal')?.style.display = 'none';
             loadInboxCounts();
         }
 
@@ -643,7 +649,7 @@
 
 
         // --- PASSWORD UPDATE LISTENER (PUBLIC) ---
-        document.getElementById('password-update-form').addEventListener('submit', async (e) => {
+        document.getElementById('password-update-form')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
@@ -710,21 +716,14 @@
             setInterval(sendHeartbeat, 60000);
             setInterval(loadInboxCounts, 60000);
             
-            // Initialize Bulk tab content (the default view)
-            // Show current navigation link as active based on URL
-            document.querySelectorAll('.nav-tabs .nav-link').forEach(link => {
-                if (link.href === window.location.href || link.href === window.location.href.split('#')[0]) {
-                    link.classList.add('active');
-                    // Manually trigger showTab/loadKpiData for the default view
-                    showTab('bulk-verification', link); 
-                }
-            });
-
-            /* --- SMALL SAFE FALLBACK (non-invasive) ---
-            If the external bulk_verification_logic.js did not attach listeners
-            (missing or errored), make sure the process button enables when a file
-            is selected and disables otherwise. This does NOT change logic.
-            */
+            // Initialize tab content based on URL
+            // NOTE: This complex logic is now obsolete/incorrect for the modular page, 
+            // as the content is hardcoded and only POLLED.
+            
+            // We just need to load the data for this specific page:
+            if (typeof startJobPolling === 'function') startJobPolling();
+            
+            /* --- SMALL SAFE FALLBACK (non-invasive) --- */
             try {
                 ensureProcessButtonFallback();
             } catch (e) {
@@ -777,9 +776,7 @@
             if (!fileInput || !processBtn) return;
 
             function updateButtonState() {
-                // read active job count (fallback to 0)
                 const active = Number(activeJobCountEl?.textContent || 0);
-                // enable only if file selected AND no active jobs
                 const hasFile = fileInput.files && fileInput.files.length > 0;
                 processBtn.disabled = !(hasFile && active < MAX_ACTIVE);
             }

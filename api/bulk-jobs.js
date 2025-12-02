@@ -1,7 +1,10 @@
 // public/bulk_verification_logic.js
 // Bulk verification logic refactored for Enterprise UX (Drag & Drop, Preview, Filtering)
 
-// NOTE: API_BULK_JOBS, authFetch, checkPlanValidity, showTab, getRemainingCredits are now assumed global from client-dashboard.html
+// NOTE: Assumes API_BULK_JOBS, authFetch, checkPlanValidity, showTab are global from client-dashboard.html
+
+// --- FIX: REMOVED CONFLICTING DECLARATION ---
+// const API_BULK_JOBS = '/api/bulk-jobs'; 
 
 // --- UI helpers (existing) ---
 function updateStatusMessage(message, isError = false) {
@@ -125,7 +128,7 @@ async function getActiveJobCount() {
 
 // --- Main bulk handler (refactored for job submission) ---
 async function handleBulkVerification() {
-    // Note: checkPlanValidity, isPlanValid, authFetch, showTab, getRemainingCredits are assumed global
+    // Note: API_BULK_JOBS is assumed global
     if (!checkPlanValidity() || !isPlanValid) {
         updateStatusMessage("Access denied. Plan is expired or disabled.", true);
         return;

@@ -50,6 +50,7 @@
         .msg-card .msg-icon { font-size: 1.2rem; color: #5F3DC4; margin-right: 15px; flex-shrink: 0; }
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; display: none; }
         .modal-content { max-width: 520px; padding: 24px; border-radius: 12px; background: #fff; }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
     </style>
 </head>
 <body>
@@ -147,12 +148,12 @@
     
     <script src="../bulk_verification_logic.js"></script>
     <script>
-        // --- CONSTANTS AND STATE ---
+        // --- CONSTANTS AND STATE (Corrected for modularity) ---
         const API_BASE = '/api';
         const API_CLIENT = `${API_BASE}/client/index`;
-        const API_ENDPOINT = "/api/verify-single-address"; 
+        const API_ENDPOINT = "/api/verify-single-address"; // used by single verification
         const LOGIN_PAGE = "../client-login.html"; // Corrected relative path for login page
-        // API_BULK_JOBS is defined in bulk_verification_logic.js.
+        // API_BULK_JOBS is assumed to be defined globally in bulk_verification_logic.js
         
         let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
         const CLIENT_NAME = localStorage.getItem('clientName') || planDetails.clientName || planDetails.username || 'Client';
@@ -277,6 +278,13 @@
                     statusEl.textContent = isActive ? 'Enabled' : 'Disabled';
                     statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
                 }
+                
+                // NOTE: Fetch usage data and render chart only if the canvas exists on the REPORTS page.
+                if (document.getElementById('usage-chart')) { 
+                    fetchUsageData().then(data => {
+                        if (data) renderUsageChart(data);
+                    }).catch(console.error);
+                }
 
                 checkPlanValidity();
                 
@@ -293,7 +301,7 @@
             
             // --- FIX: Apply optional chaining to all lookups ---
             document.getElementById('plan-remaining-credits')?.textContent = creditsDisplay;
-            document.getElementById('client-name-display').textContent = CLIENT_NAME;
+            document.getElementById('client-name-display').textContent = CLIENT_NAME; 
             document.getElementById('profile-username')?.textContent = planDetails.username || CLIENT_NAME;
             document.getElementById('profile-email')?.textContent = planDetails.email || '—';
             document.getElementById('profile-mobile')?.textContent = planDetails.mobile || '—';
@@ -308,7 +316,6 @@
                 statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
             }
         }
-        // --- END FIX ---
 
         // --- CHECK PLAN VALIDITY (PUBLIC) ---
         function checkPlanValidity() {
@@ -338,7 +345,7 @@
                 }
 
                 // OK
-                document.getElementById('bulkContent').classList.remove('hidden');
+                document.getElementById('bulkContent')?.classList.remove('hidden');
                 isPlanValid = true;
                 return true;
 
@@ -370,26 +377,26 @@
                 <a href="tel:+919193246219" class="block w-full py-3 bg-tf-secondary text-white text-center font-bold rounded-lg hover:bg-[#86259d] transition">Call Support / Renew Plan</a>
                 <a href="https://wa.me/919193246219" target="_blank" class="block w-full py-3 bg-whatsapp-green text-white text-center font-bold rounded-lg hover:bg-green-600">🟢 WhatsApp Support</a>
             `;
-            document.getElementById('bulk-verification').appendChild(errorBlock);
+            document.getElementById('bulk-verification')?.appendChild(errorBlock);
         }
 
         // --- PASSWORD MODAL LOGIC (PUBLIC) ---
         function openPasswordModal() {
-            document.getElementById('password-modal').style.display = 'flex';
-            document.getElementById('password-update-form').reset();
-            document.getElementById('password-update-status').textContent = '';
+            document.getElementById('password-modal')?.style.display = 'flex';
+            document.getElementById('password-update-form')?.reset();
+            document.getElementById('password-update-status')?.textContent = '';
         }
 
         function closePasswordModal() {
-            document.getElementById('password-modal').style.display = 'none';
+            document.getElementById('password-modal')?.style.display = 'none';
         }
         
         // --- FORCE-LOGOUT UI / helpers (PUBLIC) ---
         function openForceModal() {
-            document.getElementById('force-logout-modal').style.display = 'flex';
+            document.getElementById('force-logout-modal')?.style.display = 'flex';
         }
         function closeForceModal() {
-            document.getElementById('force-logout-modal').style.display = 'none';
+            document.getElementById('force-logout-modal')?.style.display = 'none';
         }
 
         function getTokenPayload() {
@@ -409,7 +416,6 @@
             if (!clientId) {
                 alert('Cannot determine clientId. Please log in again.');
                 closeForceModal();
-                localStorage.clear();
                 window.location.href = LOGIN_PAGE;
                 return;
             }
@@ -500,12 +506,12 @@
         }
 
         function toggleInbox() {
-            document.getElementById('inbox-modal').style.display = 'flex';
+            document.getElementById('inbox-modal')?.style.display = 'flex';
             loadClientInbox();
         }
 
         function closeInbox() {
-            document.getElementById('inbox-modal').style.display = 'none';
+            document.getElementById('inbox-modal')?.style.display = 'none';
             loadInboxCounts();
         }
 
@@ -642,7 +648,7 @@
 
 
         // --- PASSWORD UPDATE LISTENER (PUBLIC) ---
-        document.getElementById('password-update-form').addEventListener('submit', async (e) => {
+        document.getElementById('password-update-form')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
@@ -709,21 +715,28 @@
             setInterval(sendHeartbeat, 60000);
             setInterval(loadInboxCounts, 60000);
             
-            // Initialize Bulk tab content (the default view)
-            // Show current navigation link as active based on URL
+            // Initialize tab content based on URL
             document.querySelectorAll('.nav-tabs .nav-link').forEach(link => {
-                if (link.href === window.location.href || link.href === window.location.href.split('#')[0]) {
+                const currentPath = window.location.pathname.endsWith('/') ? window.location.pathname : window.location.pathname.split('/').pop();
+                const linkPath = link.href.split('/').pop();
+
+                if (linkPath === currentPath) {
                     link.classList.add('active');
-                    // Manually trigger showTab/loadKpiData for the default view
-                    showTab('bulk-verification', link); 
+                    
+                    // Trigger initialization logic specific to the current page
+                    if (linkPath.includes('reports.html')) {
+                        if (document.getElementById('usage-chart')) {
+                            fetchUsageData().then(data => {
+                                if (data) renderUsageChart(data);
+                            }).catch(console.error);
+                        }
+                    } else if (linkPath.includes('in-progress.html') || linkPath.includes('completed.html')) {
+                        if (typeof startJobPolling === 'function') startJobPolling();
+                    }
                 }
             });
 
-            /* --- SMALL SAFE FALLBACK (non-invasive) ---
-            If the external bulk_verification_logic.js did not attach listeners
-            (missing or errored), make sure the process button enables when a file
-            is selected and disables otherwise. This does NOT change logic.
-            */
+            /* --- SMALL SAFE FALLBACK (non-invasive) --- */
             try {
                 ensureProcessButtonFallback();
             } catch (e) {
@@ -776,9 +789,7 @@
             if (!fileInput || !processBtn) return;
 
             function updateButtonState() {
-                // read active job count (fallback to 0)
                 const active = Number(activeJobCountEl?.textContent || 0);
-                // enable only if file selected AND no active jobs
                 const hasFile = fileInput.files && fileInput.files.length > 0;
                 processBtn.disabled = !(hasFile && active < MAX_ACTIVE);
             }
