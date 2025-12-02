@@ -514,7 +514,7 @@
         const API_BASE = '/api';
         const API_CLIENT = `${API_BASE}/client/index`;
         const API_ENDPOINT = "/api/verify-single-address"; // used by single verification
-        const API_BULK_JOBS = '/api/bulk-jobs'; // Defined globally here (SAFE)
+        // NOTE: API_BULK_JOBS is defined in bulk_verification_logic.js. Removed declaration here to fix SyntaxError.
         const LOGIN_PAGE = "client-login.html";
         
         let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
@@ -646,7 +646,7 @@
                 checkPlanValidity();
                 
                 // --- Enterprise Improvement: Load Chart Data (Placeholder API) ---
-                // NOTE: This will run only if the user navigates to the reports page.
+                // NOTE: This will run only if the user navigates to the profile page.
                 // if (document.getElementById('usage-chart')) {
                 //     fetchUsageData().then(data => {
                 //         if (data) {
