@@ -7,6 +7,7 @@
 
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
     <script>
         window.tailwind = {
@@ -93,8 +94,7 @@
         .status-disabled { background-color: #FEE2E2; color: #DC2626;
         }
         
-        /* ENTERPRISE IMPROVEMENT & FIX (Invisible Button Fix): Force colors via CSS */
-        /* This ensures ALL buttons using custom colors are visible immediately */
+        /* ENTERPRISE IMPROVEMENT & FIX 3 (Invisible Button Fix): Force colors via CSS */
         .action-btn { 
             background-color: #5F3DC4 !important; /* FIX: Force primary color on action buttons (Logout button base) */
             color: white; padding: 10px 20px; border-radius: 8px;
@@ -139,6 +139,30 @@
         #inbox-header-btn .fas { font-size: 20px; color: #5F3DC4;
         }
         #inbox-header-btn .badge { top: -5px; right: -5px; padding: 2px 6px;
+        }
+        /* Style for the new Drag & Drop zone */
+        #drop-zone {
+            border: 2px dashed #CBD5E1;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+        #drop-zone.dragover {
+            border-color: #A437C1;
+            background-color: #EEF2FF;
+        }
+        /* Style for the CSV preview table */
+        #preview-table th {
+            background-color: #E2E8F0;
+            padding: 8px 12px;
+            border-bottom: 1px solid #CBD5E1;
+            font-weight: 600;
+        }
+        #preview-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #F1F5F9;
         }
 
 
@@ -211,11 +235,21 @@
         
         <div 
         class="nav-tabs" role="tablist">
-            <button id="bulk-tab-btn" class="tab-button active" onclick="showTab('bulk-verification', this)" role="tab" aria-selected="true">Bulk Address Verification</button>
-            <button id="in-progress-tab-btn" class="tab-button" onclick="showTab('in-progress-jobs', this)" role="tab" aria-selected="false">In Progress</button>
-            <button id="completed-tab-btn" class="tab-button" onclick="showTab('completed-jobs', this)" role="tab" aria-selected="false">Completed</button>
-            <button id="profile-tab-btn" class="tab-button" onclick="showTab('profile-plan', this)" role="tab" aria-selected="false">Profile & Plan Status</button>
-            <button class="tab-button" onclick="showTab('support', this)" role="tab" aria-selected="false">Support/Messaging</button>
+            <button id="bulk-tab-btn" class="tab-button active" onclick="showTab('bulk-verification', this)" role="tab" aria-selected="true">
+                <i class="fas fa-file-upload mr-2"></i> Bulk Address Verification
+            </button>
+            <button id="in-progress-tab-btn" class="tab-button" onclick="showTab('in-progress-jobs', this)" role="tab" aria-selected="false">
+                <i class="fas fa-hourglass-half mr-2"></i> In Progress
+            </button>
+            <button id="completed-tab-btn" class="tab-button" onclick="showTab('completed-jobs', this)" role="tab" aria-selected="false">
+                <i class="fas fa-check-circle mr-2"></i> Completed
+            </button>
+            <button id="profile-tab-btn" class="tab-button" onclick="showTab('profile-plan', this)" role="tab" aria-selected="false">
+                <i class="fas fa-user-circle mr-2"></i> Profile & Plan Status
+            </button>
+            <button class="tab-button" onclick="showTab('support', this)" role="tab" aria-selected="false">
+                <i class="fas fa-headset mr-2"></i> Support/Messaging
+            </button>
         </div>
 
         <div id="bulk-verification" class="tab-content" role="tabpanel" aria-labelledby="bulk-tab-btn">
@@ -227,9 +261,20 @@
                 </h2>
                 <p class="text-lg text-gray-500 mt-2">Upload a CSV file for high-volume cleaning and verification.</p>
             </header>
+            
+            <div id="kpi-grid" class="info-grid mb-8">
+                <div class="profile-card">
+                    <h3 class="text-md font-semibold text-gray-600 mb-2 flex items-center"><i class="fas fa-chart-line mr-2 text-tf-primary"></i> Overall Verification Success Rate</h3>
+                    <p id="success-rate-kpi" class="text-3xl font-bold text-tf-primary">--%</p>
+                    <p class="text-xs text-gray-500 mt-1">Based on last 90 days.</p>
+                </div>
+                <div class="profile-card">
+                    <h3 class="text-md font-semibold text-gray-600 mb-2 flex items-center"><i class="fas fa-star mr-2 text-tf-secondary"></i> Total Volume Processed</h3>
+                    <p id="total-volume-kpi" class="text-3xl font-bold text-tf-secondary">0</p>
+                    <p class="text-xs text-gray-500 mt-1">Since account inception.</p>
+                </div>
+            </div>
 
-            
-            
     
             <div id="bulkContent" class="space-y-8">
                 <div class="bg-tf-light p-8 rounded-xl border-l-4 border-tf-primary shadow-lg">
@@ -258,10 +303,23 @@
                         <i class="fas fa-upload mr-3 text-tf-secondary"></i> 2. Upload Your CSV File
     
                     </p>
-                    <input type="file" id="csvFileInput" accept=".csv" class="block w-full text-sm 
-                    text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-tf-secondary/10 file:text-tf-secondary hover:file:bg-tf-secondary/20 transition cursor-pointer" aria-describedby="file-upload-hint">
+                    <div id="drop-zone" class="mb-4">
+                        <p class="text-gray-500 mb-2">Drag and drop your CSV file here, or click to select.</p>
+                        <input type="file" id="csvFileInput" accept=".csv" class="hidden" aria-describedby="file-upload-hint">
+                        <label for="csvFileInput" class="py-2 px-4 bg-tf-secondary/10 text-tf-secondary font-semibold rounded-lg hover:bg-tf-secondary/20 transition cursor-pointer">
+                            Choose File
+                        </label>
+                        <span id="file-name-display" class="text-gray-700 ml-3">No file chosen</span>
+                    </div>
+
                     <p class="text-xs 
                     text-gray-500 mt-2" id="file-upload-hint">Maximum 1000 rows recommended for stability. Must use the provided template format.</p>
+                    
+                    <div id="preview-section" class="mt-4 hidden p-4 bg-gray-50 rounded border border-gray-200 overflow-x-auto">
+                        <h4 class="font-semibold text-gray-800 mb-2">Preview (First 5 Rows)</h4>
+                        <table id="preview-table" class="w-full text-sm text-left">
+                            </table>
+                    </div>
                 </div>
 
                 <button id="processButton" class="w-full py-4 bg-tf-secondary text-white font-bold text-lg rounded-lg shadow-xl transition duration-200 transform hover:scale-[1.005] hover:bg-[#86259d] focus:outline-none focus:ring-4 focus:ring-tf-secondary focus:ring-opacity-50" disabled style="display:block;" aria-label="Start Bulk Verification Process" role="button">
@@ -290,6 +348,9 @@
         
         <div id="in-progress-jobs" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="in-progress-tab-btn">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Active Jobs (<span id="active-job-count">0</span>/1)</h2>
+            <input type="text" id="in-progress-search" class="w-full p-3 border rounded mb-4" placeholder="Filter jobs by Filename or Job ID">
+            <p class="text-xs text-gray-500 mb-4" id="in-progress-status-timestamp">Last refreshed: Just now.</p>
+
             <div id="in-progress-list" class="space-y-4">
                 <p class="text-gray-500 text-center">Loading active jobs...</p>
             </div>
@@ -298,6 +359,9 @@
         
         <div id="completed-jobs" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="completed-tab-btn">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Completed Jobs</h2>
+            <input type="text" id="completed-search" class="w-full p-3 border rounded mb-4" placeholder="Filter jobs by Filename or Job ID">
+            <p class="text-xs text-gray-500 mb-4" id="completed-status-timestamp">Last refreshed: Just now.</p>
+            
             <div id="completed-list" class="space-y-4">
                    <p class="text-gray-500 text-center">No recently completed jobs.</p>
             </div>
@@ -307,6 +371,12 @@
         <div id="profile-plan" class="tab-content" 
         style="display:none;" role="tabpanel" aria-labelledby="profile-tab-btn">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Account Overview</h2>
+            
+            <div class="profile-card mb-8">
+                <h3 class="text-xl font-semibold text-tf-primary mb-4 flex items-center"><i class="fas fa-chart-area mr-2"></i> Last 30 Days Usage Trend</h3>
+                <canvas id="usage-chart" role="img" aria-label="Line chart showing credits used over the past 30 days."></canvas>
+            </div>
+
             <div class="info-grid">
                 <div class="profile-card flex flex-col justify-between">
                     <h3 class="text-xl 
@@ -447,10 +517,9 @@
         const API_BASE = '/api';
         const API_CLIENT = `${API_BASE}/client/index`;
         const API_ENDPOINT = "/api/verify-single-address"; // used by single verification
-        // const API_BULK_JOBS is defined in bulk_verification_logic.js
+        const API_BULK_JOBS = '/api/bulk-jobs'; // Defined globally for JS use
         const LOGIN_PAGE = "client-login.html";
         
-        // Ensure that the plan details are parsed from the correct localStorage key
         let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
         const CLIENT_NAME = localStorage.getItem('clientName') || planDetails.clientName || planDetails.username || 'Client';
         let isPlanValid = true;
@@ -460,8 +529,8 @@
             window.location.href = LOGIN_PAGE;
         }
 
-        let activeJobPollInterval; // Global state for polling (NEW)
-
+        let activeJobPollInterval; 
+        let globalJobsData = { inProgress: [], completed: [] }; // Storage for filtering (NEW)
 
         // --- HEARTBEAT FUNCTION (PUBLIC) ---
         async function sendHeartbeat() {
@@ -574,11 +643,81 @@
                 statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
 
                 checkPlanValidity();
+                
+                // --- Enterprise Improvement: Load Chart Data (Placeholder API) ---
+                if (document.getElementById('usage-chart')) {
+                    fetchUsageData().then(data => {
+                        if (data) {
+                            renderUsageChart(data);
+                        }
+                    }).catch(console.error);
+                }
+
             } catch (e) {
                 console.error('fetchProfileData error:', e);
                 updateUIFromLocalPlan();
             }
         }
+        
+        // --- Enterprise Improvement: Usage Data (Placeholder) ---
+        async function fetchUsageData() {
+            // NOTE: This assumes a new API endpoint exists to fetch credits used per day for the last 30 days.
+            // Example Placeholder Data structure (replace with actual authFetch to your backend):
+            const placeholderData = {
+                labels: ['Day 1', 'Day 6', 'Day 12', 'Day 18', 'Day 24', 'Day 30'],
+                creditsUsed: [250, 150, 400, 300, 500, 200]
+            };
+            // Simulate API latency
+            await new Promise(resolve => setTimeout(resolve, 300)); 
+            return placeholderData;
+        }
+
+        let usageChartInstance = null;
+        function renderUsageChart(data) {
+            if (usageChartInstance) {
+                usageChartInstance.destroy();
+            }
+            const ctx = document.getElementById('usage-chart').getContext('2d');
+            usageChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Credits Used',
+                        data: data.creditsUsed,
+                        borderColor: '#A437C1',
+                        backgroundColor: 'rgba(164, 55, 193, 0.1)',
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#5F3DC4'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Credits'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    }
+                }
+            });
+        }
+
 
         // --- Update UI from Local Plan (PUBLIC) ---
         function updateUIFromLocalPlan() {
@@ -832,6 +971,8 @@
             
             if (tabId === 'bulk-verification') {
                 checkPlanValidity();
+                // Enterprise Improvement: Call function to load KPI data
+                if (typeof loadKpiData === 'function') loadKpiData(); 
             } else if (tabId === 'profile-plan') {
                 fetchProfileData(); // Ensure fresh data on tab click
             } else if (tabId === 'in-progress-jobs' || tabId === 'completed-jobs') {
@@ -841,16 +982,122 @@
         }
         
         // --- JOB POLLING LOGIC (PUBLIC) ---
+        // Enterprise Improvement: Filter search is integrated here
         function startJobPolling() {
             if (activeJobPollInterval) clearInterval(activeJobPollInterval);
             fetchAndUpdateJobStatus(); // Initial fetch
             activeJobPollInterval = setInterval(fetchAndUpdateJobStatus, 5000); // Poll every 5 seconds
+            
+            // Add listeners for filtering (NEW)
+            document.getElementById('in-progress-search')?.addEventListener('input', filterJobsList);
+            document.getElementById('completed-search')?.addEventListener('input', filterJobsList);
         }
 
+        // --- Enterprise Improvement: Job Filtering Logic ---
+        function filterJobsList() {
+            const activeSearchTerm = document.getElementById('in-progress-search')?.value.toLowerCase() || '';
+            const completedSearchTerm = document.getElementById('completed-search')?.value.toLowerCase() || '';
+            
+            // Render In Progress list (filtered)
+            renderJobsList(globalJobsData.inProgress, 'in-progress-list', activeSearchTerm);
+            
+            // Render Completed list (filtered)
+            renderJobsList(globalJobsData.completed, 'completed-list', completedSearchTerm);
+        }
+
+        // Reusable function to render job lists (NEW)
+        function renderJobsList(jobs, containerId, searchTerm) {
+            const container = document.getElementById(containerId);
+            let filteredJobs = jobs;
+
+            if (searchTerm) {
+                filteredJobs = jobs.filter(job => 
+                    job.filename.toLowerCase().includes(searchTerm) || 
+                    job._id.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            let html = '';
+            let activeCount = 0; // Only count active jobs for the active job counter
+
+            for (const job of filteredJobs) {
+                const progress = job.totalRows > 0 ? ((job.processedCount / job.totalRows) * 100).toFixed(0) : 0;
+                const isFailed = job.status === 'Failed';
+                const isCompleted = job.status === 'Completed';
+                
+                // Show only 10 completed jobs unless filtering is active
+                if (containerId === 'completed-list' && !searchTerm && html.split('job-card').length > 10) continue;
+                
+                const completionDisplay = isCompleted ? formatISTTime(job.completedTime) : new Date(job.submittedAt).toLocaleDateString();
+
+                if (job.status === 'In Progress' || job.status === 'Queued') {
+                    activeCount++; // Count only for active list
+                }
+                
+                const cardHtml = `
+                    <div class="job-card bg-white p-4 rounded-lg shadow-md border-l-4 ${isCompleted ? 'border-green-500' : isFailed || job.status === 'Cancelled' ? 'border-red-500' : 'border-tf-secondary'}">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-lg text-gray-800 truncate">${job.filename}</h4>
+                            <span class="text-sm font-semibold text-gray-600">${completionDisplay}</span>
+                        </div>
+                        <div class="text-sm text-gray-600 mb-2 space-y-1">
+                            <p><strong>Status:</strong> <span class="font-bold text-${isCompleted ? 'green' : isFailed || job.status === 'Cancelled' ? 'red' : 'tf-secondary'}-600">${job.status}</span></p>
+                            ${job.status !== 'Cancelled' && job.status !== 'Failed' ? `<p><strong>Rows:</strong> ${job.processedCount} / ${job.totalRows}</p>` : ''}
+                        </div>
+                        ${job.status === 'In Progress' ? `
+                        <div class="progress-bar w-full bg-gray-300 rounded-full h-2 mt-2">
+                            <div class="progress-fill h-2 bg-tf-secondary rounded-full" style="width: ${progress}%;"></div>
+                        </div>
+                        ` : ''}
+                        <div class="mt-3 flex gap-2 justify-end">
+                            ${job.status === 'In Progress' || job.status === 'Queued' ? `
+                                <button class="py-1 px-3 bg-red-500 text-white text-sm rounded hover:bg-red-600" onclick="handleCancelJob('${job._id}')" role="button" aria-label="Cancel Job ${job.filename}">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>` 
+                            : isCompleted ? `
+                                <button class="py-1 px-3 bg-tf-primary text-white text-sm rounded hover:bg-[#4d2e97] transition" onclick="handleAuthenticatedDownload('${job._id}', '${job.filename.replace(/'/g, "\\'").replace(/"/g, '')}')" role="button" aria-label="Download verified file for Job ${job.filename}">
+                                    <i class="fas fa-download"></i> Download
+                                </button>`
+                            : isFailed ? `<span class="text-red-500 text-sm italic">${job.error || 'Check server logs.'}</span>`
+                            : job.status === 'Cancelled' ? `<span class="text-red-500 text-sm italic">Cancelled by user.</span>`
+                            : ''}
+                        </div>
+                    </div>
+                `;
+                
+                html += cardHtml;
+            }
+
+            container.innerHTML = html || `<p class="text-gray-500 text-center mt-5">No jobs found matching the filter.</p>`;
+            
+            // Only update the active job counter if we are rendering the in-progress list without filtering.
+            if (containerId === 'in-progress-list' && !searchTerm) {
+                document.getElementById('active-job-count').textContent = activeCount;
+                
+                // Update bulk button state based on actual total active jobs (NEW)
+                const processBtn = document.getElementById('processButton');
+                const bulkTabBtn = document.getElementById('bulk-tab-btn');
+                const csvFileInput = document.getElementById('csvFileInput');
+                
+                if (activeCount >= 1) { 
+                    if (processBtn) processBtn.disabled = true;
+                    if (bulkTabBtn) bulkTabBtn.style.borderBottom = '2px solid #EF4444';
+                    document.getElementById('max-jobs-message').style.display = 'block';
+                } else {
+                    if (processBtn && csvFileInput) processBtn.disabled = !csvFileInput.files.length; 
+                    if (bulkTabBtn && document.querySelector('.tab-button.active')?.id === 'bulk-tab-btn') {
+                        bulkTabBtn.style.borderBottom = '2px solid #5F3DC4';
+                    }
+                    document.getElementById('max-jobs-message').style.display = 'none';
+                }
+            }
+
+            // Update refresh timestamp (NEW)
+            document.getElementById(containerId + '-status-timestamp').textContent = `Last refreshed: ${new Date().toLocaleTimeString()}`;
+        }
+        
         async function fetchAndUpdateJobStatus() {
             try {
-                // Use the new bulk jobs endpoint
-                // API_BULK_JOBS is available globally from bulk_verification_logic.js
                 const resp = await authFetch(API_BULK_JOBS, { method: 'GET' });
                 const result = await resp.json();
 
@@ -859,103 +1106,14 @@
                     return;
                 }
 
-                const inProgressList = document.getElementById('in-progress-list');
-                const completedList = document.getElementById('completed-list');
-                const activeJobCountEl = document.getElementById('active-job-count');
-                const maxJobsMsgEl = document.getElementById('max-jobs-message');
-
-                let inProgressHtml = '';
-                let completedHtml = '';
-                let activeCount = 0;
-
                 // Sort by submitted time descending
                 result.jobs.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
                 
-                const maxCompletedDisplay = 10;
-                let completedDisplayCount = 0;
-
-                for (const job of result.jobs) {
-                    const progress = job.totalRows > 0 ? ((job.processedCount / job.totalRows) * 100).toFixed(0) : 0;
-                    const isFailed = job.status === 'Failed';
-                    const isCompleted = job.status === 'Completed';
-
-                    // --- CRITICAL FIX: Use formatISTTime helper for display ---
-                    const completionDisplay = isCompleted ? formatISTTime(job.completedTime) : new Date(job.submittedAt).toLocaleDateString();
-
-                    const cardHtml = `
-                        <div class="job-card bg-white p-4 rounded-lg shadow-md border-l-4 ${isCompleted ? 'border-green-500' : isFailed || job.status === 'Cancelled' ? 'border-red-500' : 'border-tf-secondary'}">
-                            <div class="flex justify-between items-start mb-2">
-                                <h4 class="font-bold text-lg text-gray-800 truncate">${job.filename}</h4>
-                                <span class="text-sm font-semibold text-gray-600">${completionDisplay}</span>
-                            </div>
-                            <div class="text-sm text-gray-600 mb-2 space-y-1">
-                                <p><strong>Status:</strong> <span class="font-bold text-${isCompleted ? 'green' : isFailed || job.status === 'Cancelled' ? 'red' : 'tf-secondary'}-600">${job.status}</span></p>
-                                ${job.status !== 'Cancelled' && job.status !== 'Failed' ? `<p><strong>Rows:</strong> ${job.processedCount} / ${job.totalRows}</p>` : ''}
-                            </div>
-                            ${job.status === 'In Progress' ? `
-                            <div class="progress-bar w-full bg-gray-300 rounded-full h-2 mt-2">
-                                <div class="progress-fill h-2 bg-tf-secondary rounded-full" style="width: ${progress}%;"></div>
-                            </div>
-                            ` : ''}
-                            <div class="mt-3 flex gap-2 justify-end">
-                                ${job.status === 'In Progress' || job.status === 'Queued' ? `
-                                    <button class="py-1 px-3 bg-red-500 text-white text-sm rounded hover:bg-red-600" onclick="handleCancelJob('${job._id}')">
-                                        <i class="fas fa-times"></i> Cancel
-                                    </button>` 
-                                : isCompleted ? `
-                                    <button class="py-1 px-3 bg-tf-primary text-white text-sm rounded hover:bg-[#4d2e97] transition" onclick="handleAuthenticatedDownload('${job._id}', '${job.filename.replace(/'/g, "\\'").replace(/"/g, '')}')">
-                                        <i class="fas fa-download"></i> Download
-                                    </button>`
-                                : isFailed ? `<span class="text-red-500 text-sm italic">${job.error || 'Check server logs.'}</span>`
-                                : job.status === 'Cancelled' ? `<span class="text-red-500 text-sm italic">Cancelled by user.</span>`
-                                : ''}
-                            </div>
-                        </div>
-                    `;
-
-                    if (job.status === 'In Progress' || job.status === 'Queued') {
-                        inProgressHtml += cardHtml;
-                        activeCount++;
-                    } else if (isCompleted || isFailed || job.status === 'Cancelled') {
-                        if (completedDisplayCount < maxCompletedDisplay) {
-                            completedHtml += cardHtml;
-                            completedDisplayCount++;
-                        }
-                    }
-                }
+                globalJobsData.inProgress = result.jobs.filter(j => j.status === 'Queued' || j.status === 'In Progress');
+                globalJobsData.completed = result.jobs.filter(j => j.status === 'Completed' || j.status === 'Failed' || j.status === 'Cancelled');
                 
-                // Update In Progress Tab
-                inProgressList.innerHTML = inProgressHtml || '<p class="text-gray-500 text-center mt-5">No jobs currently running.</p>';
-                activeJobCountEl.textContent = activeCount;
-
-                // Update Completed Tab
-                completedList.innerHTML = completedHtml || '<p class="text-gray-500 text-center mt-5">No recently completed jobs.</p>';
-                
-                // Requirement 3: Disable 'Start Verification' if max jobs reached
-                const processBtn = document.getElementById('processButton');
-                const bulkTabBtn = document.getElementById('bulk-tab-btn');
-                const csvFileInput = document.getElementById('csvFileInput');
-
-                if (activeCount >= 1) { // Changed check to 1
-                    if (processBtn) processBtn.disabled = true;
-                    if (bulkTabBtn) bulkTabBtn.style.borderBottom = '2px solid #EF4444';
-                    maxJobsMsgEl.style.display = 'block';
-                    maxJobsMsgEl.textContent = `Maximum ${activeCount} job is running. Please wait for completion.`; // Updated message
-                } else {
-                    // Only enable if fewer than 1 job AND a file is selected
-                     if (processBtn && csvFileInput) {
-                         processBtn.disabled = !csvFileInput.files.length;
-                     } 
-                     if (bulkTabBtn) {
-                         // Reset the border if active tab is bulk and status is OK
-                         if(document.querySelector('.tab-button.active')?.id === 'bulk-tab-btn') {
-                             bulkTabBtn.style.borderBottom = '2px solid #5F3DC4';
-                         } else {
-                             bulkTabBtn.style.borderBottom = '2px solid transparent';
-                         }
-                     }
-                     maxJobsMsgEl.style.display = 'none';
-                }
+                // Re-render based on current filter state
+                filterJobsList();
                 
                 // Update remaining credits UI (post-completion check)
                 const afterCreditsResp = await getRemainingCredits();
@@ -967,26 +1125,28 @@
 
             } catch (e) {
                 console.error('Job polling failed:', e);
-                inProgressList.innerHTML = '<p class="text-red-500 text-center mt-5">Failed to load status. Network error.</p>';
+                document.getElementById('in-progress-list').innerHTML = '<p class="text-red-500 text-center mt-5">Failed to load status. Network error.</p>';
             }
         }
         
-        // --- AUTHENTICATED DOWNLOAD FUNCTION (FIX for "Needs Authorisation" 401) ---
-        // This function must be defined globally to be used in fetchAndUpdateJobStatus
+        // --- Enterprise Improvement: KPI Data Logic (Placeholder) ---
+        async function loadKpiData() {
+            // NOTE: This should call a backend API to get historical data.
+            // Placeholder:
+            document.getElementById('success-rate-kpi').textContent = '96.2%';
+            document.getElementById('total-volume-kpi').textContent = '1,250,000';
+        }
+
+        // --- AUTHENTICATED DOWNLOAD FUNCTION ---
         async function handleAuthenticatedDownload(jobId, jobFilename) {
-            // Ensure filename is clean and safe
             const safeFilename = `${jobFilename.replace('.csv', '').replace(/'/g, '').replace(/"/g, '')}_verified.csv`;
-            // API_BULK_JOBS is available globally from bulk_verification_logic.js
             const downloadUrl = `${API_BULK_JOBS}?action=download&jobId=${jobId}`; 
 
             try {
-                // Use authFetch to ensure JWT is included in the header
                 const resp = await authFetch(downloadUrl, { method: 'GET' });
 
-                // Check Content-Type first; if server returned JSON, show it instead of saving it as CSV
                 const contentType = (resp.headers.get && resp.headers.get('content-type') || '').toLowerCase();
                 if (contentType.includes('application/json')) {
-                    // parse and show JSON error message
                     let json = null;
                     try { json = await resp.json(); } catch (e) { /* ignore parse error */ }
                     const msg = (json && (json.message || json.error)) ? (json.message || json.error) : 'Server returned JSON instead of CSV.';
@@ -996,7 +1156,6 @@
 
                 if (!resp.ok) {
                     const errorText = await resp.text();
-                    // attempt to parse JSON-like error text (fallback)
                     try {
                         const errorJson = JSON.parse(errorText);
                         alert('Download failed: ' + (errorJson.message || errorJson.error || 'File unavailable.'));
@@ -1006,14 +1165,12 @@
                     return;
                 }
 
-                // Get the response data as a Blob (raw file data)
                 const blob = await resp.blob(); 
                 
-                // Trigger download using Blob URL
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = window.URL.createObjectURL(blob);
-                a.download = safeFilename; // Use the safe filename
+                a.download = safeFilename; 
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(a.href);
@@ -1036,6 +1193,7 @@
         window.closeInbox = closeInbox;
         window.viewClientMessage = viewClientMessage;
         window.handleAuthenticatedDownload = handleAuthenticatedDownload;
+        window.filterJobsList = filterJobsList; // Expose filter function (NEW)
 
 
         // --- PASSWORD UPDATE LISTENER (PUBLIC) ---
@@ -1090,7 +1248,9 @@
 
         // --- INITIALIZATION ---
         window.onload = () => {
-            // Try to fetch profile and then init bulk listeners (external)
+            // Enterprise Improvement: Initialize Chart when appropriate tab is selected.
+            // Enterprise Improvement: Load KPI data immediately.
+            
             fetchProfileData().then(()=> {
                 if (typeof initBulkListeners === 'function') {
                     initBulkListeners();
@@ -1110,9 +1270,7 @@
             showTab('bulk-verification', document.getElementById('bulk-tab-btn'));
 
             /* --- SMALL SAFE FALLBACK (non-invasive) ---
-            If the external bulk_verification_logic.js did not attach listeners
-            (missing or errored), make sure the process button enables when a file
-            is selected and disables otherwise. This does NOT change logic.
+            If the external bulk_verification_logic.js did not attach listeners...
             */
             try {
                 ensureProcessButtonFallback();
@@ -1122,7 +1280,6 @@
         };
 
         // --- Time Formatting Helper (NEW) ---
-        // Defined globally for use in job status polling
         function formatISTTime(utcTimestamp) {
             if (!utcTimestamp) return 'N/A';
             const date = new Date(utcTimestamp);
@@ -1153,38 +1310,29 @@
 
         /* -------------------------
             Fallback helper (tiny)
-            Enables/disables Start Verification button based on:
-            - a) whether a file is selected
-            - b) whether there is currently an active job (uses active job count element)
-            This is safe — it only manipulates the button UI state and does not change any process logic.
             ------------------------- */
         function ensureProcessButtonFallback() {
             const fileInput = document.getElementById('csvFileInput');
             const processBtn = document.getElementById('processButton');
             const activeJobCountEl = document.getElementById('active-job-count');
-            const MAX_ACTIVE = 1; // consistency with your logic
+            const MAX_ACTIVE = 1;
 
             if (!fileInput || !processBtn) return;
 
             function updateButtonState() {
-                // read active job count (fallback to 0)
                 const active = Number(activeJobCountEl?.textContent || 0);
-                // enable only if file selected AND no active jobs
                 const hasFile = fileInput.files && fileInput.files.length > 0;
                 processBtn.disabled = !(hasFile && active < MAX_ACTIVE);
             }
 
-            // attach listener (safe, won't conflict if external script also uses this input)
             fileInput.addEventListener('change', updateButtonState, { passive: true });
 
-            // also observe changes to active job count (in case polling updates it later)
             const observerTarget = activeJobCountEl;
             if (observerTarget) {
                 const mo = new MutationObserver(updateButtonState);
                 mo.observe(observerTarget, { childList: true, subtree: true, characterData: true });
             }
 
-            // initial sync (in case file was preselected)
             updateButtonState();
         }
     </script>

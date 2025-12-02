@@ -1,8 +1,6 @@
 /* -----------------------------------------
-    GLOBAL PAGE STYLES
+    GLOBAL PAGE STYLES (Includes Code Visibility Fix)
     ----------------------------------------- 
-    NOTE: Most modern styling is handled by Tailwind classes in the HTML. 
-    This file provides critical input resets and layout fallbacks.
 */
 
 body {
@@ -12,13 +10,16 @@ body {
 }
 
 h1, h2, h3 {
-    /* Set a default dark color for non-Tailwind-styled elements */
     color: #1E293B; 
+}
+
+/* FIX: Ensure all inline code is visible (to fix previous invisible text issue) */
+code {
+    color: #1E293B !important; 
 }
 
 /* -----------------------------------------
     FALLBACK LAYOUT HELPERS 
-    (Keep only if used for non-Tailwind pages like login/admin)
     ----------------------------------------- */
 
 .container {
@@ -81,7 +82,7 @@ textarea:focus {
 }
 
 /* -----------------------------------------
-    TABLE STYLES (Good fallback)
+    TABLE STYLES (Updated for Preview)
     ----------------------------------------- */
 
 table {
@@ -89,6 +90,7 @@ table {
     width: 100%;
 }
 
+/* General table styling (if needed elsewhere) */
 table th, table td {
     border: 1px solid #e2e8f0; /* Tailwind gray-200 */
     padding: 8px 10px;
