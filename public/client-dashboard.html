@@ -8,13 +8,12 @@
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
-    <!-- Tailwind config must exist on window.tailwind BEFORE loading the CDN -->
     <script>
         window.tailwind = {
             config: {
                 theme: {
                     extend: {
-                       
+                        
                         colors: {
                             // 💜 Smart Locator/Teleforce Style Palette
                             'tf-primary': '#5F3DC4', 
@@ -154,7 +153,10 @@
         #force-logout-modal .modal-actions { margin-top: 16px; display:flex;
             gap:10px; justify-content:flex-end; }
          /* Message card styles */
-        .msg-card { border: 1px solid #E5E7EB;
+        .msg-card { 
+            display: flex; /* Added flex to align icon and text */
+            align-items: center; /* Center items vertically */
+            border: 1px solid #E5E7EB;
             padding: 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: background-color 0.2s, box-shadow 0.2s;
         }
         .msg-card:hover { background-color: #F0F4FF; box-shadow: 0 2px 8px rgba(95, 61, 196, 0.1);
@@ -166,7 +168,7 @@
     </style>
 </head>
 <body>
-    <div class="dashboard-container">
+    <div class="dashboard-container text-gray-800">
         <header class="header">
             <div>
                 <h1 class="text-3xl font-bold text-gray-800">Welcome, <span id="client-name-display" class="text-tf-primary">Client</span></h1>
@@ -180,7 +182,7 @@
                     <i class="fas fa-envelope-open-text"></i>
                     <span id="inbox-badge" class="badge" style="display:none;">0</span>
                 </button>
-   
+    
         
                 <button onclick="logout()" class="action-btn logout">Logout</button>
             </div>
@@ -272,7 +274,7 @@
         <div id="completed-jobs" class="tab-content" style="display:none;">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Completed Jobs</h2>
             <div id="completed-list" class="space-y-4">
-                 <p class="text-gray-500 text-center">Loading completed jobs...</p>
+                   <p class="text-gray-500 text-center">Loading completed jobs...</p>
             </div>
         </div>
 
@@ -308,13 +310,13 @@
     
                         <div class="info-item"><p><strong>Status:</strong> <span id="account-status"></span></p></div>
                         <div class="info-item"><p><strong>Valid Until:</strong> <span id="validity-end"></span></p></div>
-  
+    
         
                         <div class="info-item"><p><strong>Remaining Credits:</strong> <span id="plan-remaining-credits" class="font-bold text-tf-secondary">N/A</span></p></div>
                     </div>
                 
                     <button class="action-btn mt-6 w-full bg-tf-secondary 
-                    hover:bg-[#86259d]" onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(3)'))">Contact for Renewal</button>
+                    hover:bg-[#86259d]" onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(5)'))">Contact for Renewal</button>
             
                 </div>
             </div>
@@ -322,7 +324,7 @@
 
         <div id="support" class="tab-content" style="display:none;">
             <div class="p-8 border rounded-xl shadow-md bg-tf-light space-y-6 max-w-lg mx-auto">
-        
+    
     
     
                 <h2 class="text-2xl font-bold mb-4 flex items-center text-tf-primary">
@@ -374,7 +376,7 @@
     </div>
 
     <div id="password-modal" class="modal" aria-hidden="true">
-   
+    
         <div class="modal-content">
             <span class="modal-close" onclick="closePasswordModal()">&times;</span>
             <h2 class="text-2xl font-bold mb-4 text-tf-primary">Change Your Password</h2>
@@ -739,7 +741,7 @@
                         const sender = msg.senderId === 'admin' ? 'Admin' : 'You';
     
                         const messageHtml = `
-                            <div id="msg-${msg._id}" class="msg-card ${cardClass}" onclick="viewClientMessage('${msg._id}', ${JSON.stringify(msg.subject)}, ${JSON.stringify(msg.body)}, ${isUnread}, '${msg.timestamp}')">
+                            <div id="msg-${msg._id}" class="msg-card ${cardClass}" onclick="viewClientMessage('${msg._id}', '${msg.subject.replace(/'/g, "\\'") || '(No Subject)'}', '${msg.body.replace(/'/g, "\\'")}', ${isUnread}, '${msg.timestamp}')">
                                 <i class="fas ${icon} msg-icon"></i>
                                 <div class="flex-grow">
                                     <p class="text-md truncate">${msg.subject || '(No Subject)'}</p>
@@ -912,15 +914,15 @@
                 } else {
                     // Only enable if fewer than 1 job AND a file is selected
                      if (processBtn && csvFileInput) {
-                        processBtn.disabled = !csvFileInput.files.length;
+                         processBtn.disabled = !csvFileInput.files.length;
                      } 
                      if (bulkTabBtn) {
-                        // Reset the border if active tab is bulk and status is OK
-                        if(document.querySelector('.tab-button.active')?.id === 'bulk-tab-btn') {
-                            bulkTabBtn.style.borderBottom = '2px solid #5F3DC4';
-                        } else {
-                            bulkTabBtn.style.borderBottom = '2px solid transparent';
-                        }
+                         // Reset the border if active tab is bulk and status is OK
+                         if(document.querySelector('.tab-button.active')?.id === 'bulk-tab-btn') {
+                             bulkTabBtn.style.borderBottom = '2px solid #5F3DC4';
+                         } else {
+                             bulkTabBtn.style.borderBottom = '2px solid transparent';
+                         }
                      }
                      maxJobsMsgEl.style.display = 'none';
                 }
@@ -1078,9 +1080,9 @@
             showTab('bulk-verification', document.getElementById('bulk-tab-btn'));
 
             /* --- SMALL SAFE FALLBACK (non-invasive) ---
-               If the external bulk_verification_logic.js did not attach listeners
-               (missing or errored), make sure the process button enables when a file
-               is selected and disables otherwise. This does NOT change logic.
+            If the external bulk_verification_logic.js did not attach listeners
+            (missing or errored), make sure the process button enables when a file
+            is selected and disables otherwise. This does NOT change logic.
             */
             try {
                 ensureProcessButtonFallback();
@@ -1120,12 +1122,12 @@
         }
 
         /* -------------------------
-           Fallback helper (tiny)
-           Enables/disables Start Verification button based on:
-           - a) whether a file is selected
-           - b) whether there is currently an active job (uses active job count element)
-           This is safe — it only manipulates the button UI state and does not change any process logic.
-           ------------------------- */
+            Fallback helper (tiny)
+            Enables/disables Start Verification button based on:
+            - a) whether a file is selected
+            - b) whether there is currently an active job (uses active job count element)
+            This is safe — it only manipulates the button UI state and does not change any process logic.
+            ------------------------- */
         function ensureProcessButtonFallback() {
             const fileInput = document.getElementById('csvFileInput');
             const processBtn = document.getElementById('processButton');
@@ -1157,4 +1159,4 @@
         }
     </script>
 </body>
-    </html>
+</html>
