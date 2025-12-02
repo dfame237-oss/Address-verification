@@ -8,39 +8,38 @@
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
-    <!-- Inter font so font-family: 'Inter' works -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-
-    <!-- Tailwind config must be present before the CDN script so custom colors / classes register -->
+    <!-- Tailwind config must exist on window.tailwind BEFORE loading the CDN -->
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                 
-                    colors: {
-                        // 💜 Smart Locator/Teleforce Style Palette
-                        'tf-primary': '#5F3DC4', 
-                        'tf-secondary': '#A437C1', 
-                    
-                        'tf-dark': '#0F172A',
-                        'tf-text': '#E2E8F0',
-                        'tf-card': '#1E293B',
-                        'tf-light': '#F1F5F9',
-                    
-                        'whatsapp-green': '#25D366',
-                        'alert-dark': '#EF4444',
-                        'alert-light': '#FEE2E2',
-                        'success-light': '#D1FAE5',
-                    
-                        'tf-primary-light': '#EFE7FF',
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
+        window.tailwind = {
+            config: {
+                theme: {
+                    extend: {
+                       
+                        colors: {
+                            // 💜 Smart Locator/Teleforce Style Palette
+                            'tf-primary': '#5F3DC4', 
+                            'tf-secondary': '#A437C1', 
+                        
+                            'tf-dark': '#0F172A',
+                            'tf-text': '#E2E8F0',
+                            'tf-card': '#1E293B',
+                            'tf-light': '#F1F5F9',
+                        
+                            'whatsapp-green': '#25D366',
+                            'alert-dark': '#EF4444',
+                            'alert-light': '#FEE2E2',
+                            'success-light': '#D1FAE5',
+                        
+                            'tf-primary-light': '#EFE7FF',
+                        },
+                        fontFamily: {
+                            sans: ['Inter', 'sans-serif'],
+                        },
 
+                    }
                 }
             }
-        }
+        };
     </script>
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -125,7 +124,7 @@
 
 
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.6); justify-content: center; align-items: center; z-index: 2000; display: none;
+            background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; display: none;
         }
         #full-message-detail { border: 1px solid #D1D5DB; background-color: #F8FAFC; border-radius: 8px; padding: 15px;
             line-height: 1.6; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
@@ -181,7 +180,7 @@
                     <i class="fas fa-envelope-open-text"></i>
                     <span id="inbox-badge" class="badge" style="display:none;">0</span>
                 </button>
-    
+   
         
                 <button onclick="logout()" class="action-btn logout">Logout</button>
             </div>
@@ -230,7 +229,7 @@
     
                     class="font-bold text-xl text-gray-800 mb-4 flex items-center justify-center">
                         <i class="fas fa-upload mr-3 text-tf-secondary"></i> 2. Upload Your CSV File
-
+    
                     </p>
                     <input type="file" id="csvFileInput" accept=".csv" class="block w-full text-sm 
                     text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-tf-secondary/10 file:text-tf-secondary hover:file:bg-tf-secondary/20 transition cursor-pointer">
@@ -299,10 +298,11 @@
                 </div>
 
                 <div class="plan-card">
-
+    
                     <h3 class="text-xl font-semibold text-tf-secondary mb-4 flex items-center"><i class="fas fa-award mr-2"></i> Plan Status</h3>
                     <div class="space-y-3">
         
+    
     
                         <div class="info-item"><p><strong>Current Plan:</strong> <span id="plan-name" class="font-bold"></span></p></div>
     
@@ -315,7 +315,7 @@
                 
                     <button class="action-btn mt-6 w-full bg-tf-secondary 
                     hover:bg-[#86259d]" onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(3)'))">Contact for Renewal</button>
-                
+            
                 </div>
             </div>
         </div>
@@ -323,9 +323,10 @@
         <div id="support" class="tab-content" style="display:none;">
             <div class="p-8 border rounded-xl shadow-md bg-tf-light space-y-6 max-w-lg mx-auto">
         
-
-                <h2 class="text-2xl font-bold mb-4 flex items-center text-tf-primary">
     
+    
+                <h2 class="text-2xl font-bold mb-4 flex items-center text-tf-primary">
+        
                     <i class="fas fa-headset mr-3"></i> Contact Support
                 </h2>
 
@@ -337,7 +338,7 @@
                 </a>
 
                 <a href="tel:+919193246219" 
-
+    
                 class="block w-full py-4 bg-tf-primary text-white font-bold rounded-lg hover:bg-[#4d2e97] transition transform hover:scale-[1.005] flex items-center justify-center">
                     <i class="fas fa-phone mr-3"></i> Call Support (+91 9193246219)
                 </a>
@@ -345,7 +346,7 @@
         </div>
     </div>
 
-
+    
 
     <div id="inbox-modal" class="modal">
         
@@ -394,7 +395,6 @@
             <p class="text-xs text-center text-gray-500 mt-4">Note: Changing your password 
             will immediately log you out of all devices for security.</p>
         </div>
-        
         
         
     </div>
@@ -734,10 +734,10 @@
                     result.messages.forEach(msg => {
                         const isUnread = !msg.isRead && msg.senderId === 'admin';
                         const cardClass = isUnread ? 'unread' : '';
-
+    
                         const icon = isUnread ? 'fa-envelope' : 'fa-envelope-open';
                         const sender = msg.senderId === 'admin' ? 'Admin' : 'You';
-
+    
                         const messageHtml = `
                             <div id="msg-${msg._id}" class="msg-card ${cardClass}" onclick="viewClientMessage('${msg._id}', ${JSON.stringify(msg.subject)}, ${JSON.stringify(msg.body)}, ${isUnread}, '${msg.timestamp}')">
                                 <i class="fas ${icon} msg-icon"></i>
@@ -847,11 +847,14 @@
                     const isFailed = job.status === 'Failed';
                     const isCompleted = job.status === 'Completed';
 
+                    // --- CRITICAL FIX: Use formatISTTime helper for display ---
+                    const completionDisplay = isCompleted ? formatISTTime(job.completedTime) : new Date(job.submittedAt).toLocaleDateString();
+
                     const cardHtml = `
                         <div class="job-card bg-white p-4 rounded-lg shadow-md border-l-4 ${isCompleted ? 'border-green-500' : isFailed || job.status === 'Cancelled' ? 'border-red-500' : 'border-tf-secondary'}">
                             <div class="flex justify-between items-start mb-2">
                                 <h4 class="font-bold text-lg text-gray-800 truncate">${job.filename}</h4>
-                                <span class="text-sm font-semibold text-gray-600">${new Date(job.submittedAt).toLocaleDateString()}</span>
+                                <span class="text-sm font-semibold text-gray-600">${completionDisplay}</span>
                             </div>
                             <div class="text-sm text-gray-600 mb-2 space-y-1">
                                 <p><strong>Status:</strong> <span class="font-bold text-${isCompleted ? 'green' : isFailed || job.status === 'Cancelled' ? 'red' : 'tf-secondary'}-600">${job.status}</span></p>
@@ -913,141 +916,4 @@
                      } 
                      if (bulkTabBtn) {
                         // Reset the border if active tab is bulk and status is OK
-                        if(document.querySelector('.tab-button.active')?.id === 'bulk-tab-btn') {
-                            bulkTabBtn.style.borderBottom = '2px solid #5F3DC4';
-                        } else {
-                            bulkTabBtn.style.borderBottom = '2px solid transparent';
-                        }
-                     }
-                     maxJobsMsgEl.style.display = 'none';
-                }
-                
-                // Update remaining credits UI (post-completion check)
-                const afterCreditsResp = await getRemainingCredits();
-                if (afterCreditsResp.ok) {
-                    const rc = afterCreditsResp.remainingCredits;
-                    const remEl = document.getElementById('plan-remaining-credits');
-                    if (remEl) remEl.textContent = rc === 'Unlimited' ? 'Unlimited' : Number(rc).toLocaleString();
-                }
-
-            } catch (e) {
-                console.error('Job polling failed:', e);
-                inProgressList.innerHTML = '<p class="text-red-500 text-center mt-5">Failed to load status. Network error.</p>';
-            }
-        }
-        
-        // --- AUTHENTICATED DOWNLOAD FUNCTION (FIX for "Needs Authorisation" 401) ---
-        // This function must be defined globally to be used in fetchAndUpdateJobStatus
-        async function handleAuthenticatedDownload(jobId, jobFilename) {
-            // Ensure filename is clean and safe
-            const safeFilename = `${jobFilename.replace('.csv', '').replace(/'/g, '').replace(/"/g, '')}_verified.csv`;
-            // API_BULK_JOBS is available globally from bulk_verification_logic.js
-            const downloadUrl = `${API_BULK_JOBS}?action=download&jobId=${jobId}`; 
-
-            try {
-                // Use authFetch to ensure JWT is included in the header
-                const resp = await authFetch(downloadUrl, { method: 'GET' });
-
-                if (!resp.ok) {
-                    const errorText = await resp.text();
-                    if (errorText.startsWith('{') && errorText.endsWith('}')) {
-                         const errorJson = JSON.parse(errorText);
-                         alert('Download failed: ' + (errorJson.message || 'File unavailable.'));
-                    } else {
-                        alert('Download failed. Please try again later.');
-                    }
-                    return;
-                }
-
-                // Get the response data as a Blob (raw file data)
-                const blob = await resp.blob(); 
-                
-                // Trigger download using Blob URL
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = safeFilename; // Use the safe filename
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                a.remove();
-                
-            } catch (e) {
-                console.error("Authenticated Download Failed:", e);
-                alert('Download failed due to a network or authentication error.');
-            }
-        }
-
-        // --- PASSWORD UPDATE LISTENER (PUBLIC) ---
-        document.getElementById('password-update-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const newPassword = document.getElementById('new-password').value;
-            const confirmPassword = document.getElementById('confirm-password').value;
-            const statusEl = document.getElementById('password-update-status');
-            const updateBtn = document.getElementById('updatePasswordBtn');
-
-            if (newPassword !== confirmPassword) {
-                statusEl.textContent = 'Passwords do not match.';
-                statusEl.className = 'text-red-600 mt-3';
-                return;
-            }
-            if (newPassword.length < 6) {
-                statusEl.textContent = 'Password must be at least 6 characters.';
-                statusEl.className = 'text-red-600 mt-3';
-                return;
-            }
-
-            updateBtn.disabled = true;
-            updateBtn.textContent = 'Processing...';
-            statusEl.textContent = 'Sending request to server...';
-            statusEl.className = 'text-tf-primary mt-3';
-
-            try {
-                const resp = await authFetch(`${API_CLIENT}?action=update-password`, {
-                    method: 'PUT',
-                    body: JSON.stringify({ newPassword })
-                });
-                const result = await resp.json();
-
-                if (resp.ok && result.status === 'Success') {
-                    statusEl.textContent = 'Password changed successfully! Redirecting to login...';
-                    statusEl.className = 'text-green-600 mt-3';
-                    setTimeout(logout, 1500); 
-                } else {
-                    statusEl.textContent = result.message || 'Update failed.';
-                    statusEl.className = 'text-red-600 mt-3';
-                }
-            } catch (error) {
-                statusEl.textContent = 'Network error or session expired.';
-                statusEl.className = 'text-red-600 mt-3';
-                console.error('Password Update Error:', error);
-            } finally {
-                updateBtn.disabled = false;
-                updateBtn.textContent = 'Update & Log Out';
-            }
-        });
-
-
-        // --- INITIALIZATION ---
-        window.onload = () => {
-            fetchProfileData().then(()=> {
-                if (typeof initBulkListeners === 'function') {
-                    initBulkListeners();
-                } else {
-                    console.error("Bulk listeners function not found. Make sure bulk_verification_logic.js is loaded.");
-                }
-            }).catch((e)=> {
-                console.error('Error during profile init:', e);
-                if (typeof initBulkListeners === 'function') initBulkListeners();
-            });
-            loadInboxCounts();
-
-            setInterval(sendHeartbeat, 60000);
-            setInterval(loadInboxCounts, 60000);
-            
-            showTab('bulk-verification', document.getElementById('bulk-tab-btn'));
-        };
-    </script>
-</body>
-    </html>
+                        if(document.querySelector('.tab-button.active')?.id === '
