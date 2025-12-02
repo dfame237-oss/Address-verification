@@ -47,7 +47,7 @@ module.exports = async (req, res) => {
     return sendJSON(res, 500, { status: 'Error', message: 'Database connection failed' });
   }
   const clients = db.collection('clients');
-  const bulkJobs = db.collection('bulkJobs'); // NEW: Reference for job status
+  const bulkJobs = db.collection('bulkJobs'); // Reference for job status
 
   try {
     // -------------------------
@@ -132,11 +132,16 @@ module.exports = async (req, res) => {
     try { payload = jwt.verify(token, JWT_SECRET); }
     catch (e) { payload = jwt.decode(token); }
 
-    const clientId = payload?.clientId;
-    const sessionId = payload?.sessionId;
+    const clientId = payload?.clientId; // This is the STRING ID from JWT
+    const sessionId = payload?.sessionId; 
     if (!clientId) return sendJSON(res, 400, { status: 'Error', message: 'Invalid token payload' });
 
-    const client = await clients.findOne({ _id: new ObjectId(clientId) });
+    // FIX START: Capture the string ID and use it for the bulkJobs query
+    const clientIdString = clientId; // Store the authoritative string ID
+    // Use the string ID to create an ObjectId for the 'clients' collection lookup:
+    const client = await clients.findOne({ _id: new ObjectId(clientIdString) });
+    // FIX END
+    
     if (!client) return sendJSON(res, 401, { status: 'Error', message: 'Invalid session' });
     if (client.activeSessionId && sessionId && client.activeSessionId !== sessionId) {
       return sendJSON(res, 401, { status: 'Error', message: 'Session invalidated by server' });
@@ -154,14 +159,14 @@ module.exports = async (req, res) => {
       try {
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         const result = await clients.updateOne(
-          { _id: new ObjectId(clientId) },
+          { _id: new ObjectId(clientIdString) },
           { $set: { passwordHash: hashedPassword } }
         );
 
         if (result.matchedCount === 0) return sendJSON(res, 404, { status: 'Error', message: 'Client not found.' });
         
         // Invalidate current session for security (forces client to log back in)
-        await clients.updateOne({ _id: new ObjectId(clientId) }, { $set: { activeSessionId: null } });
+        await clients.updateOne({ _id: new ObjectId(clientIdString) }, { $set: { activeSessionId: null } });
 
         return sendJSON(res, 200, { status: 'Success', message: 'Password updated successfully. Please log in again.' });
       } catch (e) {
@@ -177,7 +182,7 @@ module.exports = async (req, res) => {
     if (action === 'logout') {
       if (req.method !== 'POST') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
 
-      const filter = { _id: new ObjectId(clientId) };
+      const filter = { _id: new ObjectId(clientIdString) };
       if (sessionId) filter.activeSessionId = sessionId;
 
       await clients.findOneAndUpdate(filter, { $set: { activeSessionId: null, lastActivityAt: new Date() } });
@@ -190,11 +195,8 @@ module.exports = async (req, res) => {
     if (action === 'force-logout') {
       if (req.method !== 'POST') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
 
-      // Note: This action typically requires ADMIN privileges, but here we assume the action token check handled authorization in login.
-      // If called directly, the auth middleware has already validated the client token.
-
       try {
-        await clients.updateOne({ _id: new ObjectId(clientId) }, { $set: { activeSessionId: null, lastActivityAt: new Date() } });
+        await clients.updateOne({ _id: new ObjectId(clientIdString) }, { $set: { activeSessionId: null, lastActivityAt: new Date() } });
         return sendJSON(res, 200, { status: 'Success', message: 'Force logout complete' });
       } catch (e) {
         console.error('force-logout error:', e && (e.stack || e.message));
@@ -208,7 +210,7 @@ module.exports = async (req, res) => {
     if (action === 'activity') {
       if (req.method !== 'POST') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
 
-      await clients.updateOne({ _id: new ObjectId(clientId) }, { $set: { lastActivityAt: new Date() } });
+      await clients.updateOne({ _id: new ObjectId(clientIdString) }, { $set: { lastActivityAt: new Date() } });
       return sendJSON(res, 200, { status: 'Success', message: 'Activity updated' });
     }
 
@@ -244,7 +246,8 @@ module.exports = async (req, res) => {
 
         try {
             const activeJobsCount = await bulkJobs.countDocuments({ 
-                clientId: clientId.toString(), // Use string ID from JWT for query
+                // FIX: Use the string ID for bulkJobs, which matches the format stored on job creation
+                clientId: clientIdString, 
                 status: { $in: ['Queued', 'In Progress'] } 
             });
 
@@ -255,8 +258,20 @@ module.exports = async (req, res) => {
         }
     }
 
+    // -------------------------
+    // ACTION: remaining-credits (GET) - NEW (Optional helper for UI polling)
+    // -------------------------
+    if (action === 'remaining-credits') {
+        if (req.method !== 'GET') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
+
+        return sendJSON(res, 200, { 
+            status: 'Success', 
+            remainingCredits: client.remainingCredits ?? null 
+        });
+    }
+
     // no action matched
-    return sendJSON(res, 400, { status: 'Error', message: 'Unknown action. Use ?action=login|logout|activity|profile|update-password|active-jobs.' });
+    return sendJSON(res, 400, { status: 'Error', message: 'Unknown action. Use ?action=login|logout|activity|profile|update-password|active-jobs|remaining-credits.' });
   } catch (err) {
     console.error('UNCAUGHT in /api/client/index.js', err && (err.stack || err.message));
     return sendJSON(res, 500, { status: 'Error', message: 'Internal server error' });
