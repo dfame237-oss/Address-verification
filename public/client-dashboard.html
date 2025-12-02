@@ -56,7 +56,7 @@
         .header { display: flex;
             justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB;
         }
-        .header h1 { font-weight: 700;
+        .header h1 { font-weight: 7;
         }
         
         /* --- NEW SIDEBAR LAYOUT STYLES --- */
@@ -316,206 +316,89 @@
                     
                     <h5 class="sidebar-section-title">Core Operations</h5>
                     
-                    <a href="client-dashboard.html" class="nav-link active" role="tab" aria-selected="true">
-                        <i class="fas fa-file-upload mr-2"></i> Bulk Verification
-                    </a>
-                    
-                    <a href="client-dashboard/in-progress.html" class="nav-link" role="tab" aria-selected="false">
-                        <i class="fas fa-hourglass-half mr-2"></i> In Progress
-                    </a>
-                    <a href="client-dashboard/completed.html" class="nav-link" role="tab" aria-selected="false">
-                        <i class="fas fa-check-circle mr-2"></i> Completed
-                    </a>
+                    <a href="../client-dashboard.html" class="nav-link" role="tab" aria-selected="false"><i class="fas fa-file-upload mr-2"></i> Bulk Verification</a>
+                    <a href="in-progress.html" class="nav-link" role="tab" aria-selected="false"><i class="fas fa-hourglass-half mr-2"></i> In Progress</a>
+                    <a href="completed.html" class="nav-link" role="tab" aria-selected="false"><i class="fas fa-check-circle mr-2"></i> Completed</a>
                     
                     <h5 class="sidebar-section-title">Analytics & Account</h5>
                     
-                    <a href="client-dashboard/reports.html" class="nav-link" role="tab" aria-selected="false">
-                        <i class="fas fa-chart-bar mr-2"></i> Key Metrics & Usage
-                    </a>
-                    
-                    <a href="client-dashboard/profile.html" class="nav-link" role="tab" aria-selected="false">
-                        <i class="fas fa-user-circle mr-2"></i> Profile & Plan Status
-                    </a>
-                    
-                    <a href="client-dashboard/support.html" class="nav-link" role="tab" aria-selected="false">
-                        <i class="fas fa-headset mr-2"></i> Support
-                    </a>
+                    <a href="reports.html" class="nav-link active" role="tab" aria-selected="true"><i class="fas fa-chart-bar mr-2"></i> Key Metrics & Usage</a>
+                    <a href="profile.html" class="nav-link" role="tab" aria-selected="false"><i class="fas fa-user-circle mr-2"></i> Profile & Plan Status</a>
+                    <a href="support.html" class="nav-link" role="tab" aria-selected="false"><i class="fas fa-headset mr-2"></i> Support</a>
                 </div>
             </aside>
             
             <main id="main-content" class="tab-content-area">
-                
-                <div id="bulk-verification" class="tab-content" role="tabpanel" aria-labelledby="bulk-tab-btn">
-                    <header class="text-center mb-10">
-                        
-                        <h2 class="text-4xl font-extrabold text-gray-900 mb-2">
-            
-                            <span class="text-tf-secondary">Bulk Address</span> Verification
-                        </h2>
-                        <p class="text-lg text-gray-500 mt-2">Upload a CSV file for high-volume cleaning and verification.</p>
-                    </header>
+                <div id="metrics-reports" class="tab-content active" role="tabpanel">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Key Metrics & Usage Reports</h2>
                     
-                    <div id="kpi-grid" class="info-grid mb-8">
-                        <div class="profile-card">
-                            <h3 class="text-md font-semibold text-gray-600 mb-2 flex items-center"><i class="fas fa-chart-line mr-2 text-tf-primary"></i> Overall Verification Success Rate</h3>
-                            <p id="success-rate-kpi" class="text-3xl font-bold text-tf-primary">--%</p>
-                            <p class="text-xs text-gray-500 mt-1">Based on last 90 days.</p>
-                        </div>
-                        <div class="profile-card">
-                            <h3 class="text-md font-semibold text-gray-600 mb-2 flex items-center"><i class="fas fa-star mr-2 text-tf-secondary"></i> Total Volume Processed</h3>
-                            <p id="total-volume-kpi" class="text-3xl font-bold text-tf-secondary">0</p>
-                            <p class="text-xs text-gray-500 mt-1">Since account inception.</p>
-                        </div>
+                    <div class="profile-card mb-8">
+                        <h3 class="text-xl font-semibold text-tf-primary mb-4 flex items-center"><i class="fas fa-chart-area mr-2"></i> Last 30 Days Usage Trend</h3>
+                        <canvas id="usage-chart" role="img" aria-label="Line chart showing credits used over the past 30 days."></canvas>
                     </div>
-
-            
-                    <div id="bulkContent" class="space-y-8">
-                        <div class="bg-tf-light p-8 rounded-xl border-l-4 border-tf-primary shadow-lg">
-                            <p class="font-bold text-xl text-tf-primary mb-3 flex items-center">
-                                <i class="fas fa-download mr-3"></i> 1. Download Template
-                            
-                            </p>
-                            <p class="text-sm text-gray-600 mb-4">
-                                Use this template to ensure your CSV file has the required columns: 
-                                <code class="bg-gray-200 px-1 rounded font-mono text-gray-900">ORDER ID</code>, 
-                                <code class="bg-gray-200 px-1 rounded font-mono text-gray-900">CUSTOMER NAME</code>, 
-                                <code class="bg-gray-200 px-1 rounded font-mono text-gray-900">CUSTOMER RAW ADDRESS</code>.
-                            </p>
-                            
-                            <button id="downloadTemplateButton" class="w-full py-3 bg-tf-primary text-white font-semibold rounded-lg hover:bg-[#4d2e97] transition duration-200 focus:outline-none focus:ring-4 focus:ring-tf-primary focus:ring-opacity-50" role="button" aria-label="Download CSV Template">
-            
-                            Download Verification Template (CSV)
-                            </button>
-                        </div>
-
-                        
-                        <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-lg text-center">
-                            <p 
-            
-                            class="font-bold text-xl text-gray-800 mb-4 flex items-center justify-center">
-                                <i class="fas fa-upload mr-3 text-tf-secondary"></i> 2. Upload Your CSV File
-            
-                            </p>
-                            <div id="drop-zone" class="mb-4">
-                                <p class="text-gray-500 mb-2">Drag and drop your CSV file here, or click to select.</p>
-                                <input type="file" id="csvFileInput" accept=".csv" class="hidden" aria-describedby="file-upload-hint">
-                                <label for="csvFileInput" class="py-2 px-4 bg-tf-secondary/10 text-tf-secondary font-semibold rounded-lg hover:bg-tf-secondary/20 transition cursor-pointer">
-                                    Choose File
-                                </label>
-                                <span id="file-name-display" class="text-gray-700 ml-3">No file chosen</span>
-                            </div>
-
-                            <p class="text-xs 
-                            text-gray-500 mt-2" id="file-upload-hint">Maximum 1000 rows recommended for stability. Must use the provided template format.</p>
-                            
-                            <div id="preview-section" class="mt-4 hidden p-4 bg-gray-50 rounded border border-gray-200 overflow-x-auto">
-                                <h4 class="font-semibold text-gray-800 mb-2">Preview (First 5 Rows)</h4>
-                                <table id="preview-table" class="w-full text-sm text-left">
-                                    </table>
-                            </div>
-                        </div>
-
-                        <button id="processButton" class="w-full py-4 bg-tf-secondary text-white font-bold text-lg rounded-lg shadow-xl transition duration-200 transform hover:scale-[1.005] hover:bg-[#86259d] focus:outline-none focus:ring-4 focus:ring-tf-secondary focus:ring-opacity-50" disabled style="display:block;" aria-label="Start Bulk Verification Process" role="button">
-            
-                            Start Verification
-            
-                        </button>
+                    
                     </div>
-
-                    <div class="progress-container mt-12 p-8 bg-tf-light rounded-xl border border-gray-300 shadow-inner">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Verification Status</h3>
-                        <p id="status-message" 
-                        class="font-semibold text-gray-600 mb-4 transition duration-300">Ready to 
-                        upload.</p>
-
-            
-                        <div class="progress-bar w-full bg-gray-300 rounded-full h-3">
-                            <div class="progress-fill h-3 bg-tf-secondary rounded-full transition-all duration-500 ease-in-out" id="progressBarFill" style="width: 0%;"></div>
-                        </div>
-
-                        </div>
-
-                    <p id="access-denied-message" class="hidden mt-6 text-center text-red-700 
-                    font-bold"></p>
-                </div>
             </main>
         </div>
     </div>
-
+    
     <div id="inbox-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="inbox-title">
-        
         <div class="modal-content w-full max-w-lg rounded-xl shadow-2xl p-6 bg-white relative">
-            <span class="modal-close" onclick="closeInbox()">&times;</span>
+            <span class="modal-close absolute right-4 top-4 text-2xl cursor-pointer" onclick="closeInbox()">&times;</span>
             <h2 class="text-3xl font-bold mb-6 text-tf-primary flex items-center" id="inbox-title">
                 <i class="fas fa-envelope-open-text mr-3"></i> Client Inbox
-            
             </h2>
-
             <div id="client-inbox-list" class="mt-4 max-h96 overflow-y-auto space-y-3">
-    
                 <p class="text-center text-gray-500 mt-5">Loading messages...</p>
             </div>
-
             <div id="full-message-detail" class="mt-6 pt-4" style="display:none;">
                 <h3 id="full-message-subject" class="font-bold text-xl mb-1"></h3>
-            
-                <small 
-                id="full-message-date" class="text-gray-500 block mb-4"></small>
-                
+                <small id="full-message-date" class="text-gray-500 block mb-4"></small>
                 <div id="full-message-body" class="p-4 border rounded bg-gray-50 whitespace-pre-wrap text-gray-700 max-h-40 overflow-y-auto"></div>
             </div>
         </div>
     </div>
-
-    <div id="password-modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="password-title">
     
+    <div id="password-modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="password-title">
         <div class="modal-content">
             <span class="modal-close" onclick="closePasswordModal()">&times;</span>
             <h2 class="text-2xl font-bold mb-4 text-tf-primary" id="password-title">Change Your Password</h2>
             <form id="password-update-form" class="space-y-4">
                 <div class="form-group">
                     <label for="new-password">New Password</label>
-                
                     <input type="password" id="new-password" name="newPassword" required minlength="6" class="w-full p-3 border rounded input-focus">
                 </div>
                 <div class="form-group">
                     <label for="confirm-password">Confirm New Password</label>
-                    <input type="password" id="confirm-password" 
-                    required minlength="6" class="w-full p-3 border rounded input-focus">
+                    <input type="password" id="confirm-password" required minlength="6" class="w-full p-3 border rounded input-focus">
                 </div>
                 <button type="submit" id="updatePasswordBtn" class="action-btn w-full bg-red-600 hover:bg-red-700" role="button">Update & Log Out</button>
                 <p id="password-update-status" class="mt-3 text-sm text-center text-gray-700"></p>
             </form>
-            <p class="text-xs text-center text-gray-500 mt-4">Note: Changing your password 
-            will immediately log you out of all devices for security.</p>
+            <p class="text-xs text-center text-gray-500 mt-4">Note: Changing your password will immediately log you out of all devices for security.</p>
         </div>
-        
-        
     </div>
-
 
     <div id="force-logout-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="force-logout-title">
         <div class="modal-content">
-            <h3 class="text-xl font-bold text-gray-800 mb-2" id="force-logout-title">Another device 
-            is logged in</h3>
+            <h3 class="text-xl font-bold text-gray-800 mb-2" id="force-logout-title">Another device is logged in</h3>
             <p class="text-gray-700">It looks like your account is currently active on another device.
             You can force-logout that session and continue here, or cancel to remain logged out.</p>
-
             <div class="modal-actions">
                 <button id="forceCancelBtn" class="py-2 px-4 bg-gray-200 rounded-lg" onclick="closeForceModal()" role="button">Cancel</button>
                 <button id="forceConfirmBtn" class="py-2 px-4 bg-red-600 text-white rounded-lg" onclick="forceLogoutOtherDevice()" role="button">Logout other device & Continue</button>
             </div>
         </div>
     </div>
-
-    <script src="bulk_verification_logic.js"></script>
+    
+    <script src="../bulk_verification_logic.js"></script>
     <script>
         // --- CONSTANTS AND STATE ---
         const API_BASE = '/api';
         const API_CLIENT = `${API_BASE}/client/index`;
         const API_ENDPOINT = "/api/verify-single-address"; // used by single verification
-        // NOTE: API_BULK_JOBS is defined in bulk_verification_logic.js. Removed declaration here to fix SyntaxError.
-        const LOGIN_PAGE = "client-login.html";
+        const LOGIN_PAGE = "../client-login.html"; // Corrected relative path for login page
+        // API_BULK_JOBS is assumed to be defined globally in bulk_verification_logic.js.
         
         let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
         const CLIENT_NAME = localStorage.getItem('clientName') || planDetails.clientName || planDetails.username || 'Client';
@@ -619,16 +502,15 @@
                 }
 
                 const pd = json.planDetails || {};
-                // Correct assignment of data to planDetails
                 planDetails = Object.assign({}, planDetails, pd);
                 localStorage.setItem('planDetails', JSON.stringify(planDetails));
 
                 const rc = pd.remainingCredits;
                 const creditsDisplay = rc === 'Unlimited' ? 'Unlimited' : (rc == null ? 'N/A' : Number(rc).toLocaleString());
                 
-                // --- FIX 1: Apply optional chaining to avoid crashing when elements don't exist (e.g., on Bulk page) ---
+                // --- FIX: Apply optional chaining to avoid crashing when elements don't exist ---
                 document.getElementById('plan-remaining-credits')?.textContent = creditsDisplay;
-                document.getElementById('client-name-display').textContent = pd.clientName || CLIENT_NAME; // ALWAYS EXISTS IN HEADER
+                document.getElementById('client-name-display').textContent = pd.clientName || CLIENT_NAME; 
                 document.getElementById('profile-username')?.textContent = pd.username || pd.clientName || CLIENT_NAME;
                 document.getElementById('profile-email')?.textContent = pd.email || '—';
                 document.getElementById('profile-mobile')?.textContent = pd.mobile || '—';
@@ -641,95 +523,30 @@
                     statusEl.textContent = isActive ? 'Enabled' : 'Disabled';
                     statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
                 }
-                // --- END FIX 1 ---
+                
+                // NOTE: Fetch usage data and render chart only if the canvas exists on the REPORTS page.
+                if (document.getElementById('usage-chart')) { 
+                    fetchUsageData().then(data => {
+                        if (data) renderUsageChart(data);
+                    }).catch(console.error);
+                }
 
                 checkPlanValidity();
                 
-                // --- Enterprise Improvement: Load Chart Data (Placeholder API) ---
-                // NOTE: This will run only if the user navigates to the profile page.
-                // if (document.getElementById('usage-chart')) {
-                //     fetchUsageData().then(data => {
-                //         if (data) {
-                //             renderUsageChart(data);
-                //         }
-                //     }).catch(console.error);
-                // }
-
             } catch (e) {
                 console.error('fetchProfileData error:', e);
-                // Catch error during fetch itself, but still try to render local data
                 updateUIFromLocalPlan(); 
             }
         }
-        
-        // --- Enterprise Improvement: Usage Data (Placeholder) ---
-        async function fetchUsageData() {
-            // NOTE: This assumes a new API endpoint exists to fetch credits used per day for the last 30 days.
-            // Example Placeholder Data structure (replace with actual authFetch to your backend):
-            const placeholderData = {
-                labels: ['Day 1', 'Day 6', 'Day 12', 'Day 18', 'Day 24', 'Day 30'],
-                creditsUsed: [250, 150, 400, 300, 500, 200]
-            };
-            // Simulate API latency
-            await new Promise(resolve => setTimeout(resolve, 300)); 
-            return placeholderData;
-        }
-
-        let usageChartInstance = null;
-        function renderUsageChart(data) {
-            if (usageChartInstance) {
-                usageChartInstance.destroy();
-            }
-            const ctx = document.getElementById('usage-chart').getContext('2d');
-            usageChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.labels,
-                    datasets: [{
-                        label: 'Credits Used',
-                        data: data.creditsUsed,
-                        borderColor: '#A437C1',
-                        backgroundColor: 'rgba(164, 55, 193, 0.1)',
-                        tension: 0.3,
-                        fill: true,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#5F3DC4'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Credits'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                        }
-                    }
-                }
-            });
-        }
-
 
         // --- Update UI from Local Plan (PUBLIC) ---
         function updateUIFromLocalPlan() {
             const rc = planDetails.remainingCredits ?? 'N/A';
             const creditsDisplay = rc === 'Unlimited' ? 'Unlimited' : (rc === 'N/A' ? 'N/A' : Number(rc).toLocaleString());
             
-            // --- FIX 2: Apply optional chaining to all lookups ---
+            // --- FIX: Apply optional chaining to all lookups ---
             document.getElementById('plan-remaining-credits')?.textContent = creditsDisplay;
-            document.getElementById('client-name-display').textContent = CLIENT_NAME; // ALWAYS EXISTS IN HEADER
+            document.getElementById('client-name-display').textContent = CLIENT_NAME; 
             document.getElementById('profile-username')?.textContent = planDetails.username || CLIENT_NAME;
             document.getElementById('profile-email')?.textContent = planDetails.email || '—';
             document.getElementById('profile-mobile')?.textContent = planDetails.mobile || '—';
@@ -744,7 +561,6 @@
                 statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
             }
         }
-        // --- END FIX 2 ---
 
         // --- CHECK PLAN VALIDITY (PUBLIC) ---
         function checkPlanValidity() {
@@ -774,7 +590,7 @@
                 }
 
                 // OK
-                document.getElementById('bulkContent').classList.remove('hidden');
+                document.getElementById('bulkContent')?.classList.remove('hidden');
                 isPlanValid = true;
                 return true;
 
@@ -811,21 +627,21 @@
 
         // --- PASSWORD MODAL LOGIC (PUBLIC) ---
         function openPasswordModal() {
-            document.getElementById('password-modal').style.display = 'flex';
-            document.getElementById('password-update-form').reset();
-            document.getElementById('password-update-status').textContent = '';
+            document.getElementById('password-modal')?.style.display = 'flex';
+            document.getElementById('password-update-form')?.reset();
+            document.getElementById('password-update-status')?.textContent = '';
         }
 
         function closePasswordModal() {
-            document.getElementById('password-modal').style.display = 'none';
+            document.getElementById('password-modal')?.style.display = 'none';
         }
         
         // --- FORCE-LOGOUT UI / helpers (PUBLIC) ---
         function openForceModal() {
-            document.getElementById('force-logout-modal').style.display = 'flex';
+            document.getElementById('force-logout-modal')?.style.display = 'flex';
         }
         function closeForceModal() {
-            document.getElementById('force-logout-modal').style.display = 'none';
+            document.getElementById('force-logout-modal')?.style.display = 'none';
         }
 
         function getTokenPayload() {
@@ -845,7 +661,6 @@
             if (!clientId) {
                 alert('Cannot determine clientId. Please log in again.');
                 closeForceModal();
-                localStorage.clear();
                 window.location.href = LOGIN_PAGE;
                 return;
             }
@@ -936,12 +751,12 @@
         }
 
         function toggleInbox() {
-            document.getElementById('inbox-modal').style.display = 'flex';
+            document.getElementById('inbox-modal')?.style.display = 'flex';
             loadClientInbox();
         }
 
         function closeInbox() {
-            document.getElementById('inbox-modal').style.display = 'none';
+            document.getElementById('inbox-modal')?.style.display = 'none';
             loadInboxCounts();
         }
 
@@ -1148,10 +963,27 @@
             // Initialize Bulk tab content (the default view)
             // Show current navigation link as active based on URL
             document.querySelectorAll('.nav-tabs .nav-link').forEach(link => {
+                // If the current URL matches the link's href, set it as active
                 if (link.href === window.location.href || link.href === window.location.href.split('#')[0]) {
                     link.classList.add('active');
-                    // Manually trigger showTab/loadKpiData for the default view
-                    showTab('bulk-verification', link); 
+                    // Manually trigger initialization logic specific to the page content (e.g., loading charts)
+                    
+                    // We check the URL/pathname to determine which function to run immediately
+                    const pathname = window.location.pathname;
+                    if (pathname.includes('reports.html')) {
+                        // Load chart data on reports page
+                        if (document.getElementById('usage-chart')) {
+                            fetchUsageData().then(data => {
+                                if (data) renderUsageChart(data);
+                            }).catch(console.error);
+                        }
+                    } else if (pathname.includes('profile.html')) {
+                        // Load profile data on profile page (Already called above, but kept here for clarity)
+                        // The initial call to fetchProfileData() at the top is sufficient for both header and content.
+                    } else if (pathname.includes('in-progress.html') || pathname.includes('completed.html')) {
+                        // Start polling on job list pages
+                        if (typeof startJobPolling === 'function') startJobPolling();
+                    }
                 }
             });
 
