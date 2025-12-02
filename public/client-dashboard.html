@@ -93,10 +93,10 @@
         .status-disabled { background-color: #FEE2E2; color: #DC2626;
         }
         
-        /* ENTERPRISE IMPROVEMENT & FIX 3 (Invisible Button Fix): Force colors via CSS */
+        /* ENTERPRISE IMPROVEMENT & FIX (Invisible Button Fix): Force colors via CSS */
         /* This ensures ALL buttons using custom colors are visible immediately */
         .action-btn { 
-            background-color: #5F3DC4 !important; /* FIX: Force primary color on action buttons */
+            background-color: #5F3DC4 !important; /* FIX: Force primary color on action buttons (Logout button base) */
             color: white; padding: 10px 20px; border-radius: 8px;
             border: none; cursor: pointer; font-weight: 600; transition: background-color 0.2s, transform 0.1s, opacity 0.2s;
         }
@@ -108,14 +108,18 @@
         }
         .action-btn.logout:hover { background-color: #B91C1C;
         }
-        /* Definitive Fix for Bulk Upload/Renewal Buttons visibility */
+        
+        /* Definitive Fix for Bulk Upload/Renewal/WhatsApp Buttons visibility */
         .bg-tf-primary {
             background-color: #5F3DC4 !important;
         }
         .bg-tf-secondary {
             background-color: #A437C1 !important;
         }
-        /* END FIX 3 */
+        .bg-whatsapp-green {
+            background-color: #25D366 !important; /* FIX for invisible WhatsApp button */
+        }
+        /* END FIX */
 
         .progress-fill { background-color: #A437C1; height: 0.75rem; border-radius: 9999px; transition: all 0.5s ease-in-out;
         }
