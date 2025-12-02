@@ -518,7 +518,7 @@
         const API_BASE = '/api';
         const API_CLIENT = `${API_BASE}/client/index`;
         const API_ENDPOINT = "/api/verify-single-address"; // used by single verification
-        const API_BULK_JOBS = '/api/bulk-jobs'; // Defined globally here (SAFE)
+        // NOTE: API_BULK_JOBS must be defined in bulk_verification_logic.js (or globally). Removed declaration here to fix SyntaxError.
         const LOGIN_PAGE = "client-login.html";
         
         let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
@@ -1183,7 +1183,7 @@
             }
         }
         
-        // Make core functions available globally for HTML onclick events
+        // FIX: Expose global functions to window object
         window.showTab = showTab;
         window.logout = logout; 
         window.openPasswordModal = openPasswordModal;
