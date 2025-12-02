@@ -51,7 +51,6 @@
         /* FIX 1: Added text-gray-800 to ensure default text color is dark on white background */
         .dashboard-container { max-width: 1200px; margin: 30px auto; padding: 35px;
             background-color: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); 
-            /* Removed padding-bottom to allow dashboard-layout to manage content height */
             padding-bottom: 0;
         }
         .header { display: flex;
@@ -72,7 +71,7 @@
             padding: 15px 0;
             border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            height: fit-content; /* Ensure sidebar doesn't stretch too much */
+            height: fit-content; 
         }
         
         .sidebar-header {
@@ -90,14 +89,14 @@
             text-transform: uppercase;
         }
 
-        /* Overrides for vertical tab buttons */
+        /* Overrides for vertical navigation links/buttons */
         .nav-tabs {
             display: block;
             border-bottom: none;
             margin-bottom: 0;
         }
 
-        .nav-tabs .tab-button {
+        .nav-tabs .nav-link, .nav-tabs .tab-button {
             display: flex;
             align-items: center;
             width: 100%;
@@ -108,14 +107,15 @@
             color: #1E293B; /* Darker default text */
             font-weight: 500;
             transition: background-color 0.2s, border-left 0.2s;
+            text-decoration: none; /* Required for <a> tags */
         }
 
-        .nav-tabs .tab-button:hover {
+        .nav-tabs .nav-link:hover, .nav-tabs .tab-button:hover {
             background-color: #EFE7FF; /* tf-primary-light on hover */
         }
 
-        /* Active tab style */
-        .nav-tabs .tab-button.active {
+        /* Active link/button style */
+        .nav-tabs .nav-link.active, .nav-tabs .tab-button.active {
             color: #5F3DC4; /* tf-primary text */
             background-color: #EFE7FF; /* tf-primary-light background */
             border-left: 4px solid #5F3DC4; /* Highlight bar */
@@ -193,8 +193,6 @@
             position: relative;
             background: #F8FAFC; 
             border: 1px solid #CBD5E1; 
-            border-radius: 50%; 
-            padding: 10px 14px; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.08);
             cursor: pointer;
             transition: background-color 0.2s;
@@ -259,7 +257,7 @@
                 padding: 10px 0;
             }
             /* Hide tab button details/icons on mobile if space is tight */
-            .nav-tabs .tab-button i {
+            .nav-tabs .nav-link i, .nav-tabs .tab-button i {
                 display: none;
             }
             .tab-content-area {
@@ -318,29 +316,30 @@
                     
                     <h5 class="sidebar-section-title">Core Operations</h5>
                     
-                    <button id="bulk-tab-btn" class="tab-button active" onclick="showTab('bulk-verification', this)" role="tab" aria-selected="true">
+                    <a href="client-dashboard.html" class="nav-link active" role="tab" aria-selected="true">
                         <i class="fas fa-file-upload mr-2"></i> Bulk Verification
-                    </button>
-                    <button id="in-progress-tab-btn" class="tab-button" onclick="showTab('in-progress-jobs', this)" role="tab" aria-selected="false">
+                    </a>
+                    
+                    <a href="client dashboard/in-progress.html" class="nav-link" role="tab" aria-selected="false">
                         <i class="fas fa-hourglass-half mr-2"></i> In Progress
-                    </button>
-                    <button id="completed-tab-btn" class="tab-button" onclick="showTab('completed-jobs', this)" role="tab" aria-selected="false">
+                    </a>
+                    <a href="client dashboard/completed.html" class="nav-link" role="tab" aria-selected="false">
                         <i class="fas fa-check-circle mr-2"></i> Completed
-                    </button>
+                    </a>
                     
                     <h5 class="sidebar-section-title">Analytics & Account</h5>
                     
-                    <button id="metrics-tab-btn" class="tab-button" onclick="showTab('metrics-reports', this)" role="tab" aria-selected="false">
+                    <a href="client dashboard/reports.html" class="nav-link" role="tab" aria-selected="false">
                         <i class="fas fa-chart-bar mr-2"></i> Key Metrics & Usage
-                    </button>
+                    </a>
                     
-                    <button id="profile-tab-btn" class="tab-button" onclick="showTab('profile-plan', this)" role="tab" aria-selected="false">
+                    <a href="client dashboard/profile.html" class="nav-link" role="tab" aria-selected="false">
                         <i class="fas fa-user-circle mr-2"></i> Profile & Plan Status
-                    </button>
+                    </a>
                     
-                    <button class="tab-button" onclick="showTab('support', this)" role="tab" aria-selected="false">
+                    <a href="client dashboard/support.html" class="nav-link" role="tab" aria-selected="false">
                         <i class="fas fa-headset mr-2"></i> Support
-                    </button>
+                    </a>
                 </div>
             </aside>
             
@@ -439,112 +438,9 @@
                     <p id="access-denied-message" class="hidden mt-6 text-center text-red-700 
                     font-bold"></p>
                 </div>
-                
-                <div id="in-progress-jobs" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="in-progress-tab-btn">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Active Jobs (<span id="active-job-count">0</span>/1)</h2>
-                    <input type="text" id="in-progress-search" class="w-full p-3 border rounded mb-4" placeholder="Filter jobs by Filename or Job ID">
-                    <p class="text-xs text-gray-500 mb-4" id="in-progress-status-timestamp">Last refreshed: Just now.</p>
-
-                    <div id="in-progress-list" class="space-y-4">
-                        <p class="text-gray-500 text-center">Loading active jobs...</p>
-                    </div>
-                    <p id="max-jobs-message" class="text-red-600 font-bold mt-4" style="display:none;">Maximum 1 job is running. Please wait for completion.</p>
-                </div>
-                
-                <div id="completed-jobs" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="completed-tab-btn">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Completed Jobs</h2>
-                    <input type="text" id="completed-search" class="w-full p-3 border rounded mb-4" placeholder="Filter jobs by Filename or Job ID">
-                    <p class="text-xs text-gray-500 mb-4" id="completed-status-timestamp">Last refreshed: Just now.</p>
-                    
-                    <div id="completed-list" class="space-y-4">
-                           <p class="text-gray-500 text-center">No recently completed jobs.</p>
-                    </div>
-                </div>
-
-                <div id="metrics-reports" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="metrics-tab-btn">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Key Metrics & Usage Reports</h2>
-                    
-                    <div class="profile-card mb-8">
-                        <h3 class="text-xl font-semibold text-tf-primary mb-4 flex items-center"><i class="fas fa-chart-area mr-2"></i> Last 30 Days Usage Trend</h3>
-                        <canvas id="usage-chart" role="img" aria-label="Line chart showing credits used over the past 30 days."></canvas>
-                    </div>
-                </div>
-
-
-                <div id="profile-plan" class="tab-content" 
-                style="display:none;" role="tabpanel" aria-labelledby="profile-tab-btn">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Account Overview</h2>
-                    
-                    
-                    <div class="info-grid">
-                        <div class="profile-card flex flex-col justify-between">
-                            <h3 class="text-xl 
-                            font-semibold text-tf-primary mb-4 flex items-center"><i class="fas fa-user-circle mr-2"></i> My Profile Details</h3>
-            
-                            <div class="space-y-3">
-                                <div class="info-item"><p><strong>Username:</strong> <span id="profile-username"></span></p></div>
-                                <div class="info-item"><p><strong>Email:</strong> <span id="profile-email"></span></p></div>
-            
-            
-                                <div class="info-item"><p><strong>Mobile:</strong> <span id="profile-mobile"></span></p></div>
-                                <div class="info-item"><p><strong>Access Code:</strong> <span id="profile-bulk-code"></span></p></div>
-                            </div>
-                            <button class="action-btn mt-6 w-full bg-gray-500 text-white hover:bg-gray-600" onclick="openPasswordModal()" role="button" aria-label="Change Account Password">Change Password</button>
-            
-                        </div>
-
-                        <div class="plan-card">
-            
-                            <h3 class="text-xl font-semibold text-tf-secondary mb-4 flex items-center"><i class="fas fa-award mr-2"></i> Plan Status</h3>
-                            <div class="space-y-3">
-                
-            
-            
-                                <div class="info-item"><p><strong>Current Plan:</strong> <span id="plan-name" class="font-bold"></span></p></div>
-            
-                                <div class="info-item"><p><strong>Status:</strong> <span id="account-status"></span></p></div>
-                                <div class="info-item"><p><strong>Valid Until:</strong> <span id="validity-end"></span></p></div>
-            
-                
-                                <div class="info-item"><p><strong>Remaining Credits:</strong> <span id="plan-remaining-credits" class="font-bold text-tf-secondary">N/A</span></p></div>
-                            </div>
-                        
-                            <button class="action-btn mt-6 w-full bg-tf-secondary 
-                            hover:bg-[#86259d]" onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(5)'))" role="button" aria-label="Contact support for renewal">Contact for Renewal</button>
-                    
-                        </div>
-                    </div>
-                </div>
-
-                <div id="support" class="tab-content" style="display:none;" role="tabpanel">
-                    <div class="p-8 border rounded-xl shadow-md bg-tf-light space-y-6 max-w-lg mx-auto">
-            
-            
-            
-                        <h2 class="text-2xl font-bold mb-4 flex items-center text-tf-primary">
-                
-                            <i class="fas fa-headset mr-3"></i> Contact Support
-                        </h2>
-
-                        <p class="text-gray-600">Need help with plan renewal, technical issues, or credits?
-                        Contact our dedicated support team instantly.</p>
-
-                        <a href="https://wa.me/919193246219" target="_blank" class="block w-full py-4 bg-whatsapp-green text-white font-bold rounded-lg shadow-lg hover:bg-green-600 transition transform hover:scale-[1.005] flex items-center justify-center" role="button" aria-label="Contact Support via WhatsApp">
-                            <i class="fab fa-whatsapp text-xl mr-3"></i> WhatsApp Support (+91 9193246219)
-                        </a>
-
-                        <a href="tel:+919193246219" 
-            
-                        class="block w-full py-4 bg-tf-primary text-white font-bold rounded-lg hover:bg-[#4d2e97] transition transform hover:scale-[1.005] flex items-center justify-center" role="button" aria-label="Call Support">
-                            <i class="fas fa-phone mr-3"></i> Call Support (+91 9193246219)
-                        </a>
-                    </div>
-                </div>
             </main>
         </div>
     </div>
-
-    
 
     <div id="inbox-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="inbox-title">
         
@@ -746,13 +642,14 @@
                 checkPlanValidity();
                 
                 // --- Enterprise Improvement: Load Chart Data (Placeholder API) ---
-                if (document.getElementById('usage-chart')) {
-                    fetchUsageData().then(data => {
-                        if (data) {
-                            renderUsageChart(data);
-                        }
-                    }).catch(console.error);
-                }
+                // NOTE: This will run only if the user navigates to the profile page.
+                // if (document.getElementById('usage-chart')) {
+                //     fetchUsageData().then(data => {
+                //         if (data) {
+                //             renderUsageChart(data);
+                //         }
+                //     }).catch(console.error);
+                // }
 
             } catch (e) {
                 console.error('fetchProfileData error:', e);
@@ -1058,32 +955,23 @@
         }
 
         // --- TAB NAVIGATION (UPDATED and PUBLIC) ---
+        // NOTE: showTab is now mostly obsolete due to modular navigation but kept for initialization simplicity.
         function showTab(tabId, button) {
-            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(tabId).style.display = 'block';
+            // Note: This logic only runs on the bulk-dashboard page now.
+            
+            // Highlight the active link (This logic is needed for visual feedback)
+            document.querySelectorAll('.nav-tabs .nav-link').forEach(btn => btn.classList.remove('active'));
             if (button) button.classList.add('active');
 
-            // Stop polling when leaving job tabs (NEW)
-            if (activeJobPollInterval) {
-                clearInterval(activeJobPollInterval);
-                activeJobPollInterval = null;
-            }
-            
+            // --- DELEGATE LOGIC TO EXTERNAL FILES ---
             if (tabId === 'bulk-verification') {
                 checkPlanValidity();
-                // Enterprise Improvement: Call function to load KPI data
                 if (typeof loadKpiData === 'function') loadKpiData(); 
-            } else if (tabId === 'profile-plan') {
-                fetchProfileData(); // Ensure fresh data on tab click
-            } else if (tabId === 'in-progress-jobs' || tabId === 'completed-jobs') {
-                // Requirements 2, 3, 5: Start polling for status when entering job tabs (NEW)
-                startJobPolling();
             }
         }
         
         // --- JOB POLLING LOGIC (PUBLIC) ---
-        // Enterprise Improvement: Filter search is integrated here
+        // NOTE: This should now only be called from in-progress.html/completed.html
         function startJobPolling() {
             if (activeJobPollInterval) clearInterval(activeJobPollInterval);
             fetchAndUpdateJobStatus(); // Initial fetch
@@ -1095,147 +983,29 @@
         }
 
         // --- Enterprise Improvement: Job Filtering Logic ---
+        // NOTE: These are placeholders/global hooks for the logic in bulk_verification_logic.js
         function filterJobsList() {
-            const activeSearchTerm = document.getElementById('in-progress-search')?.value.toLowerCase() || '';
-            const completedSearchTerm = document.getElementById('completed-search')?.value.toLowerCase() || '';
-            
-            // Render In Progress list (filtered)
-            renderJobsList(globalJobsData.inProgress, 'in-progress-list', activeSearchTerm);
-            
-            // Render Completed list (filtered)
-            renderJobsList(globalJobsData.completed, 'completed-list', completedSearchTerm);
+            if (typeof window.renderJobsList === 'function') {
+                // Rely on the external script to handle the filtering and rendering
+                window.renderJobsList(window.globalJobsData.inProgress, 'in-progress-list', document.getElementById('in-progress-search')?.value.toLowerCase() || '');
+                window.renderJobsList(window.globalJobsData.completed, 'completed-list', document.getElementById('completed-search')?.value.toLowerCase() || '');
+            }
         }
 
-        // Reusable function to render job lists (NEW)
-        function renderJobsList(jobs, containerId, searchTerm) {
-            const container = document.getElementById(containerId);
-            let filteredJobs = jobs;
+        // Reusable function to render job lists (NEW) - Placeholder, actual logic is external
+        function renderJobsList() {} 
 
-            if (searchTerm) {
-                filteredJobs = jobs.filter(job => 
-                    job.filename.toLowerCase().includes(searchTerm) || 
-                    job._id.toLowerCase().includes(searchTerm)
-                );
-            }
-            
-            let html = '';
-            let activeCount = 0; // Only count active jobs for the active job counter
-
-            for (const job of filteredJobs) {
-                const progress = job.totalRows > 0 ? ((job.processedCount / job.totalRows) * 100).toFixed(0) : 0;
-                const isFailed = job.status === 'Failed';
-                const isCompleted = job.status === 'Completed';
-                
-                // Show only 10 completed jobs unless filtering is active
-                if (containerId === 'completed-list' && !searchTerm && html.split('job-card').length > 10) continue;
-                
-                const completionDisplay = isCompleted ? formatISTTime(job.completedTime) : new Date(job.submittedAt).toLocaleDateString();
-
-                if (job.status === 'In Progress' || job.status === 'Queued') {
-                    activeCount++; // Count only for active list
-                }
-                
-                const cardHtml = `
-                    <div class="job-card bg-white p-4 rounded-lg shadow-md border-l-4 ${isCompleted ? 'border-green-500' : isFailed || job.status === 'Cancelled' ? 'border-red-500' : 'border-tf-secondary'}">
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="font-bold text-lg text-gray-800 truncate">${job.filename}</h4>
-                            <span class="text-sm font-semibold text-gray-600">${completionDisplay}</span>
-                        </div>
-                        <div class="text-sm text-gray-600 mb-2 space-y-1">
-                            <p><strong>Status:</strong> <span class="font-bold text-${isCompleted ? 'green' : isFailed || job.status === 'Cancelled' ? 'red' : 'tf-secondary'}-600">${job.status}</span></p>
-                            ${job.status !== 'Cancelled' && job.status !== 'Failed' ? `<p><strong>Rows:</strong> ${job.processedCount} / ${job.totalRows}</p>` : ''}
-                        </div>
-                        ${job.status === 'In Progress' ? `
-                        <div class="progress-bar w-full bg-gray-300 rounded-full h-2 mt-2">
-                            <div class="progress-fill h-2 bg-tf-secondary rounded-full" style="width: ${progress}%;"></div>
-                        </div>
-                        ` : ''}
-                        <div class="mt-3 flex gap-2 justify-end">
-                            ${job.status === 'In Progress' || job.status === 'Queued' ? `
-                                <button class="py-1 px-3 bg-red-500 text-white text-sm rounded hover:bg-red-600" onclick="handleCancelJob('${job._id}')">
-                                    <i class="fas fa-times"></i> Cancel
-                                </button>` 
-                            : isCompleted ? `
-                                <button class="py-1 px-3 bg-tf-primary text-white text-sm rounded hover:bg-[#4d2e97] transition" onclick="handleAuthenticatedDownload('${job._id}', '${job.filename.replace(/'/g, "\\'").replace(/"/g, '')}')">
-                                    <i class="fas fa-download"></i> Download
-                                </button>`
-                            : isFailed ? `<span class="text-red-500 text-sm italic">${job.error || 'Check server logs.'}</span>`
-                            : job.status === 'Cancelled' ? `<span class="text-red-500 text-sm italic">Cancelled by user.</span>`
-                            : ''}
-                        </div>
-                    </div>
-                `;
-                
-                html += cardHtml;
-            }
-
-            container.innerHTML = html || `<p class="text-gray-500 text-center mt-5">No jobs found matching the filter.</p>`;
-            
-            // Only update the active job counter if we are rendering the in-progress list without filtering.
-            if (containerId === 'in-progress-list' && !document.getElementById('in-progress-search')?.value) {
-                document.getElementById('active-job-count').textContent = activeCount;
-                
-                // Update bulk button state based on actual total active jobs (NEW)
-                const processBtn = document.getElementById('processButton');
-                const bulkTabBtn = document.getElementById('bulk-tab-btn');
-                const csvFileInput = document.getElementById('csvFileInput');
-                
-                if (activeCount >= 1) { 
-                    if (processBtn) processBtn.disabled = true;
-                    if (bulkTabBtn) bulkTabBtn.style.borderBottom = '2px solid #EF4444';
-                    document.getElementById('max-jobs-message').style.display = 'block';
-                } else {
-                    if (processBtn && csvFileInput) processBtn.disabled = !csvFileInput.files.length; 
-                    if (bulkTabBtn && document.querySelector('.tab-button.active')?.id === 'bulk-tab-btn') {
-                        bulkTabBtn.style.borderBottom = '2px solid #5F3DC4';
-                    }
-                    document.getElementById('max-jobs-message').style.display = 'none';
-                }
-            }
-
-            // Update refresh timestamp (NEW)
-            document.getElementById(containerId.replace('-list', '-status-timestamp')).textContent = `Last refreshed: ${new Date().toLocaleTimeString()}`;
-        }
         
         async function fetchAndUpdateJobStatus() {
-            try {
-                const resp = await authFetch(API_BULK_JOBS, { method: 'GET' });
-                const result = await resp.json();
-
-                if (result.status !== 'Success') {
-                    console.error('Failed to fetch job status:', result.message);
-                    return;
-                }
-
-                // Sort by submitted time descending
-                result.jobs.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
-                
-                globalJobsData.inProgress = result.jobs.filter(j => j.status === 'Queued' || j.status === 'In Progress');
-                globalJobsData.completed = result.jobs.filter(j => j.status === 'Completed' || j.status === 'Failed' || j.status === 'Cancelled');
-                
-                // Re-render based on current filter state
-                filterJobsList();
-                
-                // Update remaining credits UI (post-completion check)
-                const afterCreditsResp = await getRemainingCredits();
-                if (afterCreditsResp.ok) {
-                    const rc = afterCreditsResp.remainingCredits;
-                    const remEl = document.getElementById('plan-remaining-credits');
-                    if (remEl) remEl.textContent = rc === 'Unlimited' ? 'Unlimited' : Number(rc).toLocaleString();
-                }
-
-            } catch (e) {
-                console.error('Job polling failed:', e);
-                document.getElementById('in-progress-list').innerHTML = '<p class="text-red-500 text-center mt-5">Failed to load status. Network error.</p>';
-            }
+            // NOTE: This logic belongs to bulk_verification_logic.js in the modular setup, 
+            // but we need a placeholder here for the initialization flow.
         }
         
         // --- Enterprise Improvement: KPI Data Logic (Placeholder) ---
         async function loadKpiData() {
-            // NOTE: This should call a backend API to get historical data.
-            // Placeholder:
-            document.getElementById('success-rate-kpi').textContent = '96.2%';
-            document.getElementById('total-volume-kpi').textContent = '400'; // Set to realistic or placeholder value
+            // NOTE: This simulates fetching real data for a newly created account.
+            document.getElementById('success-rate-kpi').textContent = '—%';
+            document.getElementById('total-volume-kpi').textContent = '0';
         }
 
         // --- AUTHENTICATED DOWNLOAD FUNCTION ---
@@ -1283,7 +1053,7 @@
             }
         }
         
-        // Make core functions available globally for HTML onclick events
+        // FIX: Expose global functions to window object
         window.showTab = showTab;
         window.logout = logout; 
         window.openPasswordModal = openPasswordModal;
@@ -1294,7 +1064,7 @@
         window.closeInbox = closeInbox;
         window.viewClientMessage = viewClientMessage;
         window.handleAuthenticatedDownload = handleAuthenticatedDownload;
-        window.filterJobsList = filterJobsList; // Expose filter function (NEW)
+        window.startJobPolling = startJobPolling;
 
 
         // --- PASSWORD UPDATE LISTENER (PUBLIC) ---
@@ -1365,8 +1135,15 @@
             setInterval(sendHeartbeat, 60000);
             setInterval(loadInboxCounts, 60000);
             
-            // Start in bulk tab
-            showTab('bulk-verification', document.getElementById('bulk-tab-btn'));
+            // Initialize Bulk tab content (the default view)
+            // Show current navigation link as active based on URL
+            document.querySelectorAll('.nav-tabs .nav-link').forEach(link => {
+                if (link.href === window.location.href || link.href === window.location.href.split('#')[0]) {
+                    link.classList.add('active');
+                    // Manually trigger showTab/loadKpiData for the default view
+                    showTab('bulk-verification', link); 
+                }
+            });
 
             /* --- SMALL SAFE FALLBACK (non-invasive) ---
             If the external bulk_verification_logic.js did not attach listeners
@@ -1411,10 +1188,6 @@
 
         /* -------------------------
             Fallback helper (tiny)
-            Enables/disables Start Verification button based on:
-            - a) whether a file is selected
-            - b) whether there is currently an active job (uses active job count element)
-            This is safe — it only manipulates the button UI state and does not change any process logic.
             ------------------------- */
         function ensureProcessButtonFallback() {
             const fileInput = document.getElementById('csvFileInput');

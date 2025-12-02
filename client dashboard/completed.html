@@ -1,0 +1,43 @@
+<body>
+    <div class="dashboard-container text-gray-800">
+        <header class="header">...</header>
+        
+        <div class="main-dashboard-layout">
+            <aside id="sidebar" class="sidebar-nav">
+                <div class="sidebar-header"><h4 class="text-lg font-bold text-tf-dark">Dashboard Menu</h4></div>
+                <div class="nav-tabs vertical" role="tablist">
+                    <h5 class="sidebar-section-title">Core Operations</h5>
+                    <a href="../client-dashboard.html" class="nav-link" role="tab" aria-selected="false"><i class="fas fa-file-upload mr-2"></i> Bulk Verification</a>
+                    <a href="in-progress.html" class="nav-link" role="tab" aria-selected="false"><i class="fas fa-hourglass-half mr-2"></i> In Progress</a>
+                    <a href="completed.html" class="nav-link active" role="tab" aria-selected="true"><i class="fas fa-check-circle mr-2"></i> Completed</a>
+                    <h5 class="sidebar-section-title">Analytics & Account</h5>
+                    <a href="reports.html" class="nav-link" role="tab" aria-selected="false"><i class="fas fa-chart-bar mr-2"></i> Key Metrics & Usage</a>
+                    <a href="profile.html" class="nav-link" role="tab" aria-selected="false"><i class="fas fa-user-circle mr-2"></i> Profile & Plan Status</a>
+                    <a href="support.html" class="nav-link" role="tab" aria-selected="false"><i class="fas fa-headset mr-2"></i> Support</a>
+                </div>
+            </aside>
+            
+            <main id="main-content" class="tab-content-area">
+                <div id="completed-jobs" class="tab-content" role="tabpanel" aria-labelledby="completed-tab-btn">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Completed Jobs</h2>
+                    <input type="text" id="completed-search" class="w-full p-3 border rounded mb-4" placeholder="Filter jobs by Filename or Job ID">
+                    <p class="text-xs text-gray-500 mb-4" id="completed-status-timestamp">Last refreshed: Just now.</p>
+                    
+                    <div id="completed-list" class="space-y-4">
+                           <p class="text-gray-500 text-center">No recently completed jobs.</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script src="../bulk_verification_logic.js"></script>
+    <script>
+        // ... (Full JS block from root, ensuring window.onload calls startJobPolling) ...
+        window.onload = () => {
+            // ... (initialization logic) ...
+            startJobPolling(); // START POLLING
+        };
+        // ... (rest of functions) ...
+    </script>
+</body>
+</html>
