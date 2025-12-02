@@ -626,7 +626,7 @@
                 const rc = pd.remainingCredits;
                 const creditsDisplay = rc === 'Unlimited' ? 'Unlimited' : (rc == null ? 'N/A' : Number(rc).toLocaleString());
                 
-                document.getElementById('plan-remaining-credits').textContent = creditsDisplay;
+                document.getElementById('plan-remaining-credits')?.textContent = creditsDisplay;
                 document.getElementById('client-name-display').textContent = pd.clientName || CLIENT_NAME;
                 document.getElementById('profile-username').textContent = pd.username || pd.clientName || CLIENT_NAME;
                 document.getElementById('profile-email').textContent = pd.email || '—';
@@ -721,7 +721,7 @@
         function updateUIFromLocalPlan() {
             const rc = planDetails.remainingCredits ?? 'N/A';
             const creditsDisplay = rc === 'Unlimited' ? 'Unlimited' : (rc === 'N/A' ? 'N/A' : Number(rc).toLocaleString());
-            document.getElementById('plan-remaining-credits').textContent = creditsDisplay;
+            document.getElementById('plan-remaining-credits')?.textContent = creditsDisplay;
             document.getElementById('client-name-display').textContent = CLIENT_NAME;
             document.getElementById('profile-username').textContent = planDetails.username || CLIENT_NAME;
             document.getElementById('profile-email').textContent = planDetails.email || '—';
