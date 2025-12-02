@@ -389,8 +389,6 @@
             <p class="text-xs text-center text-gray-500 mt-4">Note: Changing your password 
             will immediately log you out of all devices for security.</p>
         </div>
-        
-        
     </div>
 
 
@@ -739,7 +737,7 @@
                                 <div class="flex-grow">
                                     <p class="text-md truncate">${msg.subject || '(No Subject)'}</p>
                                     <small class="text-gray-500 block">From: ${sender} • ${new Date(msg.timestamp).toLocaleDateString()}</small>
-                                </div>
+                            </div>
                             </div>
                         `;
                         msgContainer.insertAdjacentHTML('beforeend', messageHtml);
@@ -953,7 +951,7 @@
             }
         }
         
-        // --- AUTHENTICATED DOWNLOAD FUNCTION (FIX for "Needs Authorisation" 401) ---
+        // --- AUTHENTICATED DOWNLOAD FUNCTION (FIXED) ---
         // This function must be defined globally to be used in fetchAndUpdateJobStatus
         async function handleAuthenticatedDownload(jobId, jobFilename) {
             // Ensure filename is clean and safe
