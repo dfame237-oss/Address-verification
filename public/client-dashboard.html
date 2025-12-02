@@ -58,7 +58,7 @@
         .nav-tabs { display: flex; border-bottom: 2px solid #E5E7EB; margin-bottom: 30px;
         }
         .tab-button { padding: 12px 20px; cursor: pointer; border: none; background: none;
-            font-weight: 600; color: #64748B; border-bottom: 2px solid transparent; transition: color 0.3s, border-bottom 0.3s;
+            font-weight: 600; color: #64748B; border-bottom: 2遜 solid transparent; transition: color 0.3s, border-bottom 0.3s;
         }
         .tab-button.active { color: #5F3DC4; border-bottom: 2px solid #5F3DC4;
         }
@@ -92,16 +92,30 @@
         }
         .status-disabled { background-color: #FEE2E2; color: #DC2626;
         }
-        .action-btn { background-color: #5F3DC4; color: white; padding: 10px 20px; border-radius: 8px;
-            border: none; cursor: pointer; font-weight: 600; transition: background-color 0.2s, transform 0.1s;
+        
+        /* ENTERPRISE IMPROVEMENT & FIX 3 (Invisible Button Fix): Force colors via CSS */
+        .action-btn { 
+            background-color: #5F3DC4 !important; /* FIX: Force primary color on action buttons */
+            color: white; padding: 10px 20px; border-radius: 8px;
+            border: none; cursor: pointer; font-weight: 600; transition: background-color 0.2s, transform 0.1s, opacity 0.2s;
         }
         .action-btn:hover { background-color: #4d2e97; 
             transform: translateY(-1px);
         }
-        .action-btn.logout { background-color: #DC2626;
+        .action-btn.logout { 
+            background-color: #DC2626 !important; /* FIX: Force red on logout */
         }
         .action-btn.logout:hover { background-color: #B91C1C;
         }
+        /* Definitive Fix for Bulk Upload Buttons (Download/Start Verification) visibility */
+        .bg-tf-primary {
+            background-color: #5F3DC4 !important;
+        }
+        .bg-tf-secondary {
+            background-color: #A437C1 !important;
+        }
+        /* END FIX 3 */
+
         .progress-fill { background-color: #A437C1; height: 0.75rem; border-radius: 9999px; transition: all 0.5s ease-in-out;
         }
         /* Inbox Button Styles - integrated into header, not fixed */
@@ -179,27 +193,27 @@
             </div>
 
             <div class="controls">
-                <button id="inbox-header-btn" onclick="toggleInbox()">
+                <button id="inbox-header-btn" onclick="toggleInbox()" aria-label="Open Inbox" role="button">
                     <i class="fas fa-envelope-open-text"></i>
                     <span id="inbox-badge" class="badge" style="display:none;">0</span>
                 </button>
     
         
-                <button onclick="logout()" class="action-btn logout">Logout</button>
+                <button onclick="logout()" class="action-btn logout" aria-label="Logout" role="button">Logout</button>
             </div>
         </header>
 
         
         <div 
-        class="nav-tabs">
-            <button id="bulk-tab-btn" class="tab-button active" onclick="showTab('bulk-verification', this)">Bulk Address Verification</button>
-            <button id="in-progress-tab-btn" class="tab-button" onclick="showTab('in-progress-jobs', this)">In Progress</button>
-            <button id="completed-tab-btn" class="tab-button" onclick="showTab('completed-jobs', this)">Completed</button>
-            <button id="profile-tab-btn" class="tab-button" onclick="showTab('profile-plan', this)">Profile & Plan Status</button>
-            <button class="tab-button" onclick="showTab('support', this)">Support/Messaging</button>
+        class="nav-tabs" role="tablist">
+            <button id="bulk-tab-btn" class="tab-button active" onclick="showTab('bulk-verification', this)" role="tab" aria-selected="true">Bulk Address Verification</button>
+            <button id="in-progress-tab-btn" class="tab-button" onclick="showTab('in-progress-jobs', this)" role="tab" aria-selected="false">In Progress</button>
+            <button id="completed-tab-btn" class="tab-button" onclick="showTab('completed-jobs', this)" role="tab" aria-selected="false">Completed</button>
+            <button id="profile-tab-btn" class="tab-button" onclick="showTab('profile-plan', this)" role="tab" aria-selected="false">Profile & Plan Status</button>
+            <button class="tab-button" onclick="showTab('support', this)" role="tab" aria-selected="false">Support/Messaging</button>
         </div>
 
-        <div id="bulk-verification" class="tab-content">
+        <div id="bulk-verification" class="tab-content" role="tabpanel" aria-labelledby="bulk-tab-btn">
             <header class="text-center mb-10">
                 
                 <h2 class="text-4xl font-extrabold text-gray-900 mb-2">
@@ -225,7 +239,7 @@
                         <code class="bg-gray-200 px-1 rounded font-mono text-gray-900">CUSTOMER RAW ADDRESS</code>.
                     </p>
                     
-                    <button id="downloadTemplateButton" class="w-full py-3 bg-tf-primary text-white font-semibold rounded-lg hover:bg-[#4d2e97] transition duration-200 focus:outline-none focus:ring-4 focus:ring-tf-primary focus:ring-opacity-50">
+                    <button id="downloadTemplateButton" class="w-full py-3 bg-tf-primary text-white font-semibold rounded-lg hover:bg-[#4d2e97] transition duration-200 focus:outline-none focus:ring-4 focus:ring-tf-primary focus:ring-opacity-50" role="button" aria-label="Download CSV Template">
     
                     Download Verification Template (CSV)
                     </button>
@@ -240,12 +254,12 @@
     
                     </p>
                     <input type="file" id="csvFileInput" accept=".csv" class="block w-full text-sm 
-                    text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-tf-secondary/10 file:text-tf-secondary hover:file:bg-tf-secondary/20 transition cursor-pointer">
+                    text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-tf-secondary/10 file:text-tf-secondary hover:file:bg-tf-secondary/20 transition cursor-pointer" aria-describedby="file-upload-hint">
                     <p class="text-xs 
-                    text-gray-500 mt-2">Maximum 1000 rows recommended for stability.</p>
+                    text-gray-500 mt-2" id="file-upload-hint">Maximum 1000 rows recommended for stability. Must use the provided template format.</p>
                 </div>
 
-                <button id="processButton" class="w-full py-4 bg-tf-secondary text-white font-bold text-lg rounded-lg shadow-xl transition duration-200 transform hover:scale-[1.005] hover:bg-[#86259d] focus:outline-none focus:ring-4 focus:ring-tf-secondary focus:ring-opacity-50" disabled style="display:block;">
+                <button id="processButton" class="w-full py-4 bg-tf-secondary text-white font-bold text-lg rounded-lg shadow-xl transition duration-200 transform hover:scale-[1.005] hover:bg-[#86259d] focus:outline-none focus:ring-4 focus:ring-tf-secondary focus:ring-opacity-50" disabled style="display:block;" aria-label="Start Bulk Verification Process" role="button">
     
                     Start Verification
     
@@ -269,7 +283,7 @@
             font-bold"></p>
         </div>
         
-        <div id="in-progress-jobs" class="tab-content" style="display:none;">
+        <div id="in-progress-jobs" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="in-progress-tab-btn">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Active Jobs (<span id="active-job-count">0</span>/1)</h2>
             <div id="in-progress-list" class="space-y-4">
                 <p class="text-gray-500 text-center">Loading active jobs...</p>
@@ -277,16 +291,16 @@
             <p id="max-jobs-message" class="text-red-600 font-bold mt-4" style="display:none;">Maximum 1 job is running. Please wait for completion.</p>
         </div>
         
-        <div id="completed-jobs" class="tab-content" style="display:none;">
+        <div id="completed-jobs" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="completed-tab-btn">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Completed Jobs</h2>
             <div id="completed-list" class="space-y-4">
-                   <p class="text-gray-500 text-center">Loading completed jobs...</p>
+                   <p class="text-gray-500 text-center">No recently completed jobs.</p>
             </div>
         </div>
 
 
         <div id="profile-plan" class="tab-content" 
-        style="display:none;">
+        style="display:none;" role="tabpanel" aria-labelledby="profile-tab-btn">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Account Overview</h2>
             <div class="info-grid">
                 <div class="profile-card flex flex-col justify-between">
@@ -301,7 +315,7 @@
                         <div class="info-item"><p><strong>Mobile:</strong> <span id="profile-mobile"></span></p></div>
                         <div class="info-item"><p><strong>Access Code:</strong> <span id="profile-bulk-code"></span></p></div>
                     </div>
-                    <button class="action-btn mt-6 w-full bg-gray-500 text-white hover:bg-gray-600" onclick="openPasswordModal()">Change Password</button>
+                    <button class="action-btn mt-6 w-full bg-gray-500 text-white hover:bg-gray-600" onclick="openPasswordModal()" role="button" aria-label="Change Account Password">Change Password</button>
     
                 </div>
 
@@ -322,13 +336,13 @@
                     </div>
                 
                     <button class="action-btn mt-6 w-full bg-tf-secondary 
-                    hover:bg-[#86259d]" onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(5)'))">Contact for Renewal</button>
+                    hover:bg-[#86259d]" onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(5)'))" role="button" aria-label="Contact support for renewal">Contact for Renewal</button>
             
                 </div>
             </div>
         </div>
 
-        <div id="support" class="tab-content" style="display:none;">
+        <div id="support" class="tab-content" style="display:none;" role="tabpanel">
             <div class="p-8 border rounded-xl shadow-md bg-tf-light space-y-6 max-w-lg mx-auto">
     
     
@@ -341,13 +355,13 @@
                 <p class="text-gray-600">Need help with plan renewal, technical issues, or credits?
                 Contact our dedicated support team instantly.</p>
 
-                <a href="https://wa.me/919193246219" target="_blank" class="block w-full py-4 bg-whatsapp-green text-white font-bold rounded-lg shadow-lg hover:bg-green-600 transition transform hover:scale-[1.005] flex items-center justify-center">
+                <a href="https://wa.me/919193246219" target="_blank" class="block w-full py-4 bg-whatsapp-green text-white font-bold rounded-lg shadow-lg hover:bg-green-600 transition transform hover:scale-[1.005] flex items-center justify-center" role="button" aria-label="Contact Support via WhatsApp">
                     <i class="fab fa-whatsapp text-xl mr-3"></i> WhatsApp Support (+91 9193246219)
                 </a>
 
                 <a href="tel:+919193246219" 
     
-                class="block w-full py-4 bg-tf-primary text-white font-bold rounded-lg hover:bg-[#4d2e97] transition transform hover:scale-[1.005] flex items-center justify-center">
+                class="block w-full py-4 bg-tf-primary text-white font-bold rounded-lg hover:bg-[#4d2e97] transition transform hover:scale-[1.005] flex items-center justify-center" role="button" aria-label="Call Support">
                     <i class="fas fa-phone mr-3"></i> Call Support (+91 9193246219)
                 </a>
             </div>
@@ -356,11 +370,11 @@
 
     
 
-    <div id="inbox-modal" class="modal">
+    <div id="inbox-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="inbox-title">
         
         <div class="modal-content w-full max-w-lg rounded-xl shadow-2xl p-6 bg-white relative">
             <span class="modal-close absolute right-4 top-4 text-2xl cursor-pointer" onclick="closeInbox()">&times;</span>
-            <h2 class="text-3xl font-bold mb-6 text-tf-primary flex items-center">
+            <h2 class="text-3xl font-bold mb-6 text-tf-primary flex items-center" id="inbox-title">
                 <i class="fas fa-envelope-open-text mr-3"></i> Client Inbox
             
             </h2>
@@ -381,11 +395,11 @@
         </div>
     </div>
 
-    <div id="password-modal" class="modal" aria-hidden="true">
+    <div id="password-modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="password-title">
     
         <div class="modal-content">
             <span class="modal-close" onclick="closePasswordModal()">&times;</span>
-            <h2 class="text-2xl font-bold mb-4 text-tf-primary">Change Your Password</h2>
+            <h2 class="text-2xl font-bold mb-4 text-tf-primary" id="password-title">Change Your Password</h2>
             <form id="password-update-form" class="space-y-4">
                 <div class="form-group">
                     <label for="new-password">New Password</label>
@@ -397,7 +411,7 @@
                     <input type="password" id="confirm-password" 
                     required minlength="6" class="w-full p-3 border rounded input-focus">
                 </div>
-                <button type="submit" id="updatePasswordBtn" class="action-btn w-full bg-red-600 hover:bg-red-700">Update & Log Out</button>
+                <button type="submit" id="updatePasswordBtn" class="action-btn w-full bg-red-600 hover:bg-red-700" role="button">Update & Log Out</button>
                 <p id="password-update-status" class="mt-3 text-sm text-center text-gray-700"></p>
             </form>
             <p class="text-xs text-center text-gray-500 mt-4">Note: Changing your password 
@@ -408,16 +422,16 @@
     </div>
 
 
-    <div id="force-logout-modal" class="modal">
+    <div id="force-logout-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="force-logout-title">
         <div class="modal-content">
-            <h3 class="text-xl font-bold text-gray-800 mb-2">Another device 
+            <h3 class="text-xl font-bold text-gray-800 mb-2" id="force-logout-title">Another device 
             is logged in</h3>
             <p class="text-gray-700">It looks like your account is currently active on another device.
             You can force-logout that session and continue here, or cancel to remain logged out.</p>
 
             <div class="modal-actions">
-                <button id="forceCancelBtn" class="py-2 px-4 bg-gray-200 rounded-lg" onclick="closeForceModal()">Cancel</button>
-                <button id="forceConfirmBtn" class="py-2 px-4 bg-red-600 text-white rounded-lg" onclick="forceLogoutOtherDevice()">Logout other device & Continue</button>
+                <button id="forceCancelBtn" class="py-2 px-4 bg-gray-200 rounded-lg" onclick="closeForceModal()" role="button">Cancel</button>
+                <button id="forceConfirmBtn" class="py-2 px-4 bg-red-600 text-white rounded-lg" onclick="forceLogoutOtherDevice()" role="button">Logout other device & Continue</button>
             </div>
         </div>
     </div>
