@@ -514,7 +514,7 @@
         const API_BASE = '/api';
         const API_CLIENT = `${API_BASE}/client/index`;
         const API_ENDPOINT = "/api/verify-single-address"; // used by single verification
-        // NOTE: API_BULK_JOBS is defined in bulk_verification_logic.js. Removed declaration here to fix SyntaxError.
+        const API_BULK_JOBS = '/api/bulk-jobs'; // Defined globally here (SAFE)
         const LOGIN_PAGE = "client-login.html";
         
         let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
@@ -1021,7 +1021,6 @@
         // --- AUTHENTICATED DOWNLOAD FUNCTION ---
         async function handleAuthenticatedDownload(jobId, jobFilename) {
             const safeFilename = `${jobFilename.replace('.csv', '').replace(/'/g, '').replace(/"/g, '')}_verified.csv`;
-            // NOTE: API_BULK_JOBS is assumed global from the external JS file
             const downloadUrl = `${API_BULK_JOBS}?action=download&jobId=${jobId}`; 
 
             try {
