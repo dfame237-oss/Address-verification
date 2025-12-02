@@ -373,11 +373,6 @@
         style="display:none;" role="tabpanel" aria-labelledby="profile-tab-btn">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Account Overview</h2>
             
-            <div class="profile-card mb-8">
-                <h3 class="text-xl font-semibold text-tf-primary mb-4 flex items-center"><i class="fas fa-chart-area mr-2"></i> Last 30 Days Usage Trend</h3>
-                <canvas id="usage-chart" role="img" aria-label="Line chart showing credits used over the past 30 days."></canvas>
-            </div>
-
             <div class="info-grid">
                 <div class="profile-card flex flex-col justify-between">
                     <h3 class="text-xl 
@@ -415,6 +410,11 @@
                     hover:bg-[#86259d]" onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(5)'))" role="button" aria-label="Contact support for renewal">Contact for Renewal</button>
             
                 </div>
+            </div>
+            
+            <div class="profile-card mt-8">
+                <h3 class="text-xl font-semibold text-tf-primary mb-4 flex items-center"><i class="fas fa-chart-area mr-2"></i> Last 30 Days Usage Trend</h3>
+                <canvas id="usage-chart" role="img" aria-label="Line chart showing credits used over the past 30 days."></canvas>
             </div>
         </div>
 
@@ -518,7 +518,7 @@
         const API_BASE = '/api';
         const API_CLIENT = `${API_BASE}/client/index`;
         const API_ENDPOINT = "/api/verify-single-address"; // used by single verification
-        // NOTE: API_BULK_JOBS must be defined in bulk_verification_logic.js (or globally). Removed declaration here to fix SyntaxError.
+        // Removed const API_BULK_JOBS = '/api/bulk-jobs'; to resolve SyntaxError. It will be accessed globally or rely on bulk_verification_logic.js.
         const LOGIN_PAGE = "client-login.html";
         
         let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
@@ -1134,8 +1134,8 @@
         async function loadKpiData() {
             // NOTE: This should call a backend API to get historical data.
             // Placeholder:
-            document.getElementById('success-rate-kpi').textContent = '96.2%';
-            document.getElementById('total-volume-kpi').textContent = '1,250,000';
+            document.getElementById('success-rate-kpi').textContent = '--%';
+            document.getElementById('total-volume-kpi').textContent = '0';
         }
 
         // --- AUTHENTICATED DOWNLOAD FUNCTION ---
@@ -1171,6 +1171,8 @@
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = window.URL.createObjectURL(blob);
+                    // Ensure API_BULK_JOBS is available globally for use in fetchAndUpdateJobStatus
+            const API_BULK_JOBS = '/api/bulk-jobs'; 
                 a.download = safeFilename; 
                 document.body.appendChild(a);
                 a.click();
@@ -1183,7 +1185,7 @@
             }
         }
         
-        // FIX: Expose global functions to window object
+        // Make core functions available globally for HTML onclick events
         window.showTab = showTab;
         window.logout = logout; 
         window.openPasswordModal = openPasswordModal;
@@ -1238,6 +1240,7 @@
                 }
             } catch (error) {
                 statusEl.textContent = 'Network error or session expired.';
+                    const API_BULK_JOBS = '/api/bulk-jobs'; 
                 statusEl.className = 'text-red-600 mt-3';
                 console.error('Password Update Error:', error);
             } finally {
