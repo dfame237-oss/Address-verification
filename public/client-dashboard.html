@@ -28,6 +28,7 @@
                         'alert-dark': '#EF4444',
                         'alert-light': '#FEE2E2',
                         'success-light': '#D1FAE5',
+             
                         'tf-primary-light': '#EFE7FF',
                     },
                     fontFamily: {
@@ -90,7 +91,7 @@
         .action-btn { background-color: #5F3DC4; color: white; padding: 10px 20px; border-radius: 8px;
             border: none; cursor: pointer; font-weight: 600; transition: background-color 0.2s, transform 0.1s;
         }
-        .action-btn:hover { background-color: #4d2e97; 
+        .action-btn:hover { background-color: #4d2e97; 
             transform: translateY(-1px);
         }
         .action-btn.logout { background-color: #DC2626;
@@ -100,12 +101,12 @@
         .progress-fill { background-color: #A437C1; height: 0.75rem; border-radius: 9999px; transition: all 0.5s ease-in-out;
         }
         /* Inbox Button Styles - integrated into header, not fixed */
-        #inbox-header-btn { 
+        #inbox-header-btn { 
             position: relative;
-            background: #F8FAFC; 
-            border: 1px solid #CBD5E1; 
-            border-radius: 50%; 
-            padding: 10px 14px; 
+            background: #F8FAFC; 
+            border: 1px solid #CBD5E1; 
+            border-radius: 50%; 
+            padding: 10px 14px; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.08);
             cursor: pointer;
             transition: background-color 0.2s;
@@ -125,7 +126,7 @@
             line-height: 1.6; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
         #full-message-detail h3 { color: #A437C1;
             padding-bottom: 8px; border-bottom: 1px dashed #E2E8F0; margin-bottom: 8px; }
-        
+        
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .dashboard-container { padding: 15px;
@@ -165,7 +166,7 @@
         <header class="header">
             <div>
                 <h1 class="text-3xl font-bold text-gray-800">Welcome, <span id="client-name-display" class="text-tf-primary">Client</span></h1>
-                <div class="text-sm text-gray-500 mt-1">Manage your address verifications and 
+                <div class="text-sm text-gray-500 mt-1">Manage your address verifications and 
                 plan here.</div>
        
             </div>
@@ -181,8 +182,8 @@
             </div>
         </header>
 
-        
-        <div 
+        
+        <div 
         class="nav-tabs">
             <button id="bulk-tab-btn" class="tab-button active" onclick="showTab('bulk-verification', this)">Bulk Address Verification</button>
             <button id="in-progress-tab-btn" class="tab-button" onclick="showTab('in-progress-jobs', this)">In Progress</button>
@@ -193,7 +194,7 @@
 
         <div id="bulk-verification" class="tab-content">
             <header class="text-center mb-10">
-                
+                
                 <h2 class="text-4xl font-extrabold text-gray-900 mb-2">
        
                     <span class="text-tf-secondary">Bulk Address</span> Verification
@@ -201,9 +202,9 @@
                 <p class="text-lg text-gray-500 mt-2">Upload a CSV file for high-volume cleaning and verification.</p>
             </header>
 
-            
-            
-
+            
+            
+     
             <div id="bulkContent" class="space-y-8">
                 <div class="bg-tf-light p-8 rounded-xl border-l-4 border-tf-primary shadow-lg">
                     <p class="font-bold text-xl text-tf-primary mb-3 flex items-center">
@@ -211,24 +212,24 @@
              
                     </p>
                     <p class="text-sm text-gray-600 mb-4">Use this template to ensure your CSV file has the required columns: <code class="bg-gray-200 px-1 rounded font-mono">ORDER ID</code>, <code class="bg-gray-200 px-1 rounded font-mono">CUSTOMER NAME</code>, <code class="bg-gray-200 px-1 rounded font-mono">CUSTOMER RAW ADDRESS</code>.</p>
-                    
+                    
                     <button id="downloadTemplateButton" class="w-full py-3 bg-tf-primary text-white font-semibold rounded-lg hover:bg-[#4d2e97] transition duration-200 focus:outline-none focus:ring-4 focus:ring-tf-primary focus:ring-opacity-50">
            
                     Download Verification Template (CSV)
                     </button>
                 </div>
 
-                
+                
                 <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-lg text-center">
-                    <p 
-            
+                    <p 
+            
                     class="font-bold text-xl text-gray-800 mb-4 flex items-center justify-center">
                         <i class="fas fa-upload mr-3 text-tf-secondary"></i> 2. Upload Your CSV File
  
                     </p>
-                    <input type="file" id="csvFileInput" accept=".csv" class="block w-full text-sm 
+                    <input type="file" id="csvFileInput" accept=".csv" class="block w-full text-sm 
                     text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-tf-secondary/10 file:text-tf-secondary hover:file:bg-tf-secondary/20 transition cursor-pointer">
-                    <p class="text-xs 
+                    <p class="text-xs 
                     text-gray-500 mt-2">Maximum 1000 rows recommended for stability.</p>
                 </div>
 
@@ -241,21 +242,21 @@
 
             <div class="progress-container mt-12 p-8 bg-tf-light rounded-xl border border-gray-300 shadow-inner">
                 <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Verification Status</h3>
-                <p id="status-message" 
-                class="font-semibold text-gray-600 mb-4 transition duration-300">Ready to 
+                <p id="status-message" 
+                class="font-semibold text-gray-600 mb-4 transition duration-300">Ready to 
                 upload.</p>
 
-        
+        
                 <div class="progress-bar w-full bg-gray-300 rounded-full h-3">
                     <div class="progress-fill h-3 bg-tf-secondary rounded-full transition-all duration-500 ease-in-out" id="progressBarFill" style="width: 0%;"></div>
                 </div>
 
                 </div>
 
-            <p id="access-denied-message" class="hidden mt-6 text-center text-red-700 
+            <p id="access-denied-message" class="hidden mt-6 text-center text-red-700 
             font-bold"></p>
         </div>
-        
+        
         <div id="in-progress-jobs" class="tab-content" style="display:none;">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Active Jobs (<span id="active-job-count">0</span>/1)</h2>
             <div id="in-progress-list" class="space-y-4">
@@ -263,7 +264,7 @@
             </div>
             <p id="max-jobs-message" class="text-red-600 font-bold mt-4" style="display:none;">Maximum 1 job is running. Please wait for completion.</p>
         </div>
-        
+        
         <div id="completed-jobs" class="tab-content" style="display:none;">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Completed Jobs</h2>
             <div id="completed-list" class="space-y-4">
@@ -272,19 +273,19 @@
         </div>
 
  
-        <div id="profile-plan" class="tab-content" 
+        <div id="profile-plan" class="tab-content" 
         style="display:none;">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Account Overview</h2>
             <div class="info-grid">
                 <div class="profile-card flex flex-col justify-between">
-                    <h3 class="text-xl 
+                    <h3 class="text-xl 
                     font-semibold text-tf-primary mb-4 flex items-center"><i class="fas fa-user-circle mr-2"></i> My Profile Details</h3>
  
                     <div class="space-y-3">
                         <div class="info-item"><p><strong>Username:</strong> <span id="profile-username"></span></p></div>
                         <div class="info-item"><p><strong>Email:</strong> <span id="profile-email"></span></p></div>
-        
-      
+        
+      
                         <div class="info-item"><p><strong>Mobile:</strong> <span id="profile-mobile"></span></p></div>
                         <div class="info-item"><p><strong>Access Code:</strong> <span id="profile-bulk-code"></span></p></div>
                     </div>
@@ -297,15 +298,17 @@
                     <h3 class="text-xl font-semibold text-tf-secondary mb-4 flex items-center"><i class="fas fa-award mr-2"></i> Plan Status</h3>
                     <div class="space-y-3">
            
-      
+      
                         <div class="info-item"><p><strong>Current Plan:</strong> <span id="plan-name" class="font-bold"></span></p></div>
-                    
+                    
                         <div class="info-item"><p><strong>Status:</strong> <span id="account-status"></span></p></div>
                         <div class="info-item"><p><strong>Valid Until:</strong> <span id="validity-end"></span></p></div>
+  
+         
                         <div class="info-item"><p><strong>Remaining Credits:</strong> <span id="plan-remaining-credits" class="font-bold text-tf-secondary">N/A</span></p></div>
                     </div>
                  
-                    <button class="action-btn mt-6 w-full bg-tf-secondary 
+                    <button class="action-btn mt-6 w-full bg-tf-secondary 
                     hover:bg-[#86259d]" onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(3)'))">Contact for Renewal</button>
              
                 </div>
@@ -314,7 +317,7 @@
 
         <div id="support" class="tab-content" style="display:none;">
             <div class="p-8 border rounded-xl shadow-md bg-tf-light space-y-6 max-w-lg mx-auto">
-        
+        
        
                 <h2 class="text-2xl font-bold mb-4 flex items-center text-tf-primary">
              
@@ -328,7 +331,7 @@
                     <i class="fab fa-whatsapp text-xl mr-3"></i> WhatsApp Support (+91 9193246219)
                 </a>
 
-                <a href="tel:+919193246219" 
+                <a href="tel:+919193246219" 
      
                 class="block w-full py-4 bg-tf-primary text-white font-bold rounded-lg hover:bg-[#4d2e97] transition transform hover:scale-[1.005] flex items-center justify-center">
                     <i class="fas fa-phone mr-3"></i> Call Support (+91 9193246219)
@@ -337,28 +340,28 @@
         </div>
     </div>
 
-    
-
+    
+ 
     <div id="inbox-modal" class="modal">
-        
+        
         <div class="modal-content w-full max-w-lg rounded-xl shadow-2xl p-6 bg-white relative">
             <span class="modal-close absolute right-4 top-4 text-2xl cursor-pointer" onclick="closeInbox()">&times;</span>
             <h2 class="text-3xl font-bold mb-6 text-tf-primary flex items-center">
                 <i class="fas fa-envelope-open-text mr-3"></i> Client Inbox
-            
+            
             </h2>
 
             <div id="client-inbox-list" class="mt-4 max-h-96 overflow-y-auto space-y-3">
-    
+    
                 <p class="text-center text-gray-500 mt-5">Loading messages...</p>
             </div>
 
             <div id="full-message-detail" class="mt-6 pt-4" style="display:none;">
                 <h3 id="full-message-subject" class="font-bold text-xl mb-1"></h3>
            
-                <small 
+                <small 
                 id="full-message-date" class="text-gray-500 block mb-4"></small>
-                
+                
                 <div id="full-message-body" class="p-4 border rounded bg-gray-50 whitespace-pre-wrap text-gray-700 max-h-40 overflow-y-auto"></div>
             </div>
         </div>
@@ -377,21 +380,23 @@
                 </div>
                 <div class="form-group">
                     <label for="confirm-password">Confirm New Password</label>
-                    <input type="password" id="confirm-password" 
+                    <input type="password" id="confirm-password" 
                     required minlength="6" class="w-full p-3 border rounded input-focus">
                 </div>
                 <button type="submit" id="updatePasswordBtn" class="action-btn w-full bg-red-600 hover:bg-red-700">Update & Log Out</button>
                 <p id="password-update-status" class="mt-3 text-sm text-center text-gray-700"></p>
             </form>
-            <p class="text-xs text-center text-gray-500 mt-4">Note: Changing your password 
+            <p class="text-xs text-center text-gray-500 mt-4">Note: Changing your password 
             will immediately log you out of all devices for security.</p>
         </div>
+        
+        
     </div>
 
 
     <div id="force-logout-modal" class="modal">
         <div class="modal-content">
-            <h3 class="text-xl font-bold text-gray-800 mb-2">Another device 
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Another device 
             is logged in</h3>
             <p class="text-gray-700">It looks like your account is currently active on another device.
             You can force-logout that session and continue here, or cancel to remain logged out.</p>
@@ -401,8 +406,6 @@
                 <button id="forceConfirmBtn" class="py-2 px-4 bg-red-600 text-white rounded-lg" onclick="forceLogoutOtherDevice()">Logout other device & Continue</button>
             </div>
         </div>
-        
-        
     </div>
 
  
@@ -777,6 +780,25 @@
             }
         }
 
+        // --- Time Formatting Helper (NEW) ---
+        // Defined globally for use in job status polling
+        function formatISTTime(utcTimestamp) {
+            if (!utcTimestamp) return 'N/A';
+            const date = new Date(utcTimestamp);
+            
+            const options = {
+                year: 'numeric',
+                month: 'short',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+                timeZone: 'Asia/Kolkata'
+            };
+
+            return date.toLocaleDateString('en-IN', options);
+        }
+        
         // --- TAB NAVIGATION (UPDATED and PUBLIC) ---
         function showTab(tabId, button) {
             document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
@@ -805,26 +827,6 @@
             if (activeJobPollInterval) clearInterval(activeJobPollInterval);
             fetchAndUpdateJobStatus(); // Initial fetch
             activeJobPollInterval = setInterval(fetchAndUpdateJobStatus, 5000); // Poll every 5 seconds
-        }
-
-        // --- Time Formatting Helper (NEW) ---
-        function formatISTTime(utcTimestamp) {
-            if (!utcTimestamp) return 'N/A';
-            const date = new Date(utcTimestamp);
-            
-            // Options for Indian Standard Time (IST - UTC+5:30)
-            const options = {
-                year: 'numeric',
-                month: 'short',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true,
-                timeZone: 'Asia/Kolkata' // Ensures IST time zone
-            };
-
-            // Format the date and time string
-            return date.toLocaleDateString('en-IN', options);
         }
 
         async function fetchAndUpdateJobStatus() {
@@ -859,7 +861,7 @@
                     const isFailed = job.status === 'Failed';
                     const isCompleted = job.status === 'Completed';
 
-                    // --- CRITICAL CHANGE: Use formatISTTime helper for display ---
+                    // --- CRITICAL FIX: Use formatISTTime helper for display ---
                     const completionDisplay = isCompleted ? formatISTTime(job.completedTime) : new Date(job.submittedAt).toLocaleDateString();
 
                     const cardHtml = `
@@ -883,7 +885,7 @@
                                         <i class="fas fa-times"></i> Cancel
                                     </button>` 
                                 : isCompleted ? `
-                                    <button class="py-1 px-3 bg-tf-primary text-white text-sm rounded hover:bg-[#4d2e97] transition" onclick="handleAuthenticatedDownload('${job._1d || job._id}', '${job.filename.replace(/'/g, "\\'").replace(/"/g, '')}')">
+                                    <button class="py-1 px-3 bg-tf-primary text-white text-sm rounded hover:bg-[#4d2e97] transition" onclick="handleAuthenticatedDownload('${job._id}', '${job.filename.replace(/'/g, "\\'").replace(/"/g, '')}')">
                                         <i class="fas fa-download"></i> Download
                                     </button>`
                                 : isFailed ? `<span class="text-red-500 text-sm italic">${job.error || 'Check server logs.'}</span>`
@@ -990,14 +992,13 @@
                 const blob = await resp.blob(); 
                 
                 // Trigger download using Blob URL
-                const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.style.display = 'none';
-                a.href = url;
+                a.href = window.URL.createObjectURL(blob);
                 a.download = safeFilename; // Use the safe filename
                 document.body.appendChild(a);
                 a.click();
-                window.URL.revokeObjectURL(url);
+                window.URL.revokeObjectURL(a.href);
                 a.remove();
                 
             } catch (e) {
@@ -1005,6 +1006,19 @@
                 alert('Download failed due to a network or authentication error.');
             }
         }
+        
+        // Make core functions available globally for HTML onclick events
+        window.showTab = showTab;
+        window.logout = logout;
+        window.openPasswordModal = openPasswordModal;
+        window.closePasswordModal = closePasswordModal;
+        window.closeForceModal = closeForceModal;
+        window.forceLogoutOtherDevice = forceLogoutOtherDevice;
+        window.toggleInbox = toggleInbox;
+        window.closeInbox = closeInbox;
+        window.viewClientMessage = viewClientMessage;
+        window.handleAuthenticatedDownload = handleAuthenticatedDownload;
+
 
         // --- PASSWORD UPDATE LISTENER (PUBLIC) ---
         document.getElementById('password-update-form').addEventListener('submit', async (e) => {
@@ -1059,19 +1073,6 @@
         // --- INITIALIZATION ---
         window.onload = () => {
             fetchProfileData().then(()=> {
-                // FIX: Expose necessary functions globally for use in HTML attributes like onclick=""
-                // These functions were already defined earlier in the script block or imported from bulk_verification_logic.js
-                window.showTab = showTab;
-                window.logout = logout;
-                window.openPasswordModal = openPasswordModal;
-                window.closePasswordModal = closePasswordModal;
-                window.closeForceModal = closeForceModal;
-                window.forceLogoutOtherDevice = forceLogoutOtherDevice;
-                window.toggleInbox = toggleInbox;
-                window.closeInbox = closeInbox;
-                window.viewClientMessage = viewClientMessage;
-                window.handleAuthenticatedDownload = handleAuthenticatedDownload;
-                
                 if (typeof initBulkListeners === 'function') {
                     initBulkListeners();
                 } else {
