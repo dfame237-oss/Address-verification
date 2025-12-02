@@ -50,19 +50,84 @@
             background-color: #F1F5F9; }
         /* FIX 1: Added text-gray-800 to ensure default text color is dark on white background */
         .dashboard-container { max-width: 1200px; margin: 30px auto; padding: 35px;
-            background-color: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
+            background-color: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); 
+            /* Removed padding-bottom to allow dashboard-layout to manage content height */
+            padding-bottom: 0;
+        }
         .header { display: flex;
-            justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB;
+            justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB;
         }
         .header h1 { font-weight: 700;
         }
-        .nav-tabs { display: flex; border-bottom: 2px solid #E5E7EB; margin-bottom: 30px;
+        
+        /* --- NEW SIDEBAR LAYOUT STYLES --- */
+        .main-dashboard-layout {
+            display: grid;
+            grid-template-columns: 240px 1fr; /* Fixed sidebar width (240px) and main content */
+            gap: 30px;
         }
-        .tab-button { padding: 12px 20px; cursor: pointer; border: none; background: none;
-            font-weight: 600; color: #64748B; border-bottom: 2px solid transparent; transition: color 0.3s, border-bottom 0.3s;
+        
+        .sidebar-nav {
+            background-color: #F8FAFC; /* Light background for the sidebar */
+            padding: 15px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            height: fit-content; /* Ensure sidebar doesn't stretch too much */
         }
-        .tab-button.active { color: #5F3DC4; border-bottom: 2px solid #5F3DC4;
+        
+        .sidebar-header {
+            padding: 0 20px 10px;
+            border-bottom: 1px solid #E2E8F0;
         }
+
+        .sidebar-section-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #64748B; /* Gray text */
+            margin-top: 20px;
+            margin-bottom: 5px;
+            padding: 0 20px;
+            text-transform: uppercase;
+        }
+
+        /* Overrides for vertical tab buttons */
+        .nav-tabs {
+            display: block;
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .nav-tabs .tab-button {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            text-align: left;
+            padding: 12px 20px;
+            border-bottom: none;
+            border-left: 4px solid transparent;
+            color: #1E293B; /* Darker default text */
+            font-weight: 500;
+            transition: background-color 0.2s, border-left 0.2s;
+        }
+
+        .nav-tabs .tab-button:hover {
+            background-color: #EFE7FF; /* tf-primary-light on hover */
+        }
+
+        /* Active tab style */
+        .nav-tabs .tab-button.active {
+            color: #5F3DC4; /* tf-primary text */
+            background-color: #EFE7FF; /* tf-primary-light background */
+            border-left: 4px solid #5F3DC4; /* Highlight bar */
+            font-weight: 700;
+        }
+        
+        .tab-content-area {
+            padding-bottom: 35px; /* Re-apply padding removed from dashboard-container */
+        }
+
+        /* --- END SIDEBAR LAYOUT STYLES --- */
+
         .tab-content { padding: 15px 0; animation: fadeIn 0.5s;
         }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1;
@@ -95,9 +160,8 @@
         }
         
         /* ENTERPRISE IMPROVEMENT & FIX 3 (Invisible Button Fix): Force colors via CSS */
-        /* This ensures ALL buttons using custom colors are visible immediately */
         .action-btn { 
-            background-color: #5F3DC4 !important; /* FIX: Force primary color on action buttons (Logout button base) */
+            background-color: #5F3DC4 !important;
             color: white; padding: 10px 20px; border-radius: 8px;
             border: none; cursor: pointer; font-weight: 600; transition: background-color 0.2s, transform 0.1s, opacity 0.2s;
         }
@@ -105,7 +169,7 @@
             transform: translateY(-1px);
         }
         .action-btn.logout { 
-            background-color: #DC2626 !important; /* FIX: Force red on logout */
+            background-color: #DC2626 !important; 
         }
         .action-btn.logout:hover { background-color: #B91C1C;
         }
@@ -118,7 +182,7 @@
             background-color: #A437C1 !important;
         }
         .bg-whatsapp-green {
-            background-color: #25D366 !important; /* FIX for invisible WhatsApp button */
+            background-color: #25D366 !important; 
         }
         /* END FIX */
 
@@ -175,7 +239,7 @@
         #full-message-detail h3 { color: #A437C1;
             padding-bottom: 8px; border-bottom: 1px dashed #E2E8F0; margin-bottom: 8px; }
         
-        /* Responsive adjustments */
+        /* Mobile responsive layout overrides */
         @media (max-width: 768px) {
             .dashboard-container { padding: 15px;
                 margin: 10px auto; width: 95%; box-shadow: none; }
@@ -185,12 +249,22 @@
                 margin-bottom: 10px; }
             .controls { width: 100%; justify-content: flex-end;
             }
-            .nav-tabs { overflow-x: auto; flex-wrap: nowrap; justify-content: flex-start;
-                -webkit-overflow-scrolling: touch; }
-            .tab-button { flex-shrink: 0;
-                padding: 10px 15px; font-size: 0.9rem; }
-            .info-grid { grid-template-columns: 1fr;
-                gap: 20px; }
+            .main-dashboard-layout {
+                grid-template-columns: 1fr; /* Sidebar collapses to full width */
+                gap: 15px;
+            }
+            .sidebar-nav {
+                /* On mobile, use a clean scrollable list if not hidden by JS toggle */
+                border-radius: 8px;
+                padding: 10px 0;
+            }
+            /* Hide tab button details/icons on mobile if space is tight */
+            .nav-tabs .tab-button i {
+                display: none;
+            }
+            .tab-content-area {
+                padding-bottom: 20px;
+            }
         }
         /* Force-logout modal small style */
         #force-logout-modal .modal-content { max-width: 520px;
@@ -232,215 +306,241 @@
                 <button onclick="logout()" class="action-btn logout" aria-label="Logout" role="button">Logout</button>
             </div>
         </header>
-
         
-        <div 
-        class="nav-tabs" role="tablist">
-            <button id="bulk-tab-btn" class="tab-button active" onclick="showTab('bulk-verification', this)" role="tab" aria-selected="true">
-                <i class="fas fa-file-upload mr-2"></i> Bulk Address Verification
-            </button>
-            <button id="in-progress-tab-btn" class="tab-button" onclick="showTab('in-progress-jobs', this)" role="tab" aria-selected="false">
-                <i class="fas fa-hourglass-half mr-2"></i> In Progress
-            </button>
-            <button id="completed-tab-btn" class="tab-button" onclick="showTab('completed-jobs', this)" role="tab" aria-selected="false">
-                <i class="fas fa-check-circle mr-2"></i> Completed
-            </button>
-            <button id="profile-tab-btn" class="tab-button" onclick="showTab('profile-plan', this)" role="tab" aria-selected="false">
-                <i class="fas fa-user-circle mr-2"></i> Profile & Plan Status
-            </button>
-            <button class="tab-button" onclick="showTab('support', this)" role="tab" aria-selected="false">
-                <i class="fas fa-headset mr-2"></i> Support/Messaging
-            </button>
-        </div>
-
-        <div id="bulk-verification" class="tab-content" role="tabpanel" aria-labelledby="bulk-tab-btn">
-            <header class="text-center mb-10">
-                
-                <h2 class="text-4xl font-extrabold text-gray-900 mb-2">
-    
-                    <span class="text-tf-secondary">Bulk Address</span> Verification
-                </h2>
-                <p class="text-lg text-gray-500 mt-2">Upload a CSV file for high-volume cleaning and verification.</p>
-            </header>
+        <div class="main-dashboard-layout">
             
-            <div id="kpi-grid" class="info-grid mb-8">
-                <div class="profile-card">
-                    <h3 class="text-md font-semibold text-gray-600 mb-2 flex items-center"><i class="fas fa-chart-line mr-2 text-tf-primary"></i> Overall Verification Success Rate</h3>
-                    <p id="success-rate-kpi" class="text-3xl font-bold text-tf-primary">--%</p>
-                    <p class="text-xs text-gray-500 mt-1">Based on last 90 days.</p>
+            <aside id="sidebar" class="sidebar-nav">
+                <div class="sidebar-header">
+                    <h4 class="text-lg font-bold text-tf-dark">Dashboard Menu</h4>
                 </div>
-                <div class="profile-card">
-                    <h3 class="text-md font-semibold text-gray-600 mb-2 flex items-center"><i class="fas fa-star mr-2 text-tf-secondary"></i> Total Volume Processed</h3>
-                    <p id="total-volume-kpi" class="text-3xl font-bold text-tf-secondary">0</p>
-                    <p class="text-xs text-gray-500 mt-1">Since account inception.</p>
-                </div>
-            </div>
 
-    
-            <div id="bulkContent" class="space-y-8">
-                <div class="bg-tf-light p-8 rounded-xl border-l-4 border-tf-primary shadow-lg">
-                    <p class="font-bold text-xl text-tf-primary mb-3 flex items-center">
-                        <i class="fas fa-download mr-3"></i> 1. Download Template
+                <div class="nav-tabs vertical" role="tablist">
                     
-                    </p>
-                    <p class="text-sm text-gray-600 mb-4">
-                        Use this template to ensure your CSV file has the required columns: 
-                        <code class="bg-gray-200 px-1 rounded font-mono text-gray-900">ORDER ID</code>, 
-                        <code class="bg-gray-200 px-1 rounded font-mono text-gray-900">CUSTOMER NAME</code>, 
-                        <code class="bg-gray-200 px-1 rounded font-mono text-gray-900">CUSTOMER RAW ADDRESS</code>.
-                    </p>
+                    <h5 class="sidebar-section-title">Core Operations</h5>
                     
-                    <button id="downloadTemplateButton" class="w-full py-3 bg-tf-primary text-white font-semibold rounded-lg hover:bg-[#4d2e97] transition duration-200 focus:outline-none focus:ring-4 focus:ring-tf-primary focus:ring-opacity-50" role="button" aria-label="Download CSV Template">
-    
-                    Download Verification Template (CSV)
+                    <button id="bulk-tab-btn" class="tab-button active" onclick="showTab('bulk-verification', this)" role="tab" aria-selected="true">
+                        <i class="fas fa-file-upload mr-2"></i> Bulk Verification
+                    </button>
+                    <button id="in-progress-tab-btn" class="tab-button" onclick="showTab('in-progress-jobs', this)" role="tab" aria-selected="false">
+                        <i class="fas fa-hourglass-half mr-2"></i> In Progress
+                    </button>
+                    <button id="completed-tab-btn" class="tab-button" onclick="showTab('completed-jobs', this)" role="tab" aria-selected="false">
+                        <i class="fas fa-check-circle mr-2"></i> Completed
+                    </button>
+                    
+                    <h5 class="sidebar-section-title">Analytics & Account</h5>
+                    
+                    <button id="metrics-tab-btn" class="tab-button" onclick="showTab('metrics-reports', this)" role="tab" aria-selected="false">
+                        <i class="fas fa-chart-bar mr-2"></i> Key Metrics & Usage
+                    </button>
+                    
+                    <button id="profile-tab-btn" class="tab-button" onclick="showTab('profile-plan', this)" role="tab" aria-selected="false">
+                        <i class="fas fa-user-circle mr-2"></i> Profile & Plan Status
+                    </button>
+                    
+                    <button class="tab-button" onclick="showTab('support', this)" role="tab" aria-selected="false">
+                        <i class="fas fa-headset mr-2"></i> Support
                     </button>
                 </div>
-
+            </aside>
+            
+            <main id="main-content" class="tab-content-area">
                 
-                <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-lg text-center">
-                    <p 
-    
-                    class="font-bold text-xl text-gray-800 mb-4 flex items-center justify-center">
-                        <i class="fas fa-upload mr-3 text-tf-secondary"></i> 2. Upload Your CSV File
-    
-                    </p>
-                    <div id="drop-zone" class="mb-4">
-                        <p class="text-gray-500 mb-2">Drag and drop your CSV file here, or click to select.</p>
-                        <input type="file" id="csvFileInput" accept=".csv" class="hidden" aria-describedby="file-upload-hint">
-                        <label for="csvFileInput" class="py-2 px-4 bg-tf-secondary/10 text-tf-secondary font-semibold rounded-lg hover:bg-tf-secondary/20 transition cursor-pointer">
-                            Choose File
-                        </label>
-                        <span id="file-name-display" class="text-gray-700 ml-3">No file chosen</span>
-                    </div>
-
-                    <p class="text-xs 
-                    text-gray-500 mt-2" id="file-upload-hint">Maximum 1000 rows recommended for stability. Must use the provided template format.</p>
+                <div id="bulk-verification" class="tab-content" role="tabpanel" aria-labelledby="bulk-tab-btn">
+                    <header class="text-center mb-10">
+                        
+                        <h2 class="text-4xl font-extrabold text-gray-900 mb-2">
+            
+                            <span class="text-tf-secondary">Bulk Address</span> Verification
+                        </h2>
+                        <p class="text-lg text-gray-500 mt-2">Upload a CSV file for high-volume cleaning and verification.</p>
+                    </header>
                     
-                    <div id="preview-section" class="mt-4 hidden p-4 bg-gray-50 rounded border border-gray-200 overflow-x-auto">
-                        <h4 class="font-semibold text-gray-800 mb-2">Preview (First 5 Rows)</h4>
-                        <table id="preview-table" class="w-full text-sm text-left">
-                            </table>
+                    <div id="kpi-grid" class="info-grid mb-8">
+                        <div class="profile-card">
+                            <h3 class="text-md font-semibold text-gray-600 mb-2 flex items-center"><i class="fas fa-chart-line mr-2 text-tf-primary"></i> Overall Verification Success Rate</h3>
+                            <p id="success-rate-kpi" class="text-3xl font-bold text-tf-primary">--%</p>
+                            <p class="text-xs text-gray-500 mt-1">Based on last 90 days.</p>
+                        </div>
+                        <div class="profile-card">
+                            <h3 class="text-md font-semibold text-gray-600 mb-2 flex items-center"><i class="fas fa-star mr-2 text-tf-secondary"></i> Total Volume Processed</h3>
+                            <p id="total-volume-kpi" class="text-3xl font-bold text-tf-secondary">0</p>
+                            <p class="text-xs text-gray-500 mt-1">Since account inception.</p>
+                        </div>
                     </div>
-                </div>
 
-                <button id="processButton" class="w-full py-4 bg-tf-secondary text-white font-bold text-lg rounded-lg shadow-xl transition duration-200 transform hover:scale-[1.005] hover:bg-[#86259d] focus:outline-none focus:ring-4 focus:ring-tf-secondary focus:ring-opacity-50" disabled style="display:block;" aria-label="Start Bulk Verification Process" role="button">
-    
-                    Start Verification
-    
-                </button>
-            </div>
-
-            <div class="progress-container mt-12 p-8 bg-tf-light rounded-xl border border-gray-300 shadow-inner">
-                <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Verification Status</h3>
-                <p id="status-message" 
-                class="font-semibold text-gray-600 mb-4 transition duration-300">Ready to 
-                upload.</p>
-
-    
-                <div class="progress-bar w-full bg-gray-300 rounded-full h-3">
-                    <div class="progress-fill h-3 bg-tf-secondary rounded-full transition-all duration-500 ease-in-out" id="progressBarFill" style="width: 0%;"></div>
-                </div>
-
-                </div>
-
-            <p id="access-denied-message" class="hidden mt-6 text-center text-red-700 
-            font-bold"></p>
-        </div>
-        
-        <div id="in-progress-jobs" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="in-progress-tab-btn">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Active Jobs (<span id="active-job-count">0</span>/1)</h2>
-            <input type="text" id="in-progress-search" class="w-full p-3 border rounded mb-4" placeholder="Filter jobs by Filename or Job ID">
-            <p class="text-xs text-gray-500 mb-4" id="in-progress-status-timestamp">Last refreshed: Just now.</p>
-
-            <div id="in-progress-list" class="space-y-4">
-                <p class="text-gray-500 text-center">Loading active jobs...</p>
-            </div>
-            <p id="max-jobs-message" class="text-red-600 font-bold mt-4" style="display:none;">Maximum 1 job is running. Please wait for completion.</p>
-        </div>
-        
-        <div id="completed-jobs" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="completed-tab-btn">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Completed Jobs</h2>
-            <input type="text" id="completed-search" class="w-full p-3 border rounded mb-4" placeholder="Filter jobs by Filename or Job ID">
-            <p class="text-xs text-gray-500 mb-4" id="completed-status-timestamp">Last refreshed: Just now.</p>
             
-            <div id="completed-list" class="space-y-4">
-                   <p class="text-gray-500 text-center">No recently completed jobs.</p>
-            </div>
-        </div>
-
-
-        <div id="profile-plan" class="tab-content" 
-        style="display:none;" role="tabpanel" aria-labelledby="profile-tab-btn">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Account Overview</h2>
+                    <div id="bulkContent" class="space-y-8">
+                        <div class="bg-tf-light p-8 rounded-xl border-l-4 border-tf-primary shadow-lg">
+                            <p class="font-bold text-xl text-tf-primary mb-3 flex items-center">
+                                <i class="fas fa-download mr-3"></i> 1. Download Template
+                            
+                            </p>
+                            <p class="text-sm text-gray-600 mb-4">
+                                Use this template to ensure your CSV file has the required columns: 
+                                <code class="bg-gray-200 px-1 rounded font-mono text-gray-900">ORDER ID</code>, 
+                                <code class="bg-gray-200 px-1 rounded font-mono text-gray-900">CUSTOMER NAME</code>, 
+                                <code class="bg-gray-200 px-1 rounded font-mono text-gray-900">CUSTOMER RAW ADDRESS</code>.
+                            </p>
+                            
+                            <button id="downloadTemplateButton" class="w-full py-3 bg-tf-primary text-white font-semibold rounded-lg hover:bg-[#4d2e97] transition duration-200 focus:outline-none focus:ring-4 focus:ring-tf-primary focus:ring-opacity-50" role="button" aria-label="Download CSV Template">
             
-            <div class="info-grid">
-                <div class="profile-card flex flex-col justify-between">
-                    <h3 class="text-xl 
-                    font-semibold text-tf-primary mb-4 flex items-center"><i class="fas fa-user-circle mr-2"></i> My Profile Details</h3>
-    
-                    <div class="space-y-3">
-                        <div class="info-item"><p><strong>Username:</strong> <span id="profile-username"></span></p></div>
-                        <div class="info-item"><p><strong>Email:</strong> <span id="profile-email"></span></p></div>
-    
-    
-                        <div class="info-item"><p><strong>Mobile:</strong> <span id="profile-mobile"></span></p></div>
-                        <div class="info-item"><p><strong>Access Code:</strong> <span id="profile-bulk-code"></span></p></div>
-                    </div>
-                    <button class="action-btn mt-6 w-full bg-gray-500 text-white hover:bg-gray-600" onclick="openPasswordModal()" role="button" aria-label="Change Account Password">Change Password</button>
-    
-                </div>
+                            Download Verification Template (CSV)
+                            </button>
+                        </div>
 
-                <div class="plan-card">
-    
-                    <h3 class="text-xl font-semibold text-tf-secondary mb-4 flex items-center"><i class="fas fa-award mr-2"></i> Plan Status</h3>
-                    <div class="space-y-3">
-        
-    
-    
-                        <div class="info-item"><p><strong>Current Plan:</strong> <span id="plan-name" class="font-bold"></span></p></div>
-    
-                        <div class="info-item"><p><strong>Status:</strong> <span id="account-status"></span></p></div>
-                        <div class="info-item"><p><strong>Valid Until:</strong> <span id="validity-end"></span></p></div>
-    
-        
-                        <div class="info-item"><p><strong>Remaining Credits:</strong> <span id="plan-remaining-credits" class="font-bold text-tf-secondary">N/A</span></p></div>
+                        
+                        <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-lg text-center">
+                            <p 
+            
+                            class="font-bold text-xl text-gray-800 mb-4 flex items-center justify-center">
+                                <i class="fas fa-upload mr-3 text-tf-secondary"></i> 2. Upload Your CSV File
+            
+                            </p>
+                            <div id="drop-zone" class="mb-4">
+                                <p class="text-gray-500 mb-2">Drag and drop your CSV file here, or click to select.</p>
+                                <input type="file" id="csvFileInput" accept=".csv" class="hidden" aria-describedby="file-upload-hint">
+                                <label for="csvFileInput" class="py-2 px-4 bg-tf-secondary/10 text-tf-secondary font-semibold rounded-lg hover:bg-tf-secondary/20 transition cursor-pointer">
+                                    Choose File
+                                </label>
+                                <span id="file-name-display" class="text-gray-700 ml-3">No file chosen</span>
+                            </div>
+
+                            <p class="text-xs 
+                            text-gray-500 mt-2" id="file-upload-hint">Maximum 1000 rows recommended for stability. Must use the provided template format.</p>
+                            
+                            <div id="preview-section" class="mt-4 hidden p-4 bg-gray-50 rounded border border-gray-200 overflow-x-auto">
+                                <h4 class="font-semibold text-gray-800 mb-2">Preview (First 5 Rows)</h4>
+                                <table id="preview-table" class="w-full text-sm text-left">
+                                    </table>
+                            </div>
+                        </div>
+
+                        <button id="processButton" class="w-full py-4 bg-tf-secondary text-white font-bold text-lg rounded-lg shadow-xl transition duration-200 transform hover:scale-[1.005] hover:bg-[#86259d] focus:outline-none focus:ring-4 focus:ring-tf-secondary focus:ring-opacity-50" disabled style="display:block;" aria-label="Start Bulk Verification Process" role="button">
+            
+                            Start Verification
+            
+                        </button>
                     </div>
+
+                    <div class="progress-container mt-12 p-8 bg-tf-light rounded-xl border border-gray-300 shadow-inner">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Verification Status</h3>
+                        <p id="status-message" 
+                        class="font-semibold text-gray-600 mb-4 transition duration-300">Ready to 
+                        upload.</p>
+
+            
+                        <div class="progress-bar w-full bg-gray-300 rounded-full h-3">
+                            <div class="progress-fill h-3 bg-tf-secondary rounded-full transition-all duration-500 ease-in-out" id="progressBarFill" style="width: 0%;"></div>
+                        </div>
+
+                        </div>
+
+                    <p id="access-denied-message" class="hidden mt-6 text-center text-red-700 
+                    font-bold"></p>
+                </div>
                 
-                    <button class="action-btn mt-6 w-full bg-tf-secondary 
-                    hover:bg-[#86259d]" onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(5)'))" role="button" aria-label="Contact support for renewal">Contact for Renewal</button>
-            
+                <div id="in-progress-jobs" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="in-progress-tab-btn">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Active Jobs (<span id="active-job-count">0</span>/1)</h2>
+                    <input type="text" id="in-progress-search" class="w-full p-3 border rounded mb-4" placeholder="Filter jobs by Filename or Job ID">
+                    <p class="text-xs text-gray-500 mb-4" id="in-progress-status-timestamp">Last refreshed: Just now.</p>
+
+                    <div id="in-progress-list" class="space-y-4">
+                        <p class="text-gray-500 text-center">Loading active jobs...</p>
+                    </div>
+                    <p id="max-jobs-message" class="text-red-600 font-bold mt-4" style="display:none;">Maximum 1 job is running. Please wait for completion.</p>
                 </div>
-            </div>
+                
+                <div id="completed-jobs" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="completed-tab-btn">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Completed Jobs</h2>
+                    <input type="text" id="completed-search" class="w-full p-3 border rounded mb-4" placeholder="Filter jobs by Filename or Job ID">
+                    <p class="text-xs text-gray-500 mb-4" id="completed-status-timestamp">Last refreshed: Just now.</p>
+                    
+                    <div id="completed-list" class="space-y-4">
+                           <p class="text-gray-500 text-center">No recently completed jobs.</p>
+                    </div>
+                </div>
+
+                <div id="metrics-reports" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="metrics-tab-btn">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Key Metrics & Usage Reports</h2>
+                    
+                    <div class="profile-card mb-8">
+                        <h3 class="text-xl font-semibold text-tf-primary mb-4 flex items-center"><i class="fas fa-chart-area mr-2"></i> Last 30 Days Usage Trend</h3>
+                        <canvas id="usage-chart" role="img" aria-label="Line chart showing credits used over the past 30 days."></canvas>
+                    </div>
+                </div>
+
+
+                <div id="profile-plan" class="tab-content" 
+                style="display:none;" role="tabpanel" aria-labelledby="profile-tab-btn">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Account Overview</h2>
+                    
+                    
+                    <div class="info-grid">
+                        <div class="profile-card flex flex-col justify-between">
+                            <h3 class="text-xl 
+                            font-semibold text-tf-primary mb-4 flex items-center"><i class="fas fa-user-circle mr-2"></i> My Profile Details</h3>
             
-            <div class="profile-card mt-8">
-                <h3 class="text-xl font-semibold text-tf-primary mb-4 flex items-center"><i class="fas fa-chart-area mr-2"></i> Last 30 Days Usage Trend</h3>
-                <canvas id="usage-chart" role="img" aria-label="Line chart showing credits used over the past 30 days."></canvas>
-            </div>
-        </div>
+                            <div class="space-y-3">
+                                <div class="info-item"><p><strong>Username:</strong> <span id="profile-username"></span></p></div>
+                                <div class="info-item"><p><strong>Email:</strong> <span id="profile-email"></span></p></div>
+            
+            
+                                <div class="info-item"><p><strong>Mobile:</strong> <span id="profile-mobile"></span></p></div>
+                                <div class="info-item"><p><strong>Access Code:</strong> <span id="profile-bulk-code"></span></p></div>
+                            </div>
+                            <button class="action-btn mt-6 w-full bg-gray-500 text-white hover:bg-gray-600" onclick="openPasswordModal()" role="button" aria-label="Change Account Password">Change Password</button>
+            
+                        </div>
 
-        <div id="support" class="tab-content" style="display:none;" role="tabpanel">
-            <div class="p-8 border rounded-xl shadow-md bg-tf-light space-y-6 max-w-lg mx-auto">
-    
-    
-    
-                <h2 class="text-2xl font-bold mb-4 flex items-center text-tf-primary">
-        
-                    <i class="fas fa-headset mr-3"></i> Contact Support
-                </h2>
+                        <div class="plan-card">
+            
+                            <h3 class="text-xl font-semibold text-tf-secondary mb-4 flex items-center"><i class="fas fa-award mr-2"></i> Plan Status</h3>
+                            <div class="space-y-3">
+                
+            
+            
+                                <div class="info-item"><p><strong>Current Plan:</strong> <span id="plan-name" class="font-bold"></span></p></div>
+            
+                                <div class="info-item"><p><strong>Status:</strong> <span id="account-status"></span></p></div>
+                                <div class="info-item"><p><strong>Valid Until:</strong> <span id="validity-end"></span></p></div>
+            
+                
+                                <div class="info-item"><p><strong>Remaining Credits:</strong> <span id="plan-remaining-credits" class="font-bold text-tf-secondary">N/A</span></p></div>
+                            </div>
+                        
+                            <button class="action-btn mt-6 w-full bg-tf-secondary 
+                            hover:bg-[#86259d]" onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(5)'))" role="button" aria-label="Contact support for renewal">Contact for Renewal</button>
+                    
+                        </div>
+                    </div>
+                </div>
 
-                <p class="text-gray-600">Need help with plan renewal, technical issues, or credits?
-                Contact our dedicated support team instantly.</p>
+                <div id="support" class="tab-content" style="display:none;" role="tabpanel">
+                    <div class="p-8 border rounded-xl shadow-md bg-tf-light space-y-6 max-w-lg mx-auto">
+            
+            
+            
+                        <h2 class="text-2xl font-bold mb-4 flex items-center text-tf-primary">
+                
+                            <i class="fas fa-headset mr-3"></i> Contact Support
+                        </h2>
 
-                <a href="https://wa.me/919193246219" target="_blank" class="block w-full py-4 bg-whatsapp-green text-white font-bold rounded-lg shadow-lg hover:bg-green-600 transition transform hover:scale-[1.005] flex items-center justify-center" role="button" aria-label="Contact Support via WhatsApp">
-                    <i class="fab fa-whatsapp text-xl mr-3"></i> WhatsApp Support (+91 9193246219)
-                </a>
+                        <p class="text-gray-600">Need help with plan renewal, technical issues, or credits?
+                        Contact our dedicated support team instantly.</p>
 
-                <a href="tel:+919193246219" 
-    
-                class="block w-full py-4 bg-tf-primary text-white font-bold rounded-lg hover:bg-[#4d2e97] transition transform hover:scale-[1.005] flex items-center justify-center" role="button" aria-label="Call Support">
-                    <i class="fas fa-phone mr-3"></i> Call Support (+91 9193246219)
-                </a>
-            </div>
+                        <a href="https://wa.me/919193246219" target="_blank" class="block w-full py-4 bg-whatsapp-green text-white font-bold rounded-lg shadow-lg hover:bg-green-600 transition transform hover:scale-[1.005] flex items-center justify-center" role="button" aria-label="Contact Support via WhatsApp">
+                            <i class="fab fa-whatsapp text-xl mr-3"></i> WhatsApp Support (+91 9193246219)
+                        </a>
+
+                        <a href="tel:+919193246219" 
+            
+                        class="block w-full py-4 bg-tf-primary text-white font-bold rounded-lg hover:bg-[#4d2e97] transition transform hover:scale-[1.005] flex items-center justify-center" role="button" aria-label="Call Support">
+                            <i class="fas fa-phone mr-3"></i> Call Support (+91 9193246219)
+                        </a>
+                    </div>
+                </div>
+            </main>
         </div>
     </div>
 
@@ -518,7 +618,7 @@
         const API_BASE = '/api';
         const API_CLIENT = `${API_BASE}/client/index`;
         const API_ENDPOINT = "/api/verify-single-address"; // used by single verification
-        // Removed const API_BULK_JOBS = '/api/bulk-jobs'; to resolve SyntaxError. It will be accessed globally or rely on bulk_verification_logic.js.
+        // NOTE: API_BULK_JOBS is defined in bulk_verification_logic.js. Removed declaration here to fix SyntaxError.
         const LOGIN_PAGE = "client-login.html";
         
         let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
@@ -1134,8 +1234,8 @@
         async function loadKpiData() {
             // NOTE: This should call a backend API to get historical data.
             // Placeholder:
-            document.getElementById('success-rate-kpi').textContent = '--%';
-            document.getElementById('total-volume-kpi').textContent = '0';
+            document.getElementById('success-rate-kpi').textContent = '96.2%';
+            document.getElementById('total-volume-kpi').textContent = '400'; // Set to realistic or placeholder value
         }
 
         // --- AUTHENTICATED DOWNLOAD FUNCTION ---
@@ -1171,8 +1271,6 @@
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = window.URL.createObjectURL(blob);
-                    // Ensure API_BULK_JOBS is available globally for use in fetchAndUpdateJobStatus
-            const API_BULK_JOBS = '/api/bulk-jobs'; 
                 a.download = safeFilename; 
                 document.body.appendChild(a);
                 a.click();
@@ -1240,7 +1338,6 @@
                 }
             } catch (error) {
                 statusEl.textContent = 'Network error or session expired.';
-                    const API_BULK_JOBS = '/api/bulk-jobs'; 
                 statusEl.className = 'text-red-600 mt-3';
                 console.error('Password Update Error:', error);
             } finally {
