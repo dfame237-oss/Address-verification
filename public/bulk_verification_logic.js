@@ -4,7 +4,7 @@
 // NOTE: Assumes API_BULK_JOBS, authFetch, checkPlanValidity, showTab, API_CLIENT are global from client-dashboard.html
 
 const API_BULK_JOBS = '/api/bulk-jobs'; 
-// FIX: Removed redundant declaration of API_CLIENT (it is declared in client-dashboard.html)
+// FIX: API_CLIENT declaration removed to prevent duplicate declaration error (it is declared in client-dashboard.html)
 
 // --- UI helpers (existing) ---
 function updateStatusMessage(message, isError = false) {
@@ -27,10 +27,11 @@ function updateStatusMessage(message, isError = false) {
 // --- Template download (unchanged) ---
 function handleTemplateDownload() {
     const templateHeaders = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS\n";
+    // FIX: Removed the trailing \n from the last data row to prevent the creation of a blank third row.
     const templateData =
         "1,\"John Doe\",\"H.No.\n" +
         "123, Sector 40B, near bus stand, Chandigarh\"\n" +
-        "2,\"Jane Smith\",\"5th Floor, Alpha Tower, Mumbai 400001\"\n";
+        "2,\"Jane Smith\",\"5th Floor, Alpha Tower, Mumbai 400001\"";
     const csvContent = templateHeaders + templateData;
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -380,7 +381,7 @@ async function fetchDeductionHistory() {
     container.innerHTML = '<p class="text-center text-gray-500 mt-5">Loading history...</p>';
 
     try {
-        // FIX: Query the new permanent deduction API endpoint
+        // Use the globally declared API_CLIENT
         const resp = await authFetch(`${API_CLIENT}?action=deduction-history`, { method: 'GET' });
         const result = await resp.json();
 
