@@ -20,7 +20,7 @@ function updateStatusMessage(message, isError = false) {
         statusMessage.classList.remove('text-gray-600', 'bg-tf-light');
     } else {
         statusMessage.classList.add('text-gray-600', 'bg-tf-light');
-        statusMessage.classList.remove('bg-red-100', 'font-bold');
+        statusStatus.classList.remove('bg-red-100', 'font-bold');
     }
 }
 
@@ -141,7 +141,7 @@ async function handleBulkVerification() {
     // Requirement 3 Check: Max 1 active job - Now uses the new modal
     const activeJobs = await getActiveJobCount();
     if (activeJobs >= 1) { 
-        // FIX: Replaced simple alert with the new dynamic modal
+        // FIX: Use the new dynamic modal instead of the simple message in the bulk tab area
         window.openMaxJobsModal();
         updateStatusMessage("Job submission blocked. One job is already running.", true);
         return;
@@ -225,9 +225,18 @@ async function handleBulkVerification() {
     reader.readAsText(file);
 }
 
-// --- NEW: Handle Job Cancellation (Requirement 4) ---
-async function handleCancelJob(jobId) {
-    if (!confirm(`Are you sure you want to cancel Job ID: ${jobId}?`)) return;
+// --- NEW CANCELLATION LOGIC: Step 1 - Opens the Modal ---
+
+// Renamed and exposed globally via initBulkListeners
+function handleCancelJob(jobId) {
+    // FIX: Replaced window.confirm() with the new modal function
+    window.openCancelJobModal(jobId);
+}
+
+// --- NEW CANCELLATION LOGIC: Step 2 - Executes API Call after modal confirmation ---
+
+// Function executed when user clicks "Yes, Cancel Job" inside the modal
+async function handleCancelJobConfirmed(jobId) {
     // Note: authFetch is assumed global
     try {
         const resp = await authFetch(API_BULK_JOBS + '?action=cancel', {
@@ -246,7 +255,8 @@ async function handleCancelJob(jobId) {
     }
 }
 
-// --- Enterprise Improvement: Drag & Drop Handlers ---
+
+// --- Enterprise Improvement: Drag & Drop Handlers (unchanged) ---
 function setupDragDropListeners() {
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('csvFileInput');
@@ -310,6 +320,8 @@ function setupDragDropListeners() {
 function initBulkListeners() {
     // Export core functions needed by client-dashboard.html
     window.handleCancelJob = handleCancelJob;
+    // EXPOSE THE NEW CONFIRMATION HANDLER FOR THE MODAL BUTTON
+    window.handleCancelJobConfirmed = handleCancelJobConfirmed;
     
     // Call initial KPI fetch right away for a non-stale number
     if (typeof fetchTodayCompletedKpi === 'function') {
@@ -453,3 +465,4 @@ window.initBulkListeners = initBulkListeners;
 window.handleCancelJob = handleCancelJob;
 window.fetchTodayCompletedKpi = fetchTodayCompletedKpi;
 window.fetchDeductionHistory = fetchDeductionHistory;
+window.handleCancelJobConfirmed = handleCancelJobConfirmed; // EXPOSED FOR MODAL BUTTON
