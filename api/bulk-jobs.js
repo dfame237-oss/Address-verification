@@ -4,10 +4,11 @@
 const { connectToDatabase } = require('../utils/db');
 const { ObjectId } = require('mongodb'); 
 const jwt = require('jsonwebtoken');
-// FIX: Correctly import the reusable core verification function from the single-address file
+// FIX: Correctly import the reusable core verification function and CRITICAL_KEYWORDS
 const { 
-    runVerificationLogic 
-} = require('./verify-single-address');
+    runVerificationLogic,
+    CRITICAL_KEYWORDS 
+} = require('./verify-single-address'); 
 const JWT_SECRET = process.env.JWT_SECRET || 'replace_with_env_jwt_secret';
 const MAX_ACTIVE_JOBS = 1; 
 // Enforce single job concurrency
@@ -64,7 +65,7 @@ if (cleanedRow.length > Math.max(idIndex, nameIndex, addressIndex)) {
 function createCSV(rows) {
     // FIX: Uses Comma delimiter for consistency
     const CUSTOM_DELIMITER = ",";
-const header = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS,CLEAN NAME,CLEAN ADDRESS LINE 1,LANDMARK,STATE,DISTRICT,PIN,REMARKS,QUALITY\n"; 
+const header = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS,CLEAN NAME,CLEAN ADDRESS LINE 1,LANDMARK,STATE,DISTRICT,PIN,REMARKS,QUALITY,LOCATION_TYPE\n"; 
     const escapeAndQuote = (cell) => {
         return `\"${String(cell || '').replace(/\"/g, '\"\"')}\"`;
     };
@@ -79,6 +80,7 @@ const header = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS,CLEAN NAME,CLEAN ADD
         const pin = vr.pin || ''; 
         const remarks = vr.remarks || '';
         const addressQuality = vr.addressQuality || 'Very Bad';
+        const locationType = vr.locationType || 'Unknown';
 
         return [
             vr['ORDER ID'],
@@ -92,7 +94,8 @@ cleanName,
             district,
             pin,
             remarks,
-            addressQuality
+            addressQuality,
+            locationType
         ].map(escapeAndQuote).join(CUSTOM_DELIMITER); 
     });
    
@@ -103,7 +106,6 @@ cleanName,
 
 /**
  * Executes an array of asynchronous tasks (promises) in chunks (throttling).
- * THIS FUNCTION IS CRITICAL FOR AVOIDING RATE LIMIT ERRORS.
  */ 
 async function processInChunks(promiseFactories, limit, jobId, jobsCollection) {
     const results = [];
@@ -137,8 +139,6 @@ try {
             status: 'Completed',
             completedTime: { $lt: twentyFourHoursAgo }
         });
-// You can log this for debugging on the server
-        // console.log(`Cleanup ran. Deleted ${result.deletedCount} old completed jobs.`);
 return result.deletedCount; 
     } catch (e) {
         console.error('Failed to cleanup old jobs:', e);
@@ -161,7 +161,7 @@ await jobsCollection.updateOne(
         { _id: jobId }, 
         { $set: { status: 'In Progress', startTime: new Date(), processedCount: 0 } }
     );
-// FIX: Improve check for unlimited credits.
+
     const isUnlimited = (client.remainingCredits === 'Unlimited' || String(client.initialCredits).toLowerCase() === 'unlimited');
     let successfulVerifications = 0;
 // --- 1. Map addresses to an array of promise factories (functions that return promises) --- 
@@ -176,8 +176,7 @@ if (!rawAddress || rawAddress.trim() === "") {
                 return { 
                     'ORDER ID': row['ORDER ID'], 'CUSTOMER NAME': row['CUSTOMER NAME'], 'CUSTOMER RAW ADDRESS': rawAddress,
                     status: "Skipped", remarks: "Missing raw address in CSV row.", addressQuality: "Very Bad", 
-            
-customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "" 
+                    customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "", success: false
                 };
             } 
 
@@ -188,145 +187,178 @@ customerCleanName: customerName, addressLine1: "", landmark: "", state: "", dist
                 
                 if (result.success) {
                     successfulVerifications++;
-} 
+                } 
                 
-                // Return the full mapped result
+                // Return the full mapped result (including classification fields)
                 return {
                     'ORDER ID': row['ORDER ID'], 'CUSTOMER NAME': row['CUSTOMER NAME'], 'CUSTOMER RAW ADDRESS': rawAddress,
-               
-      status: result.status, customerCleanName: result.customerCleanName, addressLine1: result.addressLine1, 
-                    landmark: result.landmark, state: result.state, district: result.district, pin: result.pin,
-                    addressQuality: result.addressQuality, remarks: result.remarks,
+                    ...result
                 };
-} catch (e) { 
+            } catch (e) { 
                 // Catch any error from runVerificationLogic and map to an error row
                 console.error(`Error processing address for ID ${row['ORDER ID']}:`, e);
-return { 
+                return { 
                     'ORDER ID': row['ORDER ID'], 'CUSTOMER NAME': row['CUSTOMER NAME'], 'CUSTOMER RAW ADDRESS': rawAddress,
                     status: "Error", remarks: `Fatal processing error: ${e.message}`, addressQuality: "Very Bad", 
-                    customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "" 
-     
-}; 
-}
+                    customerCleanName: customerName, addressLine1: "", landmark: "", state: "", district: "", pin: "", success: false 
+                }; 
+            }
         };
     });
 
-    let outputRows;
-try { 
-        // --- 2. Execute promises in throttled chunks (10 at a time) ---
-        outputRows = await processInChunks(promiseFactories, MAX_CONCURRENT_CALLS, jobId, jobsCollection);
-} catch (e) { 
+    let allProcessedRows;
+    try { 
+        // --- 2. Execute promises in throttled chunks ---
+        allProcessedRows = await processInChunks(promiseFactories, MAX_CONCURRENT_CALLS, jobId, jobsCollection);
+    } catch (e) { 
         if (e.message === 'JobCancelled') {
              console.log(`Job ${jobId} ended as cancelled.`);
-await jobsCollection.updateOne({ _id: jobId }, { $set: { status: 'Cancelled' } }); 
+            await jobsCollection.updateOne({ _id: jobId }, { $set: { status: 'Cancelled' } }); 
              return;
-} 
+        } 
         console.error(`Fatal unexpected error during job ${jobId}:`, e);
-await jobsCollection.updateOne({ _id: jobId }, { $set: { status: 'Failed', error: 'Throttled processing failed.' } }); 
+        await jobsCollection.updateOne({ _id: jobId }, { $set: { status: 'Failed', error: 'Throttled processing failed.' } }); 
         return;
-} 
+    } 
     
-    // Final status check is now mostly redundant if catch blocks handle statuses correctly
     const jobStatusCheck = await jobsCollection.findOne({ _id: jobId }, { projection: { status: 1 } });
-if (jobStatusCheck.status === 'Cancelled') { 
+    if (jobStatusCheck.status === 'Cancelled') { 
         console.log(`Job ${jobId} ended as cancelled.`);
         return;
-} 
+    } 
+
+    // --------------------------------------------------------
+    // *** NEW FILE CLASSIFICATION LOGIC ***
+    // --------------------------------------------------------
+
+    const readyForShipRows = [];
+    const manualCheckRows = [];
     
-    // --- CRITICAL STEP 1: FINAL CREDIT DEDUCTION ---
+    // Note: CRITICAL_KEYWORDS is imported from verify-single-address.js
+    const criticalKeywords = CRITICAL_KEYWORDS;
+
+    for (const row of allProcessedRows) {
+        // Rule 1: Always send errors or skipped rows to Manual Check
+        if (row.status !== "Success") {
+            manualCheckRows.push(row);
+            continue;
+        }
+
+        const isHighQuality = ['Very Good', 'Good'].includes(row.addressQuality);
+        
+        // Rule 2: Check for ANY critical keyword in the remarks.
+        // Ambiguous text in 'Remaining' is allowed if quality is high.
+        const hasCriticalKeyword = criticalKeywords.some(keyword => row.remarks.includes(keyword));
+        
+        // Rule 3: The FINAL Classification Rule (Ready vs Manual)
+        if (isHighQuality && !hasCriticalKeyword) {
+            // Ready for Ship: High Quality AND NO severe critical alerts
+            readyForShipRows.push(row);
+        } else {
+            // Manual Check: Low Quality OR a severe critical alert is present
+            manualCheckRows.push(row);
+        }
+    }
+
+    const readyCSV = createCSV(readyForShipRows);
+    const manualCSV = createCSV(manualCheckRows);
+    
+    // --- FINAL CREDIT DEDUCTION & LOGGING (UNCHANGED) ---
     if (!isUnlimited && successfulVerifications > 0) {
         const deductionAmount = successfulVerifications;
         let initialBalance = null;
 
-try { 
-            // Fetch client just before the deduction to record initial balance
+        try { 
             const clientBeforeDeduction = await clientsCollection.findOne({ _id: client._id });
             initialBalance = clientBeforeDeduction.remainingCredits;
 
             const deductionResult = await clientsCollection.updateOne(
-                // Use ObjectId for client ID lookup AND check if credits are not 'Unlimited'
                 { _id: client._id, remainingCredits: { $ne: 'Unlimited' } },
                 { $inc: { remainingCredits: -deductionAmount } }
             ); 
-if (deductionResult.matchedCount === 0) { 
+            if (deductionResult.matchedCount === 0) { 
                 console.warn(`Client ${client.username} used credits but deduction failed.`);
-} else { 
-                console.log(`Successfully deducted ${deductionAmount} credits for job ${jobId}.`);
-
-                // --- CRITICAL STEP 2: LOG DEDUCTION PERMANENTLY ---
+            } else { 
                 const clientAfterDeduction = await clientsCollection.findOne({ _id: client._id });
                 const finalBalance = clientAfterDeduction.remainingCredits;
 
                 await deductionsCollection.insertOne({
                     clientId: clientAfterDeduction._id.toString(),
                     jobId: jobId.toString(),
-                    filename: client.filename, // Store filename here for history display
+                    filename: client.filename, 
                     timestamp: new Date(),
                     type: 'Bulk Verification',
                     amountDeducted: deductionAmount,
                     initialBalance: initialBalance,
                     finalBalance: finalBalance
                 });
-                // --- END PERMANENT LOGGING ---
-} 
+            } 
         } catch (e) {
             console.error(`Failed to perform final bulk credit deduction/logging for job ${jobId}:`, e);
-} 
+        } 
     }
     
-    // Finalize Job
-    const finalCSV = createCSV(outputRows);
-await jobsCollection.updateOne( 
+    // Finalize Job - Store TWO separate CSV outputs
+    await jobsCollection.updateOne( 
         { _id: jobId }, 
-        // *** CRITICAL: Ensure completedTime is set on completion ***
-        { $set: { status: 'Completed', completedTime: new Date(), outputData: finalCSV, processedCount: addresses.length } } 
+        { $set: { 
+            status: 'Completed', 
+            completedTime: new Date(), 
+            processedCount: addresses.length,
+            // Store two separate output files
+            outputDataReady: readyCSV,
+            outputDataManual: manualCSV,
+            countReady: readyForShipRows.length,
+            countManual: manualCheckRows.length,
+        } } 
     );
-console.log(`Job ${jobId} completed successfully.`); 
+    console.log(`Job ${jobId} completed successfully. Ready: ${readyForShipRows.length}, Manual: ${manualCheckRows.length}`); 
 }
 
-// --- Router Handler ---
+// --- Router Handler (UPDATED to handle 'type' parameter) ---
 module.exports = async (req, res) => {
     // CORS & Auth Setup
     res.setHeader('Access-Control-Allow-Credentials', true);
-res.setHeader('Access-Control-Allow-Origin', '*'); 
+    res.setHeader('Access-Control-Allow-Origin', '*'); 
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
     if (req.method === 'OPTIONS') return res.status(200).end();
 
     const url = new URL(req.url, `http://${req.headers.host}`);
-const action = url.searchParams.get('action') || ''; 
+    const action = url.searchParams.get('action') || ''; 
     
     const jwtPayload = parseJwtFromHeader(req);
-if (!jwtPayload || !jwtPayload.clientId) { 
+    if (!jwtPayload || !jwtPayload.clientId) { 
         return res.status(401).json({ status: 'Error', message: 'Authentication required.' });
-} 
+    } 
     
     let db;
-try { 
+    try { 
         db = (await connectToDatabase()).db;
-} catch (e) { 
+    } catch (e) { 
         return res.status(500).json({ status: 'Error', message: 'Database connection failed.' });
-} 
+    } 
     const clientsCollection = db.collection('clients');
     const jobsCollection = db.collection('bulkJobs');
     const clientId = new ObjectId(jwtPayload.clientId); // Used for client table lookup
     let body = req.body; 
-    if (typeof body === 'string') { try { body = JSON.parse(body);
-} catch (e) { /* ignore */ } } 
+    if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { /* ignore */ } } 
     
     // --------------------------------------------------------
     // GET: LIST STATUS (Runs Cleanup)
     // --------------------------------------------------------
     if (req.method === 'GET' && (!action || action === 'list')) {
         try {
-            // *** CRITICAL: Run cleanup before fetching the list ***
             await cleanupOldJobs(jobsCollection);
-const jobs = await jobsCollection.find({ clientId: jwtPayload.clientId }).sort({ submittedAt: -1 }).toArray(); 
+            // Project the new count fields for the client
+            const jobs = await jobsCollection.find({ clientId: jwtPayload.clientId }, { 
+                projection: { outputDataReady: 0, outputDataManual: 0 } // Exclude large CSV data from list view
+            }).sort({ submittedAt: -1 }).toArray(); 
             return res.status(200).json({ status: 'Success', jobs });
-} catch (e) { 
+        } catch (e) { 
             console.error('GET /api/bulk-jobs error:', e);
-return res.status(500).json({ status: 'Error', message: 'Failed to retrieve jobs.' });
-} 
+            return res.status(500).json({ status: 'Error', message: 'Failed to retrieve jobs.' });
+        } 
     }
     
     // --------------------------------------------------------
@@ -336,116 +368,121 @@ return res.status(500).json({ status: 'Error', message: 'Failed to retrieve jobs
         const { filename, csvData, totalRows } = body ||
 {}; 
         if (!csvData || !totalRows || !filename) return res.status(400).json({ status: 'Error', message: 'Missing file data.' });
-try { 
+        try { 
             const client = await clientsCollection.findOne({ _id: clientId });
-if (!client) return res.status(404).json({ status: 'Error', message: 'Client not found.' });
-// Check Max Active Jobs (Requirement 3 - Now 1)
+            if (!client) return res.status(404).json({ status: 'Error', message: 'Client not found.' });
             const activeJobsCount = await jobsCollection.countDocuments({ clientId: jwtPayload.clientId, status: { $in: ['Queued', 'In Progress'] } });
-if (activeJobsCount >= MAX_ACTIVE_JOBS) { 
+            if (activeJobsCount >= MAX_ACTIVE_JOBS) { 
                 return res.status(429).json({ 
                     status: 'Error', 
                     message: `Maximum ${MAX_ACTIVE_JOBS} job is already in progress. Please wait for completion.` 
                 });
-} 
+            } 
 
-            // Check Credits (Requirement 6 - Pre-check)
             const remaining = client.remainingCredits;
-if (remaining !== 'Unlimited' && Number(remaining) < totalRows) { 
+            if (remaining !== 'Unlimited' && Number(remaining) < totalRows) { 
                 return res.status(400).json({ 
                     status: 'Error', 
                     message: `Insufficient Credits. You have ${remaining} credits but require ${totalRows}.` 
                 });
-} 
+            } 
 
-            // Parse CSV for processing
             const addresses = parseCSV(csvData);
-if (addresses.length === 0) return res.status(400).json({ status: 'Error', message: 'No valid rows found in CSV.' });
-// Create Job Document
+            if (addresses.length === 0) return res.status(400).json({ status: 'Error', message: 'No valid rows found in CSV.' });
+            
             const newJob = {
-                // CRITICAL FIX: Ensure clientId is stored as a STRING to match API/index.js middleware
                 clientId: jwtPayload.clientId, 
                 filename,
                 totalRows: addresses.length,
                 processedCount: 0,
-               
-  status: 'Queued', 
+                status: 'Queued', 
                 submittedAt: new Date(),
                 startTime: null,
                 completedTime: null,
-                outputData: null,
+                outputDataReady: null, // New field for Ready CSV
+                outputDataManual: null, // New field for Manual CSV
+                countReady: 0,
+                countManual: 0,
                 error: null,
-            
-}; 
+            }; 
             const insertResult = await jobsCollection.insertOne(newJob);
             const jobId = insertResult.insertedId;
-// --- Execute Job Processor (Throttled Concurrent Block) --- 
-            // Pass the client object which has client._id (ObjectId)
+            
             runJobProcessor(db, jobId, client, addresses)
                 .catch(err => {
                     console.error(`Job ${jobId} FAILED with uncaught error:`, err);
-                    jobsCollection.updateOne({ _id: jobId }, { $set: { status: 'Failed', error: 'Internal processing error.' 
-} }); 
+                    jobsCollection.updateOne({ _id: jobId }, { $set: { status: 'Failed', error: 'Internal processing error.' } }); 
                 });
-// --- End Concurrent Block --- 
 
             return res.status(200).json({ status: 'Success', message: 'Job submitted and started.', jobId: jobId.toString() });
-} catch (e) { 
+        } catch (e) { 
             console.error('POST /api/bulk-jobs error:', e);
-return res.status(500).json({ status: 'Error', message: `Internal Server Error: ${e.message}` });
-} 
+            return res.status(500).json({ status: 'Error', message: `Internal Server Error: ${e.message}` });
+        } 
     }
 
     // --------------------------------------------------------
-    // PUT: CANCEL JOB (Requirement 4)
+    // PUT: CANCEL JOB (Requirement 4) (Unchanged)
     // --------------------------------------------------------
     if (req.method === 'PUT' && action === 'cancel') {
         const { jobId } = body ||
 {}; 
         if (!jobId) return res.status(400).json({ status: 'Error', message: 'jobId is required for cancellation.' });
-try { 
+        try { 
             const jobObjectId = new ObjectId(jobId);
-const result = await jobsCollection.updateOne( 
+            const result = await jobsCollection.updateOne( 
                 { _id: jobObjectId, clientId: jwtPayload.clientId, status: { $in: ['Queued', 'In Progress'] } },
                 { $set: { status: 'Cancelled', cancelledAt: new Date(), remarks: 'Cancelled by client.' } }
             );
-if (result.matchedCount === 0) { 
+            if (result.matchedCount === 0) { 
                 return res.status(404).json({ status: 'Error', message: 'Job not found, or it is already completed/failed.' });
-} 
+            } 
             
             return res.status(200).json({ status: 'Success', message: 'Job cancellation successful.' });
-} catch (e) { 
+        } catch (e) { 
             console.error('PUT /api/bulk-jobs?action=cancel error:', e);
-return res.status(500).json({ status: 'Error', message: `Cancellation failed: ${e.message}` });
+            return res.status(500).json({ status: 'Error', message: `Cancellation failed: ${e.message}` });
         }
     }
     
     // --------------------------------------------------------
-    // GET: DOWNLOAD CSV (FIXED)
+    // GET: DOWNLOAD CSV (UPDATED to support 'type')
     // --------------------------------------------------------
     if (req.method === 'GET' && action === 'download') {
         const jobId = url.searchParams.get('jobId');
-const filenameHint = url.searchParams.get('filename'); 
+        const type = url.searchParams.get('type'); // New parameter: 'ready' or 'manual'
         
-        if (!jobId) return res.status(400).json({ status: 'Error', message: 'jobId is required for download.' });
-try { 
-            const job = await jobsCollection.findOne({ _id: new ObjectId(jobId), clientId: jwtPayload.clientId, status: 'Completed' });
-if (!job) { 
-                return res.status(404).json({ status: 'Error', message: 'Job not found or not completed.' });
-} 
-            if (!job.outputData) {
-                return res.status(404).json({ status: 'Error', message: 'No output data found.' });
-} 
+        if (!jobId || !type) return res.status(400).json({ status: 'Error', message: 'jobId and type (ready/manual) are required for download.' });
+        
+        const outputField = (type === 'ready') ? 'outputDataReady' : 'outputDataManual';
+        const filenameSuffix = (type === 'ready') ? '_ready_for_ship' : '_manual_check';
+
+        try { 
+            const job = await jobsCollection.findOne({ 
+                _id: new ObjectId(jobId), 
+                clientId: jwtPayload.clientId, 
+                status: 'Completed',
+                [outputField]: { $ne: null } // Ensure the specific file exists
+            }, { projection: { [outputField]: 1, filename: 1 } });
+
+            if (!job) { 
+                return res.status(404).json({ status: 'Error', message: 'Job not found, not completed, or file not generated.' });
+            } 
             
-            const finalFilename = filenameHint ||
-`${job.filename.replace('.csv', '')}_verified.csv`; 
+            const fileData = job[outputField];
+            if (!fileData) {
+                return res.status(404).json({ status: 'Error', message: 'No data found for the requested file type.' });
+            }
+            
+            const finalFilename = `${job.filename.replace('.csv', '')}${filenameSuffix}.csv`; 
             
             res.setHeader('Content-Type', 'text/csv; charset=utf-8');
             res.setHeader('Content-Disposition', `attachment; filename="${finalFilename}"`);
             
-            return res.status(200).send(job.outputData);
-} catch (e) { 
-            console.error('GET /api/bulk-jobs?action=download error:', e);
-return res.status(500).json({ status: 'Error', message: `Download failed: ${e.message}` });
+            return res.status(200).send(fileData);
+        } catch (e) { 
+            console.error(`GET /api/bulk-jobs?action=download&type=${type} error:`, e);
+            return res.status(500).json({ status: 'Error', message: `Download failed: ${e.message}` });
         }
     }
 

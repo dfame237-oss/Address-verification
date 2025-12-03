@@ -39,6 +39,17 @@ const MAJOR_CITY_CONFLICTS = {
     'kolkata': 'West Bengal',
 };
 
+// --- NEW: Keywords used to flag results for Manual Check ---
+const CRITICAL_KEYWORDS = [
+    'CRITICAL_ALERT: Wrong PIN', 
+    'CRITICAL_ALERT: AI-provided PIN',
+    'CRITICAL_ALERT: PIN not found',
+    'CRITICAL_ALERT: Raw address lacks',
+    'CRITICAL_ALERT: Major location conflict',
+    'CRITICAL_ALERT: Formatted address is short',
+    'CRITICAL_ALERT: JSON parse failed' // Include parser failure as critical
+];
+
 
 // --- India Post helper ---
 async function getIndiaPostData(pin) {
@@ -94,11 +105,13 @@ async function getGeminiResponse(prompt) {
     try {
         const response = await fetch(apiUrl, options); 
         const result = await response.json();
-        if (response.status !== 200) {
-            const errorMessage = `Gemini API Error: ${result.error?.message ||
-            "Unknown error."}`;
-            console.error(errorMessage); 
-            return { text: null, error: errorMessage }; 
+        
+        // Check for non-200 status or specific Gemini error messages
+        if (response.status !== 200 || result.error) {
+            const rawErrorMessage = result.error?.message || "Unknown API error.";
+            console.error(`Gemini API Error (Raw): ${rawErrorMessage}`); 
+            // Return a generic error message for the client
+            return { text: null, error: "External AI verification service failure. Please try again." }; 
         }
 
         if (result.candidates && result.candidates.length > 0) {
@@ -106,12 +119,14 @@ async function getGeminiResponse(prompt) {
         } else {
             const errorMessage = "Gemini API Error: No candidates found in response."; 
             console.error(errorMessage);
-            return { text: null, error: errorMessage }; 
+            // Return a generic error message for the client
+            return { text: null, error: "External AI verification service failed to return data." }; 
         }
     } catch (e) {
         const errorMessage = `Error during Gemini API call: ${e.message}`;
         console.error(errorMessage); 
-        return { text: null, error: errorMessage }; 
+        // Return a generic error message for the client
+        return { text: null, error: "A network issue occurred while contacting the AI service." }; 
     }
 }
 
@@ -200,8 +215,10 @@ async function runVerificationLogic(address, customerName) {
     const geminiResult = await processAddress(originalAddress, postalData);
 
     if (geminiResult.error || !geminiResult.text) {
+        // FIX: Mask the specific Gemini error in the remarks returned to the client
+        const maskedRemarks = "Verification failed due to a problem with the external AI service.";
         return {
-            status: "Error", remarks: `Fatal Gemini Error: ${geminiResult.error || 'API failed.'}`, addressQuality: "Very Bad", 
+            status: "Error", remarks: maskedRemarks, addressQuality: "Very Bad", 
             customerCleanName: cleanedName, addressLine1: originalAddress, landmark: "", state: "", district: "", pin: initialPin, success: false
         };
     }
@@ -212,11 +229,12 @@ async function runVerificationLogic(address, customerName) {
         const jsonText = geminiResult.text.replace(/```json|```/g, '').trim(); 
         parsedData = JSON.parse(jsonText);
     } catch (e) {
-        remarks.push(`CRITICAL_ALERT: JSON parse failed. Raw Gemini Output: ${String(geminiResult.text || '').substring(0, 50)}...`);
+        const maskedRemarks = `CRITICAL_ALERT: AI response format error. Verification service returned unreadable data.`;
+        remarks.push(maskedRemarks);
         parsedData = {
             FormattedAddress: originalAddress.replace(meaninglessRegex, '').trim(),
             Landmark: '', State: '', DIST: '', PIN: initialPin, 
-            AddressQuality: 'Very Bad', Remaining: remarks[0],
+            AddressQuality: 'Very Bad', Remaining: maskedRemarks, // Use masked message here
         };
     }
 
@@ -253,7 +271,7 @@ async function runVerificationLogic(address, customerName) {
     const hasStreetOrColony = parsedData.Street || parsedData.Colony || parsedData.Locality;
 
     if (!hasHouseOrFlat && !hasStreetOrColony) {
-        remarks.push(`CRITICAL_ALERT: Raw address lacks street/house/colony details. Quality penalized.`);
+        remarks.push(`CRITICAL_ALERT: Raw address lacks street/house/colony details.`);
         if (currentQuality === 'Very Good' || currentQuality === 'Good' || currentQuality === 'Medium') {
             parsedData.AddressQuality = 'Bad';
         }
@@ -268,7 +286,7 @@ async function runVerificationLogic(address, customerName) {
 
             // Use the safely defined variable here
             if (originalAddressLower.includes(city) && !verifiedStateLower.includes(expectedStateLower)) { 
-                remarks.push(`CRITICAL_ALERT: Major location conflict found. Raw address mentioned '${city.toUpperCase()}' but verified state is '${verifiedState}'. Quality severely penalized.`);
+                remarks.push(`CRITICAL_ALERT: Major location conflict found. Raw address mentioned '${city.toUpperCase()}' but verified state is '${verifiedState}'.`);
                 
                 parsedData.AddressQuality = 'Very Bad';
                 currentQuality = parsedData.AddressQuality; // Update for next check
@@ -436,8 +454,9 @@ module.exports = async (req, res) => {
                  try {
                      await clients.updateOne({ _id: client._id }, { $inc: { remainingCredits: 1 } });
                  } catch (refundErr) {
-                     console.error('Failed to refund reserved credit after Gemini error:', refundErr);
+                     console.error('Failed to refund reserved credit after AI/system error:', refundErr);
                  }
+                 // Return the masked error message from runVerificationLogic
                  return res.status(500).json({ status: finalResponse.status, message: finalResponse.remarks });
             }
 
@@ -461,10 +480,11 @@ module.exports = async (req, res) => {
     return res.status(405).json({ status: 'Error', error: 'Method Not Allowed' }); 
 };
 
-// Export core functions for use in bulk-jobs.js
+// Export core functions for use in bulk-jobs.js AND for classification logic
 module.exports.getIndiaPostData = getIndiaPostData;
 module.exports.getGeminiResponse = getGeminiResponse;
 module.exports.processAddress = processAddress;
 module.exports.extractPin = extractPin;
 module.exports.meaninglessRegex = meaninglessRegex;
 module.exports.runVerificationLogic = runVerificationLogic;
+module.exports.CRITICAL_KEYWORDS = CRITICAL_KEYWORDS; // NEW EXPORT

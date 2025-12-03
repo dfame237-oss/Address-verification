@@ -1060,7 +1060,7 @@ You can force-logout that session and continue here, or cancel to remain logged 
             document.getElementById('plan-name').textContent = (planDetails.planName || 'Not Set').split('_')[0];
             document.getElementById('validity-end').textContent = planDetails.validityEnd ? new Date(planDetails.validityEnd).toLocaleDateString() : 'N/A';
             const statusEl = document.getElementById('account-status');
-            const isActive = (typeof planDetails.isActive === 'undefined') ? true : planDetails.isActive; 
+            const isActive = (typeof pd.isActive === 'undefined') ? true : pd.isActive; 
             statusEl.textContent = isActive ?
 'Enabled' : 'Disabled';
             statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
@@ -1407,10 +1407,16 @@ job.status === 'Queued' ? `
                </button>`
                             : isCompleted ?
 `
-                                <button class="py-1 px-3 bg-tf-primary text-white text-sm rounded hover:bg-[#4d2e97] transition" onclick="handleAuthenticatedDownload('${job._id}', '${job.filename.replace(/'/g, "\\'").replace(/"/g, '')}')">
-                                    <i class="fas fa-download"></i> Download
-                 
-               </button>`
+                                <span class="text-xs text-gray-500 mr-2">Ready: ${job.countReady} | Manual: ${job.countManual}</span>
+                                <button class="py-1 px-3 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition" onclick="handleAuthenticatedDownload('${job._id}', '${job.filename.replace(/'/g, "\\'").replace(/"/g, '')}', 'ready')">
+                                    <i class="fas fa-file-download"></i> Ready (${job.countReady})
+                                </button>
+                                <button class="py-1 px-3 bg-orange-500 text-white text-sm rounded hover:bg-orange-600 transition" onclick="handleAuthenticatedDownload('${job._id}', '${job.filename.replace(/'/g, "\\'").replace(/"/g, '')}', 'manual')">
+                                    <i class="fas fa-clipboard-list"></i> Manual (${job.countManual})
+                                </button>
+                                
+                                
+               `
                             : isFailed ? `<span class="text-red-500 text-sm italic">${job.error || 'Check server logs.'}</span>`
                             : job.status === 'Cancelled' ? `<span class="text-red-500 text-sm italic">Cancelled by user.</span>`
          
@@ -1509,9 +1515,11 @@ job.status === 'Queued' ? `
         }
 
         // --- AUTHENTICATED DOWNLOAD FUNCTION ---
-        async function handleAuthenticatedDownload(jobId, jobFilename) {
-            const safeFilename = `${jobFilename.replace('.csv', '').replace(/'/g, '').replace(/"/g, '')}_verified.csv`;
-            const downloadUrl = `${API_BULK_JOBS}?action=download&jobId=${jobId}`; 
+        async function handleAuthenticatedDownload(jobId, jobFilename, fileType) {
+            const suffix = (fileType === 'ready' ? '_ready_for_ship' : '_manual_check');
+            const safeFilename = `${jobFilename.replace('.csv', '').replace(/'/g, '').replace(/"/g, '')}${suffix}.csv`;
+            // FIX: Pass the fileType parameter to the API
+            const downloadUrl = `${API_BULK_JOBS}?action=download&jobId=${jobId}&type=${fileType}`; 
 
             try {
               

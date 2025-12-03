@@ -225,7 +225,7 @@ async function handleBulkVerification() {
         fileInput.disabled = false;
     };
 
-    reader.readAsText(file); // 
+    reader.readAsText(file); //
 }
 
 // --- NEW CANCELLATION LOGIC: Step 1 - Opens the Modal ---
