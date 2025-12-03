@@ -3,7 +3,7 @@
 
 // NOTE: Assumes API_BULK_JOBS, authFetch, checkPlanValidity, showTab, API_CLIENT are global from client-dashboard.html
 
-const API_BULK_JOBS = '/api/bulk-jobs'; //
+const API_BULK_JOBS = '/api/bulk-jobs'; 
 // FIX: Removed redundant declaration of API_CLIENT (it is declared in client-dashboard.html)
 
 // --- UI helpers (existing) ---
@@ -372,19 +372,15 @@ async function fetchTodayCompletedKpi() {
     }
 }
 
-// --- FIX 2: Fetch and display DEDUCTION HISTORY (NEW FUNCTION) ---
+// --- FIX 2: Fetch and display DEDUCTION HISTORY (UPDATED for permanent log) ---
 async function fetchDeductionHistory() {
     const container = document.getElementById('deduction-history-list');
     if (!container) return;
 
-    // Remove old placeholder message if it exists
-    const oldPlaceholder = container.querySelector('.bg-yellow-50');
-    if (oldPlaceholder) oldPlaceholder.remove();
-
     container.innerHTML = '<p class="text-center text-gray-500 mt-5">Loading history...</p>';
 
     try {
-        // Use the globally declared API_CLIENT
+        // FIX: Query the new permanent deduction API endpoint
         const resp = await authFetch(`${API_CLIENT}?action=deduction-history`, { method: 'GET' });
         const result = await resp.json();
 
@@ -394,7 +390,7 @@ async function fetchDeductionHistory() {
         }
 
         if (result.history.length === 0) {
-            container.innerHTML = '<p class="text-center text-gray-500 mt-5">No completed verification jobs found.</p>';
+            container.innerHTML = '<p class="text-center text-gray-500 mt-5">No credit deduction records found.</p>';
             return;
         }
 
@@ -404,31 +400,29 @@ async function fetchDeductionHistory() {
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job ID</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Filename</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rows (Usage)</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completion Time</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date/Time</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deducted</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance Before</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance After</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
         `;
 
-        result.history.forEach(job => {
-            const statusClass = job.status === 'Completed' ? 'text-green-600' : 'text-red-600';
-            const statusText = job.status === 'Completed' ? 'Deducted' : job.status;
-            // Assumes totalRows in a Completed job is the final deduction amount (successfulVerifications)
-            const usageText = job.status === 'Completed' ? job.totalRows.toLocaleString() : '—'; 
-            // Use the globally available formatISTTime function
-            const completionTime = window.formatISTTime(job.completedTime || job.submittedAt);
+        result.history.forEach(deduction => {
+            const amount = deduction.amountDeducted.toLocaleString();
+            const date = window.formatISTTime(deduction.timestamp);
+            const initial = deduction.initialBalance === 'Unlimited' ? 'Unlimited' : (deduction.initialBalance ?? 0).toLocaleString();
+            const final = deduction.finalBalance === 'Unlimited' ? 'Unlimited' : (deduction.finalBalance ?? 0).toLocaleString();
             
             html += `
                 <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${job._id.substring(0, 8)}...</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${job.filename}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${statusClass}">${statusText}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-tf-secondary">${usageText}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${completionTime}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${deduction.type || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">-${amount}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${initial}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-tf-secondary">${final}</td>
                 </tr>
             `;
         });

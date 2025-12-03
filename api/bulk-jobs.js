@@ -133,7 +133,6 @@ async function cleanupOldJobs(jobsCollection) {
 try { 
         // *** CRITICAL CHANGE: Only delete jobs where status is 'Completed' 
         // AND completedTime is less than 24 hours ago.
-        // The original logic was retained for correctness in bulk-jobs API. ***
         const result = await jobsCollection.deleteMany({
             status: 'Completed',
             completedTime: { $lt: twentyFourHoursAgo }
@@ -153,8 +152,10 @@ return 0;
 // --------------------------------------------------------
 async function runJobProcessor(db, jobId, client, addresses) {
     const jobsCollection = db.collection('bulkJobs');
-const clientsCollection = db.collection('clients'); 
-    
+    const clientsCollection = db.collection('clients'); 
+    // NEW: Permanent log collection
+    const deductionsCollection = db.collection('creditDeductions');
+
     console.log(`Starting throttled job ${jobId.toString()} for client ${client.username}`);
 await jobsCollection.updateOne( 
         { _id: jobId }, 
@@ -232,10 +233,16 @@ if (jobStatusCheck.status === 'Cancelled') {
         return;
 } 
     
-    // --- CRITICAL STEP: FINAL CREDIT DEDUCTION ---
+    // --- CRITICAL STEP 1: FINAL CREDIT DEDUCTION ---
     if (!isUnlimited && successfulVerifications > 0) {
         const deductionAmount = successfulVerifications;
+        let initialBalance = null;
+
 try { 
+            // Fetch client just before the deduction to record initial balance
+            const clientBeforeDeduction = await clientsCollection.findOne({ _id: client._id });
+            initialBalance = clientBeforeDeduction.remainingCredits;
+
             const deductionResult = await clientsCollection.updateOne(
                 // Use ObjectId for client ID lookup AND check if credits are not 'Unlimited'
                 { _id: client._id, remainingCredits: { $ne: 'Unlimited' } },
@@ -245,9 +252,25 @@ if (deductionResult.matchedCount === 0) {
                 console.warn(`Client ${client.username} used credits but deduction failed.`);
 } else { 
                 console.log(`Successfully deducted ${deductionAmount} credits for job ${jobId}.`);
+
+                // --- CRITICAL STEP 2: LOG DEDUCTION PERMANENTLY ---
+                const clientAfterDeduction = await clientsCollection.findOne({ _id: client._id });
+                const finalBalance = clientAfterDeduction.remainingCredits;
+
+                await deductionsCollection.insertOne({
+                    clientId: clientAfterDeduction._id.toString(),
+                    jobId: jobId.toString(),
+                    filename: client.filename, // Store filename here for history display
+                    timestamp: new Date(),
+                    type: 'Bulk Verification',
+                    amountDeducted: deductionAmount,
+                    initialBalance: initialBalance,
+                    finalBalance: finalBalance
+                });
+                // --- END PERMANENT LOGGING ---
 } 
         } catch (e) {
-            console.error(`Failed to perform final bulk credit deduction for job ${jobId}:`, e);
+            console.error(`Failed to perform final bulk credit deduction/logging for job ${jobId}:`, e);
 } 
     }
     
@@ -356,6 +379,7 @@ if (addresses.length === 0) return res.status(400).json({ status: 'Error', messa
             const insertResult = await jobsCollection.insertOne(newJob);
             const jobId = insertResult.insertedId;
 // --- Execute Job Processor (Throttled Concurrent Block) --- 
+            // Pass the client object which has client._id (ObjectId)
             runJobProcessor(db, jobId, client, addresses)
                 .catch(err => {
                     console.error(`Job ${jobId} FAILED with uncaught error:`, err);

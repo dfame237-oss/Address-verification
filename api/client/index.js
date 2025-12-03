@@ -48,6 +48,7 @@ module.exports = async (req, res) => { //
   }
   const clients = db.collection('clients'); //
   const bulkJobs = db.collection('bulkJobs'); // Reference for job status
+  const creditDeductions = db.collection('creditDeductions'); // NEW: Permanent deduction log
 
   try {
     // -------------------------
@@ -259,34 +260,25 @@ module.exports = async (req, res) => { //
     }
 
     // -------------------------
-    // ACTION: deduction-history (GET) - FIXED
-    // Fetches completed bulk verification jobs for deduction history display
+    // ACTION: deduction-history (GET) - FIXED to use permanent log
+    // Fetches permanent deduction records
     // -------------------------
     if (action === 'deduction-history') {
         if (req.method !== 'GET') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
         try {
-            // Fetch jobs that are completed, failed, or cancelled for a full history,
-            // ordered by submission time.
-            const historyJobs = await bulkJobs.find({ 
+            // FIX: Query the new permanent creditDeductions collection
+            const deductionHistory = await creditDeductions.find({ 
                 clientId: clientIdString, 
-                status: { $in: ['Completed', 'Failed', 'Cancelled'] } 
             })
-            .sort({ completedTime: -1, submittedAt: -1 }) // Sort by newest completed jobs first, then submitted time
-            .limit(100) // Limit to a manageable number for 
-            .project({ // Select only necessary fields to reduce payload size
-              _id: 1,
-              filename: 1,
-              submittedAt: 1,
-              completedTime: 1,
-              totalRows: 1,
-              status: 1,
-              error: 1,
-            })
+            .sort({ timestamp: -1 }) // Sort by newest deduction first
+            .limit(200) // Increase limit for comprehensive history
             .toArray();
-            return sendJSON(res, 200, { status: 'Success', history: historyJobs });
+            
+            // Pass the permanent history to the client
+            return sendJSON(res, 200, { status: 'Success', history: deductionHistory });
         } catch (e) {
             console.error('Error fetching deduction history:', e);
-            return sendJSON(res, 500, { status: 'Error', message: 'Internal server error fetching history.' });
+            return sendJSON(res, 500, { status: 'Error', message: 'Internal server error fetching permanent history.' });
         }
     }
 
