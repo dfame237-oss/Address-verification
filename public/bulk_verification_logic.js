@@ -4,7 +4,7 @@
 // NOTE: Assumes API_BULK_JOBS, authFetch, checkPlanValidity, showTab, API_CLIENT are global from client-dashboard.html
 
 const API_BULK_JOBS = '/api/bulk-jobs'; //
-const API_CLIENT = '/api/client/index'; // Assumed global but safer to define here for new call
+// FIX: Removed redundant declaration of API_CLIENT (it is declared in client-dashboard.html)
 
 // --- UI helpers (existing) ---
 function updateStatusMessage(message, isError = false) {
@@ -109,7 +109,8 @@ function generatePreview(data) {
 // --- NEW: Check Active Job Count (Replaces function in HTML) ---
 async function getActiveJobCount() {
     try {
-        const resp = await authFetch('/api/client/index?action=active-jobs', { method: 'GET' });
+        // Use the globally declared API_CLIENT
+        const resp = await authFetch(`${API_CLIENT}?action=active-jobs`, { method: 'GET' });
         const json = await resp.json();
         if (json.status === 'Success' && typeof json.activeJobsCount === 'number') {
             return json.activeJobsCount;
@@ -383,7 +384,7 @@ async function fetchDeductionHistory() {
     container.innerHTML = '<p class="text-center text-gray-500 mt-5">Loading history...</p>';
 
     try {
-        // Call the new API endpoint
+        // Use the globally declared API_CLIENT
         const resp = await authFetch(`${API_CLIENT}?action=deduction-history`, { method: 'GET' });
         const result = await resp.json();
 
