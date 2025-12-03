@@ -19,21 +19,21 @@
                         colors: {
                             // 💜 Smart Locator/Teleforce Style Palette
             
-                [cite_start]'tf-primary': '#5F3DC4', // [cite: 293]
-                            [cite_start]'tf-secondary': '#A437C1', // [cite: 293]
+                'tf-primary': '#5F3DC4', 
+                            'tf-secondary': '#A437C1', 
                         
                             
-[cite_start]'tf-dark': '#0F172A', // [cite: 294]
+'tf-dark': '#0F172A',
                             'tf-text': '#E2E8F0',
                             'tf-card': '#1E293B',
                             'tf-light': '#F1F5F9',
             
             
-                            [cite_start]'whatsapp-green': '#25D366', // [cite: 295]
+                            'whatsapp-green': '#25D366',
                             'alert-dark': '#EF4444',
                             'alert-light': '#FEE2E2',
  
-                           [cite_start]'success-light': '#D1FAE5', // [cite: 296]
+                           'success-light': '#D1FAE5',
                         
                             'tf-primary-light': '#EFE7FF',
                    
@@ -43,59 +43,59 @@
                         },
 
                 
-    [cite_start]} // [cite: 298]
+    }
                 }
             }
         };
-[cite_start]// [cite: 299] </script>
+    </script>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
         /* Base styles adapted for new brand colors */
         body { font-family: 'Inter', sans-serif;
-background-color: #F1F5F9; [cite_start]} // [cite: 300]
+background-color: #F1F5F9; }
         /* FIX 1: Added text-gray-800 to ensure default text color is dark on white background */
         .dashboard-container { max-width: 1200px;
-margin: 30px auto; padding: 35px; [cite_start]// [cite: 301]
+margin: 30px auto; padding: 35px;
             background-color: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1);
-// Removed padding-bottom to allow dashboard-layout to manage content height
-            padding-bottom: 0; [cite_start]// [cite: 303]
+            /* Removed padding-bottom to allow dashboard-layout to manage content height */
+            padding-bottom: 0;
         }
         .header { display: flex;
             justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 20px;
-border-bottom: 1px solid #E5E7EB; [cite_start]// [cite: 304]
+border-bottom: 1px solid #E5E7EB;
         }
         .header h1 { font-weight: 700;
-[cite_start]} // [cite: 305]
+        }
         
         /* --- NEW SIDEBAR LAYOUT STYLES --- */
         .main-dashboard-layout {
             display: grid;
-grid-template-columns: 240px 1fr; [cite_start]/* Fixed sidebar width (240px) and main content */ // [cite: 306]
-            gap: 30px; [cite_start]// [cite: 307]
+grid-template-columns: 240px 1fr; /* Fixed sidebar width (240px) and main content */
+            gap: 30px;
         }
         
         .sidebar-nav {
             background-color: #F8FAFC;
-// Light background for the sidebar
-            padding: 15px 0; [cite_start]// [cite: 309]
-border-radius: 12px; [cite_start]// [cite: 309]
+            /* Light background for the sidebar */
+            padding: 15px 0;
+border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
             height: fit-content; /* Ensure sidebar doesn't stretch too much */
         }
         
         .sidebar-header {
             padding: 0 20px 10px;
-border-bottom: 1px solid #E2E8F0; [cite_start]// [cite: 310]
+border-bottom: 1px solid #E2E8F0;
         }
 
         .sidebar-section-title {
             font-size: 0.8rem;
-font-weight: 700; [cite_start]// [cite: 311]
+font-weight: 700;
             color: #64748B; /* Gray text */
             margin-top: 20px;
-margin-bottom: 5px; [cite_start]// [cite: 312]
+margin-bottom: 5px;
             padding: 0 20px;
             text-transform: uppercase;
         }
@@ -103,210 +103,210 @@ margin-bottom: 5px; [cite_start]// [cite: 312]
         /* Overrides for vertical tab buttons */
         .nav-tabs {
             display: block;
-border-bottom: none; [cite_start]// [cite: 313]
+border-bottom: none;
             margin-bottom: 0;
         }
 
         .nav-tabs .tab-button {
             display: flex;
-align-items: center; [cite_start]// [cite: 314]
+align-items: center;
             width: 100%;
             text-align: left;
             padding: 12px 20px;
             border-bottom: none;
             border-left: 4px solid transparent;
             color: #1E293B;
-// Darker default text
-            font-weight: 500; [cite_start]// [cite: 316]
-transition: background-color 0.2s, border-left 0.2s; [cite_start]// [cite: 316]
+            /* Darker default text */
+            font-weight: 500;
+transition: background-color 0.2s, border-left 0.2s;
         }
 
         .nav-tabs .tab-button:hover {
             background-color: #EFE7FF;
-// tf-primary-light on hover
+            /* tf-primary-light on hover */
         }
 
         /* Active tab style */
         .nav-tabs .tab-button.active {
             color: #5F3DC4;
-// tf-primary text
+            /* tf-primary text */
             background-color: #EFE7FF;
-// tf-primary-light background
+            /* tf-primary-light background */
             border-left: 4px solid #5F3DC4;
-// Highlight bar
+            /* Highlight bar */
             font-weight: 700;
-[cite_start]} // [cite: 321]
+        }
         
         .tab-content-area {
             padding-bottom: 35px;
-// Re-apply padding removed from dashboard-container
+            /* Re-apply padding removed from dashboard-container */
         }
 
         /* --- END SIDEBAR LAYOUT STYLES --- */
 
         .tab-content { padding: 15px 0;
-animation: fadeIn 0.5s; [cite_start]// [cite: 323]
+animation: fadeIn 0.5s;
         }
         @keyframes fadeIn { from { opacity: 0;
-} to { opacity: 1; [cite_start]// [cite: 324]
+        } to { opacity: 1;
         } }
         /* Controls are updated to align better */
         .controls { display: flex;
-gap: 15px; align-items: center; [cite_start]// [cite: 325]
+gap: 15px; align-items: center;
         }
         .icon-btn { cursor: pointer; position: relative; font-size: 24px;
-color: #64748B; [cite_start]// [cite: 326]
+color: #64748B;
         transition: color 0.2s; }
         .icon-btn:hover { color: #5F3DC4;
-[cite_start]} // [cite: 327]
+        }
         .badge { position: absolute; top: -5px; right: -5px; background-color: #EF4444; color: white;
-border-radius: 50%; padding: 3px 7px; font-size: 11px; [cite_start]} // [cite: 328]
+border-radius: 50%; padding: 3px 7px; font-size: 11px; }
         .info-grid { display: grid;
-grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; [cite_start]} // [cite: 329]
+grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
         .profile-card, .plan-card { background-color: #F8FAFC;
-padding: 30px; border-radius: 12px; border: 1px solid #E2E8F0; transition: box-shadow 0.2s; [cite_start]// [cite: 331]
-}
+padding: 30px; border-radius: 12px; border: 1px solid #E2E8F0; transition: box-shadow 0.2s;
+        }
         .profile-card:hover, .plan-card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-[cite_start]} // [cite: 332]
+        }
         .info-item strong { color: #1E293B; margin-right: 8px; font-weight: 600;
-[cite_start]} // [cite: 333]
+        }
         .plan-status-badge { display: inline-block; padding: 6px 14px; border-radius: 9999px; font-size: 0.85rem;
-font-weight: 700; [cite_start]} // [cite: 334]
+font-weight: 700; }
         .status-enabled { background-color: #EFE7FF; color: #5F3DC4;
-[cite_start]} // [cite: 335]
+        }
         .status-disabled { background-color: #FEE2E2; color: #DC2626;
-[cite_start]} // [cite: 336]
+        }
         
         /* ENTERPRISE IMPROVEMENT & FIX 3 (Invisible Button Fix): Force colors via CSS */
         .action-btn { 
             background-color: #5F3DC4 !important;
-color: white; padding: 10px 20px; border-radius: 8px; [cite_start]// [cite: 337]
-            border: none; cursor: pointer; font-weight: 600; transition: background-color 0.2s, transform 0.1s, opacity 0.2s; [cite_start]// [cite: 338]
-}
+color: white; padding: 10px 20px; border-radius: 8px;
+            border: none; cursor: pointer; font-weight: 600; transition: background-color 0.2s, transform 0.1s, opacity 0.2s;
+        }
         .action-btn:hover { background-color: #4d2e97; 
             transform: translateY(-1px);
-[cite_start]} // [cite: 339]
+        }
         .action-btn.logout { 
             background-color: #DC2626 !important;
-[cite_start]} // [cite: 340]
+        }
         .action-btn.logout:hover { background-color: #B91C1C;
-[cite_start]} // [cite: 341]
+        }
         
         /* Definitive Fix for Bulk Upload/Renewal/WhatsApp Buttons visibility */
         .bg-tf-primary {
             background-color: #5F3DC4 !important;
-[cite_start]} // [cite: 342]
+        }
         .bg-tf-secondary {
             background-color: #A437C1 !important;
-[cite_start]} // [cite: 343]
+        }
         .bg-whatsapp-green {
             background-color: #25D366 !important;
-[cite_start]} // [cite: 344]
+        }
         /* END FIX */
 
         .progress-fill { background-color: #A437C1;
-height: 0.75rem; border-radius: 9999px; transition: all 0.5s ease-in-out; [cite_start]// [cite: 345]
+height: 0.75rem; border-radius: 9999px; transition: all 0.5s ease-in-out;
         }
         /* Inbox Button Styles - integrated into header, not fixed */
         #inbox-header-btn { 
             position: relative;
-background: #F8FAFC; [cite_start]// [cite: 346]
+background: #F8FAFC; 
             border: 1px solid #CBD5E1; 
             border-radius: 50%; 
             padding: 10px 14px; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.08);
             cursor: pointer;
-transition: background-color 0.2s; [cite_start]// [cite: 347]
+transition: background-color 0.2s;
         }
         #inbox-header-btn:hover { background-color: #EFE7FF;
-[cite_start]} // [cite: 348]
+        }
         #inbox-header-btn .fas { font-size: 20px; color: #5F3DC4;
-[cite_start]} // [cite: 349]
+        }
         #inbox-header-btn .badge { top: -5px; right: -5px; padding: 2px 6px;
-[cite_start]} // [cite: 350]
+        }
         /* Style for the new Drag & Drop zone */
         #drop-zone {
             border: 2px dashed #CBD5E1;
-border-radius: 12px; [cite_start]// [cite: 351]
+border-radius: 12px;
             padding: 30px;
             text-align: center;
             cursor: pointer;
-            transition: border-color 0.3s, background-color 0.3s; [cite_start]// [cite: 352]
-}
+            transition: border-color 0.3s, background-color 0.3s;
+        }
         #drop-zone.dragover {
             border-color: #A437C1;
-background-color: #EEF2FF; [cite_start]// [cite: 353]
+background-color: #EEF2FF;
         }
         /* Style for the CSV preview table */
         #preview-table th {
             background-color: #E2E8F0;
-padding: 8px 12px; [cite_start]// [cite: 354]
+padding: 8px 12px;
             border-bottom: 1px solid #CBD5E1;
             font-weight: 600;
         }
         #preview-table td {
             padding: 8px 12px;
-border-bottom: 1px solid #F1F5F9; [cite_start]// [cite: 355]
+border-bottom: 1px solid #F1F5F9;
         }
 
 
         .modal { position: fixed; top: 0; left: 0;
-width: 100%; height: 100%; [cite_start]// [cite: 356]
-            background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; display: none; [cite_start]// [cite: 357]
-}
+width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; display: none;
+        }
         #full-message-detail { border: 1px solid #D1D5DB; background-color: #F8FAFC; border-radius: 8px; padding: 15px;
-line-height: 1.6; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); [cite_start]} // [cite: 358]
+line-height: 1.6; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
         #full-message-detail h3 { color: #A437C1;
-padding-bottom: 8px; border-bottom: 1px dashed #E2E8F0; margin-bottom: 8px; [cite_start]} // [cite: 359]
+padding-bottom: 8px; border-bottom: 1px dashed #E2E8F0; margin-bottom: 8px; }
         
         /* Mobile responsive layout overrides */
         @media (max-width: 768px) {
             .dashboard-container { padding: 15px;
-margin: 10px auto; width: 95%; box-shadow: none; [cite_start]} // [cite: 360]
+margin: 10px auto; width: 95%; box-shadow: none; }
             .header { flex-direction: column;
-align-items: flex-start; margin-bottom: 20px; [cite_start]} // [cite: 361]
+align-items: flex-start; margin-bottom: 20px; }
             .header h1 { font-size: 1.75rem;
-margin-bottom: 10px; [cite_start]} // [cite: 362]
+margin-bottom: 10px; }
             .controls { width: 100%; justify-content: flex-end;
-[cite_start]} // [cite: 363]
+            }
             .main-dashboard-layout {
                 grid-template-columns: 1fr;
-// Sidebar collapses to full width
-                gap: 15px; [cite_start]// [cite: 365]
+                /* Sidebar collapses to full width */
+                gap: 15px;
             }
             .sidebar-nav {
                 /* On mobile, use a clean scrollable list if not hidden by JS toggle */
                 border-radius: 8px;
-padding: 10px 0; [cite_start]// [cite: 366]
+padding: 10px 0;
             }
             /* Hide tab button details/icons on mobile if space is tight */
             .nav-tabs .tab-button i {
                 display: none;
-[cite_start]} // [cite: 367]
+            }
             .tab-content-area {
                 padding-bottom: 20px;
-[cite_start]} // [cite: 368]
+            }
         }
         /* Force-logout modal small style */
         #force-logout-modal .modal-content { max-width: 520px;
-padding: 24px; border-radius: 12px; background: #fff; [cite_start]} // [cite: 369]
+padding: 24px; border-radius: 12px; background: #fff; }
         #force-logout-modal .modal-actions { margin-top: 16px; display:flex;
-gap:10px; justify-content:flex-end; [cite_start]} // [cite: 370]
+gap:10px; justify-content:flex-end; }
          /* Message card styles */
         .msg-card { 
             display: flex;
-// Added flex to align icon and text
-            align-items: center; [cite_start]// [cite: 372]
-// Center items vertically
+            /* Added flex to align icon and text */
+            align-items: center;
+            /* Center items vertically */
             border: 1px solid #E5E7EB;
-padding: 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: background-color 0.2s, box-shadow 0.2s; [cite_start]// [cite: 374]
-}
-        .msg-card:hover { background-color: #F0F4FF; box-shadow: 0 2px 8px rgba(95, 61, 196, 0.1); [cite_start]// [cite: 375]
-}
-        .msg-card.unread { background-color: #EEF2FF; border-left: 4px solid #5F3DC4; font-weight: 600; [cite_start]// [cite: 376]
-}
-        .msg-card .msg-icon { font-size: 1.2rem; color: #5F3DC4; margin-right: 15px; flex-shrink: 0; [cite_start]// [cite: 377]
-}
+padding: 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: background-color 0.2s, box-shadow 0.2s;
+        }
+        .msg-card:hover { background-color: #F0F4FF; box-shadow: 0 2px 8px rgba(95, 61, 196, 0.1);
+        }
+        .msg-card.unread { background-color: #EEF2FF; border-left: 4px solid #5F3DC4; font-weight: 600;
+        }
+        .msg-card .msg-icon { font-size: 1.2rem; color: #5F3DC4; margin-right: 15px; flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
@@ -547,7 +547,6 @@ flex items-center"><i class="fas fa-chart-area mr-2"></i> Last 30 Days Usage Tre
 style="display:none;" role="tabpanel" aria-labelledby="deduction-history-btn">
                     <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center"><i class="fas fa-file-invoice-dollar mr-2"></i> Verification Deduction History</h2>
                     <p class="text-gray-600 mb-4">This section displays a detailed history of your bulk verification jobs and credit usage.</p>
-                    
                     <div id="deduction-history-list" class="space-y-4">
                         <p class="text-gray-500 text-center">Loading history...</p>
                     </div>
@@ -725,86 +724,86 @@ You can force-logout that session and continue here, or cancel to remain logged 
     <script src="bulk_verification_logic.js"></script>
     <script>
         // --- CONSTANTS AND STATE ---
-        const API_BASE = '/api'; [cite_start]// [cite: 451]
-        const API_CLIENT = `${API_BASE}/client/index`; [cite_start]// [cite: 451]
-        const API_ENDPOINT = "/api/verify-single-address"; [cite_start]// used by single verification // [cite: 452]
+        const API_BASE = '/api';
+        const API_CLIENT = `${API_BASE}/client/index`;
+        const API_ENDPOINT = "/api/verify-single-address"; // used by single verification
         // NOTE: API_BULK_JOBS is defined in bulk_verification_logic.js.
-        const LOGIN_PAGE = "client-login.html"; [cite_start]// [cite: 452]
+        const LOGIN_PAGE = "client-login.html";
         
         let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
-        const CLIENT_NAME = localStorage.getItem('clientName') || planDetails.clientName || planDetails.username || 'Client'; [cite_start]// [cite: 453]
-        let isPlanValid = true; [cite_start]// [cite: 453]
+        const CLIENT_NAME = localStorage.getItem('clientName') || planDetails.clientName || planDetails.username || 'Client';
+        let isPlanValid = true;
         
         const initialToken = localStorage.getItem('clientToken');
         if (!initialToken) {
-            window.location.href = LOGIN_PAGE; [cite_start]// [cite: 454]
+            window.location.href = LOGIN_PAGE;
         }
 
         let activeJobPollInterval; 
-        let globalJobsData = { inProgress: [], completed: [] }; [cite_start]// [cite: 455]
-[cite_start]// Storage for filtering (NEW) // [cite: 455]
+        let globalJobsData = { inProgress: [], completed: [] };
+        // Storage for filtering (NEW)
 
         // --- HEARTBEAT FUNCTION (PUBLIC) ---
         async function sendHeartbeat() {
-            const currentToken = localStorage.getItem('clientToken'); [cite_start]// [cite: 456]
-            if (!currentToken) return; [cite_start]// [cite: 456]
+            const currentToken = localStorage.getItem('clientToken');
+            if (!currentToken) return;
             try {
-                await authFetch(`${API_CLIENT}?action=activity`, { method: 'POST' }); [cite_start]// [cite: 457]
+                await authFetch(`${API_CLIENT}?action=activity`, { method: 'POST' });
             } catch (e) {
-                console.warn("Heartbeat failed, session may be invalid:", e); [cite_start]// [cite: 458]
+                console.warn("Heartbeat failed, session may be invalid:", e);
             }
         }
 
         // --- LOGOUT (PUBLIC) ---
         async function logout() {
-            const tokenToNotify = localStorage.getItem('clientToken'); [cite_start]// [cite: 459]
+            const tokenToNotify = localStorage.getItem('clientToken');
             try {
                 if (tokenToNotify) {
                     await fetch(`${API_CLIENT}?action=logout`, {
                         method: 'POST',
                         headers: {
          
-                   [cite_start]'Authorization': `Bearer ${tokenToNotify}`, // [cite: 460]
+                   'Authorization': `Bearer ${tokenToNotify}`,
                             'Content-Type': 'application/json'
                         }
-                    }); [cite_start]// [cite: 461]
+                    });
                 }
             } catch (error) {
-                console.warn("Could not notify server of logout:", error); [cite_start]// [cite: 462]
+                console.warn("Could not notify server of logout:", error);
             } finally {
-                localStorage.clear(); [cite_start]// [cite: 463]
-                window.location.href = LOGIN_PAGE; [cite_start]// [cite: 463]
+                localStorage.clear();
+                window.location.href = LOGIN_PAGE;
             }
         }
 
         // --- authFetch (PUBLIC) ---
         async function authFetch(url, options = {}) {
-            const currentToken = localStorage.getItem('clientToken'); [cite_start]// [cite: 464]
+            const currentToken = localStorage.getItem('clientToken');
             if (!currentToken) {
-                localStorage.clear(); [cite_start]// [cite: 465]
-                window.location.href = LOGIN_PAGE; [cite_start]// [cite: 465]
-                throw new Error("Session expired. Please log in again."); [cite_start]// [cite: 466]
+                localStorage.clear();
+                window.location.href = LOGIN_PAGE;
+                throw new Error("Session expired. Please log in again.");
             }
 
-            const defaultHeaders = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` }; [cite_start]// [cite: 467]
-            const resp = await fetch(url, { ...options, headers: { ...defaultHeaders, ...(options.headers || {}) } }); [cite_start]// [cite: 468]
+            const defaultHeaders = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` };
+            const resp = await fetch(url, { ...options, headers: { ...defaultHeaders, ...(options.headers || {}) } });
             if (resp.status === 401 || resp.status === 403) {
-                let debugText = ''; [cite_start]// [cite: 468]
-                try { debugText = await resp.text(); [cite_start]} catch(e){} // [cite: 469]
-                console.warn('authFetch got 401/403 from', url, 'server message:', debugText); [cite_start]// [cite: 470]
-                localStorage.clear(); [cite_start]// [cite: 470]
+                let debugText = '';
+                try { debugText = await resp.text(); } catch(e){}
+                console.warn('authFetch got 401/403 from', url, 'server message:', debugText);
+                localStorage.clear();
                 window.location.href = LOGIN_PAGE;
-                throw new Error("Session expired. Please log in again."); [cite_start]// [cite: 471]
+                throw new Error("Session expired. Please log in again.");
             }
-            return resp; [cite_start]// [cite: 472]
+            return resp;
         }
 
         // --- Profile fetch (PUBLIC) ---
         async function fetchProfileData() {
-            const currentToken = localStorage.getItem('clientToken'); [cite_start]// [cite: 473]
+            const currentToken = localStorage.getItem('clientToken');
             if (!currentToken) {
-                localStorage.clear(); [cite_start]// [cite: 474]
-                window.location.href = LOGIN_PAGE; [cite_start]// [cite: 474]
+                localStorage.clear();
+                window.location.href = LOGIN_PAGE;
                 return;
             }
 
@@ -816,62 +815,65 @@ You can force-logout that session and continue here, or cancel to remain logged 
   });
 
                 if (resp.status === 401) {
-                    let bodyText = ''; [cite_start]// [cite: 476]
-                    try { bodyText = await resp.text(); [cite_start]} catch(e){} // [cite: 476]
-                    console.warn('Profile fetch 401:', bodyText); [cite_start]// [cite: 477]
+                    let bodyText = '';
+                    try { bodyText = await resp.text(); } catch(e){}
+                    console.warn('Profile fetch 401:', bodyText);
                     if (bodyText && bodyText.toLowerCase().includes('session invalidated')) {
-                        openForceModal(); [cite_start]// [cite: 478]
+                        openForceModal();
                         return;
                     }
 
-                    updateUIFromLocalPlan(); [cite_start]// [cite: 479]
-                    return;
-                }
-
-                const json = await resp.json().catch(()=>null); [cite_start]// [cite: 480]
-                if (!resp.ok || !json || json.status === 'Error') {
-                    console.warn('Profile fetch failed', resp.status, json); [cite_start]// [cite: 481]
                     updateUIFromLocalPlan();
                     return;
                 }
 
-                const pd = json.planDetails || [cite_start]// [cite: 482]
+                const json = await resp.json().catch(()=>null);
+                if (!resp.ok || !json || json.status === 'Error') {
+                    console.warn('Profile fetch failed', resp.status, json);
+                    updateUIFromLocalPlan();
+                    return;
+                }
+
+                const pd = json.planDetails ||
 {};
                 // Correct assignment of data to planDetails
-                planDetails = Object.assign({}, planDetails, pd); [cite_start]// [cite: 483]
-                localStorage.setItem('planDetails', JSON.stringify(planDetails)); [cite_start]// [cite: 483]
+                planDetails = Object.assign({}, planDetails, pd);
+                localStorage.setItem('planDetails', JSON.stringify(planDetails));
 
                 const rc = pd.remainingCredits;
-                const creditsDisplay = rc === 'Unlimited' ? [cite_start]// [cite: 484]
+                const creditsDisplay = rc === 'Unlimited' ?
 'Unlimited' : (rc == null ? 'N/A' : Number(rc).toLocaleString());
                 
                 document.getElementById('plan-remaining-credits').textContent = creditsDisplay;
-                document.getElementById('client-name-display').textContent = pd.clientName || CLIENT_NAME; [cite_start]// [cite: 485]
-                document.getElementById('profile-username').textContent = pd.username || pd.clientName || CLIENT_NAME; [cite_start]// [cite: 485]
+                document.getElementById('client-name-display').textContent = pd.clientName || CLIENT_NAME;
+                document.getElementById('profile-username').textContent = pd.username || pd.clientName || CLIENT_NAME;
                 document.getElementById('profile-email').textContent = pd.email || '—';
-                document.getElementById('profile-mobile').textContent = pd.mobile || '—'; [cite_start]// [cite: 486]
-                document.getElementById('profile-bulk-code').textContent = pd.bulkAccessCode || 'N/A'; [cite_start]// [cite: 486]
+                document.getElementById('profile-mobile').textContent = pd.mobile || '—';
+                document.getElementById('profile-bulk-code').textContent = pd.bulkAccessCode || 'N/A';
                 document.getElementById('plan-name').textContent = (pd.planName || 'Not Set').split('_')[0];
-                document.getElementById('validity-end').textContent = pd.validityEnd ? new Date(pd.validityEnd).toLocaleDateString() : 'N/A'; [cite_start]// [cite: 487]
+                document.getElementById('validity-end').textContent = pd.validityEnd ? new Date(pd.validityEnd).toLocaleDateString() : 'N/A';
                 const statusEl = document.getElementById('account-status');
                 const isActive = (typeof pd.isActive === 'undefined') ? true : pd.isActive;
-                statusEl.textContent = isActive ? [cite_start]// [cite: 488]
+                statusEl.textContent = isActive ?
 'Enabled' : 'Disabled';
-                statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`; [cite_start]// [cite: 488]
+                statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
 
-                checkPlanValidity(); [cite_start]// [cite: 489]
-// --- Enterprise Improvement: Load Chart Data (Placeholder API) ---
+                checkPlanValidity();
+                // --- Enterprise Improvement: Load Chart Data (Placeholder API) ---
                 if (document.getElementById('usage-chart')) {
                     fetchUsageData().then(data => {
                         if (data) {
                          
-   [cite_start]renderUsageChart(data); // [cite: 490]
+   renderUsageChart(data);
                         }
-                    }).catch(console.error); [cite_start]// [cite: 491]
+                    }).catch(console.error);
                 }
+                
+                // FIX 1: Initial call to load KPI data after profile fetch
+                if (typeof loadKpiData === 'function') loadKpiData();
 
             } catch (e) {
-                console.error('fetchProfileData error:', e); [cite_start]// [cite: 492]
+                console.error('fetchProfileData error:', e);
                 updateUIFromLocalPlan();
             }
         }
@@ -879,39 +881,39 @@ You can force-logout that session and continue here, or cancel to remain logged 
         // --- Enterprise Improvement: Usage Data (Placeholder) ---
         async function fetchUsageData() {
             // NOTE: This assumes a new API endpoint exists to fetch credits used per day for the last 30 days.
-[cite_start]// Example Placeholder Data structure (replace with actual authFetch to your backend): // [cite: 493]
+            // Example Placeholder Data structure (replace with actual authFetch to your backend):
             const placeholderData = {
                 labels: ['Day 1', 'Day 6', 'Day 12', 'Day 18', 'Day 24', 'Day 30'],
                 creditsUsed: [250, 150, 400, 300, 500, 200]
             };
-// Simulate API latency
-            await new Promise(resolve => setTimeout(resolve, 300)); [cite_start]// [cite: 495]
-            return placeholderData; [cite_start]// [cite: 495]
+            // Simulate API latency
+            await new Promise(resolve => setTimeout(resolve, 300));
+            return placeholderData;
         }
 
-        let usageChartInstance = null; [cite_start]// [cite: 496]
+        let usageChartInstance = null;
         function renderUsageChart(data) {
             if (usageChartInstance) {
-                usageChartInstance.destroy(); [cite_start]// [cite: 497]
+                usageChartInstance.destroy();
             }
-            const ctx = document.getElementById('usage-chart').getContext('2d'); [cite_start]// [cite: 498]
+            const ctx = document.getElementById('usage-chart').getContext('2d');
             usageChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: data.labels,
                     datasets: [{
                     
-    [cite_start]label: 'Credits Used', // [cite: 499]
+    label: 'Credits Used',
                         data: data.creditsUsed,
                         borderColor: '#A437C1',
                         backgroundColor: 'rgba(164, 55, 193, 0.1)',
                 
-        [cite_start]tension: 0.3, // [cite: 500]
+        tension: 0.3,
                         fill: true,
                         pointRadius: 4,
                         pointBackgroundColor: '#5F3DC4'
                 
-    [cite_start]}] // [cite: 501]
+    }]
                 },
                 options: {
                     responsive: true,
@@ -922,86 +924,86 @@ You can force-logout that session and continue here, or cancel to remain logged 
                             beginAtZero: true,
                             title: {
                  
-               [cite_start]display: true, // [cite: 503]
+               display: true,
                                 text: 'Credits'
                             }
                        
- [cite_start]} // [cite: 504]
+ }
                     },
                     plugins: {
                         legend: {
                             display: false
     
-                    [cite_start]}, // [cite: 505]
+                    },
                         tooltip: {
                             mode: 'index',
                           
-  [cite_start]intersect: false, // [cite: 506]
+  intersect: false,
                         }
                     }
                 }
-            }); [cite_start]// [cite: 507]
+            });
         }
 
 
         // --- Update UI from Local Plan (PUBLIC) ---
         function updateUIFromLocalPlan() {
-            const rc = planDetails.remainingCredits ?? [cite_start]// [cite: 507, 508]
+            const rc = planDetails.remainingCredits ??
 'N/A';
             const creditsDisplay = rc === 'Unlimited' ? 'Unlimited' : (rc === 'N/A' ? 'N/A' : Number(rc).toLocaleString());
             document.getElementById('plan-remaining-credits').textContent = creditsDisplay;
-            document.getElementById('client-name-display').textContent = CLIENT_NAME; [cite_start]// [cite: 509]
+            document.getElementById('client-name-display').textContent = CLIENT_NAME;
             document.getElementById('profile-username').textContent = planDetails.username || CLIENT_NAME;
             document.getElementById('profile-email').textContent = planDetails.email || '—';
-            document.getElementById('profile-mobile').textContent = planDetails.mobile || '—'; [cite_start]// [cite: 510]
-            document.getElementById('profile-bulk-code').textContent = planDetails.bulkAccessCode || 'N/A'; [cite_start]// [cite: 510]
+            document.getElementById('profile-mobile').textContent = planDetails.mobile || '—';
+            document.getElementById('profile-bulk-code').textContent = planDetails.bulkAccessCode || 'N/A';
             document.getElementById('plan-name').textContent = (planDetails.planName || 'Not Set').split('_')[0];
-            document.getElementById('validity-end').textContent = planDetails.validityEnd ? new Date(planDetails.validityEnd).toLocaleDateString() : 'N/A'; [cite_start]// [cite: 511]
+            document.getElementById('validity-end').textContent = planDetails.validityEnd ? new Date(planDetails.validityEnd).toLocaleDateString() : 'N/A';
             const statusEl = document.getElementById('account-status');
             const isActive = (typeof planDetails.isActive === 'undefined') ? true : planDetails.isActive; 
-            statusEl.textContent = isActive ? [cite_start]// [cite: 512]
+            statusEl.textContent = isActive ?
 'Enabled' : 'Disabled';
-            statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`; [cite_start]// [cite: 513]
+            statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
         }
 
         // --- CHECK PLAN VALIDITY (PUBLIC) ---
         function checkPlanValidity() {
-            const token = localStorage.getItem('clientToken'); [cite_start]// [cite: 513, 514]
-            const planDetailsString = localStorage.getItem('planDetails'); [cite_start]// [cite: 514]
+            const token = localStorage.getItem('clientToken');
+            const planDetailsString = localStorage.getItem('planDetails');
 
             if (!token) {
                 showAccessDenied("Please log in to access Bulk Address Verification.");
-                isPlanValid = false; [cite_start]// [cite: 515]
+                isPlanValid = false;
                 return false;
             }
 
             try {
-                const validityEnd = planDetails.validityEnd ? [cite_start]// [cite: 516]
+                const validityEnd = planDetails.validityEnd ?
 new Date(planDetails.validityEnd) : null;
-                const now = new Date(); [cite_start]// [cite: 516]
+                const now = new Date();
 
                 if (planDetails.isActive === false) {
-                    showAccessDenied("Your account has been **disabled** by the administrator. Please contact support."); [cite_start]// [cite: 517]
+                    showAccessDenied("Your account has been **disabled** by the administrator. Please contact support.");
                     isPlanValid = false;
                     return false;
                 }
 
                 if (validityEnd && validityEnd < now) {
-                    showAccessDenied(`Your bulk plan expired on **${validityEnd.toLocaleDateString()}**. Please contact support to renew.`); [cite_start]// [cite: 518]
+                    showAccessDenied(`Your bulk plan expired on **${validityEnd.toLocaleDateString()}**. Please contact support to renew.`);
                     isPlanValid = false;
                     return false;
                 }
 
                 // OK
-                document.getElementById('bulkContent').classList.remove('hidden'); [cite_start]// [cite: 519]
+                document.getElementById('bulkContent').classList.remove('hidden');
                 const progressContainer = document.querySelector('#bulk-verification .progress-container');
                 if (progressContainer) progressContainer.classList.remove('hidden'); 
-                isPlanValid = true; [cite_start]// [cite: 520]
+                isPlanValid = true;
                 return true;
             } catch (e) {
-                console.error("Error parsing plan details:", e); [cite_start]// [cite: 521]
+                console.error("Error parsing plan details:", e);
                 showAccessDenied("Client authentication data is corrupted. Please log in again.");
-                setTimeout(() => { localStorage.clear(); window.location.href = LOGIN_PAGE; }, 1500); [cite_start]// [cite: 522]
+                setTimeout(() => { localStorage.clear(); window.location.href = LOGIN_PAGE; }, 1500);
                 isPlanValid = false;
                 return false;
             }
@@ -1009,13 +1011,13 @@ new Date(planDetails.validityEnd) : null;
 
         // --- SHOW ACCESS DENIED (PUBLIC) ---
         function showAccessDenied(message) {
-            const bulkContent = document.getElementById('bulkContent'); [cite_start]// [cite: 523]
+            const bulkContent = document.getElementById('bulkContent');
             const progressContainer = document.querySelector('#bulk-verification .progress-container');
-            if (bulkContent) bulkContent.classList.add('hidden'); [cite_start]// [cite: 523]
-            if (progressContainer) progressContainer.classList.add('hidden'); [cite_start]// [cite: 523]
+            if (bulkContent) bulkContent.classList.add('hidden');
+            if (progressContainer) progressContainer.classList.add('hidden');
 
             const existing = document.querySelector('#bulk-verification .access-denied-block');
-            if (existing) return; [cite_start]// [cite: 524]
+            if (existing) return;
             const errorBlock = document.createElement('div');
             errorBlock.className = 'access-denied-block space-y-6 mt-6';
             errorBlock.innerHTML = `
@@ -1026,45 +1028,45 @@ new Date(planDetails.validityEnd) : null;
  </div>
                 <a href="tel:+919193246219" class="block w-full py-3 bg-tf-secondary text-white text-center font-bold rounded-lg hover:bg-[#86259d] transition">Call Support / Renew Plan</a>
                 <a href="https://wa.me/919193246219" target="_blank" class="block w-full py-3 bg-whatsapp-green text-white text-center font-bold rounded-lg hover:bg-green-600">🟢 WhatsApp Support</a>
-            `; [cite_start]// [cite: 525]
-            document.getElementById('bulk-verification').appendChild(errorBlock); [cite_start]// [cite: 526]
+            `;
+            document.getElementById('bulk-verification').appendChild(errorBlock);
         }
 
         // --- PASSWORD MODAL LOGIC (PUBLIC) ---
         function openPasswordModal() {
-            document.getElementById('password-modal').style.display = 'flex'; [cite_start]// [cite: 527]
+            document.getElementById('password-modal').style.display = 'flex';
             document.getElementById('password-update-form').reset();
             document.getElementById('password-update-status').textContent = '';
         }
 
         function closePasswordModal() {
-            document.getElementById('password-modal').style.display = 'none'; [cite_start]// [cite: 528]
+            document.getElementById('password-modal').style.display = 'none';
         }
         
         // --- FORCE-LOGOUT UI / helpers (PUBLIC) ---
         function openForceModal() {
-            document.getElementById('force-logout-modal').style.display = 'flex'; [cite_start]// [cite: 529]
+            document.getElementById('force-logout-modal').style.display = 'flex';
         }
         function closeForceModal() {
-            document.getElementById('force-logout-modal').style.display = 'none'; [cite_start]// [cite: 530]
+            document.getElementById('force-logout-modal').style.display = 'none';
         }
 
         function getTokenPayload() {
-            const token = localStorage.getItem('clientToken'); [cite_start]// [cite: 531]
-            if (!token) return null; [cite_start]// [cite: 531]
+            const token = localStorage.getItem('clientToken');
+            if (!token) return null;
             try {
-                const payload = JSON.parse(atob(token.split('.')[1])); [cite_start]// [cite: 532]
+                const payload = JSON.parse(atob(token.split('.')[1]));
                 return payload;
             } catch (e) {
-                return null; [cite_start]// [cite: 533]
+                return null;
             }
         }
 
         async function forceLogoutOtherDevice() {
-            const payload = getTokenPayload(); [cite_start]// [cite: 534]
-            const clientId = payload && payload.clientId ? payload.clientId : (planDetails.id || planDetails.clientId); [cite_start]// [cite: 535]
+            const payload = getTokenPayload();
+            const clientId = payload && payload.clientId ? payload.clientId : (planDetails.id || planDetails.clientId);
             if (!clientId) {
-                alert('Cannot determine clientId. Please log in again.'); [cite_start]// [cite: 536]
+                alert('Cannot determine clientId. Please log in again.');
                 closeForceModal();
                 localStorage.clear();
                 window.location.href = LOGIN_PAGE;
@@ -1077,20 +1079,20 @@ new Date(planDetails.validityEnd) : null;
                     headers: { 'Content-Type': 'application/json' },
                
      body: JSON.stringify({ clientId })
-                }); [cite_start]// [cite: 537]
-                const json = await resp.json().catch(()=>null); [cite_start]// [cite: 538]
+                });
+                const json = await resp.json().catch(()=>null);
                 if (resp.ok && json && json.status === 'Success') {
-                    closeForceModal(); [cite_start]// [cite: 539]
+                    closeForceModal();
                     localStorage.removeItem('clientToken');
                     alert('Other device logged out. Please log in again here.');
-                    window.location.href = LOGIN_PAGE; [cite_start]// [cite: 540]
+                    window.location.href = LOGIN_PAGE;
                 } else {
-                    console.warn('force-logout failed', resp.status, json); [cite_start]// [cite: 541]
+                    console.warn('force-logout failed', resp.status, json);
                     alert('Could not force logout other device. Contact support.');
                     closeForceModal();
                 }
             } catch (e) {
-                console.error('force-logout error', e); [cite_start]// [cite: 542]
+                console.error('force-logout error', e);
                 alert('Network error. Try again or contact support.');
                 closeForceModal();
             }
@@ -1099,32 +1101,32 @@ new Date(planDetails.validityEnd) : null;
         // --- INBOX FUNCTIONS (PUBLIC) ---
         async function loadInboxCounts() {
             try {
-                const response = await authFetch(`${API_BASE}/inbox/message`); [cite_start]// [cite: 543]
+                const response = await authFetch(`${API_BASE}/inbox/message`);
                 const result = await response.json();
                 if (result.status === "Success" && result.unreadCount > 0) {
-                    const badge = document.getElementById('inbox-badge'); [cite_start]// [cite: 544]
+                    const badge = document.getElementById('inbox-badge');
                     badge.textContent = result.unreadCount;
                     badge.style.display = 'block';
                 } else {
-                    document.getElementById('inbox-badge').style.display = 'none'; [cite_start]// [cite: 545]
+                    document.getElementById('inbox-badge').style.display = 'none';
                 }
             } catch (e) {
-                console.error("Failed to load client inbox counts:", e); [cite_start]// [cite: 546]
+                console.error("Failed to load client inbox counts:", e);
             }
         }
 
         async function loadClientInbox() {
-            const msgContainer = document.getElementById('client-inbox-list'); [cite_start]// [cite: 547]
+            const msgContainer = document.getElementById('client-inbox-list');
             const detailView = document.getElementById('full-message-detail');
             msgContainer.innerHTML = '<p class="text-center text-gray-500 mt-5">Loading messages...</p>';
-            detailView.style.display = 'none'; [cite_start]// [cite: 548]
+            detailView.style.display = 'none';
             try {
-                const response = await authFetch(`${API_BASE}/inbox/message`); [cite_start]// [cite: 549]
+                const response = await authFetch(`${API_BASE}/inbox/message`);
                 const result = await response.json();
                 if (result.status === "Success") {
-                    msgContainer.innerHTML = ''; [cite_start]// [cite: 550]
+                    msgContainer.innerHTML = '';
                     if (!result.messages || result.messages.length === 0) {
-                        msgContainer.innerHTML = '<p class="text-center text-gray-500 mt-5">No messages in your inbox.</p>'; [cite_start]// [cite: 551]
+                        msgContainer.innerHTML = '<p class="text-center text-gray-500 mt-5">No messages in your inbox.</p>';
                         return;
                     }
                     result.messages.forEach(msg => {
@@ -1132,13 +1134,13 @@ new Date(planDetails.validityEnd) : null;
                         const cardClass = isUnread ? 'unread' : '';
     
            
-             [cite_start]const icon = isUnread ? 'fa-envelope' : 'fa-envelope-open'; // [cite: 552]
+             const icon = isUnread ? 'fa-envelope' : 'fa-envelope-open';
                         const sender = msg.senderId === 'admin' ? 'Admin' : 'You';
     
                         // FIX: Use JSON.stringify for subject/body when passing to onclick to handle quotes/special characters
       
-                  const subjectSafe = JSON.stringify(msg.subject || '(No Subject)'); [cite_start]// [cite: 553]
-                        const bodySafe = JSON.stringify(msg.body || ''); [cite_start]// [cite: 553]
+                  const subjectSafe = JSON.stringify(msg.subject || '(No Subject)');
+                        const bodySafe = JSON.stringify(msg.body || '');
 
                         const messageHtml = `
                     
@@ -1146,77 +1148,77 @@ new Date(planDetails.validityEnd) : null;
                                 <i class="fas ${icon} msg-icon"></i>
                                 <div class="flex-grow">
                 
-                    <p class="text-md truncate">${msg.subject || [cite_start]// [cite: 555]
-[cite_start]'(No Subject)'}</p> // [cite: 556]
+                    <p class="text-md truncate">${msg.subject ||
+'(No Subject)'}</p>
                                     <small class="text-gray-500 block">From: ${sender} • ${new Date(msg.timestamp).toLocaleDateString()}</small>
                                 </div>
                          
    </div>
-                        `; [cite_start]// [cite: 557]
-                        msgContainer.insertAdjacentHTML('beforeend', messageHtml); [cite_start]// [cite: 558]
+                        `;
+                        msgContainer.insertAdjacentHTML('beforeend', messageHtml);
                     });
                 } else {
-                    msgContainer.innerHTML = `<p class="text-center text-red-500 mt-5">Failed to load inbox: ${result.message}</p>`; [cite_start]// [cite: 559]
+                    msgContainer.innerHTML = `<p class="text-center text-red-500 mt-5">Failed to load inbox: ${result.message}</p>`;
                 }
             } catch (error) {
-                msgContainer.innerHTML = `<p class="text-center text-red-500 mt-5">Network Error: ${error.message}</p>`; [cite_start]// [cite: 560]
+                msgContainer.innerHTML = `<p class="text-center text-red-500 mt-5">Network Error: ${error.message}</p>`;
             }
         }
 
         function toggleInbox() {
-            document.getElementById('inbox-modal').style.display = 'flex'; [cite_start]// [cite: 561]
+            document.getElementById('inbox-modal').style.display = 'flex';
             loadClientInbox();
         }
 
         function closeInbox() {
-            document.getElementById('inbox-modal').style.display = 'none'; [cite_start]// [cite: 562]
+            document.getElementById('inbox-modal').style.display = 'none';
             loadInboxCounts();
         }
 
         function viewClientMessage(messageId, subject, body, isUnread, timestamp) {
-            const detailView = document.getElementById('full-message-detail'); [cite_start]// [cite: 563]
-            document.getElementById('full-message-subject').textContent = subject; [cite_start]// [cite: 563]
+            const detailView = document.getElementById('full-message-detail');
+            document.getElementById('full-message-subject').textContent = subject;
             // FIX: Use innerText for body to avoid injection and respect whitespace
-            document.getElementById('full-message-body').innerText = body; [cite_start]// [cite: 564]
+            document.getElementById('full-message-body').innerText = body;
             document.getElementById('full-message-date').textContent = new Date(timestamp).toLocaleString();
             detailView.style.display = 'block';
             if (isUnread) {
-                authFetch(`${API_BASE}/inbox/message?messageId=${messageId}`, { method: 'PUT' }).catch(()=>{}); [cite_start]// [cite: 565]
+                authFetch(`${API_BASE}/inbox/message?messageId=${messageId}`, { method: 'PUT' }).catch(()=>{});
                 const card = document.getElementById(`msg-${messageId}`);
                 if (card) {
-                    card.classList.remove('unread'); [cite_start]// [cite: 566]
+                    card.classList.remove('unread');
                     const iconEl = card.querySelector('.msg-icon');
                     if (iconEl) iconEl.classList.replace('fa-envelope', 'fa-envelope-open');
                 }
-                setTimeout(loadInboxCounts, 500); [cite_start]// [cite: 567]
+                setTimeout(loadInboxCounts, 500);
             }
         }
 
         // --- TAB NAVIGATION (UPDATED and PUBLIC) ---
         function showTab(tabId, button) {
-            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none'); [cite_start]// [cite: 568]
+            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             document.getElementById(tabId).style.display = 'block';
             if (button) button.classList.add('active');
 
             // Stop polling when leaving job tabs (NEW)
             if (activeJobPollInterval) {
-                clearInterval(activeJobPollInterval); [cite_start]// [cite: 569]
-                activeJobPollInterval = null; [cite_start]// [cite: 569]
+                clearInterval(activeJobPollInterval);
+                activeJobPollInterval = null;
             }
             
             if (tabId === 'bulk-verification') {
-                checkPlanValidity(); [cite_start]// [cite: 570]
-                // FIX 1: Ensure KPI data is loaded on tab open
-                if (typeof fetchTodayCompletedKpi === 'function') fetchTodayCompletedKpi(); 
+                checkPlanValidity();
+                // FIX 1: Call function exposed by bulk_verification_logic.js to load KPI data
+                if (typeof fetchTodayCompletedKpi === 'function') fetchTodayCompletedKpi();
             } else if (tabId === 'profile-plan') {
-                fetchProfileData(); [cite_start]// [cite: 572]
-// Ensure fresh data on tab click
+                fetchProfileData();
+                // Ensure fresh data on tab click
             } else if (tabId === 'in-progress-jobs' || tabId === 'completed-jobs') {
                 // Requirements 2, 3, 5: Start polling for status when entering job tabs (NEW)
-                startJobPolling(); [cite_start]// [cite: 573]
+                startJobPolling();
             } else if (tabId === 'deduction-history') {
-                 // FIX 2: Load Deduction History when tab is active
+                 // FIX 2: Call function exposed by bulk_verification_logic.js to load deduction history
                  if (typeof fetchDeductionHistory === 'function') fetchDeductionHistory();
             }
         }
@@ -1224,55 +1226,55 @@ new Date(planDetails.validityEnd) : null;
         // --- JOB POLLING LOGIC (PUBLIC) ---
         // Enterprise Improvement: Filter search is integrated here
         function startJobPolling() {
-            if (activeJobPollInterval) clearInterval(activeJobPollInterval); [cite_start]// [cite: 574]
-            fetchAndUpdateJobStatus(); [cite_start]// Initial fetch // [cite: 574]
-            activeJobPollInterval = setInterval(fetchAndUpdateJobStatus, 5000); [cite_start]// [cite: 575]
-[cite_start]// Poll every 5 seconds // [cite: 575]
+            if (activeJobPollInterval) clearInterval(activeJobPollInterval);
+            fetchAndUpdateJobStatus(); // Initial fetch
+            activeJobPollInterval = setInterval(fetchAndUpdateJobStatus, 5000);
+            // Poll every 5 seconds
             
             // Add listeners for filtering (NEW)
-            document.getElementById('in-progress-search')?.addEventListener('input', filterJobsList); [cite_start]// [cite: 576]
-            document.getElementById('completed-search')?.addEventListener('input', filterJobsList); [cite_start]// [cite: 577]
+            document.getElementById('in-progress-search')?.addEventListener('input', filterJobsList);
+            document.getElementById('completed-search')?.addEventListener('input', filterJobsList);
         }
 
         // --- Enterprise Improvement: Job Filtering Logic ---
         function filterJobsList() {
-            const activeSearchTerm = document.getElementById('in-progress-search')?.value.toLowerCase() || [cite_start]// [cite: 577]
+            const activeSearchTerm = document.getElementById('in-progress-search')?.value.toLowerCase() ||
 '';
-            const completedSearchTerm = document.getElementById('completed-search')?.value.toLowerCase() || ''; [cite_start]// [cite: 577]
+            const completedSearchTerm = document.getElementById('completed-search')?.value.toLowerCase() || '';
             
             // Render In Progress list (filtered)
-            renderJobsList(globalJobsData.inProgress, 'in-progress-list', activeSearchTerm); [cite_start]// [cite: 578]
-// Render Completed list (filtered)
-            renderJobsList(globalJobsData.completed, 'completed-list', completedSearchTerm); [cite_start]// [cite: 579]
+            renderJobsList(globalJobsData.inProgress, 'in-progress-list', activeSearchTerm);
+            // Render Completed list (filtered)
+            renderJobsList(globalJobsData.completed, 'completed-list', completedSearchTerm);
         }
 
         // Reusable function to render job lists (NEW)
         function renderJobsList(jobs, containerId, searchTerm) {
-            const container = document.getElementById(containerId); [cite_start]// [cite: 580]
-            let filteredJobs = jobs; [cite_start]// [cite: 580]
+            const container = document.getElementById(containerId);
+            let filteredJobs = jobs;
 
             if (searchTerm) {
                 filteredJobs = jobs.filter(job => 
                     job.filename.toLowerCase().includes(searchTerm) || 
                     job._id.toLowerCase().includes(searchTerm)
-                ); [cite_start]// [cite: 581]
+                );
             }
             
-            let html = ''; [cite_start]// [cite: 582]
-            let activeCount = 0; [cite_start]// Only count active jobs for the active job counter // [cite: 582]
+            let html = '';
+            let activeCount = 0; // Only count active jobs for the active job counter
 
             for (const job of filteredJobs) {
-                const progress = job.totalRows > 0 ? [cite_start]// [cite: 583]
+                const progress = job.totalRows > 0 ?
 ((job.processedCount / job.totalRows) * 100).toFixed(0) : 0;
                 const isFailed = job.status === 'Failed';
-                const isCompleted = job.status === 'Completed'; [cite_start]// [cite: 584]
-// Show only 10 completed jobs unless filtering is active
-                if (containerId === 'completed-list' && !searchTerm && html.split('job-card').length > 10) continue; [cite_start]// [cite: 585]
-                const completionDisplay = isCompleted ? formatISTTime(job.completedTime) : new Date(job.submittedAt).toLocaleDateString(); [cite_start]// [cite: 585]
+                const isCompleted = job.status === 'Completed';
+                // Show only 10 completed jobs unless filtering is active
+                if (containerId === 'completed-list' && !searchTerm && html.split('job-card').length > 10) continue;
+                const completionDisplay = isCompleted ? formatISTTime(job.completedTime) : new Date(job.submittedAt).toLocaleDateString();
 
                 if (job.status === 'In Progress' || job.status === 'Queued') {
-                    activeCount++; [cite_start]// [cite: 586]
-// Count only for active list
+                    activeCount++;
+                    // Count only for active list
                 }
                 
                 const cardHtml = `
@@ -1286,105 +1288,104 @@ new Date(planDetails.validityEnd) : null;
                         <div class="text-sm text-gray-600 mb-2 space-y-1">
                             <p><strong>Status:</strong> <span class="font-bold text-${isCompleted ? 'green' : isFailed || job.status === 'Cancelled' ? 'red' : 'tf-secondary'}-600">${job.status}</span></p>
                    
-         ${job.status !== 'Cancelled' && job.status !== 'Failed' ? [cite_start]// [cite: 589]
-[cite_start]`<p><strong>Rows:</strong> ${job.processedCount} / ${job.totalRows}</p>` : ''} // [cite: 590]
+         ${job.status !== 'Cancelled' && job.status !== 'Failed' ?
+`<p><strong>Rows:</strong> ${job.processedCount} / ${job.totalRows}</p>` : ''}
                         </div>
-                        ${job.status === 'In Progress' ? [cite_start]// [cite: 591]
+                        ${job.status === 'In Progress' ?
 `
                         <div class="progress-bar w-full bg-gray-300 rounded-full h-2 mt-2">
                             <div class="progress-fill h-2 bg-tf-secondary rounded-full" style="width: ${progress}%;"></div>
                         </div>
             
-            [cite_start]` : ''} // [cite: 592]
+            ` : ''}
                         <div class="mt-3 flex gap-2 justify-end">
-                            ${job.status === 'In Progress' || [cite_start]// [cite: 593]
+                            ${job.status === 'In Progress' ||
 job.status === 'Queued' ? `
                                 <button class="py-1 px-3 bg-red-500 text-white text-sm rounded hover:bg-red-600" onclick="handleCancelJob('${job._id}')">
                                     <i class="fas fa-times"></i> Cancel
                  
-               [cite_start]</button>` // [cite: 594]
-                            : isCompleted ? [cite_start]// [cite: 595]
+               </button>` 
+                            : isCompleted ?
 `
                                 <button class="py-1 px-3 bg-tf-primary text-white text-sm rounded hover:bg-[#4d2e97] transition" onclick="handleAuthenticatedDownload('${job._id}', '${job.filename.replace(/'/g, "\\'").replace(/"/g, '')}')">
                                     <i class="fas fa-download"></i> Download
                  
-               [cite_start]</button>` // [cite: 596]
+               </button>`
                             : isFailed ? `<span class="text-red-500 text-sm italic">${job.error || 'Check server logs.'}</span>`
                             : job.status === 'Cancelled' ? `<span class="text-red-500 text-sm italic">Cancelled by user.</span>`
          
-                   [cite_start]: ''} // [cite: 597]
+                   : ''}
                         </div>
                     </div>
                 `;
                 
     
-            html += cardHtml; [cite_start]// [cite: 598]
+            html += cardHtml;
             }
 
-            container.innerHTML = html || `<p class="text-gray-500 text-center mt-5">No jobs found matching the filter.</p>`; [cite_start]// [cite: 599]
+            container.innerHTML = html || `<p class="text-gray-500 text-center mt-5">No jobs found matching the filter.</p>`;
             
             // Only update the active job counter if we are rendering the in-progress list without filtering.
-            [cite_start]if (containerId === 'in-progress-list' && !document.getElementById('in-progress-search')?.value) { // [cite: 599]
-                document.getElementById('active-job-count').textContent = activeCount; [cite_start]// [cite: 600]
-// Update bulk button state based on actual total active jobs (NEW)
-                const processBtn = document.getElementById('processButton'); [cite_start]// [cite: 601]
+            if (containerId === 'in-progress-list' && !document.getElementById('in-progress-search')?.value) {
+                document.getElementById('active-job-count').textContent = activeCount;
+                // Update bulk button state based on actual total active jobs (NEW)
+                const processBtn = document.getElementById('processButton');
                 const bulkTabBtn = document.getElementById('bulk-tab-btn');
-                const csvFileInput = document.getElementById('csvFileInput'); [cite_start]// [cite: 601]
+                const csvFileInput = document.getElementById('csvFileInput');
                 
                 if (activeCount >= 1) { 
-                    if (processBtn) processBtn.disabled = true; [cite_start]// [cite: 602]
+                    if (processBtn) processBtn.disabled = true;
                     if (bulkTabBtn) bulkTabBtn.style.borderBottom = '2px solid #EF4444';
-                    document.getElementById('max-jobs-message').style.display = 'block'; [cite_start]// [cite: 603]
+                    document.getElementById('max-jobs-message').style.display = 'block';
                 } else {
-                    if (processBtn && csvFileInput) processBtn.disabled = !csvFileInput.files.length; [cite_start]// [cite: 604]
+                    if (processBtn && csvFileInput) processBtn.disabled = !csvFileInput.files.length;
                     if (bulkTabBtn) bulkTabBtn.style.borderBottom = '2px solid #5F3DC4';
-                    document.getElementById('max-jobs-message').style.display = 'none'; [cite_start]// [cite: 605]
+                    document.getElementById('max-jobs-message').style.display = 'none';
                 }
             }
 
             // Update refresh timestamp (NEW)
-            document.getElementById(containerId.replace('-list', '-status-timestamp')).textContent = `Last refreshed: ${new Date().toLocaleTimeString()}`; [cite_start]// [cite: 606]
+            document.getElementById(containerId.replace('-list', '-status-timestamp')).textContent = `Last refreshed: ${new Date().toLocaleTimeString()}`;
         }
         
         async function fetchAndUpdateJobStatus() {
             try {
-                const resp = await authFetch(API_BULK_JOBS, { method: 'GET' }); [cite_start]// [cite: 607]
+                const resp = await authFetch(API_BULK_JOBS, { method: 'GET' });
                 const result = await resp.json();
 
                 if (result.status !== 'Success') {
-                    console.error('Failed to fetch job status:', result.message); [cite_start]// [cite: 608]
+                    console.error('Failed to fetch job status:', result.message);
                     return;
                 }
 
                 // Sort by submitted time descending
-                result.jobs.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)); [cite_start]// [cite: 609]
-                globalJobsData.inProgress = result.jobs.filter(j => j.status === 'Queued' || j.status === 'In Progress'); [cite_start]// [cite: 610]
-                globalJobsData.completed = result.jobs.filter(j => j.status === 'Completed' || j.status === 'Failed' || j.status === 'Cancelled'); [cite_start]// [cite: 611]
-// Re-render based on current filter state
-                filterJobsList(); [cite_start]// [cite: 612]
-// Update remaining credits UI (post-completion check)
-                const afterCreditsResp = await getRemainingCredits(); [cite_start]// [cite: 613]
+                result.jobs.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+                globalJobsData.inProgress = result.jobs.filter(j => j.status === 'Queued' || j.status === 'In Progress');
+                globalJobsData.completed = result.jobs.filter(j => j.status === 'Completed' || j.status === 'Failed' || j.status === 'Cancelled');
+                // Re-render based on current filter state
+                filterJobsList();
+                // Update remaining credits UI (post-completion check)
+                const afterCreditsResp = await getRemainingCredits();
                 if (afterCreditsResp.ok) {
-                    const rc = afterCreditsResp.remainingCredits; [cite_start]// [cite: 614]
+                    const rc = afterCreditsResp.remainingCredits;
                     const remEl = document.getElementById('plan-remaining-credits');
-                    if (remEl) remEl.textContent = rc === 'Unlimited' ? 'Unlimited' : Number(rc).toLocaleString(); [cite_start]// [cite: 615]
+                    if (remEl) remEl.textContent = rc === 'Unlimited' ? 'Unlimited' : Number(rc).toLocaleString();
                 }
                 
-                // FIX 1: Ensure KPI is updated after polling is complete
-                if (typeof loadKpiData === 'function') loadKpiData(); [cite_start]// [cite: 616]
+                // CRITICAL FIX: Ensure KPI is updated after polling is complete
+                if (typeof loadKpiData === 'function') loadKpiData();
             } catch (e) {
-                console.error('Job polling failed:', e); [cite_start]// [cite: 617]
-                document.getElementById('in-progress-list').innerHTML = '<p class="text-red-500 text-center mt-5">Failed to load status. Network error.</p>'; [cite_start]// [cite: 618]
+                console.error('Job polling failed:', e);
+                document.getElementById('in-progress-list').innerHTML = '<p class="text-red-500 text-center mt-5">Failed to load status. Network error.</p>';
             }
         }
         
         // --- Enterprise Improvement: KPI Data Logic (Updated) ---
-        // FIX 1: This function is now designed to run on tab load (via fetchTodayCompletedKpi) 
-        // AND after polling, ensuring the KPI remains updated.
+        // FIX 1: This function is used by the poller to update the Today's Completed KPI
         async function loadKpiData() {
             // Get today's completed rows from the global job data
-            const today = new Date(); [cite_start]// [cite: 619]
-            today.setHours(0, 0, 0, 0); [cite_start]// [cite: 619]
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
 
             let completedToday = 0;
             
@@ -1394,16 +1395,16 @@ job.status === 'Queued' ? `
                     const completedTime = job.completedTime || job.submittedAt;
                     if (completedTime) {
     
-                        [cite_start]const completedDate = new Date(completedTime); // [cite: 620]
+                        const completedDate = new Date(completedTime);
                         if (job.status === 'Completed' && completedDate >= today) {
                             completedToday += job.totalRows;
               
-                        [cite_start]} // [cite: 621]
+                        }
                     }
-                }); [cite_start]// [cite: 622]
+                });
             }
 
-            document.getElementById('today-completed-kpi').textContent = completedToday.toLocaleString(); [cite_start]// [cite: 623]
+            document.getElementById('today-completed-kpi').textContent = completedToday.toLocaleString();
         }
 
         // --- AUTHENTICATED DOWNLOAD FUNCTION ---
@@ -1416,30 +1417,30 @@ job.status === 'Queued' ? `
                 const resp = await authFetch(downloadUrl, { method: 'GET' });
 
     
-                [cite_start]const contentType = (resp.headers.get && resp.headers.get('content-type') || '').toLowerCase(); // [cite: 624]
+                const contentType = (resp.headers.get && resp.headers.get('content-type') || '').toLowerCase();
                 if (contentType.includes('application/json')) {
                     let json = null;
                     try { json = await resp.json(); 
 } catch (e) { /* ignore parse error */ }
      
-                    const msg = (json && (json.message || json.error)) ? (json.message || json.error) : 'Server returned JSON instead of CSV.'; [cite_start]// [cite: 625]
+                    const msg = (json && (json.message || json.error)) ? (json.message || json.error) : 'Server returned JSON instead of CSV.';
                     alert('Download failed: ' + msg);
                     return;
 }
 
                 if (!resp.ok) {
      
-                    const errorText = await resp.text(); [cite_start]// [cite: 626]
-                    [cite_start]try { // [cite: 627]
-                        const errorJson = JSON.parse(errorText); [cite_start]// [cite: 628]
-                        alert('Download failed: ' + (errorJson.message || errorJson.error || 'File unavailable.')); [cite_start]// [cite: 629]
+                    const errorText = await resp.text();
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        alert('Download failed: ' + (errorJson.message || errorJson.error || 'File unavailable.'));
                     } catch (e) {
-                        alert('Download failed. Please try again later.'); [cite_start]// [cite: 630]
+                        alert('Download failed. Please try again later.');
                     }
-                    return; [cite_start]// [cite: 631]
+                    return;
                 }
 
-                const blob = await resp.blob(); [cite_start]// [cite: 632]
+                const blob = await resp.blob();
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = window.URL.createObjectURL(blob);
@@ -1447,31 +1448,30 @@ job.status === 'Queued' ? `
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(a.href);
-                a.remove(); [cite_start]// [cite: 633]
+                a.remove();
             } catch (e) {
-                console.error("Authenticated Download Failed:", e); [cite_start]// [cite: 634]
+                console.error("Authenticated Download Failed:", e);
                 alert('Download failed due to a network or authentication error.');
             }
         }
         
         // Make core functions available globally for HTML onclick events
-        window.showTab = showTab; [cite_start]// [cite: 635]
-        window.logout = logout; [cite_start]// [cite: 635] 
+        window.showTab = showTab;
+        window.logout = logout; 
         window.openPasswordModal = openPasswordModal;
         window.closePasswordModal = closePasswordModal;
         window.closeForceModal = closeForceModal;
         window.forceLogoutOtherDevice = forceLogoutOtherDevice;
         window.toggleInbox = toggleInbox;
-        window.closeInbox = closeInbox; [cite_start]// [cite: 636]
+        window.closeInbox = closeInbox;
         window.viewClientMessage = viewClientMessage;
         window.handleAuthenticatedDownload = handleAuthenticatedDownload;
-        window.filterJobsList = filterJobsList; [cite_start]// [cite: 637]
-[cite_start]// Expose filter function (NEW) // [cite: 637]
-        window.loadKpiData = loadKpiData; [cite_start]// [cite: 638]
-// Expose KPI function (FIX 1)
-        // Note: fetchTodayCompletedKpi and fetchDeductionHistory are exposed via bulk_verification_logic.js
+        window.filterJobsList = filterJobsList;
+        // Expose filter function (NEW)
+        window.loadKpiData = loadKpiData;
+        // Expose KPI function (FIX 1)
         
-// --- PASSWORD UPDATE LISTENER (PUBLIC) ---
+        // --- PASSWORD UPDATE LISTENER (PUBLIC) ---
         document.getElementById('password-update-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const newPassword = document.getElementById('new-password').value;
@@ -1481,7 +1481,7 @@ job.status === 'Queued' ? `
             updateBtn = document.getElementById('updatePasswordBtn');
 
           
-            [cite_start]if (newPassword !== confirmPassword) { // [cite: 639]
+            if (newPassword !== confirmPassword) {
                 statusEl.textContent = 'Passwords do not match.';
                 statusEl.className = 'text-red-600 mt-3';
                 return;
@@ -1489,43 +1489,43 @@ job.status === 'Queued' ? `
             if (newPassword.length 
 < 6) {
           
-                statusEl.textContent = 'Password must be at least 6 characters.'; [cite_start]// [cite: 640]
+                statusEl.textContent = 'Password must be at least 6 characters.';
                 statusEl.className = 'text-red-600 mt-3';
                 return;
             }
 
             updateBtn.disabled = true;
-            updateBtn.textContent = 'Processing...'; [cite_start]// [cite: 641]
-            statusEl.textContent = 'Sending request to server...'; [cite_start]// [cite: 641]
-            statusEl.className = 'text-tf-primary mt-3'; [cite_start]// [cite: 642]
+            updateBtn.textContent = 'Processing...';
+            statusEl.textContent = 'Sending request to server...';
+            statusEl.className = 'text-tf-primary mt-3';
             try {
                 const resp = await authFetch(`${API_CLIENT}?action=update-password`, {
                     method: 'PUT',
                     body: JSON.stringify({ newPassword })
-                }); [cite_start]// [cite: 643]
+                });
                 const result = await resp.json();
 
                 if (resp.ok && result.status === 'Success') {
                     // CRITICAL FIX: Ensure string is on one line to prevent Unterminated string literal error
-                    statusEl.textContent = 'Password changed successfully! Redirecting to login...'; [cite_start]// [cite: 644] 
+                    statusEl.textContent = 'Password changed successfully! Redirecting to login...'; 
 
                     statusEl.className = 'text-green-600 mt-3';
                     setTimeout(logout, 1500); 
                 } else {
-                    statusEl.textContent = result.message || [cite_start]// [cite: 645]
+                    statusEl.textContent = result.message ||
 'Update failed.';
                     statusEl.className = 'text-red-600 mt-3';
                 }
             } catch (error) {
-                statusEl.textContent = 'Network error or session expired.'; [cite_start]// [cite: 646]
+                statusEl.textContent = 'Network error or session expired.';
                 statusEl.className = 'text-red-600 mt-3';
                 console.error('Password Update Error:', error);
             } finally {
                 updateBtn.disabled = false;
-                updateBtn.textContent = 'Update & Log Out'; [cite_start]// [cite: 647]
+                updateBtn.textContent = 'Update & Log Out';
             }
         });
-[cite_start]// --- INITIALIZATION --- // [cite: 648]
+        // --- INITIALIZATION ---
         window.onload = () => {
             // Try to fetch profile and then init bulk listeners (external)
             fetchProfileData().then(()=> {
@@ -1539,31 +1539,31 @@ job.status === 'Queued' ? `
                 console.error('Error during profile init:', e);
              
    if (typeof initBulkListeners === 'function') initBulkListeners();
-            }); [cite_start]// [cite: 651]
-            loadInboxCounts(); [cite_start]// [cite: 651]
+            });
+            loadInboxCounts();
 
             setInterval(sendHeartbeat, 60000);
             setInterval(loadInboxCounts, 60000);
             
             // Start in bulk tab
-            showTab('bulk-verification', document.getElementById('bulk-tab-btn')); [cite_start]// [cite: 652]
-/* --- SMALL SAFE FALLBACK (non-invasive) ---
+            showTab('bulk-verification', document.getElementById('bulk-tab-btn'));
+            /* --- SMALL SAFE FALLBACK (non-invasive) ---
             If the external bulk_verification_logic.js did not attach listeners
             (missing or errored), make sure the process button enables when a file
             is selected and disables otherwise.
             This does NOT change logic.
-            [cite_start]*/ // [cite: 653]
+            */
             try {
-                ensureProcessButtonFallback(); [cite_start]// [cite: 654]
+                ensureProcessButtonFallback();
             } catch (e) {
-                console.warn('Fallback init failed', e); [cite_start]// [cite: 655]
+                console.warn('Fallback init failed', e);
             }
         };
 
         // --- Time Formatting Helper (NEW) ---
         function formatISTTime(utcTimestamp) {
-            if (!utcTimestamp) return 'N/A'; [cite_start]// [cite: 656]
-            const date = new Date(utcTimestamp); [cite_start]// [cite: 656]
+            if (!utcTimestamp) return 'N/A';
+            const date = new Date(utcTimestamp);
             
             const options = {
                 year: 'numeric',
@@ -1572,20 +1572,20 @@ job.status === 'Queued' ? `
                 hour: '2-digit',
                 minute: '2-digit',
        
-         [cite_start]hour12: true, // [cite: 657]
+         hour12: true,
                 timeZone: 'Asia/Kolkata'
             };
-            return date.toLocaleDateString('en-IN', options); [cite_start]// [cite: 658]
+            return date.toLocaleDateString('en-IN', options);
         }
 
         // placeholder for getRemainingCredits used in polling (assumes it's defined elsewhere)
         async function getRemainingCredits() {
             try {
-                const resp = await authFetch(`${API_CLIENT}?action=remaining-credits`); [cite_start]// [cite: 659]
+                const resp = await authFetch(`${API_CLIENT}?action=remaining-credits`);
                 const json = await resp.json().catch(()=>null);
-                return json || { ok: false }; [cite_start]// [cite: 660]
+                return json || { ok: false };
             } catch (e) {
-                return { ok: false }; [cite_start]// [cite: 661]
+                return { ok: false };
             }
         }
 
@@ -1596,34 +1596,34 @@ job.status === 'Queued' ? `
             - b) whether there is currently an active job (uses active job count element)
          
    This is safe — it only manipulates the button UI state and does not change any process logic.
-            [cite_start]------------------------- */ // [cite: 663]
+            ------------------------- */
         function ensureProcessButtonFallback() {
-            const fileInput = document.getElementById('csvFileInput'); [cite_start]// [cite: 664]
+            const fileInput = document.getElementById('csvFileInput');
             const processBtn = document.getElementById('processButton');
             const activeJobCountEl = document.getElementById('active-job-count');
-            const MAX_ACTIVE = 1; [cite_start]// [cite: 665]
-[cite_start]// consistency with your logic // [cite: 665]
+            const MAX_ACTIVE = 1;
+            // consistency with your logic
 
-            if (!fileInput || !processBtn) return; [cite_start]// [cite: 666]
+            if (!fileInput || !processBtn) return;
             function updateButtonState() {
                 // read active job count (fallback to 0)
-                const active = Number(activeJobCountEl?.textContent || 0); [cite_start]// [cite: 667]
-// enable only if file selected AND no active jobs
-                const hasFile = fileInput.files && fileInput.files.length > 0; [cite_start]// [cite: 668]
+                const active = Number(activeJobCountEl?.textContent || 0);
+                // enable only if file selected AND no active jobs
+                const hasFile = fileInput.files && fileInput.files.length > 0;
                 processBtn.disabled = !(hasFile && active < MAX_ACTIVE);
             }
 
             // attach listener (safe, won't conflict if external script also uses this input)
-            fileInput.addEventListener('change', updateButtonState, { passive: true }); [cite_start]// [cite: 669]
-// also observe changes to active job count (in case polling updates it later)
-            const observerTarget = activeJobCountEl; [cite_start]// [cite: 670]
+            fileInput.addEventListener('change', updateButtonState, { passive: true });
+            // also observe changes to active job count (in case polling updates it later)
+            const observerTarget = activeJobCountEl;
             if (observerTarget) {
-                const mo = new MutationObserver(updateButtonState); [cite_start]// [cite: 671]
+                const mo = new MutationObserver(updateButtonState);
                 mo.observe(observerTarget, { childList: true, subtree: true, characterData: true });
             }
 
             // initial sync (in case file was preselected)
-            updateButtonState(); [cite_start]// [cite: 672]
+            updateButtonState();
         }
     </script>
 </body>
