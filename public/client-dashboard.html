@@ -1237,14 +1237,13 @@ new Date(planDetails.validityEnd) : null;
              const icon = isUnread ? 'fa-envelope' : 'fa-envelope-open';
                         const sender = msg.senderId === 'admin' ? 'Admin' : 'You';
     
-                        // FIX: Use JSON.stringify for subject/body when passing to onclick to handle quotes/special characters
-      
-                  const subjectSafe = JSON.stringify(msg.subject || '(No Subject)');
-                        const bodySafe = JSON.stringify(msg.body || '');
+                        // FIX: Escape single quotes in subject and body before embedding in onclick attribute
+                        const subjectEscaped = (msg.subject || '(No Subject)').replace(/'/g, "\\'"); 
+                        const bodyEscaped = (msg.body || '').replace(/'/g, "\\'"); 
 
                         const messageHtml = `
                     
-        <div id="msg-${msg._id}" class="msg-card ${cardClass}" onclick="viewClientMessage('${msg._id}', ${subjectSafe}, ${bodySafe}, ${isUnread}, '${msg.timestamp}')">
+        <div id="msg-${msg._id}" class="msg-card ${cardClass}" onclick="viewClientMessage('${msg._id}', '${subjectEscaped}', '${bodyEscaped}', ${isUnread}, '${msg.timestamp}')">
                                 <i class="fas ${icon} msg-icon"></i>
                                 <div class="flex-grow">
                 
