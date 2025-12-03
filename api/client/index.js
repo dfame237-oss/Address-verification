@@ -143,6 +143,10 @@ module.exports = async (req, res) => {
     // FIX END
     
     if (!client) return sendJSON(res, 401, { status: 'Error', message: 'Invalid session' });
+    
+    // IMPROVEMENT: Check account status immediately
+    if (client.isActive === false) return sendJSON(res, 403, { status: 'Error', message: 'Account disabled' });
+
     if (client.activeSessionId && sessionId && client.activeSessionId !== sessionId) {
       return sendJSON(res, 401, { status: 'Error', message: 'Session invalidated by server' });
     }
@@ -257,6 +261,32 @@ module.exports = async (req, res) => {
             return sendJSON(res, 500, { status: 'Error', message: 'Internal server error fetching job count.' });
         }
     }
+
+    // -------------------------
+    // ACTION: deduction-history (GET) - NEW
+    // Fetches completed bulk verification jobs for deduction history display
+    // -------------------------
+    if (action === 'deduction-history') {
+        if (req.method !== 'GET') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
+
+        try {
+            // Fetch jobs that are completed, failed, or cancelled for a full history,
+            // ordered by submission time.
+            const historyJobs = await bulkJobs.find({ 
+                clientId: clientIdString, 
+                status: { $in: ['Completed', 'Failed', 'Cancelled'] } 
+            })
+            .sort({ submittedAt: -1 }) // Sort by newest submitted jobs first
+            .limit(100) // Limit to a manageable number for history
+            .toArray();
+
+            return sendJSON(res, 200, { status: 'Success', history: historyJobs });
+        } catch (e) {
+            console.error('Error fetching deduction history:', e);
+            return sendJSON(res, 500, { status: 'Error', message: 'Internal server error fetching history.' });
+        }
+    }
+
 
     // -------------------------
     // ACTION: remaining-credits (GET) - NEW (Optional helper for UI polling)
