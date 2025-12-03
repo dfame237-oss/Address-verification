@@ -1,309 +1,393 @@
-// api/client/index.js
-// Combined client router: login | logout | force-logout | activity | profile | update-password | active-jobs (NEW)
+// public/bulk_verification_logic.js
+// Bulk verification logic refactored for Enterprise UX (Drag & Drop, Preview, Filtering)
+// Updated fixes: ensure KPI persists across quick refreshes and fetches server data when needed.
 
-const { connectToDatabase } = require('../../utils/db');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { randomUUID } = require('crypto');
-const { ObjectId } = require('mongodb');
+const API_BULK_JOBS = '/api/bulk-jobs';
 
-// FIX: Standardize JWT_SECRET fallback to match all other server files.
-const JWT_SECRET = process.env.JWT_SECRET || 'replace_with_env_jwt_secret';
-const ACTION_TOKEN_SECRET =
-  process.env.ACTION_TOKEN_SECRET ||
-  (process.env.JWT_SECRET ? (process.env.JWT_SECRET + '_action') : 'change_action_secret');
-const ACTION_TOKEN_EXPIRES_SECONDS = 300; // 5 minutes
+// --- UI helpers (existing) ---
+function updateStatusMessage(message, isError = false) {
+    const statusMessage = document.getElementById('status-message');
+    if (!statusMessage) return;
 
-const sendJSON = (res, statusCode, obj) => {
-  res.setHeader('Content-Type', 'application/json');
-  res.status(statusCode).end(JSON.stringify(obj));
-};
+    statusMessage.textContent = message;
+    statusMessage.classList.remove('text-red-700', 'bg-red-100', 'text-gray-600', 'bg-tf-light', 'font-bold');
+    statusMessage.classList.add('p-2', 'rounded');
+    if (isError) {
+        statusMessage.classList.add('text-red-700', 'bg-red-100', 'font-bold');
+        statusMessage.classList.remove('text-gray-600', 'bg-tf-light');
+    } else {
+        statusMessage.classList.add('text-gray-600', 'bg-tf-light');
+        statusMessage.classList.remove('bg-red-100', 'font-bold');
+    }
+}
 
-module.exports = async (req, res) => {
-  // CORS (tighten in production)
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,OPTIONS'); // Added PUT for update
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+// --- Template download (unchanged) ---
+function handleTemplateDownload() {
+    const templateHeaders = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS\n";
+    const templateData =
+        "1,\"John Doe\",\"H.No. 123, Sector 40B, near bus stand, Chandigarh\"\n" +
+        "2,\"Jane Smith\",\"5th Floor, Alpha Tower, Mumbai 400001\"\n";
+    const csvContent = templateHeaders + templateData;
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', 'address_verification_template.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
 
-  // derive action: ?action=... or body.action
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  const actionQ = url.searchParams.get('action');
-  // parse body if needed
-  let body = req.body;
-  if (typeof body === 'string') {
-    try { body = JSON.parse(body); } catch (e) { /* ignore */ }
-  }
-  const action = (actionQ || (body && body.action) || '').toLowerCase();
-
-  // connect DB once
-  let db;
-  try {
-    db = (await connectToDatabase()).db;
-  } catch (e) {
-    console.error('DB connect failed in /api/client/index.js', e && (e.stack || e.message));
-    return sendJSON(res, 500, { status: 'Error', message: 'Database connection failed' });
-  }
-  const clients = db.collection('clients');
-  const bulkJobs = db.collection('bulkJobs'); // Reference for job status
-
-  try {
-    // -------------------------
-    // ACTION: login
-    // -------------------------
-    if (action === 'login') {
-      if (req.method !== 'POST') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
-
-      const { username, password, force = false, actionToken = null } = body || {};
-      if (!username || !password) return sendJSON(res, 400, { status: 'Error', message: 'username and password required' });
-
-      const client = await clients.findOne({ username });
-      if (!client) return sendJSON(res, 401, { status: 'Error', message: 'Invalid credentials' });
-
-      const passwordHash = client.passwordHash || client.password || null;
-      if (!passwordHash) {
-        console.error('Missing passwordHash for', username);
-        return sendJSON(res, 500, { status: 'Error', message: 'Server misconfiguration: password hash missing.' });
-      }
-
-      const match = await bcrypt.compare(password, passwordHash);
-      if (!match) return sendJSON(res, 401, { status: 'Error', message: 'Invalid credentials' });
-      if (client.isActive === false) return sendJSON(res, 403, { status: 'Error', message: 'Account disabled' });
-
-      const existingSessionId = client.activeSessionId || null;
-
-      // If there is an existing session and caller didn't ask to force, return actionToken
-      if (existingSessionId && !force) {
-        const actionPayload = { clientId: String(client._id), ts: Date.now() };
-        const actionTokenSigned = jwt.sign(actionPayload, ACTION_TOKEN_SECRET, { expiresIn: ACTION_TOKEN_EXPIRES_SECONDS });
-        return sendJSON(res, 200, {
-          status: 'OK',
-          alreadyLoggedIn: true,
-          message: 'User already logged in on another device.',
-          actionToken: actionTokenSigned,
-          clientId: String(client._id)
-        });
-      }
-
-      // If force requested, validate actionToken
-      if (force) {
-        if (!actionToken) return sendJSON(res, 400, { status: 'Error', message: 'actionToken required to force login.' });
-        try {
-          const decoded = jwt.verify(actionToken, ACTION_TOKEN_SECRET);
-          if (!decoded || decoded.clientId !== String(client._id)) {
-            return sendJSON(res, 403, { status: 'Error', message: 'Invalid action token.' });
-          }
-          // valid: clear previous session
-          await clients.updateOne({ _id: client._id }, { $set: { activeSessionId: null } });
-        } catch (e) {
-          console.error('Invalid/expired actionToken', e && (e.message || e));
-          return sendJSON(res, 403, { status: 'Error', message: 'Invalid or expired action token.' });
-        }
-      }
-
-      // Create new session
-      const sessionId = randomUUID();
-      await clients.updateOne({ _id: client._id }, { $set: { activeSessionId: sessionId, lastActivityAt: new Date() } });
-
-      const jwtPayload = { clientId: String(client._id), sessionId, role: 'client' };
-      const token = jwt.sign(jwtPayload, JWT_SECRET, { expiresIn: '7d' });
-
-      const planDetails = {
-        planName: client.planName || null,
-        clientName: client.clientName || client.username || null,
-        initialCredits: client.initialCredits ?? null,
-        remainingCredits: client.remainingCredits ?? null,
-        validityEnd: client.validityEnd ?? null
-      };
-
-      return sendJSON(res, 200, { status: 'Success', message: 'Authenticated', token, planDetails });
+// --- CSV parsing (for local row counting and preview) ---
+function parseCSV(text) {
+    const lines = text.split('\n');
+    if (lines.length < 2) return { rows: [], header: [] };
+    const header = lines[0].split(',').map(h => h.trim().replace(/^\"|\"$/g, ''));
+    const data = [];
+    const idIndex = header.indexOf('ORDER ID');
+    const nameIndex = header.indexOf('CUSTOMER NAME');
+    const addressIndex = header.indexOf('CUSTOMER RAW ADDRESS');
+    if (idIndex === -1 || nameIndex === -1 || addressIndex === -1) {
+        return { rows: [], header: [] };
     }
 
-    // -------------------------
-    // Middleware for authenticated actions (checks token validity, extracts clientId, checks session)
-    // -------------------------
-    const authHeader = req.headers.authorization || '';
-    const token = (authHeader.split(' ')[1]) || null;
-    if (!token) return sendJSON(res, 401, { status: 'Error', message: 'Missing token' });
-
-    let payload;
-    try { payload = jwt.verify(token, JWT_SECRET); }
-    catch (e) { payload = jwt.decode(token); }
-
-    const clientId = payload?.clientId; // This is the STRING ID from JWT
-    const sessionId = payload?.sessionId; 
-    if (!clientId) return sendJSON(res, 400, { status: 'Error', message: 'Invalid token payload' });
-
-    // FIX START: Capture the string ID and use it for the bulkJobs query
-    const clientIdString = clientId; // Store the authoritative string ID
-    // Use the string ID to create an ObjectId for the 'clients' collection lookup:
-    const client = await clients.findOne({ _id: new ObjectId(clientIdString) });
-    // FIX END
-    
-    if (!client) return sendJSON(res, 401, { status: 'Error', message: 'Invalid session' });
-    
-    // IMPROVEMENT: Check account status immediately
-    if (client.isActive === false) return sendJSON(res, 403, { status: 'Error', message: 'Account disabled' });
-
-    if (client.activeSessionId && sessionId && client.activeSessionId !== sessionId) {
-      return sendJSON(res, 401, { status: 'Error', message: 'Session invalidated by server' });
-    }
-
-    // -------------------------
-    // ACTION: update-password (NEW)
-    // -------------------------
-    if (action === 'update-password') {
-      if (req.method !== 'PUT') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
-
-      const { newPassword } = body || {};
-      if (!newPassword || newPassword.length < 6) return sendJSON(res, 400, { status: 'Error', message: 'New password must be at least 6 characters.' });
-
-      try {
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-        const result = await clients.updateOne(
-          { _id: new ObjectId(clientIdString) },
-          { $set: { passwordHash: hashedPassword } }
-        );
-
-        if (result.matchedCount === 0) return sendJSON(res, 404, { status: 'Error', message: 'Client not found.' });
-        
-        // Invalidate current session for security (forces client to log back in)
-        await clients.updateOne({ _id: new ObjectId(clientIdString) }, { $set: { activeSessionId: null } });
-
-        return sendJSON(res, 200, { status: 'Success', message: 'Password updated successfully. Please log in again.' });
-      } catch (e) {
-        console.error('Password update error:', e && (e.stack || e.message));
-        return sendJSON(res, 500, { status: 'Error', message: 'Internal Server Error during password update.' });
-      }
-    }
-
-
-    // -------------------------
-    // ACTION: logout
-    // -------------------------
-    if (action === 'logout') {
-      if (req.method !== 'POST') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
-
-      const filter = { _id: new ObjectId(clientIdString) };
-      if (sessionId) filter.activeSessionId = sessionId;
-
-      await clients.findOneAndUpdate(filter, { $set: { activeSessionId: null, lastActivityAt: new Date() } });
-      return sendJSON(res, 200, { status: 'Success', message: 'Logged out' });
-    }
-
-    // -------------------------
-    // ACTION: force-logout (explicit)
-    // -------------------------
-    if (action === 'force-logout') {
-      if (req.method !== 'POST') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
-
-      try {
-        await clients.updateOne({ _id: new ObjectId(clientIdString) }, { $set: { activeSessionId: null, lastActivityAt: new Date() } });
-        return sendJSON(res, 200, { status: 'Success', message: 'Force logout complete' });
-      } catch (e) {
-        console.error('force-logout error:', e && (e.stack || e.message));
-        return sendJSON(res, 500, { status: 'Error', message: 'Internal Server Error' });
-      }
-    }
-
-    // -------------------------
-    // ACTION: activity (heartbeat)
-    // -------------------------
-    if (action === 'activity') {
-      if (req.method !== 'POST') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
-
-      await clients.updateOne({ _id: new ObjectId(clientIdString) }, { $set: { lastActivityAt: new Date() } });
-      return sendJSON(res, 200, { status: 'Success', message: 'Activity updated' });
-    }
-
-    // -------------------------
-    // ACTION: profile (GET) - NEW
-    // Returns authoritative plan/credits & validates session
-    // -------------------------
-    if (action === 'profile') {
-      if (req.method !== 'GET') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
-      // Session validation handled by middleware above
-
-      const planDetails = {
-        planName: client.planName || null,
-        clientName: client.clientName || client.username || null,
-        username: client.username || null,
-        email: client.email || null,
-        mobile: client.mobile || null,
-        bulkAccessCode: client.bulkAccessCode || null,
-        initialCredits: client.initialCredits ?? null,
-        remainingCredits: client.remainingCredits ?? null,
-        validityEnd: client.validityEnd ?? null,
-        isActive: client.isActive
-      };
-
-      return sendJSON(res, 200, { status: 'Success', planDetails });
-    }
-    
-    // -------------------------
-    // ACTION: active-jobs (GET) - NEW (Requirement 3 helper)
-    // -------------------------
-    if (action === 'active-jobs') {
-        if (req.method !== 'GET') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
-
-        try {
-            const activeJobsCount = await bulkJobs.countDocuments({ 
-                // FIX: Use the string ID for bulkJobs, which matches the format stored on job creation
-                clientId: clientIdString, 
-                status: { $in: ['Queued', 'In Progress'] } 
+    for (let i = 1; i < lines.length; i++) {
+        if (lines[i].trim() === '') continue;
+        const row = lines[i].match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g) || [];
+        const cleanedRow = row.map(cell => cell.trim().replace(/^\"|\"$/g, '').replace(/\"\"/g, '"'));
+        if (cleanedRow.length > Math.max(idIndex, nameIndex, addressIndex)) {
+            data.push({
+                'ORDER ID': cleanedRow[idIndex] || '',
+                'CUSTOMER NAME': cleanedRow[nameIndex] || '',
+                'CUSTOMER RAW ADDRESS': cleanedRow[addressIndex] || '',
             });
-
-            return sendJSON(res, 200, { status: 'Success', activeJobsCount });
-        } catch (e) {
-            console.error('Error fetching active job count:', e);
-            return sendJSON(res, 500, { status: 'Error', message: 'Internal server error fetching job count.' });
         }
     }
+    return { rows: data, header: header };
+}
 
-    // -------------------------
-    // ACTION: deduction-history (GET) - NEW
-    // Fetches completed bulk verification jobs for deduction history display
-    // -------------------------
-    if (action === 'deduction-history') {
-        if (req.method !== 'GET') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
+// --- Enterprise Improvement: CSV Preview Generator ---
+function generatePreview(data) {
+    const tableEl = document.getElementById('preview-table');
+    const previewSection = document.getElementById('preview-section');
 
-        try {
-            // Fetch jobs that are completed, failed, or cancelled for a full history,
-            // ordered by submission time.
-            const historyJobs = await bulkJobs.find({ 
-                clientId: clientIdString, 
-                status: { $in: ['Completed', 'Failed', 'Cancelled'] } 
-            })
-            .sort({ submittedAt: -1 }) // Sort by newest submitted jobs first
-            .limit(100) // Limit to a manageable number for history
-            .toArray();
+    if (!tableEl || !previewSection) return;
 
-            return sendJSON(res, 200, { status: 'Success', history: historyJobs });
-        } catch (e) {
-            console.error('Error fetching deduction history:', e);
-            return sendJSON(res, 500, { status: 'Error', message: 'Internal server error fetching history.' });
-        }
+    if (data.rows.length === 0) {
+        previewSection.classList.add('hidden');
+        return;
     }
 
-
-    // -------------------------
-    // ACTION: remaining-credits (GET) - NEW (Optional helper for UI polling)
-    // -------------------------
-    if (action === 'remaining-credits') {
-        if (req.method !== 'GET') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
-
-        return sendJSON(res, 200, { 
-            status: 'Success', 
-            remainingCredits: client.remainingCredits ?? null 
+    // Create Header Row
+    let html = '<thead><tr>';
+    const requiredHeaders = ['ORDER ID', 'CUSTOMER NAME', 'CUSTOMER RAW ADDRESS'];
+    requiredHeaders.forEach(h => {
+        html += `<th>${h}</th>`;
+    });
+    html += '</tr></thead><tbody>';
+    const rowsToDisplay = data.rows.slice(0, 5);
+    rowsToDisplay.forEach(row => {
+        html += '<tr>';
+        requiredHeaders.forEach(h => {
+            const cellValue = (row[h] || '').toString();
+            const cellContent = cellValue.length > 40 ? cellValue.substring(0, 37) + '...' : cellValue;
+            html += `<td>${escapeHtml(cellContent)}</td>`;
         });
+        html += '</tr>';
+    });
+    html += '</tbody>';
+    tableEl.innerHTML = html;
+    previewSection.classList.remove('hidden');
+}
+
+function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// --- NEW: Check Active Job Count (Replaces function in HTML) ---
+async function getActiveJobCount() {
+    try {
+        const resp = await authFetch('/api/client/index?action=active-jobs', { method: 'GET' });
+        const json = await resp.json();
+        if (json.status === 'Success' && typeof json.activeJobsCount === 'number') {
+            return json.activeJobsCount;
+        }
+        return 0;
+    } catch (e) {
+        console.error('Failed to get active job count:', e);
+        return 0;
+    }
+}
+
+// --- Main bulk handler (refactored for job submission) ---
+async function handleBulkVerification() {
+    if (!checkPlanValidity() || !isPlanValid) {
+        updateStatusMessage("Access denied. Plan is expired or disabled.", true);
+        return;
     }
 
-    // no action matched
-    return sendJSON(res, 400, { status: 'Error', message: 'Unknown action. Use ?action=login|logout|activity|profile|update-password|active-jobs|remaining-credits.' });
-  } catch (err) {
-    console.error('UNCAUGHT in /api/client/index.js', err && (err.stack || err.message));
-    return sendJSON(res, 500, { status: 'Error', message: 'Internal server error' });
-  }
-};
+    const fileInput = document.getElementById('csvFileInput');
+    const processButton = document.getElementById('processButton');
+    if (!fileInput || !processButton) {
+        updateStatusMessage("UI not fully loaded.", true);
+        return;
+    }
+    if (!fileInput.files.length) {
+        updateStatusMessage("Please select a CSV file first.", true);
+        return;
+    }
+
+    // Requirement 3 Check: Max 1 active job
+    const activeJobs = await getActiveJobCount();
+    if (activeJobs >= 1) {
+        alert("⚠️ A job is already in progress. Please wait for completion before submitting a new file.");
+        updateStatusMessage("Job submission blocked. One job is already running.", true);
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+
+    processButton.disabled = true;
+    fileInput.disabled = true;
+    updateStatusMessage('Reading file and performing credit check...');
+    reader.onload = async function (e) {
+        const text = e.target.result;
+        const { rows: addresses } = parseCSV(text);
+
+        if (addresses.length === 0) {
+            updateStatusMessage("Error: No valid addresses found in CSV. Check format and required columns.", true);
+            processButton.disabled = false;
+            fileInput.disabled = false;
+            return;
+        }
+
+        const totalRows = addresses.length;
+        try {
+            updateStatusMessage(`Submitting job for ${totalRows} addresses...`);
+            const resp = await authFetch(API_BULK_JOBS, {
+                method: 'POST',
+                body: JSON.stringify({
+                    filename: file.name,
+                    csvData: text,
+                    totalRows: totalRows
+                })
+            });
+            const result = await resp.json();
+
+            if (resp.status === 429) {
+                alert("⚠️ A job is already in progress on the server. Please wait for completion.");
+                updateStatusMessage(`Job submission blocked. Server busy.`, true);
+            } else if (!resp.ok && resp.status !== 429) {
+                updateStatusMessage(result.message || `Job submission failed (Status: ${resp.status}).`, true);
+            } else if (result.status === 'Success' && result.jobId) {
+                updateStatusMessage(`Verification job submitted (ID: ${result.jobId}). Processing started asynchronously.`);
+                const inProgressBtn = document.getElementById('in-progress-tab-btn');
+                if (inProgressBtn) showTab('in-progress-jobs', inProgressBtn);
+
+                // Refresh credit UI after submission
+                const afterCreditsResp = await getRemainingCredits();
+                if (afterCreditsResp.ok) {
+                    const rc = afterCreditsResp.remainingCredits;
+                    const remEl = document.getElementById('plan-remaining-credits');
+                    if (remEl) remEl.textContent = rc === 'Unlimited' ? 'Unlimited' : Number(rc).toLocaleString();
+                }
+
+            } else {
+                updateStatusMessage(result.message || 'Job submission failed due to unknown server response.', true);
+            }
+        } catch (error) {
+            updateStatusMessage(`Network error during job submission: ${error.message}`, true);
+        } finally {
+            processButton.disabled = false;
+            fileInput.disabled = false;
+        }
+    };
+
+    reader.onerror = function () {
+        updateStatusMessage("Error reading file.", true);
+        processButton.disabled = false;
+        fileInput.disabled = false;
+    };
+
+    reader.readAsText(file);
+}
+
+// --- NEW: Handle Job Cancellation (Requirement 4) ---
+async function handleCancelJob(jobId) {
+    if (!confirm(`Are you sure you want to cancel Job ID: ${jobId}?`)) return;
+    try {
+        const resp = await authFetch(API_BULK_JOBS + '?action=cancel', {
+            method: 'PUT',
+            body: JSON.stringify({ jobId })
+        });
+        const result = await resp.json();
+
+        if (result.status === 'Success') {
+            updateStatusMessage(`Cancellation request sent for Job ${jobId}. Status will update shortly.`, false);
+        } else {
+            updateStatusMessage(`Failed to cancel Job ${jobId}: ${result.message}`, true);
+        }
+    } catch (e) {
+        console.error('Cancel job failed:', e);
+        updateStatusMessage('Network or server error while cancelling the job.', true);
+    }
+}
+
+// --- Persisted KPI Cache helpers ---
+function setKpiCache(value) {
+    const payload = { value, ts: Date.now() };
+    try { localStorage.setItem('kpi_today_completed', JSON.stringify(payload)); } catch (e) {}
+}
+function getKpiCache() {
+    try {
+        const raw = localStorage.getItem('kpi_today_completed');
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        // expire after 5 minutes
+        if (Date.now() - (parsed.ts || 0) > 5 * 60 * 1000) {
+            localStorage.removeItem('kpi_today_completed');
+            return null;
+        }
+        return parsed.value;
+    } catch (e) { return null; }
+}
+
+// --- KPI loader: computes today's completed rows. If globalJobsData is empty, fetches server-side job list. ---
+async function loadKpiData() {
+    const cached = getKpiCache();
+    if (cached != null) {
+        const el = document.getElementById('today-completed-kpi');
+        if (el) el.textContent = Number(cached).toLocaleString();
+        // still attempt to refresh in background
+        fetchKpiAndRefresh();
+        return;
+    }
+    await fetchKpiAndRefresh();
+}
+
+async function fetchKpiAndRefresh() {
+    try {
+        // If globalJobsData has been populated by a poller, prefer that
+        let completedJobs = (window.globalJobsData && window.globalJobsData.completed) || [];
+
+        // If not present, fetch from server
+        if (!completedJobs || completedJobs.length === 0) {
+            // call API_BULK_JOBS to get jobs list (same endpoint used by poller)
+            const resp = await authFetch(API_BULK_JOBS, { method: 'GET' });
+            if (resp.ok) {
+                const result = await resp.json();
+                if (result && result.status === 'Success' && Array.isArray(result.jobs)) {
+                    completedJobs = result.jobs.filter(j => j.status === 'Completed' || j.status === 'Failed' || j.status === 'Cancelled');
+                    // update globalJobsData so other UI re-renders benefit
+                    window.globalJobsData = window.globalJobsData || {};
+                    window.globalJobsData.completed = completedJobs;
+                }
+            }
+        }
+
+        // compute today's completed rows
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        let completedToday = 0;
+        (completedJobs || []).forEach(job => {
+            const completedTime = job.completedTime || job.submittedAt;
+            if (completedTime && job.status === 'Completed') {
+                const completedDate = new Date(completedTime);
+                if (completedDate >= today) {
+                    completedToday += Number(job.totalRows || 0);
+                }
+            }
+        });
+
+        // persist to cache and update UI
+        setKpiCache(completedToday);
+        const el = document.getElementById('today-completed-kpi');
+        if (el) el.textContent = completedToday.toLocaleString();
+    } catch (e) {
+        console.error('Failed to load KPI data:', e);
+    }
+}
+
+// --- Drag & Drop + File selection handlers (existing) ---
+function setupDragDropListeners() {
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('csvFileInput');
+    const fileNameDisplay = document.getElementById('file-name-display');
+    const processButton = document.getElementById('processButton');
+
+    if (!dropZone || !fileInput) return;
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            dropZone.classList.add('dragover');
+        }, false);
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            dropZone.classList.remove('dragover');
+        }, false);
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length) {
+            fileInput.files = files;
+            handleFileSelection(files[0]);
+        }
+    }, false);
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length) {
+            handleFileSelection(e.target.files[0]);
+        } else {
+            fileNameDisplay.textContent = 'No file chosen';
+            processButton.disabled = true;
+            document.getElementById('preview-section').classList.add('hidden');
+        }
+    });
+
+    function handleFileSelection(file) {
+        fileNameDisplay.textContent = file.name;
+        processButton.disabled = false;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const text = e.target.result;
+            const previewData = parseCSV(text);
+            generatePreview(previewData);
+        };
+        reader.readAsText(file);
+    }
+}
+
+// --- Init listeners (call from client-dashboard on load) ---
+function initBulkListeners() {
+    window.handleCancelJob = handleCancelJob;
+    if (isPlanValid) {
+        const downloadTemplateButton = document.getElementById('downloadTemplateButton');
+        const csvFileInput = document.getElementById('csvFileInput');
+        const processButton = document.getElementById('processButton');
+
+        setupDragDropListeners();
+
+        document.getElementById('in-progress-search')?.addEventListener('input', window.filterJobsList);
+        document.getElementById('completed-search')?.addEventListener('input', window.filterJobsList);
+        if (downloadTemplateButton) {
+            downloadTemplateButton.addEventListener('click', handleTemplateDownload);
+        }
+        if (processButton) {
+            processButton.addEventListener('click', handleBulkVerification);
+        }
+    }
+}
+
+// expose for html
+window.initBulkListeners = initBulkListeners;
+window.loadKpiData = loadKpiData;
+window.handleBulkVerification = handleBulkVerification;
+window.getActiveJobCount = getActiveJobCount;
