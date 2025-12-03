@@ -138,10 +138,11 @@ async function handleBulkVerification() {
         return;
     }
 
-    // Requirement 3 Check: Max 1 active job
+    // Requirement 3 Check: Max 1 active job - Now uses the new modal
     const activeJobs = await getActiveJobCount();
     if (activeJobs >= 1) { 
-        alert("⚠️ A job is already in progress. Please wait for completion before submitting a new file.");
+        // FIX: Replaced simple alert with the new dynamic modal
+        window.openMaxJobsModal();
         updateStatusMessage("Job submission blocked. One job is already running.", true);
         return;
     }
@@ -178,10 +179,16 @@ async function handleBulkVerification() {
             });
             const result = await resp.json();
 
-            if (resp.status === 429) { // Server rejected due to max jobs (now 1)
-                alert("⚠️ A job is already in progress on the server. Please wait for completion.");
+            // FIX: Check for Max Jobs or Insufficient Credits response from server (Status 429 or 400)
+            if (resp.status === 429 || (resp.status === 400 && result.message && result.message.includes('Maximum 1 job'))) { 
+                // Max Jobs check (redundant, but covers server-side enforcement)
+                window.openMaxJobsModal();
                 updateStatusMessage(`Job submission blocked. Server busy.`, true);
-            } else if (!resp.ok && resp.status !== 429) { // General HTTP/Credit Error
+            } else if (resp.status === 400 && result.message && result.message.includes('Insufficient Credits')) {
+                // FIX: Replaced simple alert with the new dynamic credit modal
+                window.openCreditsModal(result.message);
+                updateStatusMessage(result.message, true);
+            } else if (!resp.ok) { // General HTTP Error
                 updateStatusMessage(result.message || `Job submission failed (Status: ${resp.status}).`, true);
             } else if (result.status === 'Success' && result.jobId) {
                 updateStatusMessage(`Verification job submitted (ID: ${result.jobId}). Processing started asynchronously.`);
