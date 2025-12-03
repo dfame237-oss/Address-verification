@@ -407,7 +407,7 @@ id="sidebar" class="sidebar-nav">
                             <span class="text-tf-secondary">Bulk 
 Address</span> Verification
                         
-</h2>
+                        </h2>
                         <p class="text-lg text-gray-500 mt-2">Upload a CSV file for high-volume cleaning and verification.</p>
                     </header>
                     
@@ -1409,10 +1409,10 @@ job.status === 'Queued' ? `
 `
                                 <span class="text-xs text-gray-500 mr-2">Ready: ${job.countReady} | Manual: ${job.countManual}</span>
                                 <button class="py-1 px-3 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition" onclick="handleAuthenticatedDownload('${job._id}', '${job.filename.replace(/'/g, "\\'").replace(/"/g, '')}', 'ready')">
-                                    <i class="fas fa-file-download"></i> Ready (${job.countReady})
+                                    <i class="fas fa-file-download"></i> Ready for Ship (${job.countReady})
                                 </button>
                                 <button class="py-1 px-3 bg-orange-500 text-white text-sm rounded hover:bg-orange-600 transition" onclick="handleAuthenticatedDownload('${job._id}', '${job.filename.replace(/'/g, "\\'").replace(/"/g, '')}', 'manual')">
-                                    <i class="fas fa-clipboard-list"></i> Manual (${job.countManual})
+                                    <i class="fas fa-clipboard-list"></i> Manual Check Needed (${job.countManual})
                                 </button>
                                 
                                 
@@ -1516,7 +1516,7 @@ job.status === 'Queued' ? `
 
         // --- AUTHENTICATED DOWNLOAD FUNCTION ---
         async function handleAuthenticatedDownload(jobId, jobFilename, fileType) {
-            const suffix = (fileType === 'ready' ? '_ready_for_ship' : '_manual_check');
+            const suffix = (fileType === 'ready' ? '_READY_FOR_SHIPMENT' : '_MANUAL_CHECK_NEEDED');
             const safeFilename = `${jobFilename.replace('.csv', '').replace(/'/g, '').replace(/"/g, '')}${suffix}.csv`;
             // FIX: Pass the fileType parameter to the API
             const downloadUrl = `${API_BULK_JOBS}?action=download&jobId=${jobId}&type=${fileType}`; 
