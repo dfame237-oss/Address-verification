@@ -674,6 +674,20 @@ credits?
             <button class="action-btn bg-tf-primary hover:bg-[#4d2e97] w-full" onclick="showTab('in-progress-jobs', document.getElementById('in-progress-tab-btn')); closeMaxJobsModal();">Monitor Active Job</button>
         </div>
     </div>
+
+    <div id="cancel-job-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="cancel-title">
+        <div class="modal-content w-full max-w-sm rounded-xl shadow-2xl p-6 bg-white relative text-center">
+            <span class="modal-close absolute right-4 top-4 text-2xl cursor-pointer" onclick="closeCancelJobModal()">&times;</span>
+            <i class="fas fa-times-circle text-alert-dark text-4xl mb-4"></i>
+            <h3 class="text-xl font-bold text-gray-800 mb-2" id="cancel-title">Confirm Cancellation</h3>
+            <p id="cancel-job-message" class="text-gray-700 mb-6"></p>
+            
+            <div class="modal-actions flex justify-center gap-4">
+                <button class="py-2 px-4 bg-gray-200 rounded-lg hover:bg-gray-300" onclick="closeCancelJobModal()">No, Keep Job</button>
+                <button id="confirmCancelBtn" class="py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700" onclick="confirmJobCancellation()">Yes, Cancel Job</button>
+            </div>
+        </div>
+    </div>
     
     <div id="inbox-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="inbox-title">
         
@@ -772,7 +786,10 @@ You can force-logout that session and continue here, or cancel to remain logged 
         let globalJobsData = { inProgress: [], completed: [] };
         // Storage for filtering (NEW)
 
-        // --- NEW MODAL HELPERS (CREDITS & MAX JOBS) ---
+        // --- GLOBAL MODAL STATE FOR CANCELLATION ---
+        let jobToCancel = null;
+
+        // --- NEW MODAL HELPERS (CREDITS & MAX JOBS & CANCEL) ---
 
         function openCreditsModal(message) {
             document.getElementById('credits-required-message').textContent = message;
@@ -791,11 +808,34 @@ You can force-logout that session and continue here, or cancel to remain logged 
             document.getElementById('max-jobs-modal').style.display = 'none';
         }
         
-        // Expose new helpers globally
+        function openCancelJobModal(jobId) {
+            jobToCancel = jobId;
+            document.getElementById('cancel-job-message').textContent = `Are you sure you want to cancel Job ID: ${jobId}? This action cannot be undone.`;
+            document.getElementById('cancel-job-modal').style.display = 'flex';
+        }
+
+        function closeCancelJobModal() {
+            document.getElementById('cancel-job-modal').style.display = 'none';
+            jobToCancel = null;
+        }
+
+        // Function triggered by the modal "Yes, Cancel Job" button
+        function confirmJobCancellation() {
+            if (jobToCancel) {
+                // IMPORTANT: This calls the actual API function defined in bulk_verification_logic.js
+                window.handleCancelJobConfirmed(jobToCancel);
+            }
+            closeCancelJobModal();
+        }
+        
+        // Expose helpers globally
         window.openCreditsModal = openCreditsModal;
         window.closeCreditsModal = closeCreditsModal;
         window.openMaxJobsModal = openMaxJobsModal;
         window.closeMaxJobsModal = closeMaxJobsModal;
+        window.openCancelJobModal = openCancelJobModal; // NEW
+        window.closeCancelJobModal = closeCancelJobModal; // NEW
+        window.confirmJobCancellation = confirmJobCancellation; // NEW
 
 
         // --- HEARTBEAT FUNCTION (PUBLIC) ---
