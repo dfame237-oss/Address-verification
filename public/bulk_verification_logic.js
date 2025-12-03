@@ -27,11 +27,11 @@ function updateStatusMessage(message, isError = false) {
 // --- Template download (unchanged) ---
 function handleTemplateDownload() {
     const templateHeaders = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS\n";
-    // FIX: Removed the trailing \n from the last data row to prevent the creation of a blank third row.
+    // FIX: Removed the embedded newline within the first address AND ensured no trailing newline 
+    // to guarantee exactly two sample data rows.
     const templateData =
-        "1,\"John Doe\",\"H.No.\n" +
-        "123, Sector 40B, near bus stand, Chandigarh\"\n" +
-        "2,\"Jane Smith\",\"5th Floor, Alpha Tower, Mumbai 400001\"";
+        "1,\"John Doe\",\"H.No. 123, Sector 40B, near bus stand, Chandigarh\"\n" +
+        "2,\"Jane Smith\",\"5th Floor, Alpha Tower, Mumbai 400001\""; 
     const csvContent = templateHeaders + templateData;
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
