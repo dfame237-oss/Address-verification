@@ -13,79 +13,89 @@
         window.tailwind = {
             config: {
                 theme: {
-                    extend: {
+               
+     extend: {
                         
                         colors: {
                             // 💜 Smart Locator/Teleforce Style Palette
-                            'tf-primary': '#5F3DC4', 
+            
+                'tf-primary': '#5F3DC4', 
                             'tf-secondary': '#A437C1', 
                         
-                            'tf-dark': '#0F172A',
+                            
+'tf-dark': '#0F172A',
                             'tf-text': '#E2E8F0',
                             'tf-card': '#1E293B',
                             'tf-light': '#F1F5F9',
-                        
+            
+            
                             'whatsapp-green': '#25D366',
                             'alert-dark': '#EF4444',
                             'alert-light': '#FEE2E2',
-                            'success-light': '#D1FAE5',
+ 
+                           'success-light': '#D1FAE5',
                         
                             'tf-primary-light': '#EFE7FF',
-                        },
+                   
+     },
                         fontFamily: {
                             sans: ['Inter', 'sans-serif'],
                         },
 
-                    }
+                
+    }
                 }
             }
         };
-    </script>
+</script>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
         /* Base styles adapted for new brand colors */
         body { font-family: 'Inter', sans-serif;
-            background-color: #F1F5F9; }
+background-color: #F1F5F9; }
         /* FIX 1: Added text-gray-800 to ensure default text color is dark on white background */
-        .dashboard-container { max-width: 1200px; margin: 30px auto; padding: 35px;
-            background-color: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); 
-            /* Removed padding-bottom to allow dashboard-layout to manage content height */
+        .dashboard-container { max-width: 1200px;
+margin: 30px auto; padding: 35px;
+            background-color: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+/* Removed padding-bottom to allow dashboard-layout to manage content height */
             padding-bottom: 0;
-        }
+}
         .header { display: flex;
-            justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB;
+            justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 20px;
+border-bottom: 1px solid #E5E7EB;
         }
         .header h1 { font-weight: 700;
-        }
+}
         
         /* --- NEW SIDEBAR LAYOUT STYLES --- */
         .main-dashboard-layout {
             display: grid;
-            grid-template-columns: 240px 1fr; /* Fixed sidebar width (240px) and main content */
+grid-template-columns: 240px 1fr; /* Fixed sidebar width (240px) and main content */
             gap: 30px;
-        }
+}
         
         .sidebar-nav {
-            background-color: #F8FAFC; /* Light background for the sidebar */
+            background-color: #F8FAFC;
+/* Light background for the sidebar */
             padding: 15px 0;
-            border-radius: 12px;
+border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
             height: fit-content; /* Ensure sidebar doesn't stretch too much */
         }
         
         .sidebar-header {
             padding: 0 20px 10px;
-            border-bottom: 1px solid #E2E8F0;
+border-bottom: 1px solid #E2E8F0;
         }
 
         .sidebar-section-title {
             font-size: 0.8rem;
-            font-weight: 700;
+font-weight: 700;
             color: #64748B; /* Gray text */
             margin-top: 20px;
-            margin-bottom: 5px;
+margin-bottom: 5px;
             padding: 0 20px;
             text-transform: uppercase;
         }
@@ -93,197 +103,210 @@
         /* Overrides for vertical tab buttons */
         .nav-tabs {
             display: block;
-            border-bottom: none;
+border-bottom: none;
             margin-bottom: 0;
         }
 
         .nav-tabs .tab-button {
             display: flex;
-            align-items: center;
+align-items: center;
             width: 100%;
             text-align: left;
             padding: 12px 20px;
             border-bottom: none;
             border-left: 4px solid transparent;
-            color: #1E293B; /* Darker default text */
+            color: #1E293B;
+/* Darker default text */
             font-weight: 500;
-            transition: background-color 0.2s, border-left 0.2s;
+transition: background-color 0.2s, border-left 0.2s;
         }
 
         .nav-tabs .tab-button:hover {
-            background-color: #EFE7FF; /* tf-primary-light on hover */
+            background-color: #EFE7FF;
+/* tf-primary-light on hover */
         }
 
         /* Active tab style */
         .nav-tabs .tab-button.active {
-            color: #5F3DC4; /* tf-primary text */
-            background-color: #EFE7FF; /* tf-primary-light background */
-            border-left: 4px solid #5F3DC4; /* Highlight bar */
+            color: #5F3DC4;
+/* tf-primary text */
+            background-color: #EFE7FF;
+/* tf-primary-light background */
+            border-left: 4px solid #5F3DC4;
+/* Highlight bar */
             font-weight: 700;
-        }
+}
         
         .tab-content-area {
-            padding-bottom: 35px; /* Re-apply padding removed from dashboard-container */
+            padding-bottom: 35px;
+/* Re-apply padding removed from dashboard-container */
         }
 
         /* --- END SIDEBAR LAYOUT STYLES --- */
 
-        .tab-content { padding: 15px 0; animation: fadeIn 0.5s;
+        .tab-content { padding: 15px 0;
+animation: fadeIn 0.5s;
         }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1;
+        @keyframes fadeIn { from { opacity: 0;
+} to { opacity: 1;
         } }
         /* Controls are updated to align better */
         .controls { display: flex;
-            gap: 15px; align-items: center;
+gap: 15px; align-items: center;
         }
         .icon-btn { cursor: pointer; position: relative; font-size: 24px;
-            color: #64748B;
+color: #64748B;
         transition: color 0.2s; }
         .icon-btn:hover { color: #5F3DC4;
-        }
+}
         .badge { position: absolute; top: -5px; right: -5px; background-color: #EF4444; color: white;
-            border-radius: 50%; padding: 3px 7px; font-size: 11px; }
+border-radius: 50%; padding: 3px 7px; font-size: 11px; }
         .info-grid { display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
         .profile-card, .plan-card { background-color: #F8FAFC;
-            padding: 30px; border-radius: 12px; border: 1px solid #E2E8F0; transition: box-shadow 0.2s;
-        }
+padding: 30px; border-radius: 12px; border: 1px solid #E2E8F0; transition: box-shadow 0.2s;
+}
         .profile-card:hover, .plan-card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-        }
+}
         .info-item strong { color: #1E293B; margin-right: 8px; font-weight: 600;
-        }
+}
         .plan-status-badge { display: inline-block; padding: 6px 14px; border-radius: 9999px; font-size: 0.85rem;
-            font-weight: 700; }
+font-weight: 700; }
         .status-enabled { background-color: #EFE7FF; color: #5F3DC4;
-        }
+}
         .status-disabled { background-color: #FEE2E2; color: #DC2626;
-        }
+}
         
         /* ENTERPRISE IMPROVEMENT & FIX 3 (Invisible Button Fix): Force colors via CSS */
         .action-btn { 
             background-color: #5F3DC4 !important;
-            color: white; padding: 10px 20px; border-radius: 8px;
+color: white; padding: 10px 20px; border-radius: 8px;
             border: none; cursor: pointer; font-weight: 600; transition: background-color 0.2s, transform 0.1s, opacity 0.2s;
-        }
+}
         .action-btn:hover { background-color: #4d2e97; 
             transform: translateY(-1px);
-        }
+}
         .action-btn.logout { 
-            background-color: #DC2626 !important; 
-        }
+            background-color: #DC2626 !important;
+}
         .action-btn.logout:hover { background-color: #B91C1C;
-        }
+}
         
         /* Definitive Fix for Bulk Upload/Renewal/WhatsApp Buttons visibility */
         .bg-tf-primary {
             background-color: #5F3DC4 !important;
-        }
+}
         .bg-tf-secondary {
             background-color: #A437C1 !important;
-        }
+}
         .bg-whatsapp-green {
-            background-color: #25D366 !important; 
-        }
+            background-color: #25D366 !important;
+}
         /* END FIX */
 
-        .progress-fill { background-color: #A437C1; height: 0.75rem; border-radius: 9999px; transition: all 0.5s ease-in-out;
+        .progress-fill { background-color: #A437C1;
+height: 0.75rem; border-radius: 9999px; transition: all 0.5s ease-in-out;
         }
         /* Inbox Button Styles - integrated into header, not fixed */
         #inbox-header-btn { 
             position: relative;
-            background: #F8FAFC; 
+background: #F8FAFC; 
             border: 1px solid #CBD5E1; 
             border-radius: 50%; 
             padding: 10px 14px; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.08);
             cursor: pointer;
-            transition: background-color 0.2s;
+transition: background-color 0.2s;
         }
         #inbox-header-btn:hover { background-color: #EFE7FF;
-        }
+}
         #inbox-header-btn .fas { font-size: 20px; color: #5F3DC4;
-        }
+}
         #inbox-header-btn .badge { top: -5px; right: -5px; padding: 2px 6px;
-        }
+}
         /* Style for the new Drag & Drop zone */
         #drop-zone {
             border: 2px dashed #CBD5E1;
-            border-radius: 12px;
+border-radius: 12px;
             padding: 30px;
             text-align: center;
             cursor: pointer;
             transition: border-color 0.3s, background-color 0.3s;
-        }
+}
         #drop-zone.dragover {
             border-color: #A437C1;
-            background-color: #EEF2FF;
+background-color: #EEF2FF;
         }
         /* Style for the CSV preview table */
         #preview-table th {
             background-color: #E2E8F0;
-            padding: 8px 12px;
+padding: 8px 12px;
             border-bottom: 1px solid #CBD5E1;
             font-weight: 600;
         }
         #preview-table td {
             padding: 8px 12px;
-            border-bottom: 1px solid #F1F5F9;
+border-bottom: 1px solid #F1F5F9;
         }
 
 
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        .modal { position: fixed; top: 0; left: 0;
+width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; display: none;
-        }
+}
         #full-message-detail { border: 1px solid #D1D5DB; background-color: #F8FAFC; border-radius: 8px; padding: 15px;
-            line-height: 1.6; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
+line-height: 1.6; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
         #full-message-detail h3 { color: #A437C1;
-            padding-bottom: 8px; border-bottom: 1px dashed #E2E8F0; margin-bottom: 8px; }
+padding-bottom: 8px; border-bottom: 1px dashed #E2E8F0; margin-bottom: 8px; }
         
         /* Mobile responsive layout overrides */
         @media (max-width: 768px) {
             .dashboard-container { padding: 15px;
-                margin: 10px auto; width: 95%; box-shadow: none; }
+margin: 10px auto; width: 95%; box-shadow: none; }
             .header { flex-direction: column;
-                align-items: flex-start; margin-bottom: 20px; }
+align-items: flex-start; margin-bottom: 20px; }
             .header h1 { font-size: 1.75rem;
-                margin-bottom: 10px; }
+margin-bottom: 10px; }
             .controls { width: 100%; justify-content: flex-end;
-            }
+}
             .main-dashboard-layout {
-                grid-template-columns: 1fr; /* Sidebar collapses to full width */
+                grid-template-columns: 1fr;
+/* Sidebar collapses to full width */
                 gap: 15px;
-            }
+}
             .sidebar-nav {
                 /* On mobile, use a clean scrollable list if not hidden by JS toggle */
                 border-radius: 8px;
-                padding: 10px 0;
+padding: 10px 0;
             }
             /* Hide tab button details/icons on mobile if space is tight */
             .nav-tabs .tab-button i {
                 display: none;
-            }
+}
             .tab-content-area {
                 padding-bottom: 20px;
-            }
+}
         }
         /* Force-logout modal small style */
         #force-logout-modal .modal-content { max-width: 520px;
-            padding: 24px; border-radius: 12px; background: #fff; }
+padding: 24px; border-radius: 12px; background: #fff; }
         #force-logout-modal .modal-actions { margin-top: 16px; display:flex;
-            gap:10px; justify-content:flex-end; }
+gap:10px; justify-content:flex-end; }
          /* Message card styles */
         .msg-card { 
-            display: flex; /* Added flex to align icon and text */
-            align-items: center; /* Center items vertically */
+            display: flex;
+/* Added flex to align icon and text */
+            align-items: center;
+/* Center items vertically */
             border: 1px solid #E5E7EB;
-            padding: 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: background-color 0.2s, box-shadow 0.2s;
-        }
+padding: 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: background-color 0.2s, box-shadow 0.2s;
+}
         .msg-card:hover { background-color: #F0F4FF; box-shadow: 0 2px 8px rgba(95, 61, 196, 0.1);
-        }
+}
         .msg-card.unread { background-color: #EEF2FF; border-left: 4px solid #5F3DC4; font-weight: 600;
-        }
+}
         .msg-card .msg-icon { font-size: 1.2rem; color: #5F3DC4; margin-right: 15px; flex-shrink: 0;
-        }
+}
     </style>
 </head>
 <body>
@@ -294,13 +317,15 @@
                 <div class="text-sm text-gray-500 mt-1">Manage your address verifications and 
                 plan here.</div>
     
-            </div>
+  
+          </div>
 
             <div class="controls">
                 <button id="inbox-header-btn" onclick="toggleInbox()" aria-label="Open Inbox" role="button">
                     <i class="fas fa-envelope-open-text"></i>
                     <span id="inbox-badge" class="badge" style="display:none;">0</span>
-                </button>
+           
+     </button>
     
         
                 <button onclick="logout()" class="action-btn logout" aria-label="Logout" role="button">Logout</button>
@@ -309,239 +334,301 @@
         
         <div class="main-dashboard-layout">
             
-            <aside id="sidebar" class="sidebar-nav">
+            <aside 
+id="sidebar" class="sidebar-nav">
                 <div class="sidebar-header">
                     <h4 class="text-lg font-bold text-tf-dark">Dashboard Menu</h4>
                 </div>
 
                 <div class="nav-tabs vertical" role="tablist">
                     
-                    <h5 class="sidebar-section-title">Core Operations</h5>
+   
+                 <h5 class="sidebar-section-title">Core Operations</h5>
                     
                     <button id="bulk-tab-btn" class="tab-button active" onclick="showTab('bulk-verification', this)" role="tab" aria-selected="true">
                         <i class="fas fa-file-upload mr-2"></i> Bulk Verification
-                    </button>
+     
+               </button>
                     <button id="in-progress-tab-btn" class="tab-button" onclick="showTab('in-progress-jobs', this)" role="tab" aria-selected="false">
                         <i class="fas fa-hourglass-half mr-2"></i> In Progress
                     </button>
-                    <button id="completed-tab-btn" class="tab-button" onclick="showTab('completed-jobs', this)" role="tab" aria-selected="false">
+          
+          <button id="completed-tab-btn" class="tab-button" onclick="showTab('completed-jobs', this)" role="tab" aria-selected="false">
                         <i class="fas fa-check-circle mr-2"></i> Completed
                     </button>
                     
-                    <h5 class="sidebar-section-title">Analytics & Account</h5>
+                
+    <h5 class="sidebar-section-title">Analytics & Account</h5>
                     
                     <button id="metrics-tab-btn" class="tab-button" onclick="showTab('metrics-reports', this)" role="tab" aria-selected="false">
                         <i class="fas fa-chart-bar mr-2"></i> Key Metrics & Usage
-                    </button>
+                
+    </button>
                     
+                    <button id="deduction-history-btn" class="tab-button" onclick="showTab('deduction-history', this)" role="tab" aria-selected="false">
+                        <i class="fas fa-file-invoice-dollar mr-2"></i> Deduction History
+                    </button>
+
                     <button id="profile-tab-btn" class="tab-button" onclick="showTab('profile-plan', this)" role="tab" aria-selected="false">
                         <i class="fas fa-user-circle mr-2"></i> Profile & Plan Status
-                    </button>
+                   
+ </button>
                     
                     <button class="tab-button" onclick="showTab('support', this)" role="tab" aria-selected="false">
                         <i class="fas fa-headset mr-2"></i> Support
                     </button>
-                </div>
+      
+          </div>
             </aside>
             
             <main id="main-content" class="tab-content-area">
                 
                 <div id="bulk-verification" class="tab-content" role="tabpanel" aria-labelledby="bulk-tab-btn">
-                    <header class="text-center mb-10">
+                
+    <header class="text-center mb-10">
                         
                         <h2 class="text-4xl font-extrabold text-gray-900 mb-2">
             
-                            <span class="text-tf-secondary">Bulk Address</span> Verification
+                            <span class="text-tf-secondary">Bulk 
+Address</span> Verification
                         </h2>
                         <p class="text-lg text-gray-500 mt-2">Upload a CSV file for high-volume cleaning and verification.</p>
                     </header>
                     
+ 
                     <div id="kpi-grid" class="info-grid mb-8">
-                        <div class="profile-card">
-                            <h3 class="text-md font-semibold text-gray-600 mb-2 flex items-center"><i class="fas fa-chart-line mr-2 text-tf-primary"></i> Overall Verification Success Rate</h3>
-                            <p id="success-rate-kpi" class="text-3xl font-bold text-tf-primary">--%</p>
-                            <p class="text-xs text-gray-500 mt-1">Based on last 90 days.</p>
-                        </div>
-                        <div class="profile-card">
-                            <h3 class="text-md font-semibold text-gray-600 mb-2 flex items-center"><i class="fas fa-star mr-2 text-tf-secondary"></i> Total Volume Processed</h3>
-                            <p id="total-volume-kpi" class="text-3xl font-bold text-tf-secondary">0</p>
-                            <p class="text-xs text-gray-500 mt-1">Since account inception.</p>
+                        <div class="profile-card w-full max-w-sm mx-auto">
+                            <h3 class="text-md font-semibold text-gray-600 mb-2 flex items-center"><i class="fas fa-calendar-day mr-2 text-tf-primary"></i> Today's Completed Verifications</h3>
+                            <p id="today-completed-kpi" class="text-3xl font-bold text-tf-primary">0</p>
+                            <p class="text-xs text-gray-500 mt-1">Refreshed on tab load.</p>
                         </div>
                     </div>
 
             
                     <div id="bulkContent" class="space-y-8">
-                        <div class="bg-tf-light p-8 rounded-xl border-l-4 border-tf-primary shadow-lg">
+          
+              <div class="bg-tf-light p-8 rounded-xl border-l-4 border-tf-primary shadow-lg">
                             <p class="font-bold text-xl text-tf-primary mb-3 flex items-center">
                                 <i class="fas fa-download mr-3"></i> 1. Download Template
-                            
+        
+                    
                             </p>
                             <p class="text-sm text-gray-600 mb-4">
-                                Use this template to ensure your CSV file has the required columns: 
+                     
+           Use this template to ensure your CSV file has the required columns: 
                                 <code class="bg-gray-200 px-1 rounded font-mono text-gray-900">ORDER ID</code>, 
-                                <code class="bg-gray-200 px-1 rounded font-mono text-gray-900">CUSTOMER NAME</code>, 
+                                <code class="bg-gray-200 px-1 rounded font-mono text-gray-900">CUSTOMER 
+NAME</code>, 
                                 <code class="bg-gray-200 px-1 rounded font-mono text-gray-900">CUSTOMER RAW ADDRESS</code>.
-                            </p>
+</p>
                             
                             <button id="downloadTemplateButton" class="w-full py-3 bg-tf-primary text-white font-semibold rounded-lg hover:bg-[#4d2e97] transition duration-200 focus:outline-none focus:ring-4 focus:ring-tf-primary focus:ring-opacity-50" role="button" aria-label="Download CSV Template">
             
-                            Download Verification Template (CSV)
+              
+              Download Verification Template (CSV)
                             </button>
                         </div>
 
                         
-                        <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-lg text-center">
+       
+                 <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-lg text-center">
                             <p 
             
                             class="font-bold text-xl text-gray-800 mb-4 flex items-center justify-center">
-                                <i class="fas fa-upload mr-3 text-tf-secondary"></i> 2. Upload Your CSV File
+ 
+                               <i class="fas fa-upload mr-3 text-tf-secondary"></i> 2. Upload Your CSV File
             
                             </p>
-                            <div id="drop-zone" class="mb-4">
+                    
+        <div id="drop-zone" class="mb-4">
                                 <p class="text-gray-500 mb-2">Drag and drop your CSV file here, or click to select.</p>
                                 <input type="file" id="csvFileInput" accept=".csv" class="hidden" aria-describedby="file-upload-hint">
-                                <label for="csvFileInput" class="py-2 px-4 bg-tf-secondary/10 text-tf-secondary font-semibold rounded-lg hover:bg-tf-secondary/20 transition cursor-pointer">
+         
+                       <label for="csvFileInput" class="py-2 px-4 bg-tf-secondary/10 text-tf-secondary font-semibold rounded-lg hover:bg-tf-secondary/20 transition cursor-pointer">
                                     Choose File
-                                </label>
+                              
+  </label>
                                 <span id="file-name-display" class="text-gray-700 ml-3">No file chosen</span>
                             </div>
 
                             <p class="text-xs 
-                            text-gray-500 mt-2" id="file-upload-hint">Maximum 1000 rows recommended for stability. Must use the provided template format.</p>
+   
+                         text-gray-500 mt-2" id="file-upload-hint">Maximum 1000 rows recommended for stability.
+Must use the provided template format.</p>
                             
                             <div id="preview-section" class="mt-4 hidden p-4 bg-gray-50 rounded border border-gray-200 overflow-x-auto">
-                                <h4 class="font-semibold text-gray-800 mb-2">Preview (First 5 Rows)</h4>
+                              
+  <h4 class="font-semibold text-gray-800 mb-2">Preview (First 5 Rows)</h4>
                                 <table id="preview-table" class="w-full text-sm text-left">
                                     </table>
-                            </div>
+                    
+        </div>
                         </div>
 
-                        <button id="processButton" class="w-full py-4 bg-tf-secondary text-white font-bold text-lg rounded-lg shadow-xl transition duration-200 transform hover:scale-[1.005] hover:bg-[#86259d] focus:outline-none focus:ring-4 focus:ring-tf-secondary focus:ring-opacity-50" disabled style="display:block;" aria-label="Start Bulk Verification Process" role="button">
+                        <button id="processButton" class="w-full py-4 bg-tf-secondary text-white font-bold text-lg rounded-lg shadow-xl transition duration-200 transform hover:scale-[1.005] hover:bg-[#86259d] focus:outline-none focus:ring-4 focus:ring-tf-secondary focus:ring-opacity-50" disabled style="display:block;"
+aria-label="Start Bulk Verification Process" role="button">
             
                             Start Verification
             
                         </button>
-                    </div>
+                   
+ </div>
 
                     <div class="progress-container mt-12 p-8 bg-tf-light rounded-xl border border-gray-300 shadow-inner">
                         <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Verification Status</h3>
                         <p id="status-message" 
-                        class="font-semibold text-gray-600 mb-4 transition duration-300">Ready to 
+              
+          class="font-semibold text-gray-600 mb-4 transition duration-300">Ready to 
                         upload.</p>
 
             
                         <div class="progress-bar w-full bg-gray-300 rounded-full h-3">
-                            <div class="progress-fill h-3 bg-tf-secondary rounded-full transition-all duration-500 ease-in-out" id="progressBarFill" style="width: 0%;"></div>
+                   
+         <div class="progress-fill h-3 bg-tf-secondary rounded-full transition-all duration-500 ease-in-out" id="progressBarFill" style="width: 0%;"></div>
                         </div>
 
                         </div>
 
                     <p id="access-denied-message" class="hidden mt-6 text-center text-red-700 
-                    font-bold"></p>
+       
+             font-bold"></p>
                 </div>
                 
-                <div id="in-progress-jobs" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="in-progress-tab-btn">
+                <div id="in-progress-jobs" class="tab-content" style="display:none;"
+role="tabpanel" aria-labelledby="in-progress-tab-btn">
                     <h2 class="text-2xl font-bold text-gray-800 mb-6">Active Jobs (<span id="active-job-count">0</span>/1)</h2>
                     <input type="text" id="in-progress-search" class="w-full p-3 border rounded mb-4" placeholder="Filter jobs by Filename or Job ID">
                     <p class="text-xs text-gray-500 mb-4" id="in-progress-status-timestamp">Last refreshed: Just now.</p>
 
-                    <div id="in-progress-list" class="space-y-4">
+           
+         <div id="in-progress-list" class="space-y-4">
                         <p class="text-gray-500 text-center">Loading active jobs...</p>
                     </div>
-                    <p id="max-jobs-message" class="text-red-600 font-bold mt-4" style="display:none;">Maximum 1 job is running. Please wait for completion.</p>
+                    <p id="max-jobs-message" class="text-red-600 font-bold mt-4" style="display:none;">Maximum 1 job is running.
+Please wait for completion.</p>
                 </div>
                 
-                <div id="completed-jobs" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="completed-tab-btn">
+                <div id="completed-jobs" class="tab-content" style="display:none;"
+role="tabpanel" aria-labelledby="completed-tab-btn">
                     <h2 class="text-2xl font-bold text-gray-800 mb-6">Completed Jobs</h2>
                     <input type="text" id="completed-search" class="w-full p-3 border rounded mb-4" placeholder="Filter jobs by Filename or Job ID">
                     <p class="text-xs text-gray-500 mb-4" id="completed-status-timestamp">Last refreshed: Just now.</p>
-                    
+             
+       
                     <div id="completed-list" class="space-y-4">
                            <p class="text-gray-500 text-center">No recently completed jobs.</p>
                     </div>
                 </div>
 
-                <div id="metrics-reports" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="metrics-tab-btn">
+   
+             <div id="metrics-reports" class="tab-content" style="display:none;"
+role="tabpanel" aria-labelledby="metrics-tab-btn">
                     <h2 class="text-2xl font-bold text-gray-800 mb-6">Key Metrics & Usage Reports</h2>
                     
                     <div class="profile-card mb-8">
-                        <h3 class="text-xl font-semibold text-tf-primary mb-4 flex items-center"><i class="fas fa-chart-area mr-2"></i> Last 30 Days Usage Trend</h3>
+                        <h3 class="text-xl font-semibold text-tf-primary mb-4 
+flex items-center"><i class="fas fa-chart-area mr-2"></i> Last 30 Days Usage Trend</h3>
                         <canvas id="usage-chart" role="img" aria-label="Line chart showing credits used over the past 30 days."></canvas>
                     </div>
                 </div>
 
+                <div id="deduction-history" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="deduction-history-btn">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center"><i class="fas fa-file-invoice-dollar mr-2"></i> Verification Deduction History</h2>
+                    <p class="text-gray-600 mb-4">This section will display a detailed history of credits deducted after each successful batch verification job.</p>
+                    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 text-sm text-yellow-800">
+                        Data integration for this section is still pending API implementation.
+                    </div>
+                </div>
 
                 <div id="profile-plan" class="tab-content" 
-                style="display:none;" role="tabpanel" aria-labelledby="profile-tab-btn">
+
+                style="display:none;"
+role="tabpanel" aria-labelledby="profile-tab-btn">
                     <h2 class="text-2xl font-bold text-gray-800 mb-6">Account Overview</h2>
                     
                     
                     <div class="info-grid">
-                        <div class="profile-card flex flex-col justify-between">
+             
+           <div class="profile-card flex flex-col justify-between">
                             <h3 class="text-xl 
                             font-semibold text-tf-primary mb-4 flex items-center"><i class="fas fa-user-circle mr-2"></i> My Profile Details</h3>
             
-                            <div class="space-y-3">
+     
+                       <div class="space-y-3">
                                 <div class="info-item"><p><strong>Username:</strong> <span id="profile-username"></span></p></div>
                                 <div class="info-item"><p><strong>Email:</strong> <span id="profile-email"></span></p></div>
-            
+      
+      
             
                                 <div class="info-item"><p><strong>Mobile:</strong> <span id="profile-mobile"></span></p></div>
                                 <div class="info-item"><p><strong>Access Code:</strong> <span id="profile-bulk-code"></span></p></div>
-                            </div>
+           
+                 </div>
                             <button class="action-btn mt-6 w-full bg-gray-500 text-white hover:bg-gray-600" onclick="openPasswordModal()" role="button" aria-label="Change Account Password">Change Password</button>
             
                         </div>
 
-                        <div class="plan-card">
+       
+                 <div class="plan-card">
             
                             <h3 class="text-xl font-semibold text-tf-secondary mb-4 flex items-center"><i class="fas fa-award mr-2"></i> Plan Status</h3>
                             <div class="space-y-3">
-                
+  
+              
             
             
                                 <div class="info-item"><p><strong>Current Plan:</strong> <span id="plan-name" class="font-bold"></span></p></div>
             
-                                <div class="info-item"><p><strong>Status:</strong> <span id="account-status"></span></p></div>
+             
+                   <div class="info-item"><p><strong>Status:</strong> <span id="account-status"></span></p></div>
                                 <div class="info-item"><p><strong>Valid Until:</strong> <span id="validity-end"></span></p></div>
             
                 
-                                <div class="info-item"><p><strong>Remaining Credits:</strong> <span id="plan-remaining-credits" class="font-bold text-tf-secondary">N/A</span></p></div>
+              
+                  <div class="info-item"><p><strong>Remaining Credits:</strong> <span id="plan-remaining-credits" class="font-bold text-tf-secondary">N/A</span></p></div>
                             </div>
                         
-                            <button class="action-btn mt-6 w-full bg-tf-secondary 
+                        
+    <button class="action-btn mt-6 w-full bg-tf-secondary 
                             hover:bg-[#86259d]" onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(5)'))" role="button" aria-label="Contact support for renewal">Contact for Renewal</button>
                     
                         </div>
-                    </div>
+         
+           </div>
                 </div>
 
-                <div id="support" class="tab-content" style="display:none;" role="tabpanel">
+                <div id="support" class="tab-content" style="display:none;"
+role="tabpanel">
                     <div class="p-8 border rounded-xl shadow-md bg-tf-light space-y-6 max-w-lg mx-auto">
             
             
             
                         <h2 class="text-2xl font-bold mb-4 flex items-center text-tf-primary">
-                
+      
+          
                             <i class="fas fa-headset mr-3"></i> Contact Support
                         </h2>
 
-                        <p class="text-gray-600">Need help with plan renewal, technical issues, or credits?
+                        <p class="text-gray-600">Need help with plan renewal, technical issues, or 
+credits?
                         Contact our dedicated support team instantly.</p>
 
                         <a href="https://wa.me/919193246219" target="_blank" class="block w-full py-4 bg-whatsapp-green text-white font-bold rounded-lg shadow-lg hover:bg-green-600 transition transform hover:scale-[1.005] flex items-center justify-center" role="button" aria-label="Contact Support via WhatsApp">
                             <i class="fab fa-whatsapp text-xl mr-3"></i> WhatsApp Support (+91 9193246219)
-                        </a>
+            
+            </a>
 
                         <a href="tel:+919193246219" 
             
                         class="block w-full py-4 bg-tf-primary text-white font-bold rounded-lg hover:bg-[#4d2e97] transition transform hover:scale-[1.005] flex items-center justify-center" role="button" aria-label="Call Support">
-                            <i class="fas fa-phone mr-3"></i> Call Support (+91 9193246219)
+          
+                  <i class="fas fa-phone mr-3"></i> Call Support (+91 9193246219)
                         </a>
                     </div>
                 </div>
             </main>
-        </div>
+   
+     </div>
     </div>
 
     
@@ -551,7 +638,8 @@
         <div class="modal-content w-full max-w-lg rounded-xl shadow-2xl p-6 bg-white relative">
             <span class="modal-close absolute right-4 top-4 text-2xl cursor-pointer" onclick="closeInbox()">&times;</span>
             <h2 class="text-3xl font-bold mb-6 text-tf-primary flex items-center" id="inbox-title">
-                <i class="fas fa-envelope-open-text mr-3"></i> Client Inbox
+                
+<i class="fas fa-envelope-open-text mr-3"></i> Client Inbox
             
             </h2>
 
@@ -561,12 +649,14 @@
             </div>
 
             <div id="full-message-detail" class="mt-6 pt-4" style="display:none;">
-                <h3 id="full-message-subject" class="font-bold text-xl mb-1"></h3>
+  
+              <h3 id="full-message-subject" class="font-bold text-xl mb-1"></h3>
             
                 <small 
                 id="full-message-date" class="text-gray-500 block mb-4"></small>
                 
-                <div id="full-message-body" class="p-4 border rounded bg-gray-50 whitespace-pre-wrap text-gray-700 max-h-40 overflow-y-auto"></div>
+                <div id="full-message-body" 
+class="p-4 border rounded bg-gray-50 whitespace-pre-wrap text-gray-700 max-h-40 overflow-y-auto"></div>
             </div>
         </div>
     </div>
@@ -576,22 +666,26 @@
         <div class="modal-content">
             <span class="modal-close" onclick="closePasswordModal()">&times;</span>
             <h2 class="text-2xl font-bold mb-4 text-tf-primary" id="password-title">Change Your Password</h2>
-            <form id="password-update-form" class="space-y-4">
+            <form 
+id="password-update-form" class="space-y-4">
                 <div class="form-group">
                     <label for="new-password">New Password</label>
                 
                     <input type="password" id="new-password" name="newPassword" required minlength="6" class="w-full p-3 border rounded input-focus">
-                </div>
+              
+  </div>
                 <div class="form-group">
                     <label for="confirm-password">Confirm New Password</label>
                     <input type="password" id="confirm-password" 
                     required minlength="6" class="w-full p-3 border rounded input-focus">
-                </div>
+         
+       </div>
                 <button type="submit" id="updatePasswordBtn" class="action-btn w-full bg-red-600 hover:bg-red-700" role="button">Update & Log Out</button>
                 <p id="password-update-status" class="mt-3 text-sm text-center text-gray-700"></p>
             </form>
             <p class="text-xs text-center text-gray-500 mt-4">Note: Changing your password 
-            will immediately log you out of all devices for security.</p>
+            will immediately 
+log you out of all devices for security.</p>
         </div>
         
         
@@ -602,97 +696,102 @@
         <div class="modal-content">
             <h3 class="text-xl font-bold text-gray-800 mb-2" id="force-logout-title">Another device 
             is logged in</h3>
-            <p class="text-gray-700">It looks like your account is currently active on another device.
-            You can force-logout that session and continue here, or cancel to remain logged out.</p>
+            <p class="text-gray-700">It 
+looks like your account is currently active on another device.
+You can force-logout that session and continue here, or cancel to remain logged out.</p>
 
             <div class="modal-actions">
                 <button id="forceCancelBtn" class="py-2 px-4 bg-gray-200 rounded-lg" onclick="closeForceModal()" role="button">Cancel</button>
                 <button id="forceConfirmBtn" class="py-2 px-4 bg-red-600 text-white rounded-lg" onclick="forceLogoutOtherDevice()" role="button">Logout other device & Continue</button>
             </div>
         </div>
-    </div>
+   
+ </div>
 
     <script src="bulk_verification_logic.js"></script>
     <script>
         // --- CONSTANTS AND STATE ---
         const API_BASE = '/api';
-        const API_CLIENT = `${API_BASE}/client/index`;
+const API_CLIENT = `${API_BASE}/client/index`;
         const API_ENDPOINT = "/api/verify-single-address"; // used by single verification
-        // NOTE: API_BULK_JOBS is defined in bulk_verification_logic.js. Removed declaration here to fix SyntaxError.
+        // NOTE: API_BULK_JOBS is defined in bulk_verification_logic.js.
+Removed declaration here to fix SyntaxError.
         const LOGIN_PAGE = "client-login.html";
         
         let planDetails = JSON.parse(localStorage.getItem('planDetails') || '{}');
-        const CLIENT_NAME = localStorage.getItem('clientName') || planDetails.clientName || planDetails.username || 'Client';
+const CLIENT_NAME = localStorage.getItem('clientName') || planDetails.clientName || planDetails.username || 'Client';
         let isPlanValid = true;
         
         const initialToken = localStorage.getItem('clientToken');
-        if (!initialToken) {
+if (!initialToken) {
             window.location.href = LOGIN_PAGE;
-        }
+}
 
         let activeJobPollInterval; 
-        let globalJobsData = { inProgress: [], completed: [] }; // Storage for filtering (NEW)
+        let globalJobsData = { inProgress: [], completed: [] };
+// Storage for filtering (NEW)
 
         // --- HEARTBEAT FUNCTION (PUBLIC) ---
         async function sendHeartbeat() {
             const currentToken = localStorage.getItem('clientToken');
-            if (!currentToken) return;
+if (!currentToken) return;
             try {
                 await authFetch(`${API_CLIENT}?action=activity`, { method: 'POST' });
-            } catch (e) {
+} catch (e) {
                 console.warn("Heartbeat failed, session may be invalid:", e);
-            }
+}
         }
 
         // --- LOGOUT (PUBLIC) ---
         async function logout() {
             const tokenToNotify = localStorage.getItem('clientToken');
-            try {
+try {
                 if (tokenToNotify) {
                     await fetch(`${API_CLIENT}?action=logout`, {
                         method: 'POST',
                         headers: {
-                            'Authorization': `Bearer ${tokenToNotify}`,
+         
+                   'Authorization': `Bearer ${tokenToNotify}`,
                             'Content-Type': 'application/json'
                         }
                     });
-                }
+}
             } catch (error) {
                 console.warn("Could not notify server of logout:", error);
-            } finally {
+} finally {
                 localStorage.clear();
-                window.location.href = LOGIN_PAGE;
+window.location.href = LOGIN_PAGE;
             }
         }
 
         // --- authFetch (PUBLIC) ---
         async function authFetch(url, options = {}) {
             const currentToken = localStorage.getItem('clientToken');
-            if (!currentToken) {
+if (!currentToken) {
                 localStorage.clear();
-                window.location.href = LOGIN_PAGE;
+window.location.href = LOGIN_PAGE;
                 throw new Error("Session expired. Please log in again.");
-            }
+}
 
             const defaultHeaders = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` };
-            const resp = await fetch(url, { ...options, headers: { ...defaultHeaders, ...(options.headers || {}) } });
-            if (resp.status === 401 || resp.status === 403) {
+const resp = await fetch(url, { ...options, headers: { ...defaultHeaders, ...(options.headers || {}) } });
+if (resp.status === 401 || resp.status === 403) {
                 let debugText = '';
-                try { debugText = await resp.text(); } catch(e){}
+try { debugText = await resp.text(); } catch(e){}
                 console.warn('authFetch got 401/403 from', url, 'server message:', debugText);
-                localStorage.clear();
+localStorage.clear();
                 window.location.href = LOGIN_PAGE;
                 throw new Error("Session expired. Please log in again.");
-            }
+}
             return resp;
-        }
+}
 
         // --- Profile fetch (PUBLIC) ---
         async function fetchProfileData() {
             const currentToken = localStorage.getItem('clientToken');
-            if (!currentToken) {
+if (!currentToken) {
                 localStorage.clear();
-                window.location.href = LOGIN_PAGE;
+window.location.href = LOGIN_PAGE;
                 return;
             }
 
@@ -700,182 +799,198 @@
                 const resp = await fetch(`${API_CLIENT}?action=profile`, {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${currentToken}`, 'Content-Type': 'application/json' }
-                });
+              
+  });
 
                 if (resp.status === 401) {
                     let bodyText = '';
-                    try { bodyText = await resp.text(); } catch(e){}
+try { bodyText = await resp.text(); } catch(e){}
                     console.warn('Profile fetch 401:', bodyText);
-                    if (bodyText && bodyText.toLowerCase().includes('session invalidated')) {
+if (bodyText && bodyText.toLowerCase().includes('session invalidated')) {
                         openForceModal();
-                        return;
+return;
                     }
 
                     updateUIFromLocalPlan();
-                    return;
+return;
                 }
 
                 const json = await resp.json().catch(()=>null);
-                if (!resp.ok || !json || json.status === 'Error') {
+if (!resp.ok || !json || json.status === 'Error') {
                     console.warn('Profile fetch failed', resp.status, json);
-                    updateUIFromLocalPlan();
+updateUIFromLocalPlan();
                     return;
                 }
 
-                const pd = json.planDetails || {};
+                const pd = json.planDetails ||
+{};
                 // Correct assignment of data to planDetails
                 planDetails = Object.assign({}, planDetails, pd);
-                localStorage.setItem('planDetails', JSON.stringify(planDetails));
+localStorage.setItem('planDetails', JSON.stringify(planDetails));
 
                 const rc = pd.remainingCredits;
-                const creditsDisplay = rc === 'Unlimited' ? 'Unlimited' : (rc == null ? 'N/A' : Number(rc).toLocaleString());
+                const creditsDisplay = rc === 'Unlimited' ?
+'Unlimited' : (rc == null ? 'N/A' : Number(rc).toLocaleString());
                 
                 document.getElementById('plan-remaining-credits').textContent = creditsDisplay;
                 document.getElementById('client-name-display').textContent = pd.clientName || CLIENT_NAME;
-                document.getElementById('profile-username').textContent = pd.username || pd.clientName || CLIENT_NAME;
+document.getElementById('profile-username').textContent = pd.username || pd.clientName || CLIENT_NAME;
                 document.getElementById('profile-email').textContent = pd.email || '—';
                 document.getElementById('profile-mobile').textContent = pd.mobile || '—';
-                document.getElementById('profile-bulk-code').textContent = pd.bulkAccessCode || 'N/A';
+document.getElementById('profile-bulk-code').textContent = pd.bulkAccessCode || 'N/A';
                 document.getElementById('plan-name').textContent = (pd.planName || 'Not Set').split('_')[0];
                 document.getElementById('validity-end').textContent = pd.validityEnd ? new Date(pd.validityEnd).toLocaleDateString() : 'N/A';
-                const statusEl = document.getElementById('account-status');
+const statusEl = document.getElementById('account-status');
                 const isActive = (typeof pd.isActive === 'undefined') ? true : pd.isActive;
-                statusEl.textContent = isActive ? 'Enabled' : 'Disabled';
+                statusEl.textContent = isActive ?
+'Enabled' : 'Disabled';
                 statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
 
                 checkPlanValidity();
-                
-                // --- Enterprise Improvement: Load Chart Data (Placeholder API) ---
+// --- Enterprise Improvement: Load Chart Data (Placeholder API) ---
                 if (document.getElementById('usage-chart')) {
                     fetchUsageData().then(data => {
                         if (data) {
-                            renderUsageChart(data);
+                         
+   renderUsageChart(data);
                         }
                     }).catch(console.error);
-                }
+}
 
             } catch (e) {
                 console.error('fetchProfileData error:', e);
-                updateUIFromLocalPlan();
+updateUIFromLocalPlan();
             }
         }
         
         // --- Enterprise Improvement: Usage Data (Placeholder) ---
         async function fetchUsageData() {
             // NOTE: This assumes a new API endpoint exists to fetch credits used per day for the last 30 days.
-            // Example Placeholder Data structure (replace with actual authFetch to your backend):
+// Example Placeholder Data structure (replace with actual authFetch to your backend):
             const placeholderData = {
                 labels: ['Day 1', 'Day 6', 'Day 12', 'Day 18', 'Day 24', 'Day 30'],
                 creditsUsed: [250, 150, 400, 300, 500, 200]
             };
-            // Simulate API latency
-            await new Promise(resolve => setTimeout(resolve, 300)); 
-            return placeholderData;
+// Simulate API latency
+            await new Promise(resolve => setTimeout(resolve, 300));
+return placeholderData;
         }
 
         let usageChartInstance = null;
-        function renderUsageChart(data) {
+function renderUsageChart(data) {
             if (usageChartInstance) {
                 usageChartInstance.destroy();
-            }
+}
             const ctx = document.getElementById('usage-chart').getContext('2d');
-            usageChartInstance = new Chart(ctx, {
+usageChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: data.labels,
                     datasets: [{
-                        label: 'Credits Used',
+                    
+    label: 'Credits Used',
                         data: data.creditsUsed,
                         borderColor: '#A437C1',
                         backgroundColor: 'rgba(164, 55, 193, 0.1)',
-                        tension: 0.3,
+                
+        tension: 0.3,
                         fill: true,
                         pointRadius: 4,
                         pointBackgroundColor: '#5F3DC4'
-                    }]
+                
+    }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
-                    scales: {
+                    scales: 
+{
                         y: {
                             beginAtZero: true,
                             title: {
-                                display: true,
+                 
+               display: true,
                                 text: 'Credits'
                             }
-                        }
+                       
+ }
                     },
                     plugins: {
                         legend: {
                             display: false
-                        },
+    
+                    },
                         tooltip: {
                             mode: 'index',
-                            intersect: false,
+                          
+  intersect: false,
                         }
                     }
                 }
             });
-        }
+}
 
 
         // --- Update UI from Local Plan (PUBLIC) ---
         function updateUIFromLocalPlan() {
-            const rc = planDetails.remainingCredits ?? 'N/A';
+            const rc = planDetails.remainingCredits ??
+'N/A';
             const creditsDisplay = rc === 'Unlimited' ? 'Unlimited' : (rc === 'N/A' ? 'N/A' : Number(rc).toLocaleString());
             document.getElementById('plan-remaining-credits').textContent = creditsDisplay;
-            document.getElementById('client-name-display').textContent = CLIENT_NAME;
+document.getElementById('client-name-display').textContent = CLIENT_NAME;
             document.getElementById('profile-username').textContent = planDetails.username || CLIENT_NAME;
             document.getElementById('profile-email').textContent = planDetails.email || '—';
             document.getElementById('profile-mobile').textContent = planDetails.mobile || '—';
-            document.getElementById('profile-bulk-code').textContent = planDetails.bulkAccessCode || 'N/A';
+document.getElementById('profile-bulk-code').textContent = planDetails.bulkAccessCode || 'N/A';
             document.getElementById('plan-name').textContent = (planDetails.planName || 'Not Set').split('_')[0];
             document.getElementById('validity-end').textContent = planDetails.validityEnd ? new Date(planDetails.validityEnd).toLocaleDateString() : 'N/A';
-
-            const statusEl = document.getElementById('account-status');
-            const isActive = (typeof pd.isActive === 'undefined') ? true : pd.isActive;
-            statusEl.textContent = isActive ? 'Enabled' : 'Disabled';
+const statusEl = document.getElementById('account-status');
+            const isActive = (typeof planDetails.isActive === 'undefined') ? true : planDetails.isActive; // CRITICAL FIX: Use planDetails
+            statusEl.textContent = isActive ?
+'Enabled' : 'Disabled';
             statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
-        }
+}
 
         // --- CHECK PLAN VALIDITY (PUBLIC) ---
         function checkPlanValidity() {
             const token = localStorage.getItem('clientToken');
-            const planDetailsString = localStorage.getItem('planDetails');
+const planDetailsString = localStorage.getItem('planDetails');
 
             if (!token) {
                 showAccessDenied("Please log in to access Bulk Address Verification.");
-                isPlanValid = false;
+isPlanValid = false;
                 return false;
             }
 
             try {
-                const validityEnd = planDetails.validityEnd ? new Date(planDetails.validityEnd) : null;
+                const validityEnd = planDetails.validityEnd ?
+new Date(planDetails.validityEnd) : null;
                 const now = new Date();
 
                 if (planDetails.isActive === false) {
                     showAccessDenied("Your account has been **disabled** by the administrator. Please contact support.");
-                    isPlanValid = false;
+isPlanValid = false;
                     return false;
                 }
 
                 if (validityEnd && validityEnd < now) {
                     showAccessDenied(`Your bulk plan expired on **${validityEnd.toLocaleDateString()}**. Please contact support to renew.`);
-                    isPlanValid = false;
+isPlanValid = false;
                     return false;
                 }
 
                 // OK
                 document.getElementById('bulkContent').classList.remove('hidden');
-                isPlanValid = true;
+                const progressContainer = document.querySelector('#bulk-verification .progress-container');
+                if (progressContainer) progressContainer.classList.remove('hidden'); // Ensure progress bar is visible on valid plan
+isPlanValid = true;
                 return true;
 
             } catch (e) {
                 console.error("Error parsing plan details:", e);
-                showAccessDenied("Client authentication data is corrupted. Please log in again.");
+showAccessDenied("Client authentication data is corrupted. Please log in again.");
                 setTimeout(() => { localStorage.clear(); window.location.href = LOGIN_PAGE; }, 1500);
-                isPlanValid = false;
+isPlanValid = false;
                 return false;
             }
         }
@@ -883,61 +998,62 @@
         // --- SHOW ACCESS DENIED (PUBLIC) ---
         function showAccessDenied(message) {
             const bulkContent = document.getElementById('bulkContent');
-            const progressContainer = document.querySelector('#bulk-verification .progress-container');
+const progressContainer = document.querySelector('#bulk-verification .progress-container');
             if (bulkContent) bulkContent.classList.add('hidden');
             if (progressContainer) progressContainer.classList.add('hidden');
 
             const existing = document.querySelector('#bulk-verification .access-denied-block');
             if (existing) return;
-            const errorBlock = document.createElement('div');
+const errorBlock = document.createElement('div');
             errorBlock.className = 'access-denied-block space-y-6 mt-6';
             errorBlock.innerHTML = `
                 <div class="bg-red-50 p-8 rounded-xl border-l-4 border-alert-dark shadow-lg">
                     <p class="font-bold text-xl text-alert-dark mb-3 flex items-center">🛑 Access Denied</p>
                     <p class="text-base text-gray-700 mb-6">${message.replace(/\*\*/g, '<strong>')}</p>
-                </div>
+               
+ </div>
                 <a href="tel:+919193246219" class="block w-full py-3 bg-tf-secondary text-white text-center font-bold rounded-lg hover:bg-[#86259d] transition">Call Support / Renew Plan</a>
                 <a href="https://wa.me/919193246219" target="_blank" class="block w-full py-3 bg-whatsapp-green text-white text-center font-bold rounded-lg hover:bg-green-600">🟢 WhatsApp Support</a>
             `;
-            document.getElementById('bulk-verification').appendChild(errorBlock);
+document.getElementById('bulk-verification').appendChild(errorBlock);
         }
 
         // --- PASSWORD MODAL LOGIC (PUBLIC) ---
         function openPasswordModal() {
             document.getElementById('password-modal').style.display = 'flex';
-            document.getElementById('password-update-form').reset();
+document.getElementById('password-update-form').reset();
             document.getElementById('password-update-status').textContent = '';
         }
 
         function closePasswordModal() {
             document.getElementById('password-modal').style.display = 'none';
-        }
+}
         
         // --- FORCE-LOGOUT UI / helpers (PUBLIC) ---
         function openForceModal() {
             document.getElementById('force-logout-modal').style.display = 'flex';
-        }
+}
         function closeForceModal() {
             document.getElementById('force-logout-modal').style.display = 'none';
-        }
+}
 
         function getTokenPayload() {
             const token = localStorage.getItem('clientToken');
-            if (!token) return null;
+if (!token) return null;
             try {
                 const payload = JSON.parse(atob(token.split('.')[1]));
-                return payload;
+return payload;
             } catch (e) {
                 return null;
-            }
+}
         }
 
         async function forceLogoutOtherDevice() {
             const payload = getTokenPayload();
-            const clientId = payload && payload.clientId ? payload.clientId : (planDetails.id || planDetails.clientId);
-            if (!clientId) {
+const clientId = payload && payload.clientId ? payload.clientId : (planDetails.id || planDetails.clientId);
+if (!clientId) {
                 alert('Cannot determine clientId. Please log in again.');
-                closeForceModal();
+closeForceModal();
                 localStorage.clear();
                 window.location.href = LOGIN_PAGE;
                 return;
@@ -947,22 +1063,23 @@
                 const resp = await fetch(`${API_CLIENT}?action=force-logout`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ clientId })
+               
+     body: JSON.stringify({ clientId })
                 });
-                const json = await resp.json().catch(()=>null);
+const json = await resp.json().catch(()=>null);
                 if (resp.ok && json && json.status === 'Success') {
                     closeForceModal();
-                    localStorage.removeItem('clientToken');
+localStorage.removeItem('clientToken');
                     alert('Other device logged out. Please log in again here.');
                     window.location.href = LOGIN_PAGE;
-                } else {
+} else {
                     console.warn('force-logout failed', resp.status, json);
-                    alert('Could not force logout other device. Contact support.');
+alert('Could not force logout other device. Contact support.');
                     closeForceModal();
                 }
             } catch (e) {
                 console.error('force-logout error', e);
-                alert('Network error. Try again or contact support.');
+alert('Network error. Try again or contact support.');
                 closeForceModal();
             }
         }
@@ -971,271 +1088,306 @@
         async function loadInboxCounts() {
             try {
                 const response = await authFetch(`${API_BASE}/inbox/message`);
-                const result = await response.json();
+const result = await response.json();
                 if (result.status === "Success" && result.unreadCount > 0) {
                     const badge = document.getElementById('inbox-badge');
-                    badge.textContent = result.unreadCount;
+badge.textContent = result.unreadCount;
                     badge.style.display = 'block';
                 } else {
                     document.getElementById('inbox-badge').style.display = 'none';
-                }
+}
             } catch (e) {
                 console.error("Failed to load client inbox counts:", e);
-            }
+}
         }
 
         async function loadClientInbox() {
             const msgContainer = document.getElementById('client-inbox-list');
-            const detailView = document.getElementById('full-message-detail');
+const detailView = document.getElementById('full-message-detail');
             msgContainer.innerHTML = '<p class="text-center text-gray-500 mt-5">Loading messages...</p>';
             detailView.style.display = 'none';
-            try {
+try {
                 const response = await authFetch(`${API_BASE}/inbox/message`);
-                const result = await response.json();
+const result = await response.json();
                 if (result.status === "Success") {
                     msgContainer.innerHTML = '';
-                    if (!result.messages || result.messages.length === 0) {
+if (!result.messages || result.messages.length === 0) {
                         msgContainer.innerHTML = '<p class="text-center text-gray-500 mt-5">No messages in your inbox.</p>';
-                        return;
+return;
                     }
                     result.messages.forEach(msg => {
                         const isUnread = !msg.isRead && msg.senderId === 'admin';
                         const cardClass = isUnread ? 'unread' : '';
     
-                        const icon = isUnread ? 'fa-envelope' : 'fa-envelope-open';
+           
+             const icon = isUnread ? 'fa-envelope' : 'fa-envelope-open';
                         const sender = msg.senderId === 'admin' ? 'Admin' : 'You';
     
                         // FIX: Use JSON.stringify for subject/body when passing to onclick to handle quotes/special characters
-                        const subjectSafe = JSON.stringify(msg.subject || '(No Subject)');
+      
+                  const subjectSafe = JSON.stringify(msg.subject || '(No Subject)');
                         const bodySafe = JSON.stringify(msg.body || '');
 
                         const messageHtml = `
-                            <div id="msg-${msg._id}" class="msg-card ${cardClass}" onclick="viewClientMessage('${msg._id}', ${subjectSafe}, ${bodySafe}, ${isUnread}, '${msg.timestamp}')">
+                    
+        <div id="msg-${msg._id}" class="msg-card ${cardClass}" onclick="viewClientMessage('${msg._id}', ${subjectSafe}, ${bodySafe}, ${isUnread}, '${msg.timestamp}')">
                                 <i class="fas ${icon} msg-icon"></i>
                                 <div class="flex-grow">
-                                    <p class="text-md truncate">${msg.subject || '(No Subject)'}</p>
+                
+                    <p class="text-md truncate">${msg.subject ||
+'(No Subject)'}</p>
                                     <small class="text-gray-500 block">From: ${sender} • ${new Date(msg.timestamp).toLocaleDateString()}</small>
                                 </div>
-                            </div>
+                         
+   </div>
                         `;
-                        msgContainer.insertAdjacentHTML('beforeend', messageHtml);
+msgContainer.insertAdjacentHTML('beforeend', messageHtml);
                     });
                 } else {
                     msgContainer.innerHTML = `<p class="text-center text-red-500 mt-5">Failed to load inbox: ${result.message}</p>`;
-                }
+}
             } catch (error) {
                 msgContainer.innerHTML = `<p class="text-center text-red-500 mt-5">Network Error: ${error.message}</p>`;
-            }
+}
         }
 
         function toggleInbox() {
             document.getElementById('inbox-modal').style.display = 'flex';
-            loadClientInbox();
+loadClientInbox();
         }
 
         function closeInbox() {
             document.getElementById('inbox-modal').style.display = 'none';
-            loadInboxCounts();
+loadInboxCounts();
         }
 
         function viewClientMessage(messageId, subject, body, isUnread, timestamp) {
             const detailView = document.getElementById('full-message-detail');
-            document.getElementById('full-message-subject').textContent = subject;
+document.getElementById('full-message-subject').textContent = subject;
             // FIX: Use innerText for body to avoid injection and respect whitespace
             document.getElementById('full-message-body').innerText = body;
-            document.getElementById('full-message-date').textContent = new Date(timestamp).toLocaleString();
+document.getElementById('full-message-date').textContent = new Date(timestamp).toLocaleString();
             detailView.style.display = 'block';
             if (isUnread) {
                 authFetch(`${API_BASE}/inbox/message?messageId=${messageId}`, { method: 'PUT' }).catch(()=>{});
-                const card = document.getElementById(`msg-${messageId}`);
+const card = document.getElementById(`msg-${messageId}`);
                 if (card) {
                     card.classList.remove('unread');
-                    const iconEl = card.querySelector('.msg-icon');
+const iconEl = card.querySelector('.msg-icon');
                     if (iconEl) iconEl.classList.replace('fa-envelope', 'fa-envelope-open');
                 }
                 setTimeout(loadInboxCounts, 500);
-            }
+}
         }
 
         // --- TAB NAVIGATION (UPDATED and PUBLIC) ---
         function showTab(tabId, button) {
             document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             document.getElementById(tabId).style.display = 'block';
             if (button) button.classList.add('active');
 
             // Stop polling when leaving job tabs (NEW)
             if (activeJobPollInterval) {
                 clearInterval(activeJobPollInterval);
-                activeJobPollInterval = null;
+activeJobPollInterval = null;
             }
             
             if (tabId === 'bulk-verification') {
                 checkPlanValidity();
-                // Enterprise Improvement: Call function to load KPI data
-                if (typeof loadKpiData === 'function') loadKpiData(); 
-            } else if (tabId === 'profile-plan') {
-                fetchProfileData(); // Ensure fresh data on tab click
+// Enterprise Improvement: Call function to load KPI data
+                if (typeof loadKpiData === 'function') loadKpiData();
+} else if (tabId === 'profile-plan') {
+                fetchProfileData();
+// Ensure fresh data on tab click
             } else if (tabId === 'in-progress-jobs' || tabId === 'completed-jobs') {
                 // Requirements 2, 3, 5: Start polling for status when entering job tabs (NEW)
                 startJobPolling();
-            }
+}
         }
         
         // --- JOB POLLING LOGIC (PUBLIC) ---
         // Enterprise Improvement: Filter search is integrated here
         function startJobPolling() {
             if (activeJobPollInterval) clearInterval(activeJobPollInterval);
-            fetchAndUpdateJobStatus(); // Initial fetch
-            activeJobPollInterval = setInterval(fetchAndUpdateJobStatus, 5000); // Poll every 5 seconds
+fetchAndUpdateJobStatus(); // Initial fetch
+            activeJobPollInterval = setInterval(fetchAndUpdateJobStatus, 5000);
+// Poll every 5 seconds
             
             // Add listeners for filtering (NEW)
             document.getElementById('in-progress-search')?.addEventListener('input', filterJobsList);
-            document.getElementById('completed-search')?.addEventListener('input', filterJobsList);
+document.getElementById('completed-search')?.addEventListener('input', filterJobsList);
         }
 
         // --- Enterprise Improvement: Job Filtering Logic ---
         function filterJobsList() {
-            const activeSearchTerm = document.getElementById('in-progress-search')?.value.toLowerCase() || '';
+            const activeSearchTerm = document.getElementById('in-progress-search')?.value.toLowerCase() ||
+'';
             const completedSearchTerm = document.getElementById('completed-search')?.value.toLowerCase() || '';
             
             // Render In Progress list (filtered)
             renderJobsList(globalJobsData.inProgress, 'in-progress-list', activeSearchTerm);
-            
-            // Render Completed list (filtered)
+// Render Completed list (filtered)
             renderJobsList(globalJobsData.completed, 'completed-list', completedSearchTerm);
-        }
+}
 
         // Reusable function to render job lists (NEW)
         function renderJobsList(jobs, containerId, searchTerm) {
             const container = document.getElementById(containerId);
-            let filteredJobs = jobs;
+let filteredJobs = jobs;
 
             if (searchTerm) {
                 filteredJobs = jobs.filter(job => 
                     job.filename.toLowerCase().includes(searchTerm) || 
                     job._id.toLowerCase().includes(searchTerm)
                 );
-            }
+}
             
             let html = '';
-            let activeCount = 0; // Only count active jobs for the active job counter
+let activeCount = 0; // Only count active jobs for the active job counter
 
             for (const job of filteredJobs) {
-                const progress = job.totalRows > 0 ? ((job.processedCount / job.totalRows) * 100).toFixed(0) : 0;
+                const progress = job.totalRows > 0 ?
+((job.processedCount / job.totalRows) * 100).toFixed(0) : 0;
                 const isFailed = job.status === 'Failed';
                 const isCompleted = job.status === 'Completed';
-                
-                // Show only 10 completed jobs unless filtering is active
+// Show only 10 completed jobs unless filtering is active
                 if (containerId === 'completed-list' && !searchTerm && html.split('job-card').length > 10) continue;
-                
-                const completionDisplay = isCompleted ? formatISTTime(job.completedTime) : new Date(job.submittedAt).toLocaleDateString();
+const completionDisplay = isCompleted ? formatISTTime(job.completedTime) : new Date(job.submittedAt).toLocaleDateString();
 
                 if (job.status === 'In Progress' || job.status === 'Queued') {
-                    activeCount++; // Count only for active list
+                    activeCount++;
+// Count only for active list
                 }
                 
                 const cardHtml = `
                     <div class="job-card bg-white p-4 rounded-lg shadow-md border-l-4 ${isCompleted ? 'border-green-500' : isFailed || job.status === 'Cancelled' ? 'border-red-500' : 'border-tf-secondary'}">
-                        <div class="flex justify-between items-start mb-2">
+     
+                   <div class="flex justify-between items-start mb-2">
                             <h4 class="font-bold text-lg text-gray-800 truncate">${job.filename}</h4>
                             <span class="text-sm font-semibold text-gray-600">${completionDisplay}</span>
-                        </div>
+              
+          </div>
                         <div class="text-sm text-gray-600 mb-2 space-y-1">
                             <p><strong>Status:</strong> <span class="font-bold text-${isCompleted ? 'green' : isFailed || job.status === 'Cancelled' ? 'red' : 'tf-secondary'}-600">${job.status}</span></p>
-                            ${job.status !== 'Cancelled' && job.status !== 'Failed' ? `<p><strong>Rows:</strong> ${job.processedCount} / ${job.totalRows}</p>` : ''}
+                   
+         ${job.status !== 'Cancelled' && job.status !== 'Failed' ?
+`<p><strong>Rows:</strong> ${job.processedCount} / ${job.totalRows}</p>` : ''}
                         </div>
-                        ${job.status === 'In Progress' ? `
+                        ${job.status === 'In Progress' ?
+`
                         <div class="progress-bar w-full bg-gray-300 rounded-full h-2 mt-2">
                             <div class="progress-fill h-2 bg-tf-secondary rounded-full" style="width: ${progress}%;"></div>
                         </div>
-                        ` : ''}
+            
+            ` : ''}
                         <div class="mt-3 flex gap-2 justify-end">
-                            ${job.status === 'In Progress' || job.status === 'Queued' ? `
+                            ${job.status === 'In Progress' ||
+job.status === 'Queued' ? `
                                 <button class="py-1 px-3 bg-red-500 text-white text-sm rounded hover:bg-red-600" onclick="handleCancelJob('${job._id}')">
                                     <i class="fas fa-times"></i> Cancel
-                                </button>` 
-                            : isCompleted ? `
+                 
+               </button>` 
+                            : isCompleted ?
+`
                                 <button class="py-1 px-3 bg-tf-primary text-white text-sm rounded hover:bg-[#4d2e97] transition" onclick="handleAuthenticatedDownload('${job._id}', '${job.filename.replace(/'/g, "\\'").replace(/"/g, '')}')">
                                     <i class="fas fa-download"></i> Download
-                                </button>`
+                 
+               </button>`
                             : isFailed ? `<span class="text-red-500 text-sm italic">${job.error || 'Check server logs.'}</span>`
                             : job.status === 'Cancelled' ? `<span class="text-red-500 text-sm italic">Cancelled by user.</span>`
-                            : ''}
+         
+                   : ''}
                         </div>
                     </div>
                 `;
                 
-                html += cardHtml;
+    
+            html += cardHtml;
             }
 
             container.innerHTML = html || `<p class="text-gray-500 text-center mt-5">No jobs found matching the filter.</p>`;
             
             // Only update the active job counter if we are rendering the in-progress list without filtering.
-            if (containerId === 'in-progress-list' && !document.getElementById('in-progress-search')?.value) {
+if (containerId === 'in-progress-list' && !document.getElementById('in-progress-search')?.value) {
                 document.getElementById('active-job-count').textContent = activeCount;
-                
-                // Update bulk button state based on actual total active jobs (NEW)
+// Update bulk button state based on actual total active jobs (NEW)
                 const processBtn = document.getElementById('processButton');
-                const bulkTabBtn = document.getElementById('bulk-tab-btn');
+const bulkTabBtn = document.getElementById('bulk-tab-btn');
                 const csvFileInput = document.getElementById('csvFileInput');
                 
                 if (activeCount >= 1) { 
                     if (processBtn) processBtn.disabled = true;
-                    if (bulkTabBtn) bulkTabBtn.style.borderBottom = '2px solid #EF4444';
+if (bulkTabBtn) bulkTabBtn.style.borderBottom = '2px solid #EF4444';
                     document.getElementById('max-jobs-message').style.display = 'block';
-                } else {
-                    if (processBtn && csvFileInput) processBtn.disabled = !csvFileInput.files.length; 
-                    if (bulkTabBtn && document.querySelector('.tab-button.active')?.id === 'bulk-tab-btn') {
+} else {
+                    if (processBtn && csvFileInput) processBtn.disabled = !csvFileInput.files.length;
+if (bulkTabBtn && document.querySelector('.tab-button.active')?.id === 'bulk-tab-btn') {
                         bulkTabBtn.style.borderBottom = '2px solid #5F3DC4';
-                    }
+}
                     document.getElementById('max-jobs-message').style.display = 'none';
-                }
+}
             }
 
             // Update refresh timestamp (NEW)
             document.getElementById(containerId.replace('-list', '-status-timestamp')).textContent = `Last refreshed: ${new Date().toLocaleTimeString()}`;
-        }
+}
         
         async function fetchAndUpdateJobStatus() {
             try {
                 const resp = await authFetch(API_BULK_JOBS, { method: 'GET' });
-                const result = await resp.json();
+const result = await resp.json();
 
                 if (result.status !== 'Success') {
                     console.error('Failed to fetch job status:', result.message);
-                    return;
+return;
                 }
 
                 // Sort by submitted time descending
                 result.jobs.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
-                
-                globalJobsData.inProgress = result.jobs.filter(j => j.status === 'Queued' || j.status === 'In Progress');
-                globalJobsData.completed = result.jobs.filter(j => j.status === 'Completed' || j.status === 'Failed' || j.status === 'Cancelled');
-                
-                // Re-render based on current filter state
+globalJobsData.inProgress = result.jobs.filter(j => j.status === 'Queued' || j.status === 'In Progress');
+globalJobsData.completed = result.jobs.filter(j => j.status === 'Completed' || j.status === 'Failed' || j.status === 'Cancelled');
+// Re-render based on current filter state
                 filterJobsList();
-                
-                // Update remaining credits UI (post-completion check)
+// Update remaining credits UI (post-completion check)
                 const afterCreditsResp = await getRemainingCredits();
-                if (afterCreditsResp.ok) {
+if (afterCreditsResp.ok) {
                     const rc = afterCreditsResp.remainingCredits;
-                    const remEl = document.getElementById('plan-remaining-credits');
+const remEl = document.getElementById('plan-remaining-credits');
                     if (remEl) remEl.textContent = rc === 'Unlimited' ? 'Unlimited' : Number(rc).toLocaleString();
-                }
+}
+                
+                // CRITICAL FIX: Ensure KPI is updated after polling is complete
+                if (typeof loadKpiData === 'function') loadKpiData();
 
             } catch (e) {
                 console.error('Job polling failed:', e);
-                document.getElementById('in-progress-list').innerHTML = '<p class="text-red-500 text-center mt-5">Failed to load status. Network error.</p>';
-            }
+document.getElementById('in-progress-list').innerHTML = '<p class="text-red-500 text-center mt-5">Failed to load status. Network error.</p>';
+}
         }
         
-        // --- Enterprise Improvement: KPI Data Logic (Placeholder) ---
+        // --- Enterprise Improvement: KPI Data Logic (Updated) ---
         async function loadKpiData() {
-            // NOTE: This should call a backend API to get historical data.
-            // Placeholder:
-            document.getElementById('success-rate-kpi').textContent = '96.2%';
-            document.getElementById('total-volume-kpi').textContent = '400'; // Set to realistic or placeholder value
+            // Get today's completed rows from the global job data
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            let completedToday = 0;
+            
+            // Check if globalJobsData has been populated by the poller
+            if (globalJobsData.completed) {
+                globalJobsData.completed.forEach(job => {
+                    const completedTime = job.completedTime || job.submittedAt;
+                    if (completedTime) {
+                        const completedDate = new Date(completedTime);
+                        if (job.status === 'Completed' && completedDate >= today) {
+                            completedToday += job.totalRows;
+                        }
+                    }
+                });
+            }
+
+            document.getElementById('today-completed-kpi').textContent = completedToday.toLocaleString();
         }
 
         // --- AUTHENTICATED DOWNLOAD FUNCTION ---
@@ -1244,31 +1396,32 @@
             const downloadUrl = `${API_BULK_JOBS}?action=download&jobId=${jobId}`; 
 
             try {
-                const resp = await authFetch(downloadUrl, { method: 'GET' });
+              
+  const resp = await authFetch(downloadUrl, { method: 'GET' });
 
                 const contentType = (resp.headers.get && resp.headers.get('content-type') || '').toLowerCase();
                 if (contentType.includes('application/json')) {
                     let json = null;
-                    try { json = await resp.json(); } catch (e) { /* ignore parse error */ }
+                    try { json = await resp.json(); 
+} catch (e) { /* ignore parse error */ }
                     const msg = (json && (json.message || json.error)) ? (json.message || json.error) : 'Server returned JSON instead of CSV.';
                     alert('Download failed: ' + msg);
                     return;
-                }
+}
 
                 if (!resp.ok) {
                     const errorText = await resp.text();
-                    try {
+try {
                         const errorJson = JSON.parse(errorText);
-                        alert('Download failed: ' + (errorJson.message || errorJson.error || 'File unavailable.'));
-                    } catch (e) {
+alert('Download failed: ' + (errorJson.message || errorJson.error || 'File unavailable.'));
+} catch (e) {
                         alert('Download failed. Please try again later.');
-                    }
+}
                     return;
-                }
+}
 
-                const blob = await resp.blob(); 
-                
-                const a = document.createElement('a');
+                const blob = await resp.blob();
+const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = window.URL.createObjectURL(blob);
                 a.download = safeFilename; 
@@ -1276,25 +1429,26 @@
                 a.click();
                 window.URL.revokeObjectURL(a.href);
                 a.remove();
-                
-            } catch (e) {
+} catch (e) {
                 console.error("Authenticated Download Failed:", e);
-                alert('Download failed due to a network or authentication error.');
+alert('Download failed due to a network or authentication error.');
             }
         }
         
         // Make core functions available globally for HTML onclick events
         window.showTab = showTab;
-        window.logout = logout; 
+window.logout = logout; 
         window.openPasswordModal = openPasswordModal;
         window.closePasswordModal = closePasswordModal;
         window.closeForceModal = closeForceModal;
         window.forceLogoutOtherDevice = forceLogoutOtherDevice;
         window.toggleInbox = toggleInbox;
-        window.closeInbox = closeInbox;
+window.closeInbox = closeInbox;
         window.viewClientMessage = viewClientMessage;
         window.handleAuthenticatedDownload = handleAuthenticatedDownload;
-        window.filterJobsList = filterJobsList; // Expose filter function (NEW)
+        window.filterJobsList = filterJobsList;
+// Expose filter function (NEW)
+        window.loadKpiData = loadKpiData;
 
 
         // --- PASSWORD UPDATE LISTENER (PUBLIC) ---
@@ -1303,87 +1457,90 @@
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
             const statusEl = document.getElementById('password-update-status');
-            const updateBtn = document.getElementById('updatePasswordBtn');
+            const 
+updateBtn = document.getElementById('updatePasswordBtn');
 
             if (newPassword !== confirmPassword) {
                 statusEl.textContent = 'Passwords do not match.';
                 statusEl.className = 'text-red-600 mt-3';
                 return;
             }
-            if (newPassword.length < 6) {
+            if (newPassword.length 
+< 6) {
                 statusEl.textContent = 'Password must be at least 6 characters.';
                 statusEl.className = 'text-red-600 mt-3';
                 return;
             }
 
             updateBtn.disabled = true;
-            updateBtn.textContent = 'Processing...';
+updateBtn.textContent = 'Processing...';
             statusEl.textContent = 'Sending request to server...';
             statusEl.className = 'text-tf-primary mt-3';
-
-            try {
+try {
                 const resp = await authFetch(`${API_CLIENT}?action=update-password`, {
                     method: 'PUT',
                     body: JSON.stringify({ newPassword })
                 });
-                const result = await resp.json();
+const result = await resp.json();
 
                 if (resp.ok && result.status === 'Success') {
-                    statusEl.textContent = 'Password changed successfully! Redirecting to login...';
+                    statusEl.textContent = 'Password changed successfully!
+Redirecting to login...';
                     statusEl.className = 'text-green-600 mt-3';
                     setTimeout(logout, 1500); 
                 } else {
-                    statusEl.textContent = result.message || 'Update failed.';
+                    statusEl.textContent = result.message ||
+'Update failed.';
                     statusEl.className = 'text-red-600 mt-3';
                 }
             } catch (error) {
                 statusEl.textContent = 'Network error or session expired.';
-                statusEl.className = 'text-red-600 mt-3';
+statusEl.className = 'text-red-600 mt-3';
                 console.error('Password Update Error:', error);
             } finally {
                 updateBtn.disabled = false;
-                updateBtn.textContent = 'Update & Log Out';
+updateBtn.textContent = 'Update & Log Out';
             }
         });
-
-
-        // --- INITIALIZATION ---
+// --- INITIALIZATION ---
         window.onload = () => {
             // Try to fetch profile and then init bulk listeners (external)
             fetchProfileData().then(()=> {
                 if (typeof initBulkListeners === 'function') {
                     initBulkListeners();
-                } else {
+         
+       } else {
                     console.error("Bulk listeners function not found. Make sure bulk_verification_logic.js is loaded.");
                 }
             }).catch((e)=> {
                 console.error('Error during profile init:', e);
-                if (typeof initBulkListeners === 'function') initBulkListeners();
+             
+   if (typeof initBulkListeners === 'function') initBulkListeners();
             });
-            loadInboxCounts();
+loadInboxCounts();
 
             setInterval(sendHeartbeat, 60000);
             setInterval(loadInboxCounts, 60000);
             
             // Start in bulk tab
             showTab('bulk-verification', document.getElementById('bulk-tab-btn'));
-
-            /* --- SMALL SAFE FALLBACK (non-invasive) ---
+/* --- SMALL SAFE FALLBACK (non-invasive) ---
             If the external bulk_verification_logic.js did not attach listeners
             (missing or errored), make sure the process button enables when a file
-            is selected and disables otherwise. This does NOT change logic.
+            is selected and disables otherwise.
+This does NOT change logic.
             */
             try {
                 ensureProcessButtonFallback();
-            } catch (e) {
+} catch (e) {
                 console.warn('Fallback init failed', e);
-            }
+}
         };
 
         // --- Time Formatting Helper (NEW) ---
         function formatISTTime(utcTimestamp) {
             if (!utcTimestamp) return 'N/A';
-            const date = new Date(utcTimestamp);
+const date = new Date(utcTimestamp);
             
             const options = {
                 year: 'numeric',
@@ -1391,22 +1548,22 @@
                 day: '2-digit',
                 hour: '2-digit',
                 minute: '2-digit',
-                hour12: true,
+       
+         hour12: true,
                 timeZone: 'Asia/Kolkata'
             };
-
-            return date.toLocaleDateString('en-IN', options);
+return date.toLocaleDateString('en-IN', options);
         }
 
         // placeholder for getRemainingCredits used in polling (assumes it's defined elsewhere)
         async function getRemainingCredits() {
             try {
                 const resp = await authFetch(`${API_CLIENT}?action=remaining-credits`);
-                const json = await resp.json().catch(()=>null);
+const json = await resp.json().catch(()=>null);
                 return json || { ok: false };
-            } catch (e) {
+} catch (e) {
                 return { ok: false };
-            }
+}
         }
 
         /* -------------------------
@@ -1414,37 +1571,37 @@
             Enables/disables Start Verification button based on:
             - a) whether a file is selected
             - b) whether there is currently an active job (uses active job count element)
-            This is safe — it only manipulates the button UI state and does not change any process logic.
-            ------------------------- */
+         
+   This is safe — it only manipulates the button UI state and does not change any process logic.
+------------------------- */
         function ensureProcessButtonFallback() {
             const fileInput = document.getElementById('csvFileInput');
-            const processBtn = document.getElementById('processButton');
+const processBtn = document.getElementById('processButton');
             const activeJobCountEl = document.getElementById('active-job-count');
-            const MAX_ACTIVE = 1; // consistency with your logic
+            const MAX_ACTIVE = 1;
+// consistency with your logic
 
             if (!fileInput || !processBtn) return;
-
-            function updateButtonState() {
+function updateButtonState() {
                 // read active job count (fallback to 0)
                 const active = Number(activeJobCountEl?.textContent || 0);
-                // enable only if file selected AND no active jobs
+// enable only if file selected AND no active jobs
                 const hasFile = fileInput.files && fileInput.files.length > 0;
-                processBtn.disabled = !(hasFile && active < MAX_ACTIVE);
+processBtn.disabled = !(hasFile && active < MAX_ACTIVE);
             }
 
             // attach listener (safe, won't conflict if external script also uses this input)
             fileInput.addEventListener('change', updateButtonState, { passive: true });
-
-            // also observe changes to active job count (in case polling updates it later)
+// also observe changes to active job count (in case polling updates it later)
             const observerTarget = activeJobCountEl;
-            if (observerTarget) {
+if (observerTarget) {
                 const mo = new MutationObserver(updateButtonState);
-                mo.observe(observerTarget, { childList: true, subtree: true, characterData: true });
+mo.observe(observerTarget, { childList: true, subtree: true, characterData: true });
             }
 
             // initial sync (in case file was preselected)
             updateButtonState();
-        }
+}
     </script>
 </body>
 </html>
