@@ -572,12 +572,12 @@ role="tabpanel" aria-labelledby="profile-tab-btn">
                     
                     <div class="info-grid">
              
-           <div class="profile-card flex flex-col justify-between">
+                        <div class="profile-card flex flex-col justify-between">
                             <h3 class="text-xl 
                             font-semibold text-tf-primary mb-4 flex items-center"><i class="fas fa-user-circle mr-2"></i> My Profile Details</h3>
             
      
-                       <div class="space-y-3">
+                            <div class="space-y-3">
                                 <div class="info-item"><p><strong>Username:</strong> <span id="profile-username"></span></p></div>
                                 <div class="info-item"><p><strong>Email:</strong> <span id="profile-email"></span></p></div>
       
@@ -586,13 +586,13 @@ role="tabpanel" aria-labelledby="profile-tab-btn">
                                 <div class="info-item"><p><strong>Mobile:</strong> <span id="profile-mobile"></span></p></div>
                                 <div class="info-item"><p><strong>Access Code:</strong> <span id="profile-bulk-code"></span></p></div>
            
-                 </div>
-                            <button class="action-btn mt-6 w-full bg-gray-500 text-white hover:bg-gray-600" onclick="openPasswordModal()" role="button" aria-label="Change Password</button>
+                            </div>
+                            <button class="action-btn mt-6 w-full bg-gray-500 text-white hover:bg-gray-600" onclick="openPasswordModal()" role="button" aria-label="Change Password">Change Password</button>
             
                         </div>
 
        
-                 <div class="plan-card">
+                        <div class="plan-card">
             
                             <h3 class="text-xl font-semibold text-tf-secondary mb-4 flex items-center"><i class="fas fa-award mr-2"></i> Plan Status</h3>
                             <div class="space-y-3">
@@ -603,23 +603,22 @@ role="tabpanel" aria-labelledby="profile-tab-btn">
                                 <div class="info-item"><p><strong>Current Plan:</strong> <span id="plan-name" class="font-bold"></span></p></div>
             
              
-                   <div class="info-item"><p><strong>Status:</strong> <span id="account-status"></span></p></div>
+                                <div class="info-item"><p><strong>Status:</strong> <span id="account-status"></span></p></div>
                                 <div class="info-item"><p><strong>Valid Until:</strong> <span id="validity-end"></span></p></div>
             
                 
               
-                  <div class="info-item"><p><strong>Remaining Credits:</strong> <span id="plan-remaining-credits" class="font-bold text-tf-secondary">N/A</span></p></div>
+                                <div class="info-item"><p><strong>Remaining Credits:</strong> <span id="plan-remaining-credits" class="font-bold text-tf-secondary">N/A</span></p></div>
                             </div>
                         
                         
-    <button class="action-btn mt-6 w-full bg-tf-secondary 
-                            hover:bg-[#86259d]" onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:nth-child(5)'))" role="button" aria-label="Contact support for renewal">Contact for Renewal</button>
+                            <button class="action-btn mt-6 w-full bg-tf-secondary 
+                            hover:bg-[#86259d]" onclick="showTab('support', document.querySelector('.nav-tabs .tab-button:last-child'))" role="button" aria-label="Contact support for renewal">Contact for Renewal</button>
                     
                         </div>
          
-           </div>
+                    </div>
                 </div>
-
                 <div id="support" class="tab-content" style="display:none;"
 role="tabpanel">
                     <div class="p-8 border rounded-xl shadow-md bg-tf-light space-y-6 max-w-lg mx-auto">
@@ -954,7 +953,7 @@ You can force-logout that session and continue here, or cancel to remain logged 
                 statusEl.className = `plan-status-badge ${isActive ? 'status-enabled' : 'status-disabled'}`;
 
                 checkPlanValidity();
-                // --- Enterprise Improvement: Load Chart Data (Placeholder API) ---
+                // --- Enterprise Improvement: Load Chart Data (Placeholder -> REAL API) ---
                 if (document.getElementById('usage-chart')) {
                     fetchUsageData().then(data => {
                         if (data) {
