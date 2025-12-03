@@ -20,7 +20,7 @@ function updateStatusMessage(message, isError = false) {
         statusMessage.classList.remove('text-gray-600', 'bg-tf-light');
     } else {
         statusMessage.classList.add('text-gray-600', 'bg-tf-light');
-        statusStatus.classList.remove('bg-red-100', 'font-bold');
+        statusMessage.classList.remove('bg-red-100', 'font-bold');
     }
 }
 
@@ -152,7 +152,10 @@ async function handleBulkVerification() {
 
     processButton.disabled = true;
     fileInput.disabled = true;
+    
+    // FIX: Update status message right before starting the file read
     updateStatusMessage('Reading file and performing credit check...');
+    
     reader.onload = async function (e) {
         const text = e.target.result;
         const { rows: addresses } = parseCSV(text);
@@ -222,7 +225,7 @@ async function handleBulkVerification() {
         fileInput.disabled = false;
     };
 
-    reader.readAsText(file);
+    reader.readAsText(file); // 
 }
 
 // --- NEW CANCELLATION LOGIC: Step 1 - Opens the Modal ---
