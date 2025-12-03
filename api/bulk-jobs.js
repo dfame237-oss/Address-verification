@@ -446,16 +446,17 @@ module.exports = async (req, res) => {
     }
     
     // --------------------------------------------------------
-    // GET: DOWNLOAD CSV (UPDATED to support 'type')
+    // GET: DOWNLOAD CSV (UPDATED to support 'type' and new file names)
     // --------------------------------------------------------
     if (req.method === 'GET' && action === 'download') {
         const jobId = url.searchParams.get('jobId');
-        const type = url.searchParams.get('type'); // New parameter: 'ready' or 'manual'
+        const type = url.searchParams.get('type'); // 'ready' or 'manual'
         
         if (!jobId || !type) return res.status(400).json({ status: 'Error', message: 'jobId and type (ready/manual) are required for download.' });
         
         const outputField = (type === 'ready') ? 'outputDataReady' : 'outputDataManual';
-        const filenameSuffix = (type === 'ready') ? '_ready_for_ship' : '_manual_check';
+        // FIX: Use the new descriptive file names for the download output
+        const filenameSuffix = (type === 'ready') ? '_READY_FOR_SHIPMENT' : '_MANUAL_CHECK_NEEDED';
 
         try { 
             const job = await jobsCollection.findOne({ 
