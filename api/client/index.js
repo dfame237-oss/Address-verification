@@ -282,6 +282,46 @@ module.exports = async (req, res) => { //
         }
     }
 
+    // -------------------------
+    // ACTION: usage-reports (GET) - NEW (Fixes placeholder data issue)
+    // -------------------------
+    if (action === 'usage-reports') {
+        if (req.method !== 'GET') return sendJSON(res, 405, { status: 'Error', message: 'Method Not Allowed' });
+        try {
+            const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+            
+            // Aggregation pipeline to group deductions by date
+            const pipeline = [
+                { $match: { 
+                    clientId: clientIdString, 
+                    timestamp: { $gte: thirtyDaysAgo } 
+                }},
+                { $group: {
+                    _id: { 
+                        $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } 
+                    },
+                    totalDeducted: { $sum: "$amountDeducted" }
+                }},
+                { $sort: { "_id": 1 } } // Sort chronologically
+            ];
+
+            const usageData = await creditDeductions.aggregate(pipeline).toArray();
+
+            // Format data for the client chart (expected { labels: [], creditsUsed: [] })
+            const labels = usageData.map(item => item._id);
+            const creditsUsed = usageData.map(item => item.totalDeducted);
+
+            return sendJSON(res, 200, { 
+                status: 'Success', 
+                labels: labels,
+                creditsUsed: creditsUsed
+            });
+        } catch (e) {
+            console.error('Error fetching usage report data:', e);
+            return sendJSON(res, 500, { status: 'Error', message: 'Internal server error fetching usage data.' });
+        }
+    }
+
 
     // -------------------------
     // ACTION: remaining-credits (GET) - NEW (Optional helper for UI polling)
