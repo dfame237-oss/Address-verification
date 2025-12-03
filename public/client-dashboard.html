@@ -973,17 +973,23 @@ You can force-logout that session and continue here, or cancel to remain logged 
             }
         }
         
-        // --- Enterprise Improvement: Usage Data (Placeholder) ---
+        // --- Enterprise Improvement: Usage Data (Placeholder -> REAL) ---
         async function fetchUsageData() {
-            // NOTE: This assumes a new API endpoint exists to fetch credits used per day for the last 30 days.
-            // Example Placeholder Data structure (replace with actual authFetch to your backend):
-            const placeholderData = {
-                labels: ['Day 1', 'Day 6', 'Day 12', 'Day 18', 'Day 24', 'Day 30'],
-                creditsUsed: [250, 150, 400, 300, 500, 200]
-            };
-            // Simulate API latency
-            await new Promise(resolve => setTimeout(resolve, 300));
-            return placeholderData;
+            // NOTE: This now calls the real server endpoint for the last 30 days of deductions
+            try {
+                const resp = await authFetch(`${API_CLIENT}?action=usage-reports`, { method: 'GET' });
+                const json = await resp.json().catch(() => null);
+                
+                if (resp.ok && json && json.status === 'Success') {
+                    // Returns { labels: [], creditsUsed: [] } directly from the server
+                    return { labels: json.labels, creditsUsed: json.creditsUsed };
+                }
+                console.warn('Failed to fetch real usage data, defaulting to empty:', json);
+                return { labels: [], creditsUsed: [] };
+            } catch (e) {
+                console.error('Network error fetching usage data:', e);
+                return { labels: [], creditsUsed: [] };
+            }
         }
 
         let usageChartInstance = null;
