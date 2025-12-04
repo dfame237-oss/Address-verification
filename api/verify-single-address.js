@@ -5,7 +5,6 @@ let pincodeCache = {};
 
 // --- Google Cloud Translation Setup (REMOVED: Using Gemini directly for speed) ---
 // Note: Relying on prompt for translation.
-
 const testingKeywords = ['test', 'testing', 'asdf', 'qwer', 'zxcv', 'random', 'gjnj', 'fgjnj'];
 const coreMeaningfulWords = [
     "ddadu", "ddadu", "ai", "add", "add-", "raw", "dumping", "grand", "dumping grand",
@@ -42,12 +41,13 @@ const MAJOR_CITY_CONFLICTS = {
     'kolkata': 'West Bengal',
 };
 
-// --- NEW: Keywords used to flag results for Manual Check ---
+// --- NEW: Keywords used to flag results for Manual Check (Updated for email) ---
 const CRITICAL_KEYWORDS = [
     'CRITICAL_ALERT: Wrong PIN', 
     'CRITICAL_ALERT: AI-provided PIN',
     'CRITICAL_ALERT: PIN not found',
     'CRITICAL_ALERT: Raw address lacks',
+    'CRITICAL_ALERT: Raw address contains email', // NEW ALERT KEYWORD
     'CRITICAL_ALERT: Major location conflict',
     'CRITICAL_ALERT: Formatted address is short',
     'CRITICAL_ALERT: JSON parse failed' // Include parser failure as critical
@@ -139,6 +139,15 @@ function extractPin(address) {
     return match ? match[0] : null; 
 }
 
+// *** NEW: Function to check for email address in a string ***
+function extractEmail(text) {
+    const emailRegex = /[\w.-]+@[\w.-]+\.\w+/;
+    const match = String(text).match(emailRegex);
+    return match ? match[0] : null;
+}
+// *** END NEW ***
+
+
 function buildGeminiPrompt(originalAddress, postalData) {
     let basePrompt = `You are an expert Indian address verifier and formatter.
     Your task is to process a raw address, perform a thorough analysis, and provide a comprehensive response in a single JSON object.
@@ -156,7 +165,7 @@ function buildGeminiPrompt(originalAddress, postalData) {
     **CRITICAL INSTRUCTION:** If official Postal Data (State/District/PIN) is provided, you MUST ensure that your formatted address and extracted fields align perfectly with this official data. Remove any conflicting city, state, or district names from the raw address (e.g., if the raw address says 'Mumbai' but the PIN is for 'Delhi', you MUST remove 'Mumbai' from the FormattedAddress and set 'State'/'DIST.' to the official Delhi data).
 
     Your response must contain the following keys:
-    1.  "H.no.", "Flat No.", "Plot No.", "Room No.", "Building No.", "Block No.", "Ward No.", "Gali No.", "Zone No.": Extract only the number or alphanumeric sequence (e.g., '1-26', 'A/25', '10').
+    1.  "H.no.", "Flat No.", "Plot No.", "Room No.", "Building No.", "Block No.", "Ward No.", "Gali No.", "Zone No.": Extract only the number or alphanumeric sequence (e.g., '1-26', 'A/25', '10'). **The prefix MUST be H.no.**
     Set to null if not found.
     2.  "Colony", "Street", "Locality", "Building Name", "House Name", "Floor": Extract the name. **(MUST BE IN ENGLISH)**
     3.  "P.O.": The official Post Office name from the PIN data. Prepend "P.O." to the name. Example: "P.O. Boduppal". **(MUST BE IN ENGLISH)**
@@ -210,15 +219,15 @@ async function getTranslatedCleanName(rawName) {
 
 // --- NEW: Aggressive Address Component Translator (Final Cleanup for Address Fields) ---
 async function getTranslatedAddressComponent(rawText) {
-    if (!rawText || rawText.length < 3) return rawText;
-    
-    // Prompt designed to force translation of specific proper nouns and phrases (e.g., Landmarks)
-    const prompt = `Translate the following short address component or proper noun to standard English. Correct any phonetic spelling errors. Provide ONLY the result with no additional context. Phrase: "${rawText}"`;
-    
-    const response = await getGeminiResponse(prompt);
-    
-    // Fallback: Use the original text if translation fails.
-    return response.text ? response.text.trim() : rawText;
+    if (!rawText || rawText.length < 3) return rawText;
+    
+    // Prompt designed to force translation of specific proper nouns and phrases (e.g., Landmarks)
+    const prompt = `Translate the following short address component or proper noun to standard English. Correct any phonetic spelling errors. Provide ONLY the result with no additional context. Phrase: "${rawText}"`;
+    
+    const response = await getGeminiResponse(prompt);
+    
+    // Fallback: Use the original text if translation fails.
+    return response.text ? response.text.trim() : rawText;
 }
 
 
@@ -239,6 +248,19 @@ async function runVerificationLogic(address, customerName) {
 
     let remarks = [];
     
+    // --- NEW REQUIREMENT 1: IMMEDIATE EMAIL CHECK ---
+    const detectedEmail = extractEmail(originalAddress);
+    if (detectedEmail) {
+        remarks.push(`CRITICAL_ALERT: Raw address contains email: ${detectedEmail}. Manual check needed.`);
+        // Immediately return a 'Very Bad' result for manual check, without calling AI
+        return {
+            status: "Skipped", remarks: remarks.join('; ').trim(), addressQuality: "Very Bad", 
+            customerCleanName: (customerName || '').replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim() || null,
+            addressLine1: originalAddress, landmark: "", state: "", district: "", pin: extractPin(originalAddress), success: false
+        };
+    }
+    // --- END NEW REQUIREMENT 1 ---
+    
     // --- 1. DEDICATED NAME CLEANING & TRANSLATION (Aggressive Fix) ---
     let cleanedName = await getTranslatedCleanName(customerName);
     
@@ -275,33 +297,33 @@ async function runVerificationLogic(address, customerName) {
             AddressQuality: 'Very Bad', Remaining: maskedRemarks, // Use masked message here
         };
     }
-    
-    // --- 4. MANDATORY POST-PARSING TRANSLATION (Parallel Check for Address Components) ---
-    // If the aggressive prompt failed, this final step uses dedicated AI calls to translate components.
-    if (typeof getTranslatedAddressComponent === 'function') {
-        const fieldsToTranslate = [
-            'FormattedAddress', 'Landmark', 'State', 'DIST.', 'P.O.', 'Tehsil', 'Remaining'
-        ];
-        
-        const translationPromises = [];
-        const keysToUpdate = [];
+    
+    // --- 4. MANDATORY POST-PARSING TRANSLATION (Parallel Check for Address Components) ---
+    // If the aggressive prompt failed, this final step uses dedicated AI calls to translate components.
+    if (typeof getTranslatedAddressComponent === 'function') {
+        const fieldsToTranslate = [
+            'FormattedAddress', 'Landmark', 'State', 'DIST.', 'P.O.', 'Tehsil', 'Remaining'
+        ];
+        
+        const translationPromises = [];
+        const keysToUpdate = [];
 
-        // Collect all translation promises
-        for (const key of fieldsToTranslate) {
-            if (parsedData[key] && typeof parsedData[key] === 'string') {
-                translationPromises.push(getTranslatedAddressComponent(parsedData[key])); 
-                keysToUpdate.push(key);
-            }
-        }
+        // Collect all translation promises
+        for (const key of fieldsToTranslate) {
+            if (parsedData[key] && typeof parsedData[key] === 'string') {
+                translationPromises.push(getTranslatedAddressComponent(parsedData[key])); 
+                keysToUpdate.push(key);
+            }
+        }
 
-        // Execute all address translation calls in parallel for speed
-        const translatedResults = await Promise.all(translationPromises);
-        
-        // Re-assign translated address fields
-        for (let i = 0; i < keysToUpdate.length; i++) {
-            parsedData[keysToUpdate[i]] = translatedResults[i];
-        }
-    }
+        // Execute all address translation calls in parallel for speed
+        const translatedResults = await Promise.all(translationPromises);
+        
+        // Re-assign translated address fields
+        for (let i = 0; i < keysToUpdate.length; i++) {
+            parsedData[keysToUpdate[i]] = translatedResults[i];
+        }
+    }
 
 
     // 5. --- PIN VERIFICATION & CORRECTION LOGIC ---
@@ -365,17 +387,29 @@ async function runVerificationLogic(address, customerName) {
     }
 
 
-    // 9. --- RULE: Missing Locality/Specifics Check ---
+    // 9. --- RULE: Missing Locality/Specifics Check (UPDATED FOR STRICTER LOGIC) ---
     const hasHouseOrFlat = parsedData['H.no.'] || parsedData['Flat No.'] || parsedData['Plot No.'];
     const hasStreetOrColony = parsedData.Street || parsedData.Colony || parsedData.Locality;
 
+    // RULE 9a: Check if *both* a specific number AND a locality/street/colony are missing.
     if (!hasHouseOrFlat && !hasStreetOrColony) {
-        remarks.push(`CRITICAL_ALERT: Raw address lacks street/house/colony details.`);
+        remarks.push(`CRITICAL_ALERT: Raw address lacks street, house, or colony details after AI parsing.`);
         if (currentQuality === 'Very Good' || currentQuality === 'Good' || currentQuality === 'Medium') {
             parsedData.AddressQuality = 'Bad';
         }
-        currentQuality = parsedData.AddressQuality; // Update for next check
+        currentQuality = parsedData.AddressQuality; 
     }
+    
+    // RULE 9b: Stricter check for addresses that look like only PIN/Phone (your example case)
+    const isFormattedAddressShort = parsedData.FormattedAddress && parsedData.FormattedAddress.length < 25;
+    
+    if (isFormattedAddressShort && !hasHouseOrFlat && !hasStreetOrColony) {
+        // If the address is short and has no core details, it must be flagged 'Very Bad'
+        remarks.push(`CRITICAL_ALERT: Formatted address is critically short and lacks specifics (House/Street/Colony). Manual check needed.`);
+        parsedData.AddressQuality = 'Very Bad';
+        currentQuality = parsedData.AddressQuality;
+    }
+    // --- END UPDATED STRICTER LOGIC ---
 
     // 10. --- RULE: Location Conflict Downgrade Check ---
     if (verifiedState) {
@@ -603,7 +637,7 @@ module.exports = async (req, res) => {
             const finalResponse = await runVerificationLogic(address, customerName);
 
             // If an error occurred in runVerificationLogic, refund the credit
-            if (finalResponse.status === "Error" && reserved) {
+            if ((finalResponse.status === "Error" || finalResponse.status === "Skipped") && reserved) {
                  try {
                      await clients.updateOne({ _id: client._id }, { $inc: { remainingCredits: 1 } });
                  } catch (refundErr) {
@@ -612,6 +646,11 @@ module.exports = async (req, res) => {
                  // Return the masked error message from runVerificationLogic
                  return res.status(500).json({ status: finalResponse.status, message: finalResponse.remarks });
             }
+            // If status is "Skipped" (due to email), return 200 but inform the client
+            if (finalResponse.status === "Skipped") {
+                return res.status(200).json({ status: finalResponse.status, message: finalResponse.remarks, remainingCredits: reserved ? (client.remainingCredits ?? 0) : 'Unlimited' });
+            }
+
 
             // Determine and return updated remainingCredits
             const updatedClient = isUnlimited
