@@ -144,7 +144,7 @@ function buildGeminiPrompt(originalAddress, postalData) {
     Your task is to process a raw address, perform a thorough analysis, and provide a comprehensive response in a single JSON object.
     
     ***STRICT AND IMMEDIATE TRANSLATION REQUIRED***
-    **Provide all responses in English only. Strictly translate all extracted address components to English. FAILURE TO DO SO WILL RESULT IN IMMEDIATE REJECTION.**
+    **Provide ALL responses in English only. Strictly translate ALL extracted address components (Locality, P.O., Tehsil, Landmark, FormattedAddress, etc.) to English. FAILURE TO DO SO WILL RESULT IN IMMEDIATE REJECTION.**
     
     **Correct all common spelling and phonetic errors in the provided address, such as "rd" to "Road", "nager" to "Nagar", and "nd" to "2nd".**
     **Analyze common short forms and phonetic spellings, such as "ln" for "Lane", and use your best judgment to correct them.**
@@ -158,23 +158,23 @@ function buildGeminiPrompt(originalAddress, postalData) {
     Your response must contain the following keys:
     1.  "H.no.", "Flat No.", "Plot No.", "Room No.", "Building No.", "Block No.", "Ward No.", "Gali No.", "Zone No.": Extract only the number or alphanumeric sequence (e.g., '1-26', 'A/25', '10').
     Set to null if not found.
-    2.  "Colony", "Street", "Locality", "Building Name", "House Name", "Floor": Extract the name.
-    3.  "P.O.": The official Post Office name from the PIN data. Prepend "P.O." to the name. Example: "P.O. Boduppal".
-    4.  "Tehsil": The official Tehsil/SubDistrict from the PIN data. Prepend "Tehsil". Example: "Tehsil Pune".
-    5.  "DIST.": The official District from the PIN data.
-    6.  "State": The official State from the PIN data.
+    2.  "Colony", "Street", "Locality", "Building Name", "House Name", "Floor": Extract the name. **(MUST BE IN ENGLISH)**
+    3.  "P.O.": The official Post Office name from the PIN data. Prepend "P.O." to the name. Example: "P.O. Boduppal". **(MUST BE IN ENGLISH)**
+    4.  "Tehsil": The official Tehsil/SubDistrict from the PIN data. Prepend "Tehsil". Example: "Tehsil Pune". **(MUST BE IN ENGLISH)**
+    5.  "DIST.": The official District from the PIN data. **(MUST BE IN ENGLISH)**
+    6.  "State": The official State from the PIN data. **(MUST BE IN ENGLISH)**
     7.  "PIN": The 6-digit PIN code. Find and verify the correct PIN.
     If a PIN exists in the raw address but is incorrect, find the correct one and provide it.
     8.  "Landmark": A specific, named landmark (e.g., "Apollo Hospital"), not a generic type like "school".
-    If multiple landmarks are present, list them comma-separated. **Extract the landmark without any directional words like 'near', 'opposite', 'behind' etc., as this will be handled by the script.**
+    If multiple landmarks are present, list them comma-separated. **Extract the landmark without any directional words like 'near', 'opposite', 'behind' etc., as this will be handled by the script. (MUST BE IN ENGLISH)**
     9.  "Remaining": A last resort for any text that does not fit into other fields.
-    Clean this by removing meaningless words like 'job', 'raw', 'add-', 'tq', 'dist' and country, state, district, or PIN code.
-    10. "FormattedAddress": This is the most important field. Based on your full analysis, create a single, clean, human-readable, and comprehensive shipping-ready address string. It should contain all specific details (H.no., Room No., etc.), followed by locality, street, colony, P.O., and Tehsil. **STRICTLY DO NOT include District, State, or PIN in this string.** Use commas to separate logical components. Do not invent or "hallucinate" information.
-    11. "LocationType": Identify the type of location (e.g., "Village", "Town", "City", "Urban Area").
+    Clean this by removing meaningless words like 'job', 'raw', 'add-', 'tq', 'dist' and country, state, district, or PIN code. **(MUST BE IN ENGLISH)**
+    10. "FormattedAddress": This is the most important field. Based on your full analysis, create a single, clean, human-readable, and comprehensive shipping-ready address string. It should contain all specific details (H.no., Room No., etc.), followed by locality, street, colony, P.O., and Tehsil. **STRICTLY DO NOT include District, State, or PIN in this string. (MUST BE IN ENGLISH)**
+    11. "LocationType": Identify the type of location (e.g., "Village", "Town", "City", "Urban Area"). **(MUST BE IN ENGLISH)**
     12. "AddressQuality": Analyze the address completeness and clarity for shipping.
-    Categorize it as one of the following: Very Good, Good, Medium, Bad, or Very Bad.
+    Categorize it as one of the following: Very Good, Good, Medium, Bad, or Very Bad. **(MUST BE IN ENGLISH)**
     13. "LocationSuitability": Analyze the location based on its State, District, and PIN to determine courier-friendliness in India.
-    Categorize it as one of the following: Prime Location, Tier 1 & 2 Cities, Remote/Difficult Location, or Non-Serviceable Location.
+    Categorize it as one of the following: Prime Location, Tier 1 & 2 Cities, Remote/Difficult Location, or Non-Serviceable Location. **(MUST BE IN ENGLISH)**
     Raw Address: "${originalAddress}"
 `; 
 
