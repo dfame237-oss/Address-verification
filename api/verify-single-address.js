@@ -9,11 +9,7 @@ const projectId = process.env.GOOGLE_CLOUD_PROJECT;
 const translationClient = new TranslationServiceClient();
 const targetLanguage = 'en'; 
 
-// --- NEW TRANSLATION UTILITY (Mandatory English Output via Batch) ---
-/**
- * Translates a single string to English using Google Cloud Translation API.
- * Optimized for robustness and used for guaranteed translation.
- */
+// --- NEW TRANSLATION UTILITY (Mandatory English Output) ---
 async function translateToEnglish(text) {
     if (!text || typeof text !== 'string' || text.trim() === '' || !projectId) {
         return text || '';
@@ -34,7 +30,8 @@ async function translateToEnglish(text) {
         
         return text.trim(); 
     } catch (e) {
-        console.error(`Translation API Error for text: "${text}". Check GOOGLE_CLOUD_PROJECT/credentials. Falling back to original text.`);
+        // Fallback to the text provided by Gemini if the translation API fails
+        console.error(`Translation API Error for text: "${text}". Check GOOGLE_CLOUD_PROJECT/credentials.`);
         return text.trim(); 
     }
 }
@@ -242,6 +239,7 @@ async function runVerificationLogic(address, customerName) {
     let remarks = [];
     
     // --- 1. ROBUST NAME CLEANING (Initial cleanup) ---
+    // Cleans special characters/numbers and excessive spaces for best output.
     let cleanedName = (customerName || '').replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim() || null; 
     
     const initialPin = extractPin(originalAddress);
@@ -278,16 +276,16 @@ async function runVerificationLogic(address, customerName) {
         };
     }
     
-    // --- 4. MANDATORY TRANSLATION POST-PROCESSING (Guarantees English Output) ---
+    // --- 4. MANDATORY TRANSLATION POST-PROCESSING (Performance Fix: Parallel Execution) ---
     if (typeof translateToEnglish === 'function') {
         const fieldsToTranslate = [
             'FormattedAddress', 'Landmark', 'State', 'DIST.', 'P.O.', 'Tehsil', 'Remaining'
         ];
         
-        // 4a. Batch/Parallelize translation of multiple fields for speed
         const translationPromises = [];
         const keysToUpdate = [];
 
+        // 4a. Collect all translation promises
         for (const key of fieldsToTranslate) {
             if (parsedData[key] && typeof parsedData[key] === 'string') {
                 translationPromises.push(translateToEnglish(parsedData[key]));
@@ -298,15 +296,20 @@ async function runVerificationLogic(address, customerName) {
             translationPromises.push(translateToEnglish(cleanedName));
         }
 
+        // 4b. Execute all translation calls in parallel (CRITICAL FIX for stability/speed)
         const translatedResults = await Promise.all(translationPromises);
         
-        // 4b. Re-assign translated address fields
+        // 4c. Re-assign translated address fields
+        // The last result is the name, so we stop before the last index if name was included.
+        const nameIndex = cleanedName ? translatedResults.length - 1 : translatedResults.length;
+        
         for (let i = 0; i < keysToUpdate.length; i++) {
             parsedData[keysToUpdate[i]] = translatedResults[i];
         }
-        // 4c. Re-assign translated name
+        
+        // 4d. Re-assign translated name
         if (cleanedName) {
-            cleanedName = translatedResults[translatedResults.length - 1];
+            cleanedName = translatedResults[nameIndex];
         }
     }
 
@@ -336,7 +339,7 @@ async function runVerificationLogic(address, customerName) {
         finalPin = initialPin || null; 
     }
 
-    // --- 6. NEW: Local Address Correction Logic (P.O. Conflict Check) ---
+    // --- 6. Local Address Correction Logic (P.O. Conflict Check) ---
     postVerificationCorrections(parsedData, originalAddress, remarks);
 
 
@@ -363,7 +366,7 @@ async function runVerificationLogic(address, customerName) {
         parsedData.Landmark = removeAdjacentDuplicates(parsedData.Landmark);
     }
 
-    // --- 8. NEW: Village Prefix Logic (From Google Script) ---
+    // --- 8. Village Prefix Logic (From Google Script) ---
     if (originalAddressLower.includes('village') && parsedData.FormattedAddress) {
         // Only prefix if it's not already prefixed
         if (!parsedData.FormattedAddress.toLowerCase().startsWith('village')) {
