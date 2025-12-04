@@ -6,6 +6,7 @@
     "node": "22.x"
   },
   "dependencies": {
+    "@google-cloud/translate": "^9.3.0",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^5.9.2"
