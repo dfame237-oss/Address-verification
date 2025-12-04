@@ -47,7 +47,7 @@ const CRITICAL_KEYWORDS = [
     'CRITICAL_ALERT: AI-provided PIN',
     'CRITICAL_ALERT: PIN not found',
     'CRITICAL_ALERT: Raw address lacks',
-    'CRITICAL_ALERT: Raw address contains email', // NEW ALERT KEYWORD
+    'CRITICAL_ALERT: Raw address contains email', // NEW ALERT KEYWORD
     'CRITICAL_ALERT: Major location conflict',
     'CRITICAL_ALERT: Formatted address is short',
     'CRITICAL_ALERT: JSON parse failed' // Include parser failure as critical
@@ -141,9 +141,9 @@ function extractPin(address) {
 
 // *** NEW: Function to check for email address in a string ***
 function extractEmail(text) {
-    const emailRegex = /[\w.-]+@[\w.-]+\.\w+/;
-    const match = String(text).match(emailRegex);
-    return match ? match[0] : null;
+    const emailRegex = /[\w.-]+@[\w.-]+\.\w+/;
+    const match = String(text).match(emailRegex);
+    return match ? match[0] : null;
 }
 // *** END NEW ***
 
@@ -248,19 +248,19 @@ async function runVerificationLogic(address, customerName) {
 
     let remarks = [];
     
-    // --- NEW REQUIREMENT 1: IMMEDIATE EMAIL CHECK ---
-    const detectedEmail = extractEmail(originalAddress);
-    if (detectedEmail) {
-        remarks.push(`CRITICAL_ALERT: Raw address contains email: ${detectedEmail}. Manual check needed.`);
-        // Immediately return a 'Very Bad' result for manual check, without calling AI
-        return {
-            status: "Skipped", remarks: remarks.join('; ').trim(), addressQuality: "Very Bad", 
-            customerCleanName: (customerName || '').replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim() || null,
-            addressLine1: originalAddress, landmark: "", state: "", district: "", pin: extractPin(originalAddress), success: false
-        };
-    }
-    // --- END NEW REQUIREMENT 1 ---
-    
+    // --- NEW REQUIREMENT 1: IMMEDIATE EMAIL CHECK ---
+    const detectedEmail = extractEmail(originalAddress);
+    if (detectedEmail) {
+        remarks.push(`CRITICAL_ALERT: Raw address contains email: ${detectedEmail}. Manual check needed.`);
+        // Immediately return a 'Very Bad' result for manual check, without calling AI
+        return {
+            status: "Skipped", remarks: remarks.join('; ').trim(), addressQuality: "Very Bad", 
+            customerCleanName: (customerName || '').replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim() || null,
+            addressLine1: originalAddress, landmark: "", state: "", district: "", pin: extractPin(originalAddress), success: false
+        };
+    }
+    // --- END NEW REQUIREMENT 1 ---
+    
     // --- 1. DEDICATED NAME CLEANING & TRANSLATION (Aggressive Fix) ---
     let cleanedName = await getTranslatedCleanName(customerName);
     
@@ -386,12 +386,20 @@ async function runVerificationLogic(address, customerName) {
         }
     }
 
+    // --- NEW FIX: Enforce H.no. abbreviation (Post-AI correction) ---
+    if (parsedData.FormattedAddress) {
+        // Use a case-insensitive regex to replace the full phrase "House number" (or any case variation) with "H.no."
+        // We use \b to ensure we only match whole words
+        parsedData.FormattedAddress = parsedData.FormattedAddress.replace(/\bHouse number\b/gi, 'H.no.');
+    }
+    // --- END NEW FIX ---
+
 
     // 9. --- RULE: Missing Locality/Specifics Check (UPDATED FOR STRICTER LOGIC) ---
     const hasHouseOrFlat = parsedData['H.no.'] || parsedData['Flat No.'] || parsedData['Plot No.'];
     const hasStreetOrColony = parsedData.Street || parsedData.Colony || parsedData.Locality;
 
-    // RULE 9a: Check if *both* a specific number AND a locality/street/colony are missing.
+    // RULE 9a: Check if *both* a specific number AND a locality/street/colony are missing.
     if (!hasHouseOrFlat && !hasStreetOrColony) {
         remarks.push(`CRITICAL_ALERT: Raw address lacks street, house, or colony details after AI parsing.`);
         if (currentQuality === 'Very Good' || currentQuality === 'Good' || currentQuality === 'Medium') {
@@ -399,17 +407,17 @@ async function runVerificationLogic(address, customerName) {
         }
         currentQuality = parsedData.AddressQuality; 
     }
-    
-    // RULE 9b: Stricter check for addresses that look like only PIN/Phone (your example case)
-    const isFormattedAddressShort = parsedData.FormattedAddress && parsedData.FormattedAddress.length < 25;
-    
-    if (isFormattedAddressShort && !hasHouseOrFlat && !hasStreetOrColony) {
-        // If the address is short and has no core details, it must be flagged 'Very Bad'
-        remarks.push(`CRITICAL_ALERT: Formatted address is critically short and lacks specifics (House/Street/Colony). Manual check needed.`);
-        parsedData.AddressQuality = 'Very Bad';
-        currentQuality = parsedData.AddressQuality;
-    }
-    // --- END UPDATED STRICTER LOGIC ---
+    
+    // RULE 9b: Stricter check for addresses that look like only PIN/Phone (your example case)
+    const isFormattedAddressShort = parsedData.FormattedAddress && parsedData.FormattedAddress.length < 25;
+    
+    if (isFormattedAddressShort && !hasHouseOrFlat && !hasStreetOrColony) {
+        // If the address is short and has no core details, it must be flagged 'Very Bad'
+        remarks.push(`CRITICAL_ALERT: Formatted address is critically short and lacks specifics (House/Street/Colony). Manual check needed.`);
+        parsedData.AddressQuality = 'Very Bad';
+        currentQuality = parsedData.AddressQuality;
+    }
+    // --- END UPDATED STRICTER LOGIC ---
 
     // 10. --- RULE: Location Conflict Downgrade Check ---
     if (verifiedState) {
@@ -646,10 +654,10 @@ module.exports = async (req, res) => {
                  // Return the masked error message from runVerificationLogic
                  return res.status(500).json({ status: finalResponse.status, message: finalResponse.remarks });
             }
-            // If status is "Skipped" (due to email), return 200 but inform the client
-            if (finalResponse.status === "Skipped") {
-                return res.status(200).json({ status: finalResponse.status, message: finalResponse.remarks, remainingCredits: reserved ? (client.remainingCredits ?? 0) : 'Unlimited' });
-            }
+            // If status is "Skipped" (due to email), return 200 but inform the client
+            if (finalResponse.status === "Skipped") {
+                return res.status(200).json({ status: finalResponse.status, message: finalResponse.remarks, remainingCredits: reserved ? (client.remainingCredits ?? 0) : 'Unlimited' });
+            }
 
 
             // Determine and return updated remainingCredits
