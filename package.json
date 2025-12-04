@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "@google-cloud/translate": "^9.3.0",
-    "@google-cloud/vertexai": "^1.10.0",
+    "@google/genai": "^1.31.0",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^5.9.2"

@@ -3,14 +3,14 @@
 const INDIA_POST_API = 'https://api.postalpincode.in/pincode/'; 
 let pincodeCache = {};
 
-// --- START: VERTEX AI MIGRATION CHANGES ---
-// 1. Install Dependency: npm install @google-cloud/vertexai
-const { VertexAI } = require('@google-cloud/vertexai');
+// --- START: VERTEX AI MIGRATION CHANGES (Updated for unified SDK fix) ---
+// 1. New Dependency: npm install @google/genai
+const { GoogleGenAI } = require('@google/genai');
 const fs = require('fs'); // Node's File System module needed for Vercel Auth fix
 
 // --- Vercel Authentication Fix for Vertex AI ---
 // This block reads the Service Account JSON from the environment variable 
-// and makes it available as a temporary file for the Vertex AI SDK to find (ADC).
+// and makes it available as a temporary file for the SDK to find (ADC).
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
     try {
         const credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
@@ -28,6 +28,7 @@ if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
 // --- END: VERTEX AI MIGRATION CHANGES ---
 
 
+// --- Google Cloud Translation Setup (REMOVED: Using Gemini directly for speed) ---
 // Note: Relying on prompt for translation.
 const testingKeywords = ['test', 'testing', 'asdf', 'qwer', 'zxcv', 'random', 'gjnj', 'fgjnj'];
 const coreMeaningfulWords = [
@@ -112,12 +113,11 @@ async function getIndiaPostData(pin) {
     }
 }
 
-// --- START: VERTEX AI REPLACEMENT FUNCTION ---
+// --- START: VERTEX AI REPLACEMENT FUNCTION (Fixed) ---
 /**
- * Replaces getGeminiResponse with the Vertex AI SDK call.
+ * Replaces getGeminiResponse with the Vertex AI SDK call using the correct SDK pattern.
  */
 async function getVertexAIResponse(prompt) {
-    // Uses the GCP environment variables set in Vercel
     const project = process.env.GCP_PROJECT_ID; 
     const location = process.env.GCP_LOCATION || 'us-central1';
     
@@ -125,13 +125,19 @@ async function getVertexAIResponse(prompt) {
         return { text: null, error: "Vertex AI Error: GCP_PROJECT_ID not set." };
     }
     
-    // Initialize the Vertex AI client. Authentication uses the Service Account credentials via ADC.
-    const vertex_ai = new VertexAI({ project: project, location: location });
+    // CORRECT INITIALIZATION: Use GoogleGenAI client for the unified SDK
+    // The 'vertex: true' flag directs the call to the Vertex AI endpoint
+    const client = new GoogleGenAI({
+        project: project,
+        location: location,
+        vertex: true
+    });
 
     const model = 'gemini-2.5-flash'; 
 
     try {
-        const response = await vertex_ai.generateContent({
+        // CORRECT CALL: Use client.models.generateContent
+        const response = await client.models.generateContent({
             model: model,
             contents: [{ role: 'user', parts: [{ text: prompt }] }],
             config: {
@@ -756,7 +762,7 @@ module.exports = async (req, res) => {
 
 // Export core functions for use in bulk-jobs.js AND for classification logic
 module.exports.getIndiaPostData = getIndiaPostData;
-module.exports.getVertexAIResponse = getVertexAIResponse; // <-- EXPORT NEW FUNCTION
+module.exports.getVertexAIResponse = getVertexAIResponse;
 module.exports.processAddress = processAddress;
 module.exports.extractPin = extractPin;
 module.exports.meaninglessRegex = meaninglessRegex;
