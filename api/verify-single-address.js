@@ -26,7 +26,16 @@ const meaninglessRegex = (() => {
     }
 })();
 
-const directionalKeywords = ['near', 'opposite', 'back side', 'front side', 'behind', 'opp'];
+// >>> START OF MODIFIED SECTION <<<
+
+// UPDATED: Added 'beside', 'in front', 'above', 'below', 'next to'
+const directionalKeywords = [
+    'near', 'opposite', 'back side', 'front side', 'behind', 'opp', 
+    'beside', 'in front', 'above', 'below', 'next to'
+];
+
+// >>> END OF MODIFIED SECTION <<<
+
 // --- DB helper and auth ---
 const { connectToDatabase } = require('../utils/db');
 const jwt = require('jsonwebtoken'); 
@@ -142,16 +151,16 @@ function extractPin(address) {
 function buildGeminiPrompt(originalAddress, postalData) {
     let basePrompt = `You are an expert Indian address verifier and formatter.
     Your task is to process a raw address, perform a thorough analysis, and provide a comprehensive response in a single JSON object.
-    
-    ***STRICT AND IMMEDIATE TRANSLATION REQUIRED***
-    **Provide all responses in English only. Strictly translate all extracted address components to English. FAILURE TO DO SO WILL RESULT IN IMMEDIATE REJECTION.**
-    
+    
+    ***STRICT AND IMMEDIATE TRANSLATION REQUIRED***
+    **Provide all responses in English only. Strictly translate all extracted address components to English. FAILURE TO DO SO WILL RESULT IN IMMEDIATE REJECTION.**
+    
     **Correct all common spelling and phonetic errors in the provided address, such as "rd" to "Road", "nager" to "Nagar", and "nd" to "2nd".**
     **Analyze common short forms and phonetic spellings, such as "ln" for "Lane", and use your best judgment to correct them.**
     Be strict about ensuring the output is a valid, single, and complete address for shipping.
     **Use your advanced knowledge to identify and remove any duplicate address components that are present consecutively (e.g., 'Gandhi Street Gandhi Street' should be 'Gandhi Street').**
-    
-    ***SELF-CORRECTION CHECK: Before finalizing the JSON, verify that every field containing text, including "FormattedAddress" and all component fields, is written entirely in English.***
+    
+    ***SELF-CORRECTION CHECK: Before finalizing the JSON, verify that every field containing text, including "FormattedAddress" and all component fields, is written entirely in English.***
     
     **CRITICAL INSTRUCTION:** If official Postal Data (State/District/PIN) is provided, you MUST ensure that your formatted address and extracted fields align perfectly with this official data. Remove any conflicting city, state, or district names from the raw address (e.g., if the raw address says 'Mumbai' but the PIN is for 'Delhi', you MUST remove 'Mumbai' from the FormattedAddress and set 'State'/'DIST.' to the official Delhi data).
 
@@ -197,15 +206,15 @@ function processAddress(address, postalData) {
 
 // --- NEW: Dedicated Name Cleaner and Translator ---
 async function getTranslatedCleanName(rawName) {
-    if (!rawName) return null;
-    
-    // Prompt dedicated solely to name cleaning and translation
-    const namePrompt = `Clean, correct, and aggressively translate the following customer name to English. Remove any numbers, special characters, titles (Mr, Ms, Dr), or extraneous text. Provide ONLY the resulting cleaned, translated name, with no additional text or punctuation. Name: "${rawName}"`;
-    
-    const response = await getGeminiResponse(namePrompt);
-    
-    // Fallback: If Gemini fails to respond, perform the basic regex cleanup and use that.
-    return response.text ? response.text.trim() : (rawName || '').replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim(); 
+    if (!rawName) return null;
+    
+    // Prompt dedicated solely to name cleaning and translation
+    const namePrompt = `Clean, correct, and aggressively translate the following customer name to English. Remove any numbers, special characters, titles (Mr, Ms, Dr), or extraneous text. Provide ONLY the resulting cleaned, translated name, with no additional text or punctuation. Name: "${rawName}"`;
+    
+    const response = await getGeminiResponse(namePrompt);
+    
+    // Fallback: If Gemini fails to respond, perform the basic regex cleanup and use that.
+    return response.text ? response.text.trim() : (rawName || '').replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim(); 
 }
 
 
@@ -228,7 +237,7 @@ async function runVerificationLogic(address, customerName) {
     
     // --- 1. DEDICATED NAME CLEANING & TRANSLATION (Aggressive Fix) ---
     let cleanedName = await getTranslatedCleanName(customerName);
-    
+    
     const initialPin = extractPin(originalAddress);
     let postalData = { PinStatus: 'Error' };
 
@@ -262,9 +271,9 @@ async function runVerificationLogic(address, customerName) {
             AddressQuality: 'Very Bad', Remaining: maskedRemarks, // Use masked message here
         };
     }
-    
-    // 4. MANDATORY TRANSLATION POST-PROCESSING (REMOVED EXTERNAL API CALLS)
-    // Reliance is 100% on the aggressive prompt for address fields.
+    
+    // 4. MANDATORY TRANSLATION POST-PROCESSING (REMOVED EXTERNAL API CALLS)
+    // Reliance is 100% on the aggressive prompt for address fields.
 
 
     // 5. --- PIN VERIFICATION & CORRECTION LOGIC ---
@@ -292,40 +301,40 @@ async function runVerificationLogic(address, customerName) {
         finalPin = initialPin || null; 
     }
 
-    // --- 6. Local Address Correction Logic (P.O. Conflict Check) ---
-    postVerificationCorrections(parsedData, originalAddress, remarks);
+    // --- 6. Local Address Correction Logic (P.O. Conflict Check) ---
+    postVerificationCorrections(parsedData, originalAddress, remarks);
 
 
     const verifiedState = primaryPostOffice.State || parsedData.State || '';
     let currentQuality = parsedData.AddressQuality;
 
-    // --- 7. ADJACENT DUPLICATE REMOVAL (Clean final address strings) ---
-    const removeAdjacentDuplicates = (str) => {
-        if (!str) return str;
-        const words = str.split(' ');
-        const cleanedWords = [];
-        for (let i = 0; i < words.length; i++) {
-            if (i === 0 || words[i].toLowerCase() !== words[i - 1].toLowerCase()) {
-                cleanedWords.push(words[i]);
-            }
-        }
-        return cleanedWords.join(' ');
-    };
+    // --- 7. ADJACENT DUPLICATE REMOVAL (Clean final address strings) ---
+    const removeAdjacentDuplicates = (str) => {
+        if (!str) return str;
+        const words = str.split(' ');
+        const cleanedWords = [];
+        for (let i = 0; i < words.length; i++) {
+            if (i === 0 || words[i].toLowerCase() !== words[i - 1].toLowerCase()) {
+                cleanedWords.push(words[i]);
+            }
+        }
+        return cleanedWords.join(' ');
+    };
 
-    if (parsedData.FormattedAddress) {
-        parsedData.FormattedAddress = removeAdjacentDuplicates(parsedData.FormattedAddress);
-    }
-    if (parsedData.Landmark) {
-        parsedData.Landmark = removeAdjacentDuplicates(parsedData.Landmark);
-    }
+    if (parsedData.FormattedAddress) {
+        parsedData.FormattedAddress = removeAdjacentDuplicates(parsedData.FormattedAddress);
+    }
+    if (parsedData.Landmark) {
+        parsedData.Landmark = removeAdjacentDuplicates(parsedData.Landmark);
+    }
 
-    // --- 8. Village Prefix Logic (From Google Script) ---
-    if (originalAddressLower.includes('village') && parsedData.FormattedAddress) {
-        // Only prefix if it's not already prefixed
-        if (!parsedData.FormattedAddress.toLowerCase().startsWith('village')) {
-            parsedData.FormattedAddress = `Village ${parsedData.FormattedAddress}`;
-        }
-    }
+    // --- 8. Village Prefix Logic (From Google Script) ---
+    if (originalAddressLower.includes('village') && parsedData.FormattedAddress) {
+        // Only prefix if it's not already prefixed
+        if (!parsedData.FormattedAddress.toLowerCase().startsWith('village')) {
+            parsedData.FormattedAddress = `Village ${parsedData.FormattedAddress}`;
+        }
+    }
 
 
     // 9. --- RULE: Missing Locality/Specifics Check ---
@@ -413,56 +422,56 @@ async function runVerificationLogic(address, customerName) {
 // --- Auxiliary Local Correction Functions (Copied from Google Script) ---
 
 /**
- * Implements the P.O. conflict check logic found in your Google Script's 
- * verifyAndCorrectAddress function.
- */
+ * Implements the P.O. conflict check logic found in your Google Script's 
+ * verifyAndCorrectAddress function.
+ */
 function postVerificationCorrections(geminiData, originalAddress, remarks) {
-    const aiLocality = geminiData["Locality"] || geminiData["Colony"] || '';
-    const aiPo = geminiData["P.O."];
-    
-    // Check specific known locality conflicts (from your Google Sheet script)
-    const correctedData = getPostalDataByLocality(aiLocality);
-    
-    if (correctedData) {
-        // If Gemini gave a locality that matches a known static table entry:
-        const normalizedAiPo = String(aiPo || '').toLowerCase();
-        const normalizedCorrectedPo = `p.o. ${correctedData["P.O."].toLowerCase()}`;
+    const aiLocality = geminiData["Locality"] || geminiData["Colony"] || '';
+    const aiPo = geminiData["P.O."];
+    
+    // Check specific known locality conflicts (from your Google Sheet script)
+    const correctedData = getPostalDataByLocality(aiLocality);
+    
+    if (correctedData) {
+        // If Gemini gave a locality that matches a known static table entry:
+        const normalizedAiPo = String(aiPo || '').toLowerCase();
+        const normalizedCorrectedPo = `p.o. ${correctedData["P.O."].toLowerCase()}`;
 
-        if (normalizedAiPo !== normalizedCorrectedPo) {
-            remarks.push(`P.O. conflict: Corrected P.O. from "${geminiData["P.O."]}" to "P.O. ${correctedData["P.O."]}"`);
-            
-            // Overwrite Gemini data with the correct postal data from the lookup table
-            geminiData["P.O."] = `P.O. ${correctedData["P.O."]}`;
-            geminiData["DIST."] = correctedData["DIST."];
-            geminiData["State"] = correctedData["State"];
+        if (normalizedAiPo !== normalizedCorrectedPo) {
+            remarks.push(`P.O. conflict: Corrected P.O. from "${geminiData["P.O."]}" to "P.O. ${correctedData["P.O."]}"`);
+            
+            // Overwrite Gemini data with the correct postal data from the lookup table
+            geminiData["P.O."] = `P.O. ${correctedData["P.O."]}`;
+            geminiData["DIST."] = correctedData["DIST."];
+            geminiData["State"] = correctedData["State"];
 
-            if (geminiData["PIN"] !== correctedData["PIN"]) {
-                remarks.push(`PIN conflict: Corrected PIN from "${geminiData["PIN"]}" to "${correctedData["PIN"]}"`);
-                geminiData["PIN"] = correctedData["PIN"];
-            }
-        }
-    }
+            if (geminiData["PIN"] !== correctedData["PIN"]) {
+                remarks.push(`PIN conflict: Corrected PIN from "${geminiData["PIN"]}" to "${correctedData["PIN"]}"`);
+                geminiData["PIN"] = correctedData["PIN"];
+            }
+        }
+    }
 }
 
 /**
- * Static lookup table for P.O. conflict checks (Copied from Google Script)
- */
+ * Static lookup table for P.O. conflict checks (Copied from Google Script)
+ */
 function getPostalDataByLocality(locality) {
-    const lookupTable = {
-        "boduppal": {
-            "P.O.": "Boduppal",
-            "DIST.": "Hyderabad",
-            "State": "Telangana",
-            "PIN": "500092"
-        },
-        "putlibowli": {
-            "P.O.": "Putlibowli",
-            "DIST.": "Hyderabad",
-            "State": "Telangana",
-            "PIN": "500095"
-        }
-    };
-    return lookupTable[locality.toLowerCase()] || null;
+    const lookupTable = {
+        "boduppal": {
+            "P.O.": "Boduppal",
+            "DIST.": "Hyderabad",
+            "State": "Telangana",
+            "PIN": "500092"
+        },
+        "putlibowli": {
+            "P.O.": "Putlibowli",
+            "DIST.": "Hyderabad",
+            "State": "Telangana",
+            "PIN": "500095"
+        }
+    };
+    return lookupTable[locality.toLowerCase()] || null;
 }
 
 // --- Main Handler (AUTHENTICATED POST & GET) ---
