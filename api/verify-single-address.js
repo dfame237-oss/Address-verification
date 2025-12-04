@@ -238,6 +238,7 @@ async function runVerificationLogic(address, customerName) {
     let remarks = [];
     
     // --- 1. ROBUST NAME CLEANING (Initial cleanup) ---
+    // Cleans special characters/numbers and excessive spaces for best output.
     let cleanedName = (customerName || '').replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim() || null; 
     
     const initialPin = extractPin(originalAddress);
@@ -320,10 +321,36 @@ async function runVerificationLogic(address, customerName) {
         finalPin = initialPin || null; 
     }
 
+    // --- NEW: Local Address Correction Logic (P.O. Conflict Check) ---
+    // This function is defined below in the auxiliary section
+    postVerificationCorrections(parsedData, originalAddress, remarks);
+
+
     const verifiedState = primaryPostOffice.State || parsedData.State || '';
     let currentQuality = parsedData.AddressQuality;
 
-    // 5. --- RULE: Missing Locality/Specifics Check ---
+    // --- 5. ADJACENT DUPLICATE REMOVAL (Clean final address strings) ---
+    const removeAdjacentDuplicates = (str) => {
+        if (!str) return str;
+        const words = str.split(' ');
+        const cleanedWords = [];
+        for (let i = 0; i < words.length; i++) {
+            if (i === 0 || words[i].toLowerCase() !== words[i - 1].toLowerCase()) {
+                cleanedWords.push(words[i]);
+            }
+        }
+        return cleanedWords.join(' ');
+    };
+
+    if (parsedData.FormattedAddress) {
+        parsedData.FormattedAddress = removeAdjacentDuplicates(parsedData.FormattedAddress);
+    }
+    if (parsedData.Landmark) {
+        parsedData.Landmark = removeAdjacentDuplicates(parsedData.Landmark);
+    }
+
+
+    // 6. --- RULE: Missing Locality/Specifics Check ---
     const hasHouseOrFlat = parsedData['H.no.'] || parsedData['Flat No.'] || parsedData['Plot No.'];
     const hasStreetOrColony = parsedData.Street || parsedData.Colony || parsedData.Locality;
 
@@ -335,7 +362,7 @@ async function runVerificationLogic(address, customerName) {
         currentQuality = parsedData.AddressQuality; // Update for next check
     }
 
-    // 6. --- RULE: Location Conflict Downgrade Check ---
+    // 7. --- RULE: Location Conflict Downgrade Check ---
     if (verifiedState) {
         const verifiedStateLower = verifiedState.toLowerCase();
         for (const city in MAJOR_CITY_CONFLICTS) {
@@ -352,12 +379,12 @@ async function runVerificationLogic(address, customerName) {
         }
     }
 
-    // 7. --- Short Address Check ---
+    // 8. --- Short Address Check ---
     if (parsedData.FormattedAddress && parsedData.FormattedAddress.length < 35 && currentQuality !== 'Very Good' && currentQuality !== 'Good') {
         remarks.push(`CRITICAL_ALERT: Formatted address is short (${parsedData.FormattedAddress.length} chars). Manual verification recommended.`);
     }
 
-    // 8. --- Landmark directional prefix logic ---
+    // 9. --- Landmark directional prefix logic ---
     let landmarkValue = parsedData.Landmark || ''; 
     let finalLandmark = ''; 
     if (landmarkValue.toString().trim() !== '') {
@@ -405,6 +432,62 @@ async function runVerificationLogic(address, customerName) {
     };
 }
 
+// --- Auxiliary Local Correction Functions (Missing from original Node.js paste) ---
+
+/**
+ * Implements the P.O. conflict check logic found in your Google Script's 
+ * verifyAndCorrectAddress function.
+ * Renamed to avoid collision with the main logic flow.
+ */
+function postVerificationCorrections(geminiData, originalAddress, remarks) {
+    const aiLocality = geminiData["Locality"] || gememiData["Colony"] || '';
+    const aiPo = geminiData["P.O."];
+    // We already use the main India Post lookup, but this is for specific static conflicts.
+    
+    // Check specific known locality conflicts (from your Google Sheet script)
+    const correctedData = getPostalDataByLocality(aiLocality);
+    
+    if (correctedData) {
+        // If Gemini gave a locality that matches a known static table entry:
+        const normalizedAiPo = String(aiPo || '').toLowerCase();
+        const normalizedCorrectedPo = `p.o. ${correctedData["P.O."].toLowerCase()}`;
+
+        if (normalizedAiPo !== normalizedCorrectedPo) {
+            remarks.push(`P.O. conflict: Corrected P.O. from "${geminiData["P.O."]}" to "P.O. ${correctedData["P.O."]}"`);
+            
+            // Overwrite Gemini data with the correct postal data from the lookup table
+            geminiData["P.O."] = `P.O. ${correctedData["P.O."]}`;
+            geminiData["DIST."] = correctedData["DIST."];
+            geminiData["State"] = correctedData["State"];
+
+            if (geminiData["PIN"] !== correctedData["PIN"]) {
+                remarks.push(`PIN conflict: Corrected PIN from "${geminiData["PIN"]}" to "${correctedData["PIN"]}"`);
+                geminiData["PIN"] = correctedData["PIN"];
+            }
+        }
+    }
+}
+
+/**
+ * Static lookup table for P.O. conflict checks (Copied from Google Script)
+ */
+function getPostalDataByLocality(locality) {
+    const lookupTable = {
+        "boduppal": {
+            "P.O.": "Boduppal",
+            "DIST.": "Hyderabad",
+            "State": "Telangana",
+            "PIN": "500092"
+        },
+        "putlibowli": {
+            "P.O.": "Putlibowli",
+            "DIST.": "Hyderabad",
+            "State": "Telangana",
+            "PIN": "500095"
+        }
+    };
+    return lookupTable[locality.toLowerCase()] || null;
+}
 
 // --- Main Handler (AUTHENTICATED POST & GET) ---
 module.exports = async (req, res) => {
