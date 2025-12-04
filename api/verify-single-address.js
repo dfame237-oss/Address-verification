@@ -3,7 +3,31 @@
 const INDIA_POST_API = 'https://api.postalpincode.in/pincode/'; 
 let pincodeCache = {};
 
-// --- Google Cloud Translation Setup (REMOVED: Using Gemini directly for speed) ---
+// --- START: VERTEX AI MIGRATION CHANGES ---
+// 1. Install Dependency: npm install @google-cloud/vertexai
+const { VertexAI } = require('@google-cloud/vertexai');
+const fs = require('fs'); // Node's File System module needed for Vercel Auth fix
+
+// --- Vercel Authentication Fix for Vertex AI ---
+// This block reads the Service Account JSON from the environment variable 
+// and makes it available as a temporary file for the Vertex AI SDK to find (ADC).
+if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+    try {
+        const credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+        
+        // This ENV variable tells the SDK where to find the key file.
+        process.env.GOOGLE_APPLICATION_CREDENTIALS = 'gcp-credentials-temp.json';
+        
+        // Write the credentials to a temporary file.
+        fs.writeFileSync('gcp-credentials-temp.json', JSON.stringify(credentials));
+
+    } catch (e) {
+        console.error("Vercel Vertex AI Auth Error: Failed to parse JSON credentials.", e);
+    }
+}
+// --- END: VERTEX AI MIGRATION CHANGES ---
+
+
 // Note: Relying on prompt for translation.
 const testingKeywords = ['test', 'testing', 'asdf', 'qwer', 'zxcv', 'random', 'gjnj', 'fgjnj'];
 const coreMeaningfulWords = [
@@ -51,7 +75,7 @@ const CRITICAL_KEYWORDS = [
     'CRITICAL_ALERT: Major location conflict',
     'CRITICAL_ALERT: Formatted address is short',
     'CRITICAL_ALERT: JSON parse failed',
-    'CRITICAL_ALERT: Address lacks specificity' // NEW KEYWORD FOR MISSING H.NO/STREET
+    'CRITICAL_ALERT: Address lacks specificity' // NEW KEYWORD FOR MISSING H.NO/STREET
 ];
 
 
@@ -88,51 +112,53 @@ async function getIndiaPostData(pin) {
     }
 }
 
-// --- Gemini helper ---
-async function getGeminiResponse(prompt) { 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-        return { text: null, error: "Gemini API key not set in environment variables."
-        };
-    }
+// --- START: VERTEX AI REPLACEMENT FUNCTION ---
+/**
+ * Replaces getGeminiResponse with the Vertex AI SDK call.
+ */
+async function getVertexAIResponse(prompt) {
+    // Uses the GCP environment variables set in Vercel
+    const project = process.env.GCP_PROJECT_ID; 
+    const location = process.env.GCP_LOCATION || 'us-central1';
+    
+    if (!project) {
+        return { text: null, error: "Vertex AI Error: GCP_PROJECT_ID not set." };
+    }
+    
+    // Initialize the Vertex AI client. Authentication uses the Service Account credentials via ADC.
+    const vertex_ai = new VertexAI({ project: project, location: location });
 
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`; 
+    const model = 'gemini-2.5-flash'; 
 
-    const requestBody = {
-        contents: [{ parts: [{ text: prompt }] }],
-    };
-    const options = {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody)
-    };
-    try {
-        const response = await fetch(apiUrl, options); 
-        const result = await response.json();
-        
-        // Check for non-200 status or specific Gemini error messages
-        if (response.status !== 200 || result.error) {
-            const rawErrorMessage = result.error?.message || "Unknown API error.";
-            console.error(`Gemini API Error (Raw): ${rawErrorMessage}`); 
-            // Return a generic error message for the client
-            return { text: null, error: "External AI verification service failure. Please try again." }; 
-        }
+    try {
+        const response = await vertex_ai.generateContent({
+            model: model,
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            config: {
+                temperature: 0.1, 
+                maxOutputTokens: 2048 
+            }
+        });
 
-        if (result.candidates && result.candidates.length > 0) {
-            return { text: result.candidates[0].content.parts[0].text, error: null };
-        } else {
-            const errorMessage = "Gemini API Error: No candidates found in response."; 
-            console.error(errorMessage);
-            // Return a generic error message for the client
-            return { text: null, error: "External AI verification service failed to return data." }; 
-        }
-    } catch (e) {
-        const errorMessage = `Error during Gemini API call: ${e.message}`;
-        console.error(errorMessage); 
-        // Return a generic error message for the client
-        return { text: null, error: "A network issue occurred while contacting the AI service." }; 
-    }
+        // Safely extract the response text
+        const responseText = response.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (responseText) {
+            return { text: responseText, error: null };
+        } else {
+            const errorMessage = "Vertex AI Error: No candidates found in response or API error.";
+            console.error(errorMessage, JSON.stringify(response));
+            return { text: null, error: "External AI verification service failed to return data." };
+        }
+
+    } catch (e) {
+        const errorMessage = `Error during Vertex AI call: ${e.message}`;
+        console.error(errorMessage);
+        return { text: null, error: "A network issue occurred while contacting the AI service." };
+    }
 }
+// --- END: VERTEX AI REPLACEMENT FUNCTION ---
+
 
 // --- Utilities & Prompt Builder ---
 function extractPin(address) {
@@ -167,11 +193,11 @@ function buildGeminiPrompt(originalAddress, postalData) {
 
     Your response must contain the following keys:
     1.  "H.no.", "Flat No.", "Plot No.", "Room No.", "Building No.", "Block No.", "Ward No.", "Gali No.", "Zone No.", "Quarter No.", "Road No.", "Street No.", "Sector", "Phase": Extract only the number or alphanumeric sequence (e.g., '1-26', 'A/25', '10'). 
-    
-    **CRITICAL PREFIX PRESERVATION RULE:** The prefix used in your JSON output (e.g., "H.no.", "Block No.", "Street No.") MUST match the type used in the original raw address, even if misspelled or abbreviated by the customer (e.g., 'st n.', 'blck no.'). **Analyze the raw address to determine the original prefix type.** If the customer used 'street n.', output 'Street No.'; if 'blck', output 'Block No.'. **If the customer used the short form 'H.no.', retain it exactly as 'H.no.'.** If no specific prefix is used, default to the most descriptive term found (e.g., 'H.no.' for house details, 'Block No.' for block details).
-    
-    **CRITICAL PIN EXTRACTION RULE: Never extract the 6-digit PIN code or the customer's 10-digit phone number into any of these number fields.**
-    
+    
+    **CRITICAL PREFIX PRESERVATION RULE:** The prefix used in your JSON output (e.g., "H.no.", "Block No.", "Street No.") MUST match the type used in the original raw address, even if misspelled or abbreviated by the customer (e.g., 'st n.', 'blck no.'). **Analyze the raw address to determine the original prefix type.** If the customer used 'street n.', output 'Street No.'; if 'blck', output 'Block No.'. **If the customer used the short form 'H.no.', retain it exactly as 'H.no.'.** If no specific prefix is used, default to the most descriptive term found (e.g., 'H.no.' for house details, 'Block No.' for block details).
+    
+    **CRITICAL PIN EXTRACTION RULE: Never extract the 6-digit PIN code or the customer's 10-digit phone number into any of these number fields.**
+    
     Set to null if not found.
     2.  "Colony", "Street", "Locality", "Building Name", "House Name", "Floor": Extract the name. **(MUST BE IN ENGLISH)**
     3.  "P.O.": The **OFFICIAL, BEST-MATCHING** Post Office name from the PIN data that most closely matches the customer's locality. **You must analyze ALL Post Office names in the list and select the most appropriate one.** Prepend "P.O." to the name. Example: "P.O. Boduppal". **(MUST BE IN ENGLISH)**
@@ -207,7 +233,7 @@ You must find and verify the correct 6-digit PIN. If you cannot find a valid PIN
 
 function processAddress(address, postalData) {
     const prompt = buildGeminiPrompt(address, postalData); 
-    return getGeminiResponse(prompt);
+    return getVertexAIResponse(prompt); // <-- UPDATED to use Vertex AI
 }
 
 // --- NEW: Dedicated Name Cleaner and Translator ---
@@ -217,7 +243,7 @@ async function getTranslatedCleanName(rawName) {
     // Prompt dedicated solely to name cleaning and translation
     const namePrompt = `Clean, correct, and aggressively translate the following customer name to English. Remove any numbers, special characters, titles (Mr, Ms, Dr), or extraneous text. Provide ONLY the resulting cleaned, translated name, with no additional text or punctuation. Name: "${rawName}"`;
     
-    const response = await getGeminiResponse(namePrompt);
+    const response = await getVertexAIResponse(namePrompt); // <-- UPDATED to use Vertex AI
     
     // Fallback: If Gemini fails to respond, perform the basic regex cleanup and use that.
     return response.text ? response.text.trim() : (rawName || '').replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim(); 
@@ -230,7 +256,7 @@ async function getTranslatedAddressComponent(rawText) {
     // Prompt designed to force translation of specific proper nouns and phrases (e.g., Landmarks)
     const prompt = `Translate the following short address component or proper noun to standard English. Correct any phonetic spelling errors. Provide ONLY the result with no additional context. Phrase: "${rawText}"`;
     
-    const response = await getGeminiResponse(prompt);
+    const response = await getVertexAIResponse(prompt); // <-- UPDATED to use Vertex AI
     
     // Fallback: Use the original text if translation fails.
     return response.text ? response.text.trim() : rawText;
@@ -277,11 +303,11 @@ async function runVerificationLogic(address, customerName) {
         postalData = await getIndiaPostData(initialPin);
     }
     
-    // 2. Call Gemini API for Address Verification
+    // 2. Call AI for Address Verification (now using Vertex AI)
     const geminiResult = await processAddress(originalAddress, postalData);
 
     if (geminiResult.error || !geminiResult.text) {
-        // FIX: Mask the specific Gemini error in the remarks returned to the client
+        // FIX: Mask the specific AI error in the remarks returned to the client
         const maskedRemarks = "Verification failed due to a problem with the external AI service.";
         return {
             status: "Error", remarks: maskedRemarks, addressQuality: "Very Bad", 
@@ -289,7 +315,7 @@ async function runVerificationLogic(address, customerName) {
         };
     }
 
-    // 3. Parse Gemini JSON output
+    // 3. Parse AI JSON output
     let parsedData;
     try {
         const jsonText = geminiResult.text.replace(/```json|```/g, '').trim(); 
@@ -358,20 +384,20 @@ async function runVerificationLogic(address, customerName) {
     }
 
     // 🎯 FIX 1A: PREVENT PIN/PHONE FROM BEING TREATED AS H.NO. (OR ANY ADDRESS COMPONENT NUMBER)
-    const potentialPin = finalPin;
-    const houseNumber = parsedData['H.no.'];
-    const phoneMatch = originalAddress.match(/\b\d{10}\b/);
-    const potentialPhone = phoneMatch ? phoneMatch[0] : null;
+    const potentialPin = finalPin;
+    const houseNumber = parsedData['H.no.'];
+    const phoneMatch = originalAddress.match(/\b\d{10}\b/);
+    const potentialPhone = phoneMatch ? phoneMatch[0] : null;
 
-    if (houseNumber && (houseNumber === potentialPin || houseNumber === potentialPhone)) {
-        remarks.push(`CRITICAL_ALERT: Removed PIN/Phone (${houseNumber}) incorrectly extracted as H.no.`);
-        parsedData['H.no.'] = null;
-        // Also remove from formatted address to clean the output
-        if (parsedData.FormattedAddress) {
-            // Use regex to replace the exact number extracted as H.no.
-            parsedData.FormattedAddress = parsedData.FormattedAddress.replace(new RegExp(`\\b${houseNumber}\\b`, 'g'), '').replace(/\s+/g, ' ').trim();
-        }
-    }
+    if (houseNumber && (houseNumber === potentialPin || houseNumber === potentialPhone)) {
+        remarks.push(`CRITICAL_ALERT: Removed PIN/Phone (${houseNumber}) incorrectly extracted as H.no.`);
+        parsedData['H.no.'] = null;
+        // Also remove from formatted address to clean the output
+        if (parsedData.FormattedAddress) {
+            // Use regex to replace the exact number extracted as H.no.
+            parsedData.FormattedAddress = parsedData.FormattedAddress.replace(new RegExp(`\\b${houseNumber}\\b`, 'g'), '').replace(/\s+/g, ' ').trim();
+        }
+    }
 
 
     // --- 6. Local Address Correction Logic (P.O. Conflict Check) ---
@@ -422,11 +448,11 @@ async function runVerificationLogic(address, customerName) {
     // 9. --- RULE: Missing Locality/Specifics Check (UPDATED FOR STRICTER LOGIC) ---
     const hasHouseOrFlat = parsedData['H.no.'] || parsedData['Flat No.'] || parsedData['Plot No.'] || parsedData['Room No.'];
     const hasStreetOrColony = parsedData.Street || parsedData.Colony || parsedData.Locality;
-    const hasAnySpecificDetail = hasHouseOrFlat || hasStreetOrColony; // Simplified check
+    const hasAnySpecificDetail = hasHouseOrFlat || hasStreetOrColony; // Simplified check
 
     // RULE 9a: Check if *both* a specific number AND a locality/street/colony are missing.
     if (!hasAnySpecificDetail) {
-        // 🎯 FIX 2: Added more specific remark and force downgrade
+        // 🎯 FIX 2: Added more specific remark and force downgrade
         remarks.push(`CRITICAL_ALERT: Address lacks specificity (missing H.no./Flat/Street/Colony details).`);
         if (currentQuality === 'Very Good' || currentQuality === 'Good' || currentQuality === 'Medium') {
             parsedData.AddressQuality = 'Bad';
@@ -730,7 +756,7 @@ module.exports = async (req, res) => {
 
 // Export core functions for use in bulk-jobs.js AND for classification logic
 module.exports.getIndiaPostData = getIndiaPostData;
-module.exports.getGeminiResponse = getGeminiResponse;
+module.exports.getVertexAIResponse = getVertexAIResponse; // <-- EXPORT NEW FUNCTION
 module.exports.processAddress = processAddress;
 module.exports.extractPin = extractPin;
 module.exports.meaninglessRegex = meaninglessRegex;
