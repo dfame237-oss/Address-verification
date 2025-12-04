@@ -88,7 +88,7 @@ async function getIndiaPostData(pin) {
     }
 }
 
-// --- Gemini helper (UPGRADED) ---
+// --- Gemini helper (UPGRADED and maxOutputTokens REMOVED) ---
 async function getGeminiResponse(prompt) { 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -100,10 +100,9 @@ async function getGeminiResponse(prompt) {
 
     const requestBody = {
         contents: [{ parts: [{ text: prompt }] }],
+        // maxOutputTokens removed to rely on API default (which is usually sufficient for single-address verification)
         config: {
             temperature: 0.1,
-            // FIX: Set maxOutputTokens high to prevent the MAX_TOKENS error in bulk verification
-            maxOutputTokens: 8192 
         }
     };
     const options = {
