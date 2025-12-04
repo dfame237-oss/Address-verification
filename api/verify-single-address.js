@@ -165,7 +165,7 @@ function buildGeminiPrompt(originalAddress, postalData) {
     **CRITICAL INSTRUCTION:** If official Postal Data (State/District/PIN) is provided, you MUST ensure that your formatted address and extracted fields align perfectly with this official data. Remove any conflicting city, state, or district names from the raw address (e.g., if the raw address says 'Mumbai' but the PIN is for 'Delhi', you MUST remove 'Mumbai' from the FormattedAddress and set 'State'/'DIST.' to the official Delhi data).
 
     Your response must contain the following keys:
-    1.  "H.no.", "Flat No.", "Plot No.", "Room No.", "Building No.", "Block No.", "Ward No.", "Gali No.", "Zone No.": Extract only the number or alphanumeric sequence (e.g., '1-26', 'A/25', '10'). **The prefix MUST be H.no.**
+    1.  "H.no.", "Flat No.", "Plot No.", "Room No.", "Building No.", "Block No.", "Ward No.", "Gali No.", "Zone No.": Extract only the number or alphanumeric sequence (e.g., '1-26', 'A/25', '10'). **The prefix MUST be H.no. (exactly). Do not use 'House number'.**
     Set to null if not found.
     2.  "Colony", "Street", "Locality", "Building Name", "House Name", "Floor": Extract the name. **(MUST BE IN ENGLISH)**
     3.  "P.O.": The official Post Office name from the PIN data. Prepend "P.O." to the name. Example: "P.O. Boduppal". **(MUST BE IN ENGLISH)**

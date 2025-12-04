@@ -244,7 +244,7 @@ if (!rawAddress || rawAddress.trim() === "") {
             continue;
         }
 
-        // FIX: Include 'Medium' in the definition of high quality for ready-to-ship classification
+        // FIX: Include 'Medium' in the definition of high quality for ready-to-ship classification
         const isHighQuality = ['Very Good', 'Good', 'Medium'].includes(row.addressQuality);
         
         // Rule 2: Check for ANY critical keyword in the remarks.
@@ -468,7 +468,7 @@ module.exports = async (req, res) => {
             }, { projection: { [outputField]: 1, filename: 1 } });
 
             if (!job) { 
-                return res.status(404).json({ status: 'Error', message: 'Job not found, not completed, or file not generated.' });
+                return res.status(404).json({ status: 'Error', message: 'Job not found, or it is already completed/failed.' });
             } 
             
             const fileData = job[outputField];
