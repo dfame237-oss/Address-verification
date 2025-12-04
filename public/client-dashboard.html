@@ -90,23 +90,7 @@ border-radius: 12px;
 border-bottom: 1px solid #E2E8F0;
         }
 
-        .sidebar-section-title {
-            font-size: 0.8rem;
-font-weight: 700;
-            color: #64748B; /* Gray text */
-            margin-top: 20px;
-margin-bottom: 5px;
-            padding: 0 20px;
-            text-transform: uppercase;
-        }
-
         /* Overrides for vertical tab buttons */
-        .nav-tabs {
-            display: block;
-border-bottom: none;
-            margin-bottom: 0;
-        }
-
         .nav-tabs .tab-button {
             display: flex;
 align-items: center;
@@ -1238,6 +1222,7 @@ new Date(planDetails.validityEnd) : null;
                         const sender = msg.senderId === 'admin' ? 'Admin' : 'You';
     
                         // FIX: Escape single quotes in subject and body before embedding in onclick attribute
+                        // This prevents JS errors when subject/body contain characters like ' or "
                         const subjectEscaped = (msg.subject || '(No Subject)').replace(/'/g, "\\'"); 
                         const bodyEscaped = (msg.body || '').replace(/'/g, "\\'"); 
 
