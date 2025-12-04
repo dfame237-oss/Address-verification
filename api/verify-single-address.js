@@ -51,7 +51,7 @@ const CRITICAL_KEYWORDS = [
     'CRITICAL_ALERT: Major location conflict',
     'CRITICAL_ALERT: Formatted address is short',
     'CRITICAL_ALERT: JSON parse failed',
-    'CRITICAL_ALERT: Address lacks specificity' // NEW KEYWORD FOR MISSING H.NO/STREET
+    'CRITICAL_ALERT: Address lacks specificity' // NEW KEYWORD FOR MISSING H.NO/STREET
 ];
 
 
@@ -88,23 +88,21 @@ async function getIndiaPostData(pin) {
     }
 }
 
-// --- Gemini helper (UPGRADED and maxOutputTokens REMOVED) ---
+// --- Gemini helper ---
 async function getGeminiResponse(prompt) { 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
         return { text: null, error: "Gemini API key not set in environment variables."
         };
     }
-    // ENHANCEMENT: Switched to gemini-2.5-flash for better performance/cost balance
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`; 
+
+    // NOTE: Model remains gemini-2.0-flash as per user request.
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`; 
 
     const requestBody = {
         contents: [{ parts: [{ text: prompt }] }],
-        // maxOutputTokens removed to rely on API default (which is usually sufficient for single-address verification)
-        config: {
-            temperature: 0.1,
-        }
     };
+    // NOTE: maxOutputTokens removed as per user request.
     const options = {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -171,17 +169,17 @@ function buildGeminiPrompt(originalAddress, postalData) {
 
     Your response must contain the following keys:
     1.  "H.no.", "Flat No.", "Plot No.", "Room No.", "Building No.", "Block No.", "Ward No.", "Gali No.", "Zone No.", "Quarter No.", "Road No.", "Street No.", "Sector", "Phase": Extract only the number or alphanumeric sequence (e.g., '1-26', 'A/25', '10'). 
-    
-    **CRITICAL PREFIX PRESERVATION RULE:** The prefix used in your JSON output (e.g., "H.no.", "Block No.", "Street No.") MUST match the type used in the original raw address, even if misspelled or abbreviated by the customer (e.g., 'st n.', 'blck no.'). **Analyze the raw address to determine the original prefix type.** If the customer used 'street n.', output 'Street No.'; if 'blck', output 'Block No.'. **If the customer used the short form 'H.no.', retain it exactly as 'H.no.'.** If no specific prefix is used, default to the most descriptive term found (e.g., 'H.no.' for house details, 'Block No.' for block details).
-    
-    **CRITICAL PIN EXTRACTION RULE: Never extract the 6-digit PIN code or the customer's 10-digit phone number into any of these number fields.**
-    
+    
+    **CRITICAL PREFIX PRESERVATION RULE:** The prefix used in your JSON output (e.g., "H.no.", "Block No.", "Street No.") MUST match the type used in the original raw address, even if misspelled or abbreviated by the customer (e.g., 'st n.', 'blck no.'). **Analyze the raw address to determine the original prefix type.** If the customer used 'street n.', output 'Street No.'; if 'blck', output 'Block No.'. **If the customer used the short form 'H.no.', retain it exactly as 'H.no.'.** If no specific prefix is used, default to the most descriptive term found (e.g., 'H.no.' for house details, 'Block No.' for block details).
+    
+    **CRITICAL PIN EXTRACTION RULE: Never extract the 6-digit PIN code or the customer's 10-digit phone number into any of these number fields.**
+    
     Set to null if not found.
     2.  "Colony", "Street", "Locality", "Building Name", "House Name", "Floor": Extract the name. **(MUST BE IN ENGLISH)**
     3.  "P.O.": The **OFFICIAL, BEST-MATCHING** Post Office name from the PIN data that most closely matches the customer's locality. **You must analyze ALL Post Office names in the list and select the most appropriate one.** Prepend "P.O." to the name. Example: "P.O. Boduppal". **(MUST BE IN ENGLISH)**
     4.  "Tehsil": The official Tehsil/SubDistrict corresponding to the **P.O. you selected.** Prepend "Tehsil". Example: "Tehsil Pune". **(MUST BE IN ENGLISH)**
     5.  "DIST.": The official District corresponding to the **P.O. you selected.** **(MUST BE IN ENGLISH)**
-    6.  "State": The official State corresponding to the **P.O. you selected.** **(MUST BE IN ENGLISH)**
+    6.  "State": The official State corresponding to the **P.O. you selected.** **(MUST BE IN ENGLISH)**
     7.  "PIN": The 6-digit PIN code. Find and verify the correct PIN.
     If a PIN exists in the raw address but is incorrect, find the correct one and provide it.
     8.  "Landmark": A specific, named landmark (e.g., "Apollo Hospital"), not a generic type like "school".
@@ -362,20 +360,20 @@ async function runVerificationLogic(address, customerName) {
     }
 
     // 🎯 FIX 1A: PREVENT PIN/PHONE FROM BEING TREATED AS H.NO. (OR ANY ADDRESS COMPONENT NUMBER)
-    const potentialPin = finalPin;
-    const houseNumber = parsedData['H.no.'];
-    const phoneMatch = originalAddress.match(/\b\d{10}\b/);
-    const potentialPhone = phoneMatch ? phoneMatch[0] : null;
+    const potentialPin = finalPin;
+    const houseNumber = parsedData['H.no.'];
+    const phoneMatch = originalAddress.match(/\b\d{10}\b/);
+    const potentialPhone = phoneMatch ? phoneMatch[0] : null;
 
-    if (houseNumber && (houseNumber === potentialPin || houseNumber === potentialPhone)) {
-        remarks.push(`CRITICAL_ALERT: Removed PIN/Phone (${houseNumber}) incorrectly extracted as H.no.`);
-        parsedData['H.no.'] = null;
-        // Also remove from formatted address to clean the output
-        if (parsedData.FormattedAddress) {
-            // Use regex to replace the exact number extracted as H.no.
-            parsedData.FormattedAddress = parsedData.FormattedAddress.replace(new RegExp(`\\b${houseNumber}\\b`, 'g'), '').replace(/\s+/g, ' ').trim();
-        }
-    }
+    if (houseNumber && (houseNumber === potentialPin || houseNumber === potentialPhone)) {
+        remarks.push(`CRITICAL_ALERT: Removed PIN/Phone (${houseNumber}) incorrectly extracted as H.no.`);
+        parsedData['H.no.'] = null;
+        // Also remove from formatted address to clean the output
+        if (parsedData.FormattedAddress) {
+            // Use regex to replace the exact number extracted as H.no.
+            parsedData.FormattedAddress = parsedData.FormattedAddress.replace(new RegExp(`\\b${houseNumber}\\b`, 'g'), '').replace(/\s+/g, ' ').trim();
+        }
+    }
 
 
     // --- 6. Local Address Correction Logic (P.O. Conflict Check) ---
@@ -426,11 +424,11 @@ async function runVerificationLogic(address, customerName) {
     // 9. --- RULE: Missing Locality/Specifics Check (UPDATED FOR STRICTER LOGIC) ---
     const hasHouseOrFlat = parsedData['H.no.'] || parsedData['Flat No.'] || parsedData['Plot No.'] || parsedData['Room No.'];
     const hasStreetOrColony = parsedData.Street || parsedData.Colony || parsedData.Locality;
-    const hasAnySpecificDetail = hasHouseOrFlat || hasStreetOrColony; // Simplified check
+    const hasAnySpecificDetail = hasHouseOrFlat || hasStreetOrColony; // Simplified check
 
     // RULE 9a: Check if *both* a specific number AND a locality/street/colony are missing.
     if (!hasAnySpecificDetail) {
-        // 🎯 FIX 2: Added more specific remark and force downgrade
+        // 🎯 FIX 2: Added more specific remark and force downgrade
         remarks.push(`CRITICAL_ALERT: Address lacks specificity (missing H.no./Flat/Street/Colony details).`);
         if (currentQuality === 'Very Good' || currentQuality === 'Good' || currentQuality === 'Medium') {
             parsedData.AddressQuality = 'Bad';
@@ -497,7 +495,7 @@ async function runVerificationLogic(address, customerName) {
         remarks.push('Address verified and formatted successfully.');
     }
     
-    // --- NEW FIX: Remove Blank Prefixes from Formatted Address (Fixes H.no. , issue) ---
+    // --- FIX APPLIED: Remove Blank Prefixes from Formatted Address (Fixes H.no. , issue) ---
     if (parsedData.FormattedAddress) {
         let cleanedFormattedAddress = parsedData.FormattedAddress;
 
@@ -509,7 +507,6 @@ async function runVerificationLogic(address, customerName) {
         ];
         
         // 2. Create a regex pattern to find any of these prefixes followed by zero or more separators/spaces
-        // The regex looks for the word boundary (\b), the prefix, and then any combination of spaces/commas/dashes and spaces (\s*[:,\-]?\s*)
         const blankPrefixPattern = new RegExp(
             `\\b(?:${commonPrefixes.join('|')})\\s*[:,\-]?\\s*`, 'gi'
         );
@@ -526,7 +523,7 @@ async function runVerificationLogic(address, customerName) {
 
         parsedData.FormattedAddress = cleanedFormattedAddress;
     }
-    // --- END NEW FIX ---
+    // --- END FIX ---
 
     // Build final response object
     return {
