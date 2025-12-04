@@ -351,9 +351,9 @@ function initBulkListeners() {
     }
 }
 
-// --- FIX 1: Fetch and display TODAY'S COMPLETED VERIFICATIONS (NEW FUNCTION) ---
+// --- FIX 1 (LOGIC FIX): Fetch and display TODAY'S COMPLETED VERIFICATIONS (UPDATED) ---
 // This function addresses the issue of the KPI data disappearing on page refresh.
-    async function fetchTodayCompletedKpi() {
+async function fetchTodayCompletedKpi() {
     const kpiEl = document.getElementById('today-completed-kpi');
     if (!kpiEl) return;
 // If global data exists from a recent poll, use it (and call loadKpiData in client-dashboard.js)
@@ -372,6 +372,7 @@ function initBulkListeners() {
             let completedToday = 0;
 
             result.jobs.forEach(job => {
+                // CRITICAL FIX: Only check for completedTime if status is 'Completed'
                 const completedTime = job.completedTime;
                 if (job.status === 'Completed' && completedTime) {
                     const completedDate = new Date(completedTime);
@@ -510,5 +511,5 @@ async function fetchDeductionHistory(page = 1) { // Default page to 1
 window.initBulkListeners = initBulkListeners;
 window.handleCancelJob = handleCancelJob;
 window.fetchTodayCompletedKpi = fetchTodayCompletedKpi;
-    window.fetchDeductionHistory = fetchDeductionHistory;
+window.fetchDeductionHistory = fetchDeductionHistory;
 window.handleCancelJobConfirmed = handleCancelJobConfirmed; // EXPOSED FOR MODAL BUTTON
