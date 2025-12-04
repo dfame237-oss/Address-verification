@@ -939,11 +939,18 @@ looks like your account is currently active on another device.
                     let bodyText = '';
                     try { bodyText = await resp.text(); } catch(e){}
                     console.warn('Profile fetch 401:', bodyText);
+                    
+                    // CRITICAL FIX: Handle Session Invalidation (Admin Action)
                     if (bodyText && bodyText.toLowerCase().includes('session invalidated')) {
-                        openForceModal();
+                        console.warn('Session invalidated by server (Admin action or change). Redirecting to login.');
+                        // 1. Clear local storage to fully break the session
+                        localStorage.clear();
+                        // 2. Display alert/message and redirect
+                        alert('Your session has been invalidated by the server (e.g., due to an admin action or password change). Please log in again.');
+                        window.location.href = LOGIN_PAGE;
                         return;
                     }
-
+                    // Original logic for 401/403 errors when not due to invalidation
                     updateUIFromLocalPlan();
                     return;
                 }
