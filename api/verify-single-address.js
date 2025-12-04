@@ -168,10 +168,10 @@ function buildGeminiPrompt(originalAddress, postalData) {
     1.  "H.no.", "Flat No.", "Plot No.", "Room No.", "Building No.", "Block No.", "Ward No.", "Gali No.", "Zone No.": Extract only the number or alphanumeric sequence (e.g., '1-26', 'A/25', '10'). **The prefix MUST be H.no. (exactly). Do not use 'House number'.**
     Set to null if not found.
     2.  "Colony", "Street", "Locality", "Building Name", "House Name", "Floor": Extract the name. **(MUST BE IN ENGLISH)**
-    3.  "P.O.": The official Post Office name from the PIN data. Prepend "P.O." to the name. Example: "P.O. Boduppal". **(MUST BE IN ENGLISH)**
-    4.  "Tehsil": The official Tehsil/SubDistrict from the PIN data. Prepend "Tehsil". Example: "Tehsil Pune". **(MUST BE IN ENGLISH)**
-    5.  "DIST.": The official District from the PIN data. **(MUST BE IN ENGLISH)**
-    6.  "State": The official State from the PIN data. **(MUST BE IN ENGLISH)**
+    3.  "P.O.": The **OFFICIAL, BEST-MATCHING** Post Office name from the PIN data that most closely matches the customer's locality. **You must analyze ALL Post Office names in the list and select the most appropriate one.** Prepend "P.O." to the name. Example: "P.O. Boduppal". **(MUST BE IN ENGLISH)**
+    4.  "Tehsil": The official Tehsil/SubDistrict corresponding to the **P.O. you selected.** Prepend "Tehsil". Example: "Tehsil Pune". **(MUST BE IN ENGLISH)**
+    5.  "DIST.": The official District corresponding to the **P.O. you selected.** **(MUST BE IN ENGLISH)**
+    6.  "State": The official State corresponding to the **P.O. you selected.** **(MUST BE IN ENGLISH)**
     7.  "PIN": The 6-digit PIN code. Find and verify the correct PIN.
     If a PIN exists in the raw address but is incorrect, find the correct one and provide it.
     8.  "Landmark": A specific, named landmark (e.g., "Apollo Hospital"), not a generic type like "school".
@@ -188,8 +188,8 @@ function buildGeminiPrompt(originalAddress, postalData) {
 `; 
 
     if (postalData.PinStatus === 'Success') {
-        basePrompt += `\nOfficial Postal Data: ${JSON.stringify(postalData.PostOfficeList)}\nUse this list to find the best match for 'P.O.', 'Tehsil', and 'DIST.'
-fields.`; 
+        // ENHANCEMENT: Providing the full list to AI for better P.O. selection
+        basePrompt += `\nOfficial Postal Data: ${JSON.stringify(postalData.PostOfficeList)}\n**You MUST analyze this ENTIRE list and select the single Post Office that best matches the customer's locality. Use web search/Google to cross-reference the customer's locality against these Post Office names for 100% accuracy.**`; 
     } else {
         basePrompt += `\nAddress has no PIN or the PIN is invalid.
 You must find and verify the correct 6-digit PIN. If you cannot find a valid PIN, set "PIN" to null and provide the best available data.`;
@@ -328,7 +328,9 @@ async function runVerificationLogic(address, customerName) {
 
     // 5. --- PIN VERIFICATION & CORRECTION LOGIC ---
     let finalPin = String(parsedData.PIN).match(/\b\d{6}\b/) ? parsedData.PIN : initialPin; 
-    let primaryPostOffice = postalData.PostOfficeList ? postalData.PostOfficeList[0] : {};
+    // We intentionally stop relying on primaryPostOffice here, 
+    // as the AI's selection within parsedData['DIST.'], etc., is now the source of truth.
+    let primaryPostOffice = postalData.PostOfficeList ? postalData.PostOfficeList[0] : {}; 
     
     if (finalPin) {
         if (postalData.PinStatus !== 'Success' || (initialPin && finalPin !== initialPin)) {
@@ -355,7 +357,8 @@ async function runVerificationLogic(address, customerName) {
     postVerificationCorrections(parsedData, originalAddress, remarks);
 
 
-    const verifiedState = primaryPostOffice.State || parsedData.State || '';
+    // CRITICAL CHANGE: The state is now verified using the AI's output, as the AI selected the P.O.
+    const verifiedState = parsedData.State || '';
     let currentQuality = parsedData.AddressQuality;
 
     // --- 7. ADJACENT DUPLICATE REMOVAL (Clean final address strings) ---
@@ -477,10 +480,14 @@ async function runVerificationLogic(address, customerName) {
         addressLine1: parsedData.FormattedAddress || originalAddress.replace(meaninglessRegex, '').trim() || '', 
         landmark: finalLandmark, 
         
-        // 🎯 FIX 1 & 2 IMPLEMENTATION START
-        // P.O. FIX: Prioritize official name (Fix 1) and enforce 'P.O.' prefix (Fix 2)
+        // 🎯 NEW LOGIC: We now trust the AI to select the BEST matching P.O. from the list 
+        // and set the associated DIST. and State fields in the JSON.
+        // We use the AI's output fields (P.O., Tehsil, DIST., State) directly to ensure accuracy 
+        // based on the cross-referencing it performed.
+        
+        // P.O. FIX: Enforce 'P.O.' prefix on the AI-selected name (Fix 2)
         postOffice: (() => {
-            const poName = primaryPostOffice.Name || parsedData['P.O.'];
+            const poName = parsedData['P.O.'] || '';
             if (!poName) return '';
             const nameLower = poName.toLowerCase();
             // Check if it already has a prefix from AI, if not, add 'P.O. '
@@ -489,10 +496,9 @@ async function runVerificationLogic(address, customerName) {
             }
             return `P.O. ${poName}`; // Enforce short prefix
         })(),
-        // Tehsil FIX: Prioritize official name (Fix 1) and enforce 'Tehsil' prefix (Fix 2)
+        // Tehsil FIX: Enforce 'Tehsil' prefix on the AI-selected name (Fix 2)
         tehsil: (() => {
-            // Priority is given to official Taluk/SubDistrict data
-            const tehsilName = primaryPostOffice.Taluk || parsedData.Tehsil;
+            const tehsilName = parsedData.Tehsil || '';
             if (!tehsilName) return '';
             // Check if it already has a prefix from AI, if not, add 'Tehsil '
             if (tehsilName.toLowerCase().startsWith('tehsil')) {
@@ -500,10 +506,10 @@ async function runVerificationLogic(address, customerName) {
             }
             return `Tehsil ${tehsilName}`; // Enforce prefix
         })(),
-        // District and State FIX: Strictly prioritize official data (Fix 1)
-        district: primaryPostOffice.District || parsedData['DIST.'] || '', 
-        state: primaryPostOffice.State || parsedData.State || '', 
-        // 🎯 FIX 1 & 2 IMPLEMENTATION END
+        // District and State: Use AI's chosen data, which was cross-validated against the official list
+        district: parsedData['DIST.'] || '', 
+        state: parsedData.State || '', 
+        // 🎯 END NEW LOGIC
         
         pin: finalPin, 
         addressQuality: parsedData.AddressQuality || 'Medium', 
