@@ -26,16 +26,7 @@ const meaninglessRegex = (() => {
     }
 })();
 
-// >>> START OF MODIFIED SECTION <<<
-
-// UPDATED: Added 'beside', 'in front', 'above', 'below', 'next to'
-const directionalKeywords = [
-    'near', 'opposite', 'back side', 'front side', 'behind', 'opp', 
-    'beside', 'in front', 'above', 'below', 'next to'
-];
-
-// >>> END OF MODIFIED SECTION <<<
-
+const directionalKeywords = ['near', 'opposite', 'back side', 'front side', 'behind', 'opp', 'beside', 'in front', 'above', 'below', 'next to'];
 // --- DB helper and auth ---
 const { connectToDatabase } = require('../utils/db');
 const jwt = require('jsonwebtoken'); 
