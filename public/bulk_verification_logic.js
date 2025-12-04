@@ -3,7 +3,7 @@
 
 // NOTE: Assumes API_BULK_JOBS, authFetch, checkPlanValidity, showTab, API_CLIENT are global from client-dashboard.html
 
-const API_BULK_JOBS = '/api/bulk-jobs'; 
+const API_BULK_JOBS = '/api/bulk-jobs';
 // FIX: API_CLIENT declaration removed to prevent duplicate declaration error (it is declared in client-dashboard.html)
 
 // --- UI helpers (existing) ---
@@ -27,11 +27,11 @@ function updateStatusMessage(message, isError = false) {
 // --- Template download (unchanged) ---
 function handleTemplateDownload() {
     const templateHeaders = "ORDER ID,CUSTOMER NAME,CUSTOMER RAW ADDRESS\n";
-    // FIX: Removed the embedded newline within the first address AND ensured no trailing newline 
+// FIX: Removed the embedded newline within the first address AND ensured no trailing newline 
     // to guarantee exactly two sample data rows.
     const templateData =
-        "1,\"John Doe\",\"H.No. 123, Sector 40B, near bus stand, Chandigarh\"\n" +
-        "2,\"Jane Smith\",\"5th Floor, Alpha Tower, Mumbai 400001\""; 
+        "1,\"John Doe\",\"H.No.\n123, Sector 40B, near bus stand, Chandigarh\"\n" +
+        "2,\"Jane Smith\",\"5th Floor, Alpha Tower, Mumbai 400001\"";
     const csvContent = templateHeaders + templateData;
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -89,7 +89,7 @@ function generatePreview(data) {
         html += `<th>${h}</th>`;
     });
     html += '</tr></thead><tbody>';
-    // Add up to 5 rows for preview
+// Add up to 5 rows for preview
     const rowsToDisplay = data.rows.slice(0, 5);
     rowsToDisplay.forEach(row => {
         html += '<tr>';
@@ -100,6 +100,7 @@ function generatePreview(data) {
         });
         html += '</tr>';
 
+   
     });
 
     html += '</tbody>';
@@ -112,10 +113,10 @@ async function getActiveJobCount() {
     try {
         // Use the globally declared API_CLIENT
         const resp = await authFetch(`${API_CLIENT}?action=active-jobs`, { method: 'GET' });
-        const json = await resp.json();
+    const json = await resp.json();
         if (json.status === 'Success' && typeof json.activeJobsCount === 'number') {
             return json.activeJobsCount;
-        }
+    }
         return 0;
     } catch (e) {
         console.error('Failed to get active job count:', e);
@@ -128,7 +129,7 @@ async function handleBulkVerification() {
     // Note: checkPlanValidity, isPlanValid, authFetch, showTab, getRemainingCredits are assumed global
     if (!checkPlanValidity() || !isPlanValid) {
         updateStatusMessage("Access denied. Plan is expired or disabled.", true);
-        return;
+    return;
     }
 
     const fileInput = document.getElementById('csvFileInput');
@@ -143,7 +144,7 @@ async function handleBulkVerification() {
     if (activeJobs >= 1) { 
         // FIX: Use the new dynamic modal instead of the simple message in the bulk tab area
         window.openMaxJobsModal();
-        updateStatusMessage("Job submission blocked. One job is already running.", true);
+    updateStatusMessage("Job submission blocked. One job is already running.", true);
         return;
     }
 
@@ -152,76 +153,75 @@ async function handleBulkVerification() {
 
     processButton.disabled = true;
     fileInput.disabled = true;
-    
-    // FIX: Update status message right before starting the file read
+// FIX: Update status message right before starting the file read
     updateStatusMessage('Reading file and performing credit check...');
-    
     reader.onload = async function (e) {
         const text = e.target.result;
-        const { rows: addresses } = parseCSV(text);
+    const { rows: addresses } = parseCSV(text);
 
         if (addresses.length === 0) {
             updateStatusMessage("Error: No valid addresses found in CSV. Check format and required columns.", true);
-            processButton.disabled = false;
+    processButton.disabled = false;
             fileInput.disabled = false;
             return;
         }
 
         const totalRows = addresses.length;
-        // --- NEW: POST JOB TO SERVER ---
+// --- NEW: POST JOB TO SERVER ---
         try {
             updateStatusMessage(`Submitting job for ${totalRows} addresses...`);
-            const resp = await authFetch(API_BULK_JOBS, {
+    const resp = await authFetch(API_BULK_JOBS, {
                 method: 'POST',
                 body: JSON.stringify({ 
                     filename: file.name,
                     csvData: text,
                   
+    
                     totalRows: totalRows
                 })
             });
-            const result = await resp.json();
+    const result = await resp.json();
 
             // FIX: Check for Max Jobs or Insufficient Credits response from server (Status 429 or 400)
             if (resp.status === 429 || (resp.status === 400 && result.message && result.message.includes('Maximum 1 job'))) { 
                 // Max Jobs check (redundant, but covers server-side enforcement)
                 window.openMaxJobsModal();
-                updateStatusMessage(`Job submission blocked. Server busy.`, true);
+    updateStatusMessage(`Job submission blocked. Server busy.`, true);
             } else if (resp.status === 400 && result.message && result.message.includes('Insufficient Credits')) {
                 // FIX: Replaced simple alert with the new dynamic credit modal
                 window.openCreditsModal(result.message);
-                updateStatusMessage(result.message, true);
+    updateStatusMessage(result.message, true);
             } else if (!resp.ok) { // General HTTP Error
                 updateStatusMessage(result.message || `Job submission failed (Status: ${resp.status}).`, true);
-            } else if (result.status === 'Success' && result.jobId) {
+    } else if (result.status === 'Success' && result.jobId) {
                 updateStatusMessage(`Verification job submitted (ID: ${result.jobId}). Processing started asynchronously.`);
-                // Requirement 2: Switch to 'In Progress' tab
+// Requirement 2: Switch to 'In Progress' tab
                 const inProgressBtn = document.getElementById('in-progress-tab-btn');
-                if (inProgressBtn) showTab('in-progress-jobs', inProgressBtn); 
+    if (inProgressBtn) showTab('in-progress-jobs', inProgressBtn); 
                 
                 // Refresh credit UI after submission
                 const afterCreditsResp = await getRemainingCredits();
-                if (afterCreditsResp.ok) {
+    if (afterCreditsResp.ok) {
                     const rc = afterCreditsResp.remainingCredits;
-                    const remEl = document.getElementById('plan-remaining-credits'); // Update plan card
+    const remEl = document.getElementById('plan-remaining-credits'); // Update plan card
                     if (remEl) remEl.textContent = rc === 'Unlimited' ?
-                        'Unlimited' : Number(rc).toLocaleString();
+    'Unlimited' : Number(rc).toLocaleString();
                 }
 
             } else {
                 updateStatusMessage(result.message || 'Job submission failed due to unknown server response.', true);
-            }
+    }
         } catch (error) {
             updateStatusMessage(`Network error during job submission: ${error.message}`, true);
-        } finally {
+    } finally {
             processButton.disabled = false;
             fileInput.disabled = false;
-        }
+    }
     };
 
     reader.onerror = function () {
         updateStatusMessage("Error reading file.", true);
-        processButton.disabled = false;
+    processButton.disabled = false;
         fileInput.disabled = false;
     };
 
@@ -234,7 +234,7 @@ async function handleBulkVerification() {
 function handleCancelJob(jobId) {
     // FIX: Replaced window.confirm() with the new modal function
     window.openCancelJobModal(jobId);
-}
+    }
 
 // --- NEW CANCELLATION LOGIC: Step 2 - Executes API Call after modal confirmation ---
 
@@ -246,13 +246,13 @@ async function handleCancelJobConfirmed(jobId) {
             method: 'PUT',
             body: JSON.stringify({ jobId })
         });
-        const result = await resp.json();
+    const result = await resp.json();
 
         if (result.status === 'Success') {
             updateStatusMessage(`Cancellation request sent for Job ${jobId}. Status will update shortly.`, false);
-        } else {
+    } else {
             updateStatusMessage(`Failed to cancel Job ${jobId}: ${result.message}`, true);
-        }
+    }
     } catch (e) {
         updateStatusMessage(`Network error during cancellation: ${e.message}`, true);
     }
@@ -265,7 +265,7 @@ function setupDragDropListeners() {
     const fileInput = document.getElementById('csvFileInput');
     const fileNameDisplay = document.getElementById('file-name-display');
     const processButton = document.getElementById('processButton');
-    // Prevent default drag behaviors
+// Prevent default drag behaviors
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropZone.addEventListener(eventName, preventDefaults, false);
     });
@@ -281,16 +281,16 @@ function setupDragDropListeners() {
     ['dragleave', 'drop'].forEach(eventName => {
         dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
     });
-    // Handle dropped files
+// Handle dropped files
     dropZone.addEventListener('drop', handleDrop, false);
     function handleDrop(e) {
         const dt = e.dataTransfer;
         const files = dt.files;
-        if (files.length) {
+    if (files.length) {
             fileInput.files = files;
-            // Assign files to the hidden input
+// Assign files to the hidden input
             handleFileSelection(files[0]);
-        }
+    }
     }
     
     // Handle file selection via click/drag
@@ -302,16 +302,17 @@ function setupDragDropListeners() {
             processButton.disabled = true;
             document.getElementById('preview-section').classList.add('hidden');
   
+    
         }
     });
     function handleFileSelection(file) {
         fileNameDisplay.textContent = file.name;
         processButton.disabled = false;
-        // Read file content for preview
+// Read file content for preview
         const reader = new FileReader();
-        reader.onload = function(e) {
+    reader.onload = function(e) {
             const text = e.target.result;
-            const previewData = parseCSV(text);
+    const previewData = parseCSV(text);
             generatePreview(previewData);
         };
         reader.readAsText(file);
@@ -323,54 +324,51 @@ function setupDragDropListeners() {
 function initBulkListeners() {
     // Export core functions needed by client-dashboard.html
     window.handleCancelJob = handleCancelJob;
-    // EXPOSE THE NEW CONFIRMATION HANDLER FOR THE MODAL BUTTON
+// EXPOSE THE NEW CONFIRMATION HANDLER FOR THE MODAL BUTTON
     window.handleCancelJobConfirmed = handleCancelJobConfirmed;
-    
-    // Call initial KPI fetch right away for a non-stale number
+// Call initial KPI fetch right away for a non-stale number
     if (typeof fetchTodayCompletedKpi === 'function') {
         fetchTodayCompletedKpi();
     }
     
     if (isPlanValid) {
         const downloadTemplateButton = document.getElementById('downloadTemplateButton');
-        const csvFileInput = document.getElementById('csvFileInput');
+    const csvFileInput = document.getElementById('csvFileInput');
         const processButton = document.getElementById('processButton');
 
         // Setup Drag & Drop and manual file change listeners (NEW)
         setupDragDropListeners();
-        // Setup Search/Filtering listeners (NEW)
+// Setup Search/Filtering listeners (NEW)
         document.getElementById('in-progress-search')?.addEventListener('input', window.filterJobsList);
         document.getElementById('completed-search')?.addEventListener('input', window.filterJobsList);
-        if (downloadTemplateButton) {
+    if (downloadTemplateButton) {
             downloadTemplateButton.addEventListener('click', handleTemplateDownload);
-        }
+    }
 
         if (processButton) {
             processButton.addEventListener('click', handleBulkVerification);
-        }
+    }
     }
 }
 
 // --- FIX 1: Fetch and display TODAY'S COMPLETED VERIFICATIONS (NEW FUNCTION) ---
 // This function addresses the issue of the KPI data disappearing on page refresh.
-async function fetchTodayCompletedKpi() {
+    async function fetchTodayCompletedKpi() {
     const kpiEl = document.getElementById('today-completed-kpi');
     if (!kpiEl) return;
-    
-    // If global data exists from a recent poll, use it (and call loadKpiData in client-dashboard.js)
+// If global data exists from a recent poll, use it (and call loadKpiData in client-dashboard.js)
     if (window.globalJobsData && window.globalJobsData.completed && typeof window.loadKpiData === 'function') {
         window.loadKpiData();
-        return;
+    return;
     }
 
     try {
         // Fallback or initial load: fetch full job list and calculate locally.
-        const resp = await authFetch(API_BULK_JOBS, { method: 'GET' });
+    const resp = await authFetch(API_BULK_JOBS, { method: 'GET' });
         const result = await resp.json();
-
-        if (result.status === 'Success') {
+    if (result.status === 'Success') {
             const today = new Date();
-            today.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
             let completedToday = 0;
 
             result.jobs.forEach(job => {
@@ -378,88 +376,133 @@ async function fetchTodayCompletedKpi() {
                 if (job.status === 'Completed' && completedTime) {
                     const completedDate = new Date(completedTime);
                     if (completedDate >= today) {
+ 
                         // totalRows for a completed job is the effective deduction/usage
                         completedToday += job.totalRows; 
                     }
                 }
+     
             });
             kpiEl.textContent = completedToday.toLocaleString();
-            
-        } else {
+    } else {
             console.error('Failed to fetch KPI data:', result.message);
-        }
+    }
 
     } catch (e) {
         console.error('KPI fetch error:', e);
-        kpiEl.textContent = 'N/A';
+    kpiEl.textContent = 'N/A';
     }
 }
 
-// --- FIX 2: Fetch and display DEDUCTION HISTORY (UPDATED for permanent log) ---
-async function fetchDeductionHistory() {
+// --- FIX 2 & NEW PAGINATION: Fetch and display DEDUCTION HISTORY (UPDATED for permanent log) ---
+async function fetchDeductionHistory(page = 1) { // Default page to 1
     const container = document.getElementById('deduction-history-list');
     if (!container) return;
 
     container.innerHTML = '<p class="text-center text-gray-500 mt-5">Loading history...</p>';
-
     try {
-        // Use the globally declared API_CLIENT
-        const resp = await authFetch(`${API_CLIENT}?action=deduction-history`, { method: 'GET' });
-        const result = await resp.json();
+        // Use the globally declared API_CLIENT and pass the page parameter
+        const resp = await authFetch(`${API_CLIENT}?action=deduction-history&page=${page}`, { method: 'GET' });
+    const result = await resp.json();
 
         if (result.status !== 'Success' || !result.history) {
-            container.innerHTML = `<p class="text-center text-red-500 mt-5">Failed to load history: ${result.message || 'Unknown error.'}</p>`;
+            container.innerHTML = `<p class="text-center text-red-500 mt-5">Failed to load history: ${result.message ||
+    'Unknown error.'}</p>`;
             return;
         }
 
-        if (result.history.length === 0) {
-            container.innerHTML = '<p class="text-center text-gray-500 mt-5">No credit deduction records found.</p>';
-            return;
-        }
+        const history = result.history;
+        const pagination = result.pagination;
 
-        // Build the table header outside the loop
-        let html = `
-            <div class="overflow-x-auto bg-white rounded-lg shadow">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date/Time</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deducted</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance Before</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance After</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-        `;
-
-        result.history.forEach(deduction => {
-            const amount = deduction.amountDeducted.toLocaleString();
-            const date = window.formatISTTime(deduction.timestamp);
-            const initial = deduction.initialBalance === 'Unlimited' ? 'Unlimited' : (deduction.initialBalance ?? 0).toLocaleString();
-            const final = deduction.finalBalance === 'Unlimited' ? 'Unlimited' : (deduction.finalBalance ?? 0).toLocaleString();
+        if (history.length === 0) {
+            let message = 'No credit deduction records found.';
+            if (page > 1) {
+                message = 'No more records found on this page.';
+            } else if (pagination.totalRecords > 0) {
+                // Should not happen if page is 1 and totalRecords > 0, but as a safeguard.
+                message = 'No records found for this page range.';
+            } else {
+                message = 'No credit deduction records found in the last 90 days.';
+            }
             
-            html += `
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${date}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${deduction.type || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">-${amount}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${initial}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-tf-secondary">${final}</td>
-                </tr>
+            container.innerHTML = `<p class="text-center text-gray-500 mt-5">${message}</p>`;
+        } else {
+            // Build the table header and body
+            let html = `
+                <div class="text-sm text-gray-500 mb-4">
+                    Showing ${history.length} of ${pagination.totalRecords.toLocaleString()} entries from the last 90 days.
+                    (Page ${pagination.currentPage} of ${pagination.totalPages})
+                </div>
+                <div class="overflow-x-auto bg-white rounded-lg shadow">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                     
+                    <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date/Time</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                         
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deducted</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance Before</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance After</th>
+               
+                          </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
             `;
+        
+            history.forEach(deduction => {
+                const amount = deduction.amountDeducted.toLocaleString();
+                const date = window.formatISTTime(deduction.timestamp);
+                const initial = deduction.initialBalance === 'Unlimited' ? 'Unlimited' : (deduction.initialBalance ?? 0).toLocaleString();
+                const final = deduction.finalBalance === 'Unlimited' ? 'Unlimited' : (deduction.finalBalance ?? 0).toLocaleString();
+                
+              
+              html += `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${date}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${deduction.type || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">-${amount}</td>
+     
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${initial}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-tf-secondary">${final}</td>
+                    </tr>
+                `;
         });
 
-        html += `
-                    </tbody>
-                </table>
-            </div>
-        `;
-        container.innerHTML = html;
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        
+            // Add Pagination Controls
+            const paginationHtml = `
+                <div class="flex justify-center items-center space-x-4 mt-6">
+                    <button 
+                        class="px-4 py-2 text-sm font-medium rounded-lg transition ${pagination.currentPage <= 1 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-tf-primary text-white hover:bg-[#4d2e97]'}"
+                        ${pagination.currentPage <= 1 ? 'disabled' : ''}
+                        onclick="window.fetchDeductionHistory(${pagination.currentPage - 1})"
+                    >
+                        Previous Page
+                    </button>
+                    <span class="text-sm font-semibold text-gray-700">Page ${pagination.currentPage} of ${pagination.totalPages}</span>
+                    <button
+                        class="px-4 py-2 text-sm font-medium rounded-lg transition ${pagination.currentPage >= pagination.totalPages ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-tf-primary text-white hover:bg-[#4d2e97]'}"
+                        ${pagination.currentPage >= pagination.totalPages ? 'disabled' : ''}
+                        onclick="window.fetchDeductionHistory(${pagination.currentPage + 1})"
+                    >
+                        Next Page
+                    </button>
+                </div>
+            `;
+
+            container.innerHTML = html + paginationHtml;
+        }
+
 
     } catch (e) {
         console.error('Deduction history fetch error:', e);
-        container.innerHTML = `<p class="text-center text-red-500 mt-5">Network error during history fetch.</p>`;
+    container.innerHTML = `<p class="text-center text-red-500 mt-5">Network error during history fetch.</p>`;
     }
 }
 
@@ -467,5 +510,5 @@ async function fetchDeductionHistory() {
 window.initBulkListeners = initBulkListeners;
 window.handleCancelJob = handleCancelJob;
 window.fetchTodayCompletedKpi = fetchTodayCompletedKpi;
-window.fetchDeductionHistory = fetchDeductionHistory;
+    window.fetchDeductionHistory = fetchDeductionHistory;
 window.handleCancelJobConfirmed = handleCancelJobConfirmed; // EXPOSED FOR MODAL BUTTON
