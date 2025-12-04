@@ -4,14 +4,7 @@ const INDIA_POST_API = 'https://api.postalpincode.in/pincode/';
 let pincodeCache = {};
 
 // --- Google Cloud Translation Setup (REMOVED: Using Gemini directly for speed) ---
-// const { TranslationServiceClient } = require('@google-cloud/translate'); 
-// const projectId = process.env.GOOGLE_CLOUD_PROJECT;
-// const translationClient = new TranslationServiceClient();
-// const targetLanguage = 'en'; 
-
-// --- DUMMY TRANSLATION UTILITY (REMOVED: Not needed, relying on prompt) ---
-// async function translateToEnglish(text) { ... }
-
+// Note: Relying on prompt for translation.
 
 const testingKeywords = ['test', 'testing', 'asdf', 'qwer', 'zxcv', 'random', 'gjnj', 'fgjnj'];
 const coreMeaningfulWords = [
@@ -149,11 +142,16 @@ function extractPin(address) {
 function buildGeminiPrompt(originalAddress, postalData) {
     let basePrompt = `You are an expert Indian address verifier and formatter.
     Your task is to process a raw address, perform a thorough analysis, and provide a comprehensive response in a single JSON object.
-    **Provide all responses in English only. Strictly translate all extracted address components to English.**
+    
+    ***STRICT AND IMMEDIATE TRANSLATION REQUIRED***
+    **Provide all responses in English only. Strictly translate all extracted address components to English. FAILURE TO DO SO WILL RESULT IN IMMEDIATE REJECTION.**
+    
     **Correct all common spelling and phonetic errors in the provided address, such as "rd" to "Road", "nager" to "Nagar", and "nd" to "2nd".**
     **Analyze common short forms and phonetic spellings, such as "ln" for "Lane", and use your best judgment to correct them.**
     Be strict about ensuring the output is a valid, single, and complete address for shipping.
     **Use your advanced knowledge to identify and remove any duplicate address components that are present consecutively (e.g., 'Gandhi Street Gandhi Street' should be 'Gandhi Street').**
+    
+    ***SELF-CORRECTION CHECK: Before finalizing the JSON, verify that every field containing text, including "FormattedAddress" and all component fields, is written entirely in English.***
     
     **CRITICAL INSTRUCTION:** If official Postal Data (State/District/PIN) is provided, you MUST ensure that your formatted address and extracted fields align perfectly with this official data. Remove any conflicting city, state, or district names from the raw address (e.g., if the raw address says 'Mumbai' but the PIN is for 'Delhi', you MUST remove 'Mumbai' from the FormattedAddress and set 'State'/'DIST.' to the official Delhi data).
 
@@ -252,11 +250,10 @@ async function runVerificationLogic(address, customerName) {
         };
     }
     
-    // --- 4. MANDATORY TRANSLATION POST-PROCESSING (REMOVED EXTERNAL CALLS) ---
-    // NO EXTERNAL TRANSLATION API CALLS HERE. 
-    // We rely 100% on the prompt: "**Provide all responses in English only**"
-    // to keep the process fast and avoid the previous performance bottleneck.
-    // The outputs are expected to be in English directly from Gemini.
+    // --- 4. MANDATORY TRANSLATION POST-PROCESSING (REMOVED EXTERNAL API CALLS) ---
+    // Note: Relying 100% on the aggressive prompt now. If the fields are not English, 
+    // Gemini failed to follow the instruction, but we must return the fastest result.
+    // No code changes needed in this block since external calls were removed previously.
 
 
     // 5. --- PIN VERIFICATION & CORRECTION LOGIC ---
@@ -384,7 +381,7 @@ async function runVerificationLogic(address, customerName) {
     return {
         status: "Success",
         customerRawName: customerName,
-        customerCleanName: cleanedName, // Now comes directly from initial regex cleanup
+        customerCleanName: cleanedName, 
         
         // Use the fixed address variable here
         addressLine1: parsedData.FormattedAddress || originalAddress.replace(meaninglessRegex, '').trim() || '', 
