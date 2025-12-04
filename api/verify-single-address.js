@@ -195,6 +195,20 @@ function processAddress(address, postalData) {
     return getGeminiResponse(prompt);
 }
 
+// --- NEW: Dedicated Name Cleaner and Translator ---
+async function getTranslatedCleanName(rawName) {
+    if (!rawName) return null;
+    
+    // Prompt dedicated solely to name cleaning and translation
+    const namePrompt = `Clean, correct, and aggressively translate the following customer name to English. Remove any numbers, special characters, titles (Mr, Ms, Dr), or extraneous text. Provide ONLY the resulting cleaned, translated name, with no additional text or punctuation. Name: "${rawName}"`;
+    
+    const response = await getGeminiResponse(namePrompt);
+    
+    // Fallback: If Gemini fails to respond, perform the basic regex cleanup and use that.
+    return response.text ? response.text.trim() : (rawName || '').replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim(); 
+}
+
+
 // --- NEW: Reusable Verification Logic Function (Unified) ---
 async function runVerificationLogic(address, customerName) {
     // *** CRITICAL FIX START: Safely define necessary address variables to prevent fatal error ***
@@ -212,9 +226,8 @@ async function runVerificationLogic(address, customerName) {
 
     let remarks = [];
     
-    // --- 1. ROBUST NAME CLEANING (Initial cleanup) ---
-    // Cleans special characters/numbers and excessive spaces for best output.
-    let cleanedName = (customerName || '').replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim() || null; 
+    // --- 1. DEDICATED NAME CLEANING & TRANSLATION (Aggressive Fix) ---
+    let cleanedName = await getTranslatedCleanName(customerName);
     
     const initialPin = extractPin(originalAddress);
     let postalData = { PinStatus: 'Error' };
@@ -223,7 +236,7 @@ async function runVerificationLogic(address, customerName) {
         postalData = await getIndiaPostData(initialPin);
     }
     
-    // 2. Call Gemini API
+    // 2. Call Gemini API for Address Verification
     const geminiResult = await processAddress(originalAddress, postalData);
 
     if (geminiResult.error || !geminiResult.text) {
@@ -250,10 +263,8 @@ async function runVerificationLogic(address, customerName) {
         };
     }
     
-    // --- 4. MANDATORY TRANSLATION POST-PROCESSING (REMOVED EXTERNAL API CALLS) ---
-    // Note: Relying 100% on the aggressive prompt now. If the fields are not English, 
-    // Gemini failed to follow the instruction, but we must return the fastest result.
-    // No code changes needed in this block since external calls were removed previously.
+    // 4. MANDATORY TRANSLATION POST-PROCESSING (REMOVED EXTERNAL API CALLS)
+    // Reliance is 100% on the aggressive prompt for address fields.
 
 
     // 5. --- PIN VERIFICATION & CORRECTION LOGIC ---
@@ -381,7 +392,7 @@ async function runVerificationLogic(address, customerName) {
     return {
         status: "Success",
         customerRawName: customerName,
-        customerCleanName: cleanedName, 
+        customerCleanName: cleanedName, // Now comes from dedicated name call
         
         // Use the fixed address variable here
         addressLine1: parsedData.FormattedAddress || originalAddress.replace(meaninglessRegex, '').trim() || '', 
