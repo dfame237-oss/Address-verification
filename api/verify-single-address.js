@@ -50,7 +50,8 @@ const CRITICAL_KEYWORDS = [
     'CRITICAL_ALERT: Raw address contains email', // NEW ALERT KEYWORD
     'CRITICAL_ALERT: Major location conflict',
     'CRITICAL_ALERT: Formatted address is short',
-    'CRITICAL_ALERT: JSON parse failed' // Include parser failure as critical
+    'CRITICAL_ALERT: JSON parse failed',
+    'CRITICAL_ALERT: Address lacks specificity' // NEW KEYWORD FOR MISSING H.NO/STREET
 ];
 
 
@@ -165,7 +166,12 @@ function buildGeminiPrompt(originalAddress, postalData) {
     **CRITICAL INSTRUCTION:** If official Postal Data (State/District/PIN) is provided, you MUST ensure that your formatted address and extracted fields align perfectly with this official data. Remove any conflicting city, state, or district names from the raw address (e.g., if the raw address says 'Mumbai' but the PIN is for 'Delhi', you MUST remove 'Mumbai' from the FormattedAddress and set 'State'/'DIST.' to the official Delhi data).
 
     Your response must contain the following keys:
-    1.  "H.no.", "Flat No.", "Plot No.", "Room No.", "Building No.", "Block No.", "Ward No.", "Gali No.", "Zone No.": Extract only the number or alphanumeric sequence (e.g., '1-26', 'A/25', '10'). **The prefix MUST be H.no. (exactly). Do not use 'House number'.**
+    1.  "H.no.", "Flat No.", "Plot No.", "Room No.", "Building No.", "Block No.", "Ward No.", "Gali No.", "Zone No.", "Quarter No.", "Road No.", "Street No.", "Sector", "Phase": Extract only the number or alphanumeric sequence (e.g., '1-26', 'A/25', '10'). 
+    
+    **CRITICAL PREFIX PRESERVATION RULE:** The prefix used in your JSON output (e.g., "H.no.", "Block No.", "Street No.") MUST match the type used in the original raw address, even if misspelled or abbreviated by the customer (e.g., 'st n.', 'blck no.'). **Analyze the raw address to determine the original prefix type.** If the customer used 'street n.', output 'Street No.'; if 'blck', output 'Block No.'. **If the customer used the short form 'H.no.', retain it exactly as 'H.no.'.** If no specific prefix is used, default to the most descriptive term found (e.g., 'H.no.' for house details, 'Block No.' for block details).
+    
+    **CRITICAL PIN EXTRACTION RULE: Never extract the 6-digit PIN code or the customer's 10-digit phone number into any of these number fields.**
+    
     Set to null if not found.
     2.  "Colony", "Street", "Locality", "Building Name", "House Name", "Floor": Extract the name. **(MUST BE IN ENGLISH)**
     3.  "P.O.": The **OFFICIAL, BEST-MATCHING** Post Office name from the PIN data that most closely matches the customer's locality. **You must analyze ALL Post Office names in the list and select the most appropriate one.** Prepend "P.O." to the name. Example: "P.O. Boduppal". **(MUST BE IN ENGLISH)**
@@ -188,7 +194,7 @@ function buildGeminiPrompt(originalAddress, postalData) {
 `; 
 
     if (postalData.PinStatus === 'Success') {
-        // ENHANCEMENT: Providing the full list to AI for better P.O. selection
+        // ENHANCEMENT: Providing the full list to AI for better P.O. selection
         basePrompt += `\nOfficial Postal Data: ${JSON.stringify(postalData.PostOfficeList)}\n**You MUST analyze this ENTIRE list and select the single Post Office that best matches the customer's locality. Use web search/Google to cross-reference the customer's locality against these Post Office names for 100% accuracy.**`; 
     } else {
         basePrompt += `\nAddress has no PIN or the PIN is invalid.
@@ -328,8 +334,6 @@ async function runVerificationLogic(address, customerName) {
 
     // 5. --- PIN VERIFICATION & CORRECTION LOGIC ---
     let finalPin = String(parsedData.PIN).match(/\b\d{6}\b/) ? parsedData.PIN : initialPin; 
-    // We intentionally stop relying on primaryPostOffice here, 
-    // as the AI's selection within parsedData['DIST.'], etc., is now the source of truth.
     let primaryPostOffice = postalData.PostOfficeList ? postalData.PostOfficeList[0] : {}; 
     
     if (finalPin) {
@@ -352,6 +356,23 @@ async function runVerificationLogic(address, customerName) {
         remarks.push('CRITICAL_ALERT: PIN not found after verification attempts. Manual check needed.');
         finalPin = initialPin || null; 
     }
+
+    // 🎯 FIX 1A: PREVENT PIN/PHONE FROM BEING TREATED AS H.NO. (OR ANY ADDRESS COMPONENT NUMBER)
+    const potentialPin = finalPin;
+    const houseNumber = parsedData['H.no.'];
+    const phoneMatch = originalAddress.match(/\b\d{10}\b/);
+    const potentialPhone = phoneMatch ? phoneMatch[0] : null;
+
+    if (houseNumber && (houseNumber === potentialPin || houseNumber === potentialPhone)) {
+        remarks.push(`CRITICAL_ALERT: Removed PIN/Phone (${houseNumber}) incorrectly extracted as H.no.`);
+        parsedData['H.no.'] = null;
+        // Also remove from formatted address to clean the output
+        if (parsedData.FormattedAddress) {
+            // Use regex to replace the exact number extracted as H.no.
+            parsedData.FormattedAddress = parsedData.FormattedAddress.replace(new RegExp(`\\b${houseNumber}\\b`, 'g'), '').replace(/\s+/g, ' ').trim();
+        }
+    }
+
 
     // --- 6. Local Address Correction Logic (P.O. Conflict Check) ---
     postVerificationCorrections(parsedData, originalAddress, remarks);
@@ -399,12 +420,14 @@ async function runVerificationLogic(address, customerName) {
 
 
     // 9. --- RULE: Missing Locality/Specifics Check (UPDATED FOR STRICTER LOGIC) ---
-    const hasHouseOrFlat = parsedData['H.no.'] || parsedData['Flat No.'] || parsedData['Plot No.'];
+    const hasHouseOrFlat = parsedData['H.no.'] || parsedData['Flat No.'] || parsedData['Plot No.'] || parsedData['Room No.'];
     const hasStreetOrColony = parsedData.Street || parsedData.Colony || parsedData.Locality;
+    const hasAnySpecificDetail = hasHouseOrFlat || hasStreetOrColony; // Simplified check
 
     // RULE 9a: Check if *both* a specific number AND a locality/street/colony are missing.
-    if (!hasHouseOrFlat && !hasStreetOrColony) {
-        remarks.push(`CRITICAL_ALERT: Raw address lacks street, house, or colony details after AI parsing.`);
+    if (!hasAnySpecificDetail) {
+        // 🎯 FIX 2: Added more specific remark and force downgrade
+        remarks.push(`CRITICAL_ALERT: Address lacks specificity (missing H.no./Flat/Street/Colony details).`);
         if (currentQuality === 'Very Good' || currentQuality === 'Good' || currentQuality === 'Medium') {
             parsedData.AddressQuality = 'Bad';
         }
@@ -414,7 +437,7 @@ async function runVerificationLogic(address, customerName) {
     // RULE 9b: Stricter check for addresses that look like only PIN/Phone (your example case)
     const isFormattedAddressShort = parsedData.FormattedAddress && parsedData.FormattedAddress.length < 25;
     
-    if (isFormattedAddressShort && !hasHouseOrFlat && !hasStreetOrColony) {
+    if (isFormattedAddressShort && !hasAnySpecificDetail) {
         // If the address is short and has no core details, it must be flagged 'Very Bad'
         remarks.push(`CRITICAL_ALERT: Formatted address is critically short and lacks specifics (House/Street/Colony). Manual check needed.`);
         parsedData.AddressQuality = 'Very Bad';
@@ -480,12 +503,7 @@ async function runVerificationLogic(address, customerName) {
         addressLine1: parsedData.FormattedAddress || originalAddress.replace(meaninglessRegex, '').trim() || '', 
         landmark: finalLandmark, 
         
-        // 🎯 NEW LOGIC: We now trust the AI to select the BEST matching P.O. from the list 
-        // and set the associated DIST. and State fields in the JSON.
-        // We use the AI's output fields (P.O., Tehsil, DIST., State) directly to ensure accuracy 
-        // based on the cross-referencing it performed.
-        
-        // P.O. FIX: Enforce 'P.O.' prefix on the AI-selected name (Fix 2)
+        // P.O. FIX: Enforce 'P.O.' prefix on the AI-selected name
         postOffice: (() => {
             const poName = parsedData['P.O.'] || '';
             if (!poName) return '';
@@ -496,7 +514,7 @@ async function runVerificationLogic(address, customerName) {
             }
             return `P.O. ${poName}`; // Enforce short prefix
         })(),
-        // Tehsil FIX: Enforce 'Tehsil' prefix on the AI-selected name (Fix 2)
+        // Tehsil FIX: Enforce 'Tehsil' prefix on the AI-selected name
         tehsil: (() => {
             const tehsilName = parsedData.Tehsil || '';
             if (!tehsilName) return '';
@@ -509,7 +527,6 @@ async function runVerificationLogic(address, customerName) {
         // District and State: Use AI's chosen data, which was cross-validated against the official list
         district: parsedData['DIST.'] || '', 
         state: parsedData.State || '', 
-        // 🎯 END NEW LOGIC
         
         pin: finalPin, 
         addressQuality: parsedData.AddressQuality || 'Medium', 
