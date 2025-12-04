@@ -4,12 +4,37 @@ const INDIA_POST_API = 'https://api.postalpincode.in/pincode/';
 let pincodeCache = {};
 
 // --- Google Cloud Translation Setup (Requires GOOGLE_CLOUD_PROJECT env) ---
-// NOTE: We rely on the Gemini prompt for contextual translation, but this setup 
-// is necessary if you choose to use the dedicated API for other components.
 const { TranslationServiceClient } = require('@google-cloud/translate');
 const projectId = process.env.GOOGLE_CLOUD_PROJECT;
 const translationClient = new TranslationServiceClient();
 const targetLanguage = 'en'; 
+
+// --- NEW TRANSLATION UTILITY (Mandatory English Output) ---
+async function translateToEnglish(text) {
+    if (!text || typeof text !== 'string' || text.trim() === '' || !projectId) {
+        return text || '';
+    }
+
+    const request = {
+        parent: `projects/${projectId}`, 
+        contents: [text],
+        targetLanguageCode: targetLanguage,
+    };
+
+    try {
+        const [response] = await translationClient.translateText(request);
+        
+        if (response.translations && response.translations.length > 0) {
+            return response.translations[0].translatedText.trim();
+        }
+        
+        return text.trim(); 
+    } catch (e) {
+        console.error(`Translation API Error for text: "${text}". Check GOOGLE_CLOUD_PROJECT/credentials.`);
+        return text.trim(); 
+    }
+}
+
 
 const testingKeywords = ['test', 'testing', 'asdf', 'qwer', 'zxcv', 'random', 'gjnj', 'fgjnj'];
 const coreMeaningfulWords = [
@@ -212,9 +237,8 @@ async function runVerificationLogic(address, customerName) {
 
     let remarks = [];
     
-    // --- 1. ROBUST NAME CLEANING (Replaced costly Gemini call with robust regex cleanup) ---
-    // Cleans special characters/numbers and excessive spaces for best output.
-    const cleanedName = (customerName || '').replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim() || null; 
+    // --- 1. ROBUST NAME CLEANING (Initial cleanup) ---
+    let cleanedName = (customerName || '').replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim() || null; 
     
     const initialPin = extractPin(originalAddress);
     let postalData = { PinStatus: 'Error' };
@@ -249,6 +273,27 @@ async function runVerificationLogic(address, customerName) {
             AddressQuality: 'Very Bad', Remaining: maskedRemarks, // Use masked message here
         };
     }
+    
+    // --- ADDED: MANDATORY TRANSLATION POST-PROCESSING (Fix for English Output) ---
+    if (typeof translateToEnglish === 'function') {
+        const fieldsToTranslate = [
+            'FormattedAddress', 'Landmark', 'State', 'DIST.', 'P.O.', 'Tehsil', 'Remaining'
+        ];
+        
+        // Translate all critical address fields
+        for (const key of fieldsToTranslate) {
+            if (parsedData[key] && typeof parsedData[key] === 'string') {
+                // Wait for translation API result
+                parsedData[key] = await translateToEnglish(parsedData[key]);
+            }
+        }
+        // Translate the customer name for final output consistency
+        if (cleanedName) {
+            // Wait for translation API result
+            cleanedName = await translateToEnglish(cleanedName);
+        }
+    }
+
 
     // 4. --- PIN VERIFICATION & CORRECTION LOGIC ---
     let finalPin = String(parsedData.PIN).match(/\b\d{6}\b/) ? parsedData.PIN : initialPin; 
