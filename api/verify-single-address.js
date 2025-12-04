@@ -9,7 +9,11 @@ const projectId = process.env.GOOGLE_CLOUD_PROJECT;
 const translationClient = new TranslationServiceClient();
 const targetLanguage = 'en'; 
 
-// --- NEW TRANSLATION UTILITY (Mandatory English Output) ---
+// --- NEW TRANSLATION UTILITY (Mandatory English Output via Batch) ---
+/**
+ * Translates a single string to English using Google Cloud Translation API.
+ * Optimized for robustness and used for guaranteed translation.
+ */
 async function translateToEnglish(text) {
     if (!text || typeof text !== 'string' || text.trim() === '' || !projectId) {
         return text || '';
@@ -30,8 +34,7 @@ async function translateToEnglish(text) {
         
         return text.trim(); 
     } catch (e) {
-        // Fallback to the text provided by Gemini if the translation API fails
-        console.error(`Translation API Error for text: "${text}". Check GOOGLE_CLOUD_PROJECT/credentials.`);
+        console.error(`Translation API Error for text: "${text}". Check GOOGLE_CLOUD_PROJECT/credentials. Falling back to original text.`);
         return text.trim(); 
     }
 }
@@ -239,7 +242,6 @@ async function runVerificationLogic(address, customerName) {
     let remarks = [];
     
     // --- 1. ROBUST NAME CLEANING (Initial cleanup) ---
-    // Cleans special characters/numbers and excessive spaces for best output.
     let cleanedName = (customerName || '').replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim() || null; 
     
     const initialPin = extractPin(originalAddress);
@@ -276,28 +278,40 @@ async function runVerificationLogic(address, customerName) {
         };
     }
     
-    // --- ADDED: MANDATORY TRANSLATION POST-PROCESSING (Fix for English Output) ---
+    // --- 4. MANDATORY TRANSLATION POST-PROCESSING (Guarantees English Output) ---
     if (typeof translateToEnglish === 'function') {
         const fieldsToTranslate = [
             'FormattedAddress', 'Landmark', 'State', 'DIST.', 'P.O.', 'Tehsil', 'Remaining'
         ];
         
-        // Translate all critical address fields
+        // 4a. Batch/Parallelize translation of multiple fields for speed
+        const translationPromises = [];
+        const keysToUpdate = [];
+
         for (const key of fieldsToTranslate) {
             if (parsedData[key] && typeof parsedData[key] === 'string') {
-                // Wait for translation API result
-                parsedData[key] = await translateToEnglish(parsedData[key]);
+                translationPromises.push(translateToEnglish(parsedData[key]));
+                keysToUpdate.push(key);
             }
         }
-        // Translate the customer name for final output consistency
         if (cleanedName) {
-            // Wait for translation API result
-            cleanedName = await translateToEnglish(cleanedName);
+            translationPromises.push(translateToEnglish(cleanedName));
+        }
+
+        const translatedResults = await Promise.all(translationPromises);
+        
+        // 4b. Re-assign translated address fields
+        for (let i = 0; i < keysToUpdate.length; i++) {
+            parsedData[keysToUpdate[i]] = translatedResults[i];
+        }
+        // 4c. Re-assign translated name
+        if (cleanedName) {
+            cleanedName = translatedResults[translatedResults.length - 1];
         }
     }
 
 
-    // 4. --- PIN VERIFICATION & CORRECTION LOGIC ---
+    // 5. --- PIN VERIFICATION & CORRECTION LOGIC ---
     let finalPin = String(parsedData.PIN).match(/\b\d{6}\b/) ? parsedData.PIN : initialPin; 
     let primaryPostOffice = postalData.PostOfficeList ? postalData.PostOfficeList[0] : {};
     
@@ -322,15 +336,14 @@ async function runVerificationLogic(address, customerName) {
         finalPin = initialPin || null; 
     }
 
-    // --- 5. NEW: Local Address Correction Logic (P.O. Conflict Check) ---
-    // Implements the logic from the Google Script's verifyAndCorrectAddress function
+    // --- 6. NEW: Local Address Correction Logic (P.O. Conflict Check) ---
     postVerificationCorrections(parsedData, originalAddress, remarks);
 
 
     const verifiedState = primaryPostOffice.State || parsedData.State || '';
     let currentQuality = parsedData.AddressQuality;
 
-    // --- 6. ADJACENT DUPLICATE REMOVAL (Clean final address strings) ---
+    // --- 7. ADJACENT DUPLICATE REMOVAL (Clean final address strings) ---
     const removeAdjacentDuplicates = (str) => {
         if (!str) return str;
         const words = str.split(' ');
@@ -350,8 +363,7 @@ async function runVerificationLogic(address, customerName) {
         parsedData.Landmark = removeAdjacentDuplicates(parsedData.Landmark);
     }
 
-    // --- 7. NEW: Village Prefix Logic (From Google Script) ---
-    // ** MODIFIED LOGIC: Add "Village" prefix only if "village" is in the raw address **
+    // --- 8. NEW: Village Prefix Logic (From Google Script) ---
     if (originalAddressLower.includes('village') && parsedData.FormattedAddress) {
         // Only prefix if it's not already prefixed
         if (!parsedData.FormattedAddress.toLowerCase().startsWith('village')) {
@@ -360,7 +372,7 @@ async function runVerificationLogic(address, customerName) {
     }
 
 
-    // 8. --- RULE: Missing Locality/Specifics Check ---
+    // 9. --- RULE: Missing Locality/Specifics Check ---
     const hasHouseOrFlat = parsedData['H.no.'] || parsedData['Flat No.'] || parsedData['Plot No.'];
     const hasStreetOrColony = parsedData.Street || parsedData.Colony || parsedData.Locality;
 
@@ -372,7 +384,7 @@ async function runVerificationLogic(address, customerName) {
         currentQuality = parsedData.AddressQuality; // Update for next check
     }
 
-    // 9. --- RULE: Location Conflict Downgrade Check ---
+    // 10. --- RULE: Location Conflict Downgrade Check ---
     if (verifiedState) {
         const verifiedStateLower = verifiedState.toLowerCase();
         for (const city in MAJOR_CITY_CONFLICTS) {
@@ -389,12 +401,12 @@ async function runVerificationLogic(address, customerName) {
         }
     }
 
-    // 10. --- Short Address Check ---
+    // 11. --- Short Address Check ---
     if (parsedData.FormattedAddress && parsedData.FormattedAddress.length < 35 && currentQuality !== 'Very Good' && currentQuality !== 'Good') {
         remarks.push(`CRITICAL_ALERT: Formatted address is short (${parsedData.FormattedAddress.length} chars). Manual verification recommended.`);
     }
 
-    // 11. --- Landmark directional prefix logic ---
+    // 12. --- Landmark directional prefix logic ---
     let landmarkValue = parsedData.Landmark || ''; 
     let finalLandmark = ''; 
     if (landmarkValue.toString().trim() !== '') {
