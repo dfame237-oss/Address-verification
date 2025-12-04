@@ -1231,14 +1231,13 @@ new Date(planDetails.validityEnd) : null;
              const icon = isUnread ? 'fa-envelope' : 'fa-envelope-open';
                         const sender = msg.senderId === 'admin' ? 'Admin' : 'You';
     
-                        // FIX: Escape single quotes in subject and body before embedding in onclick attribute
-                        // This prevents JS errors when subject/body contain characters like ' or "
-                        const subjectEscaped = (msg.subject || '(No Subject)').replace(/'/g, "\\'"); 
-                        const bodyEscaped = (msg.body || '').replace(/'/g, "\\'"); 
+                        // FIX: Use encodeURIComponent for robust passing of complex strings
+                        const subjectEncoded = encodeURIComponent(msg.subject || '(No Subject)'); 
+                        const bodyEncoded = encodeURIComponent(msg.body || ''); 
 
                         const messageHtml = `
                     
-        <div id="msg-${msg._id}" class="msg-card ${cardClass}" onclick="viewClientMessage('${msg._id}', '${subjectEscaped}', '${bodyEscaped}', ${isUnread}, '${msg.timestamp}')">
+        <div id="msg-${msg._id}" class="msg-card ${cardClass}" onclick="viewClientMessage('${msg._id}', '${subjectEncoded}', '${bodyEncoded}', ${isUnread}, '${msg.timestamp}')">
                                 <i class="fas ${icon} msg-icon"></i>
                                 <div class="flex-grow">
                 
@@ -1269,13 +1268,17 @@ new Date(planDetails.validityEnd) : null;
             loadInboxCounts();
         }
 
-        function viewClientMessage(messageId, subject, body, isUnread, timestamp) {
+        function viewClientMessage(messageId, subjectEncoded, bodyEncoded, isUnread, timestamp) {
+            // FIX: Decode the strings back before assigning to textContent/innerText
+            const subject = decodeURIComponent(subjectEncoded);
+            const body = decodeURIComponent(bodyEncoded);
+            
             const detailView = document.getElementById('full-message-detail');
             document.getElementById('full-message-subject').textContent = subject;
-            // FIX: Use innerText for body to avoid injection and respect whitespace
             document.getElementById('full-message-body').innerText = body;
             document.getElementById('full-message-date').textContent = new Date(timestamp).toLocaleString();
             detailView.style.display = 'block';
+            
             if (isUnread) {
                 authFetch(`${API_BASE}/inbox/message?messageId=${messageId}`, { method: 'PUT' }).catch(()=>{});
                 const card = document.getElementById(`msg-${messageId}`);
