@@ -386,13 +386,13 @@ async function runVerificationLogic(address, customerName) {
         }
     }
 
-    // --- NEW FIX: Enforce H.no. abbreviation (Post-AI correction) ---
-    if (parsedData.FormattedAddress) {
-        // Use a case-insensitive regex to replace the full phrase "House number" (or any case variation) with "H.no."
-        // We use \b to ensure we only match whole words
-        parsedData.FormattedAddress = parsedData.FormattedAddress.replace(/\bHouse number\b/gi, 'H.no.');
-    }
-    // --- END NEW FIX ---
+    // --- NEW FIX: Enforce H.no. abbreviation (Post-AI correction) ---
+    if (parsedData.FormattedAddress) {
+        // Use a case-insensitive regex to replace the full phrase "House number" (or any case variation) with "H.no."
+        // We use \b to ensure we only match whole words
+        parsedData.FormattedAddress = parsedData.FormattedAddress.replace(/\bHouse number\b/gi, 'H.no.');
+    }
+    // --- END NEW FIX ---
 
 
     // 9. --- RULE: Missing Locality/Specifics Check (UPDATED FOR STRICTER LOGIC) ---
@@ -476,10 +476,35 @@ async function runVerificationLogic(address, customerName) {
         // Use the fixed address variable here
         addressLine1: parsedData.FormattedAddress || originalAddress.replace(meaninglessRegex, '').trim() || '', 
         landmark: finalLandmark, 
-        postOffice: primaryPostOffice.Name || parsedData['P.O.'] || '', 
-        tehsil: primaryPostOffice.Taluk || parsedData.Tehsil || '', 
+        
+        // 🎯 FIX 1 & 2 IMPLEMENTATION START
+        // P.O. FIX: Prioritize official name (Fix 1) and enforce 'P.O.' prefix (Fix 2)
+        postOffice: (() => {
+            const poName = primaryPostOffice.Name || parsedData['P.O.'];
+            if (!poName) return '';
+            const nameLower = poName.toLowerCase();
+            // Check if it already has a prefix from AI, if not, add 'P.O. '
+            if (nameLower.startsWith('p.o.') || nameLower.startsWith('post office')) {
+                return poName; 
+            }
+            return `P.O. ${poName}`; // Enforce short prefix
+        })(),
+        // Tehsil FIX: Prioritize official name (Fix 1) and enforce 'Tehsil' prefix (Fix 2)
+        tehsil: (() => {
+            // Priority is given to official Taluk/SubDistrict data
+            const tehsilName = primaryPostOffice.Taluk || parsedData.Tehsil;
+            if (!tehsilName) return '';
+            // Check if it already has a prefix from AI, if not, add 'Tehsil '
+            if (tehsilName.toLowerCase().startsWith('tehsil')) {
+                return tehsilName; 
+            }
+            return `Tehsil ${tehsilName}`; // Enforce prefix
+        })(),
+        // District and State FIX: Strictly prioritize official data (Fix 1)
         district: primaryPostOffice.District || parsedData['DIST.'] || '', 
         state: primaryPostOffice.State || parsedData.State || '', 
+        // 🎯 FIX 1 & 2 IMPLEMENTATION END
+        
         pin: finalPin, 
         addressQuality: parsedData.AddressQuality || 'Medium', 
         locationType: parsedData.LocationType || 'Unknown', 
