@@ -3,38 +3,14 @@
 const INDIA_POST_API = 'https://api.postalpincode.in/pincode/'; 
 let pincodeCache = {};
 
-// --- Google Cloud Translation Setup (Requires GOOGLE_CLOUD_PROJECT env) ---
-const { TranslationServiceClient } = require('@google-cloud/translate');
-const projectId = process.env.GOOGLE_CLOUD_PROJECT;
-const translationClient = new TranslationServiceClient();
-const targetLanguage = 'en'; 
+// --- Google Cloud Translation Setup (REMOVED: Using Gemini directly for speed) ---
+// const { TranslationServiceClient } = require('@google-cloud/translate'); 
+// const projectId = process.env.GOOGLE_CLOUD_PROJECT;
+// const translationClient = new TranslationServiceClient();
+// const targetLanguage = 'en'; 
 
-// --- NEW TRANSLATION UTILITY (Mandatory English Output) ---
-async function translateToEnglish(text) {
-    if (!text || typeof text !== 'string' || text.trim() === '' || !projectId) {
-        return text || '';
-    }
-
-    const request = {
-        parent: `projects/${projectId}`, 
-        contents: [text],
-        targetLanguageCode: targetLanguage,
-    };
-
-    try {
-        const [response] = await translationClient.translateText(request);
-        
-        if (response.translations && response.translations.length > 0) {
-            return response.translations[0].translatedText.trim();
-        }
-        
-        return text.trim(); 
-    } catch (e) {
-        // Fallback to the text provided by Gemini if the translation API fails
-        console.error(`Translation API Error for text: "${text}". Check GOOGLE_CLOUD_PROJECT/credentials.`);
-        return text.trim(); 
-    }
-}
+// --- DUMMY TRANSLATION UTILITY (REMOVED: Not needed, relying on prompt) ---
+// async function translateToEnglish(text) { ... }
 
 
 const testingKeywords = ['test', 'testing', 'asdf', 'qwer', 'zxcv', 'random', 'gjnj', 'fgjnj'];
@@ -276,42 +252,11 @@ async function runVerificationLogic(address, customerName) {
         };
     }
     
-    // --- 4. MANDATORY TRANSLATION POST-PROCESSING (Performance Fix: Parallel Execution) ---
-    if (typeof translateToEnglish === 'function') {
-        const fieldsToTranslate = [
-            'FormattedAddress', 'Landmark', 'State', 'DIST.', 'P.O.', 'Tehsil', 'Remaining'
-        ];
-        
-        const translationPromises = [];
-        const keysToUpdate = [];
-
-        // 4a. Collect all translation promises
-        for (const key of fieldsToTranslate) {
-            if (parsedData[key] && typeof parsedData[key] === 'string') {
-                translationPromises.push(translateToEnglish(parsedData[key]));
-                keysToUpdate.push(key);
-            }
-        }
-        if (cleanedName) {
-            translationPromises.push(translateToEnglish(cleanedName));
-        }
-
-        // 4b. Execute all translation calls in parallel (CRITICAL FIX for stability/speed)
-        const translatedResults = await Promise.all(translationPromises);
-        
-        // 4c. Re-assign translated address fields
-        // The last result is the name, so we stop before the last index if name was included.
-        const nameIndex = cleanedName ? translatedResults.length - 1 : translatedResults.length;
-        
-        for (let i = 0; i < keysToUpdate.length; i++) {
-            parsedData[keysToUpdate[i]] = translatedResults[i];
-        }
-        
-        // 4d. Re-assign translated name
-        if (cleanedName) {
-            cleanedName = translatedResults[nameIndex];
-        }
-    }
+    // --- 4. MANDATORY TRANSLATION POST-PROCESSING (REMOVED EXTERNAL CALLS) ---
+    // NO EXTERNAL TRANSLATION API CALLS HERE. 
+    // We rely 100% on the prompt: "**Provide all responses in English only**"
+    // to keep the process fast and avoid the previous performance bottleneck.
+    // The outputs are expected to be in English directly from Gemini.
 
 
     // 5. --- PIN VERIFICATION & CORRECTION LOGIC ---
@@ -439,7 +384,7 @@ async function runVerificationLogic(address, customerName) {
     return {
         status: "Success",
         customerRawName: customerName,
-        customerCleanName: cleanedName, // Already translated
+        customerCleanName: cleanedName, // Now comes directly from initial regex cleanup
         
         // Use the fixed address variable here
         addressLine1: parsedData.FormattedAddress || originalAddress.replace(meaninglessRegex, '').trim() || '', 
