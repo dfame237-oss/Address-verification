@@ -208,6 +208,19 @@ async function getTranslatedCleanName(rawName) {
     return response.text ? response.text.trim() : (rawName || '').replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim(); 
 }
 
+// --- NEW: Aggressive Address Component Translator (Final Cleanup for Address Fields) ---
+async function getTranslatedAddressComponent(rawText) {
+    if (!rawText || rawText.length < 3) return rawText;
+    
+    // Prompt designed to force translation of specific proper nouns and phrases (e.g., Landmarks)
+    const prompt = `Translate the following short address component or proper noun to standard English. Correct any phonetic spelling errors. Provide ONLY the result with no additional context. Phrase: "${rawText}"`;
+    
+    const response = await getGeminiResponse(prompt);
+    
+    // Fallback: Use the original text if translation fails.
+    return response.text ? response.text.trim() : rawText;
+}
+
 
 // --- NEW: Reusable Verification Logic Function (Unified) ---
 async function runVerificationLogic(address, customerName) {
@@ -262,9 +275,33 @@ async function runVerificationLogic(address, customerName) {
             AddressQuality: 'Very Bad', Remaining: maskedRemarks, // Use masked message here
         };
     }
-    
-    // 4. MANDATORY TRANSLATION POST-PROCESSING (REMOVED EXTERNAL API CALLS)
-    // Reliance is 100% on the aggressive prompt for address fields.
+    
+    // --- 4. MANDATORY POST-PARSING TRANSLATION (Parallel Check for Address Components) ---
+    // If the aggressive prompt failed, this final step uses dedicated AI calls to translate components.
+    if (typeof getTranslatedAddressComponent === 'function') {
+        const fieldsToTranslate = [
+            'FormattedAddress', 'Landmark', 'State', 'DIST.', 'P.O.', 'Tehsil', 'Remaining'
+        ];
+        
+        const translationPromises = [];
+        const keysToUpdate = [];
+
+        // Collect all translation promises
+        for (const key of fieldsToTranslate) {
+            if (parsedData[key] && typeof parsedData[key] === 'string') {
+                translationPromises.push(getTranslatedAddressComponent(parsedData[key])); 
+                keysToUpdate.push(key);
+            }
+        }
+
+        // Execute all address translation calls in parallel for speed
+        const translatedResults = await Promise.all(translationPromises);
+        
+        // Re-assign translated address fields
+        for (let i = 0; i < keysToUpdate.length; i++) {
+            parsedData[keysToUpdate[i]] = translatedResults[i];
+        }
+    }
 
 
     // 5. --- PIN VERIFICATION & CORRECTION LOGIC ---
