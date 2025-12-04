@@ -50,7 +50,8 @@ const CRITICAL_KEYWORDS = [
     'CRITICAL_ALERT: Raw address lacks',
     'CRITICAL_ALERT: Major location conflict',
     'CRITICAL_ALERT: Formatted address is short',
-    'CRITICAL_ALERT: JSON parse failed' // Include parser failure as critical
+    'CRITICAL_ALERT: JSON parse failed',
+    'CRITICAL_ALERT: Address contain email' // New flag
 ];
 
 
@@ -156,8 +157,7 @@ function buildGeminiPrompt(originalAddress, postalData) {
     **CRITICAL INSTRUCTION:** If official Postal Data (State/District/PIN) is provided, you MUST ensure that your formatted address and extracted fields align perfectly with this official data. Remove any conflicting city, state, or district names from the raw address (e.g., if the raw address says 'Mumbai' but the PIN is for 'Delhi', you MUST remove 'Mumbai' from the FormattedAddress and set 'State'/'DIST.' to the official Delhi data).
 
     Your response must contain the following keys:
-    1.  "H.no.", "Flat No.", "Plot No.", "Room No.", "Building No.", "Block No.", "Ward No.", "Gali No.", "Zone No.": Extract only the number or alphanumeric sequence (e.g., '1-26', 'A/25', '10').
-    Set to null if not found.
+    1.  "H.no.": The primary dwelling field (House/Flat/Plot/Room/Building/Block/Ward/Gali/Zone number). Extract only the valid number or alphanumeric sequence (e.g., '1-26', 'A/25', '10'). **Use H.no. as the prefix/identifier.** **STRICTLY IGNORE all phone numbers or non-dwelling digits.** Set to null if not found.
     2.  "Colony", "Street", "Locality", "Building Name", "House Name", "Floor": Extract the name. **(MUST BE IN ENGLISH)**
     3.  "P.O.": The official Post Office name from the PIN data. Prepend "P.O." to the name. Example: "P.O. Boduppal". **(MUST BE IN ENGLISH)**
     4.  "Tehsil": The official Tehsil/SubDistrict from the PIN data. Prepend "Tehsil". Example: "Tehsil Pune". **(MUST BE IN ENGLISH)**
@@ -208,25 +208,29 @@ async function getTranslatedCleanName(rawName) {
     return response.text ? response.text.trim() : (rawName || '').replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim(); 
 }
 
-// --- NEW: Aggressive Address Component Translator (Final Cleanup for Address Fields) ---
-async function getTranslatedAddressComponent(rawText) {
-    if (!rawText || rawText.length < 3) return rawText;
-    
-    // Prompt designed to force translation of specific proper nouns and phrases (e.g., Landmarks)
-    const prompt = `Translate the following short address component or proper noun to standard English. Correct any phonetic spelling errors. Provide ONLY the result with no additional context. Phrase: "${rawText}"`;
-    
-    const response = await getGeminiResponse(prompt);
-    
-    // Fallback: Use the original text if translation fails.
-    return response.text ? response.text.trim() : rawText;
-}
-
 
 // --- NEW: Reusable Verification Logic Function (Unified) ---
 async function runVerificationLogic(address, customerName) {
     // *** CRITICAL FIX START: Safely define necessary address variables to prevent fatal error ***
     const originalAddress = String(address || '').trim();
     const originalAddressLower = originalAddress.toLowerCase();
+
+    // --- CRITICAL CHECK 1: EMAIL ADDRESS VALIDATION (Immediate Fail) ---
+    const isEmailAddress = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i.test(originalAddress);
+    if (isEmailAddress) {
+        let cleanedName = (customerName || '').replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim() || null;
+        let remarks = [`CRITICAL_ALERT: Address contain email.`];
+        return {
+            status: "Error", 
+            remarks: remarks.join('; '), 
+            addressQuality: "Very Bad",
+            customerCleanName: cleanedName,
+            addressLine1: originalAddress, 
+            landmark: "", state: "", district: "", pin: null, success: false
+        };
+    }
+    // -------------------------------------------------------------------
+
 
     if (!originalAddress) {
         return {
@@ -275,33 +279,9 @@ async function runVerificationLogic(address, customerName) {
             AddressQuality: 'Very Bad', Remaining: maskedRemarks, // Use masked message here
         };
     }
-    
-    // --- 4. MANDATORY POST-PARSING TRANSLATION (Parallel Check for Address Components) ---
-    // If the aggressive prompt failed, this final step uses dedicated AI calls to translate components.
-    if (typeof getTranslatedAddressComponent === 'function') {
-        const fieldsToTranslate = [
-            'FormattedAddress', 'Landmark', 'State', 'DIST.', 'P.O.', 'Tehsil', 'Remaining'
-        ];
-        
-        const translationPromises = [];
-        const keysToUpdate = [];
-
-        // Collect all translation promises
-        for (const key of fieldsToTranslate) {
-            if (parsedData[key] && typeof parsedData[key] === 'string') {
-                translationPromises.push(getTranslatedAddressComponent(parsedData[key])); 
-                keysToUpdate.push(key);
-            }
-        }
-
-        // Execute all address translation calls in parallel for speed
-        const translatedResults = await Promise.all(translationPromises);
-        
-        // Re-assign translated address fields
-        for (let i = 0; i < keysToUpdate.length; i++) {
-            parsedData[keysToUpdate[i]] = translatedResults[i];
-        }
-    }
+    
+    // 4. MANDATORY TRANSLATION POST-PROCESSING (REMOVED EXTERNAL API CALLS)
+    // Reliance is 100% on the aggressive prompt for address fields.
 
 
     // 5. --- PIN VERIFICATION & CORRECTION LOGIC ---
@@ -365,11 +345,12 @@ async function runVerificationLogic(address, customerName) {
     }
 
 
-    // 9. --- RULE: Missing Locality/Specifics Check ---
-    const hasHouseOrFlat = parsedData['H.no.'] || parsedData['Flat No.'] || parsedData['Plot No.'];
+    // 9. --- RULE: Missing Locality/Specifics Check (Now relies on clean H.no. extraction) ---
+    const hasHouseOrFlat = parsedData['H.no.']; // Rely solely on the strictly extracted H.no.
     const hasStreetOrColony = parsedData.Street || parsedData.Colony || parsedData.Locality;
 
     if (!hasHouseOrFlat && !hasStreetOrColony) {
+        // THIS IS THE CRITICAL CHECK THAT CATCHES INPUTS LIKE 'nd' OR ONLY A PHONE NUMBER
         remarks.push(`CRITICAL_ALERT: Raw address lacks street/house/colony details.`);
         if (currentQuality === 'Very Good' || currentQuality === 'Good' || currentQuality === 'Medium') {
             parsedData.AddressQuality = 'Bad';
@@ -450,56 +431,56 @@ async function runVerificationLogic(address, customerName) {
 // --- Auxiliary Local Correction Functions (Copied from Google Script) ---
 
 /**
- * Implements the P.O. conflict check logic found in your Google Script's 
- * verifyAndCorrectAddress function.
- */
+ * Implements the P.O. conflict check logic found in your Google Script's 
+ * verifyAndCorrectAddress function.
+ */
 function postVerificationCorrections(geminiData, originalAddress, remarks) {
-    const aiLocality = geminiData["Locality"] || geminiData["Colony"] || '';
-    const aiPo = geminiData["P.O."];
-    
-    // Check specific known locality conflicts (from your Google Sheet script)
-    const correctedData = getPostalDataByLocality(aiLocality);
-    
-    if (correctedData) {
-        // If Gemini gave a locality that matches a known static table entry:
-        const normalizedAiPo = String(aiPo || '').toLowerCase();
-        const normalizedCorrectedPo = `p.o. ${correctedData["P.O."].toLowerCase()}`;
+    const aiLocality = geminiData["Locality"] || geminiData["Colony"] || '';
+    const aiPo = geminiData["P.O."];
+    
+    // Check specific known locality conflicts (from your Google Sheet script)
+    const correctedData = getPostalDataByLocality(aiLocality);
+    
+    if (correctedData) {
+        // If Gemini gave a locality that matches a known static table entry:
+        const normalizedAiPo = String(aiPo || '').toLowerCase();
+        const normalizedCorrectedPo = `p.o. ${correctedData["P.O."].toLowerCase()}`;
 
-        if (normalizedAiPo !== normalizedCorrectedPo) {
-            remarks.push(`P.O. conflict: Corrected P.O. from "${geminiData["P.O."]}" to "P.O. ${correctedData["P.O."]}"`);
-            
-            // Overwrite Gemini data with the correct postal data from the lookup table
-            geminiData["P.O."] = `P.O. ${correctedData["P.O."]}`;
-            geminiData["DIST."] = correctedData["DIST."];
-            geminiData["State"] = correctedData["State"];
+        if (normalizedAiPo !== normalizedCorrectedPo) {
+            remarks.push(`P.O. conflict: Corrected P.O. from "${geminiData["P.O."]}" to "P.O. ${correctedData["P.O."]}"`);
+            
+            // Overwrite Gemini data with the correct postal data from the lookup table
+            geminiData["P.O."] = `P.O. ${correctedData["P.O."]}`;
+            geminiData["DIST."] = correctedData["DIST."];
+            geminiData["State"] = correctedData["State"];
 
-            if (geminiData["PIN"] !== correctedData["PIN"]) {
-                remarks.push(`PIN conflict: Corrected PIN from "${geminiData["PIN"]}" to "${correctedData["PIN"]}"`);
-                geminiData["PIN"] = correctedData["PIN"];
-            }
-        }
-    }
+            if (geminiData["PIN"] !== correctedData["PIN"]) {
+                remarks.push(`PIN conflict: Corrected PIN from "${geminiData["PIN"]}" to "${correctedData["PIN"]}"`);
+                geminiData["PIN"] = correctedData["PIN"];
+            }
+        }
+    }
 }
 
 /**
- * Static lookup table for P.O. conflict checks (Copied from Google Script)
- */
+ * Static lookup table for P.O. conflict checks (Copied from Google Script)
+ */
 function getPostalDataByLocality(locality) {
-    const lookupTable = {
-        "boduppal": {
-            "P.O.": "Boduppal",
-            "DIST.": "Hyderabad",
-            "State": "Telangana",
-            "PIN": "500092"
-        },
-        "putlibowli": {
-            "P.O.": "Putlibowli",
-            "DIST.": "Hyderabad",
-            "State": "Telangana",
-            "PIN": "500095"
-        }
-    };
-    return lookupTable[locality.toLowerCase()] || null;
+    const lookupTable = {
+        "boduppal": {
+            "P.O.": "Boduppal",
+            "DIST.": "Hyderabad",
+            "State": "Telangana",
+            "PIN": "500092"
+        },
+        "putlibowli": {
+            "P.O.": "Putlibowli",
+            "DIST.": "Hyderabad",
+            "State": "Telangana",
+            "PIN": "500095"
+        }
+    };
+    return lookupTable[locality.toLowerCase()] || null;
 }
 
 // --- Main Handler (AUTHENTICATED POST & GET) ---
