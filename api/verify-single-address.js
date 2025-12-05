@@ -1,10 +1,10 @@
 // api/verify-single-address.js
-// Final Logic: Deterministic P.O. Selection + Metro Logic + Spelling Fixes
+// Logic Ported EXACTLY from Google Apps Script (GAS) to Node.js
 
 const INDIA_POST_API = 'https://api.postalpincode.in/pincode/'; 
 let pincodeCache = {};
 
-// --- 1. CONFIGURATION & KEYWORDS ---
+// --- 1. CONFIGURATION & KEYWORDS (Synced with GAS) ---
 const testingKeywords = ['test', 'testing', 'asdf', 'qwer', 'zxcv', 'random', 'gjnj', 'fgjnj'];
 
 const meaningfulWords = [
@@ -15,6 +15,7 @@ const meaningfulWords = [
     "tq", "job", "dist"
 ];
 
+// Regex to clean meaningless words
 const meaninglessRegex = (() => {
     try {
         return new RegExp(`\\b(?:${meaningfulWords.join('|')})\\b`, 'gi');
@@ -26,52 +27,21 @@ const meaninglessRegex = (() => {
 
 const directionalKeywords = ['near', 'opposite', 'back side', 'front side', 'behind', 'opp', 'beside', 'in front', 'above', 'below', 'next to'];
 
-// --- NEW: METRO CITIES CONFIG (Fix for "Tehsil Kolkata" issue) ---
-// If the District matches these, we will SUPPRESS the Tehsil output.
-const METRO_CITIES = [
-    'kolkata', 'calcutta', 
-    'mumbai', 'mumbai suburban', 
-    'delhi', 'new delhi', 'central delhi', 'south delhi', 'north delhi',
-    'chennai', 'madras', 
-    'bangalore', 'bengaluru', 'bangalore urban',
-    'hyderabad', 'secunderabad',
-    'ahmedabad'
-];
-
-// --- NEW: DISTRICT SPELLING CORRECTIONS (Fix for "Raigarh" vs "Raigad") ---
-const DISTRICT_SPELLING_CORRECTIONS = {
-    'raigarh': 'Raigad', // Common confusion in Maharashtra
-    'ahmednagar': 'Ahilyanagar',
-    'aurangabad': 'Chhatrapati Sambhajinagar',
-    'osmanabad': 'Dharashiv'
-};
-
-const CRITICAL_KEYWORDS = [
-    'CRITICAL_ALERT: Wrong PIN', 
-    'CRITICAL_ALERT: AI-provided PIN',
-    'CRITICAL_ALERT: PIN not found',
-    'CRITICAL_ALERT: Raw address lacks',
-    'CRITICAL_ALERT: Raw address contains email', 
-    'CRITICAL_ALERT: Major location conflict',
-    'CRITICAL_ALERT: Formatted address is short',
-    'CRITICAL_ALERT: JSON parse failed',
-    'CRITICAL_ALERT: Address lacks specificity'
-];
-
 // --- 2. DATABASE & AUTH ---
 const { connectToDatabase } = require('../utils/db');
 const jwt = require('jsonwebtoken');
 const { ObjectId } = require('mongodb'); 
 const JWT_SECRET = process.env.JWT_SECRET || 'replace_with_env_jwt_secret';
 
-// --- 3. HELPER: TRANSLATE TO ENGLISH ---
+// --- 3. HELPER: TRANSLATE TO ENGLISH (Replaces LanguageApp) ---
+// Since GAS uses LanguageApp, we use a lightweight Gemini call here.
 async function translateToEnglish(text) {
     if (!text || typeof text !== 'string') return text;
+    // Skip translation if text is very short or looks like a number/code
     if (text.length < 3 || /^\d+$/.test(text)) return text;
 
-    // Use Gemini to standardize text (not just translate)
-    const prompt = `Standardize this address text to English. Return ONLY the cleaned text. Text: "${text}"`;
-    const res = await getGeminiResponse(prompt, 0.0); 
+    const prompt = `Translate the following text to English. Return ONLY the translated text. If it is already in English or is a proper noun (name/place), return it as is. Text: "${text}"`;
+    const res = await getGeminiResponse(prompt, 0.0); // Strict temp
     return res.text ? res.text.trim() : text;
 }
 
@@ -108,32 +78,7 @@ async function getIndiaPostData(pin) {
     }
 }
 
-// --- 5. DETERMINISTIC P.O. MATCHING (FIXED LOGIC) ---
-function findBestPOMatch(rawAddress, postOfficeList) {
-    if (!postOfficeList || postOfficeList.length === 0) return null;
-    
-    const normalizedAddress = rawAddress.toLowerCase().replace(/[^\w\s]/g, ' ');
-
-    // Strategy 1: Exact Name Match
-    // We sort by length (longest first) to catch "Kharghar Sector 19" before "Kharghar"
-    const sortedPOs = [...postOfficeList].sort((a, b) => b.Name.length - a.Name.length);
-    
-    for (const po of sortedPOs) {
-        const normalizedPO = po.Name.toLowerCase().replace(/[^\w\s]/g, ' ');
-        // Strict word boundary check
-        const regex = new RegExp(`\\b${normalizedPO}\\b`, 'i');
-        if (regex.test(normalizedAddress)) {
-            return po; // strict match found
-        }
-    }
-    
-    // Strategy 2: If no strict match, fallback to the first "Sub Office" (S.O) 
-    // Usually S.O. is the main delivery point vs B.O. (Branch Office)
-    const subOffice = postOfficeList.find(po => po.Name.includes("S.O"));
-    return subOffice || postOfficeList[0];
-}
-
-// --- 6. GEMINI API HELPER ---
+// --- 5. GEMINI API HELPER ---
 async function getGeminiResponse(prompt, temperature = 0.0) { 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) return { text: null, error: "Gemini API key not set." };
@@ -143,7 +88,7 @@ async function getGeminiResponse(prompt, temperature = 0.0) {
     const requestBody = {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
-            temperature: temperature, // Strict
+            temperature: temperature, // Controlled by caller
             topP: 0.8,
             topK: 10
         }
@@ -175,7 +120,7 @@ async function getGeminiResponse(prompt, temperature = 0.0) {
     }
 }
 
-// --- 7. UTILITIES ---
+// --- 6. UTILITIES (From GAS) ---
 function extractPin(address) {
     const match = String(address).match(/\b\d{6}\b/);
     return match ? match[0] : null; 
@@ -199,45 +144,39 @@ function removeAdjacentDuplicates(str) {
     return cleanedWords.join(' ');
 }
 
-// --- 8. PROMPT BUILDER ---
+// --- 7. PROMPT BUILDER (Exact Copy from GAS) ---
 function buildGeminiPrompt(originalAddress, postalData) {
-    let basePrompt = `You are a strict Address Standardization Engine.
-    Raw Address: "${originalAddress}"
-    
-    **INSTRUCTIONS:**
-    1. **NO HALLUCINATIONS:** Do NOT add landmarks, shops, or descriptors not in the Raw Address.
-    2. **NO TRANSLATION:** Do NOT translate proper nouns (e.g., "Vadu Ali" stays "Vadu Ali").
-    3. **EXTRACT SPECIFIC FIELDS:**
-       - "H.no.": House/Flat/Plot No.
-       - "Street": Street Name / Road No.
-       - "Locality": Colony / Area / Sector.
-       - "Landmark": Specific landmark.
-       - "Remaining": Ambiguous text.
-    4. **POSTAL DATA:** - If provided, select the Post Office from the list.
-    
-    Official Postal Data: ${JSON.stringify(postalData.PostOfficeList || [])}
+    let basePrompt = `You are an expert Indian address verifier and formatter. Your task is to process a raw address, perform a thorough analysis, and provide a comprehensive response in a single JSON object. **Provide all responses in English only. Strictly translate all extracted address components to English. Correct all common spelling and phonetic errors in the provided address, such as "rd" to "Road", "nager" to "Nagar", and "nd" to "2nd". Analyze common short forms and phonetic spellings, such as "lean" for "Lane", and use your best judgment to correct them. Be strict about ensuring the output is a valid, single, and complete address for shipping. Use your advanced knowledge to identify and remove any duplicate address components that are present consecutively (e.g., 'Gandhi Street Gandhi Street' should be 'Gandhi Street').**
 
-    **OUTPUT JSON:**
-    {
-      "H.no.": "string/null",
-      "Street": "string/null",
-      "Locality": "string/null",
-      "Landmark": "string/null",
-      "Remaining": "string/null",
-      "P.O.": "string",
-      "Tehsil": "string",
-      "DIST.": "string",
-      "State": "string",
-      "PIN": "6-digit code",
-      "FormattedAddress": "string",
-      "AddressQuality": "Very Good/Good/Medium/Bad",
-      "LocationType": "Village/Town/City"
-    }
+Your response must contain the following keys:
+1.  **"H.no."**, **"Flat No."**, **"Plot No."**, **"Room No."**, **"Building No."**, **"Block No."**, **"Ward No."**, **"Gali No."**, **"Zone No."**: Extract only the number or alphanumeric sequence (e.g., '1-26', 'A/25', '10'). Set to null if not found.
+2.  **"Colony"**, **"Street"**, **"Locality"**, **"Building Name"**, **"House Name"**, **"Floor"**: Extract the name.
+3.  **"P.O."**: The official Post Office name from the PIN data. Prepend "P.O." to the name. Example: "P.O. Boduppal".
+4.  **"Tehsil"**: The official Tehsil/SubDistrict from the PIN data. Prepend "Tehsil". Example: "Tehsil Pune".
+5.  **"DIST."**: The official District from the PIN data.
+6.  **"State"**: The official State from the PIN data.
+7.  **"PIN"**: The 6-digit PIN code. Find and verify the correct PIN. If a PIN exists in the raw address but is incorrect, find the correct one and provide it.
+8.  **"Landmark"**: A specific, named landmark (e.g., "Apollo Hospital"), not a generic type like "school". If multiple landmarks are present, list them comma-separated. **Extract the landmark without any directional words like 'near', 'opposite', 'behind' etc., as this will be handled by the script.**
+9.  **"Remaining"**: A last resort for any text that does not fit into other fields. Clean this by removing meaningless words like 'job', 'raw', 'add-', 'tq', 'dist' and country, state, district, or PIN code.
+10. **"FormattedAddress"**: **This is the most important field.** Based on your full analysis, create a single, clean, human-readable, and comprehensive shipping-ready address string. It should contain all specific details (H.no., Room No., etc.), followed by locality, street, colony, P.O., Tehsil, and District. **DO NOT include the State or PIN in this string.** Use commas to separate logical components. Do not invent or "hallucinate" information.
+11. **"LocationType"**: Identify the type of location (e.g., "Village", "Town", "City", "Urban Area").
+12. **"AddressQuality"**: Analyze the address completeness and clarity for shipping. Categorize it as one of the following: **Very Good**, **Good**, **Medium**, **Bad**, or **Very Bad**.
+13. **"LocationSuitability"**: Analyze the location based on its State, District, and PIN to determine courier-friendliness in India. Categorize it as one of the following: **Prime Location**, **Tier 1 & 2 Cities**, **Remote/Difficult Location**, or **Non-Serviceable Location**.
+
+Raw Address: "${originalAddress}"
 `;
+
+    if (postalData.PinStatus === 'Success') {
+        basePrompt += `\nOfficial Postal Data: ${JSON.stringify(postalData.PostOfficeList)}\nUse this list to find the best match for 'P.O.', 'Tehsil', and 'DIST.' fields.`;
+    } else {
+        basePrompt += `\nAddress has no PIN or the PIN is invalid. You must find and verify the correct 6-digit PIN. If you cannot find a valid PIN, set "PIN" to null.`;
+    }
     return basePrompt;
 }
 
-// --- 9. LOCAL CONFLICT CORRECTION (Restored) ---
+// --- 8. LOGIC FUNCTIONS FROM GOOGLE SCRIPT ---
+
+// Lookup Table for Conflict Resolution
 function getPostalDataByLocality(locality) {
     const lookupTable = {
         "boduppal": { "P.O.": "Boduppal", "DIST.": "Hyderabad", "State": "Telangana", "PIN": "500092" },
@@ -246,165 +185,186 @@ function getPostalDataByLocality(locality) {
     return lookupTable[locality.toLowerCase()] || null;
 }
 
-function verifyAndCorrectAddress(geminiData, remarks) {
+// Verify and Correct Address (PO Conflict)
+function verifyAndCorrectAddress(geminiData, originalAddress, remarks) {
     const aiLocality = geminiData["Locality"] || geminiData["Colony"] || '';
-    if (aiLocality) {
+    const aiPo = geminiData["P.O."];
+    
+    if (aiLocality && aiPo && aiLocality.toLowerCase() !== aiPo.toLowerCase()) {
         const correctedData = getPostalDataByLocality(aiLocality);
         if (correctedData) {
-            // Apply hard correction
-            geminiData["P.O."] = `P.O. ${correctedData["P.O."]}`;
-            geminiData["DIST."] = correctedData["DIST."];
-            geminiData["State"] = correctedData["State"];
-            geminiData["PIN"] = correctedData["PIN"];
-            remarks.push(`Locality correction applied for ${aiLocality}`);
+            // Check if AI got the wrong PO
+            const normalizedAiPo = String(geminiData["P.O."] || '').toLowerCase();
+            const normalizedCorrectedPo = `p.o. ${correctedData["P.O."].toLowerCase()}`;
+
+            if (normalizedAiPo !== normalizedCorrectedPo) {
+                remarks.push(`P.O. conflict: Corrected P.O. from "${geminiData["P.O."]}" to "P.O. ${correctedData["P.O."]}"`);
+                geminiData["P.O."] = `P.O. ${correctedData["P.O."].toLowerCase()}`;
+                geminiData["DIST."] = correctedData["DIST."];
+                geminiData["State"] = correctedData["State"];
+                if (geminiData["PIN"] !== correctedData["PIN"]) {
+                    remarks.push(`PIN conflict: Corrected PIN from "${geminiData["PIN"]}" to "${correctedData["PIN"]}"`);
+                    geminiData["PIN"] = correctedData["PIN"];
+                }
+            }
         }
     }
 }
 
-// --- 10. CLEANUP GEMINI DATA (Restored) ---
+// Clean Up Gemini Data (Remove Pin/State/Dist from Remaining)
 function cleanUpGeminiData(geminiData) {
     if (geminiData["Remaining"]) {
         let remainingText = geminiData["Remaining"].toString().trim();
+        const pinRegex = /\b\d{6}\b/;
+        const state = geminiData["State"] || '';
+        const district = geminiData["DIST."] || '';
+
         remainingText = remainingText.replace(meaninglessRegex, '').replace(/\s+/g, ' ').trim();
-        // Remove PIN/State/Dist from remaining text
-        if (geminiData["PIN"]) remainingText = remainingText.replace(geminiData["PIN"], '');
-        if (geminiData["State"]) remainingText = remainingText.replace(new RegExp(geminiData["State"], 'gi'), '');
-        if (geminiData["DIST."]) remainingText = remainingText.replace(new RegExp(geminiData["DIST."], 'gi'), '');
-        geminiData["Remaining"] = remainingText.trim();
+
+        const remainingPinMatch = remainingText.match(pinRegex);
+        if (remainingPinMatch && geminiData["PIN"] && remainingPinMatch[0] === geminiData["PIN"].toString().trim()) {
+            remainingText = remainingText.replace(remainingPinMatch[0], '').trim();
+        }
+
+        if (state && remainingText.toLowerCase().includes(state.toLowerCase())) {
+            remainingText = remainingText.toLowerCase().replace(state.toLowerCase(), '').trim();
+        }
+
+        if (district && remainingText.toLowerCase().includes(district.toLowerCase())) {
+            remainingText = remainingText.toLowerCase().replace(district.toLowerCase(), '').trim();
+        }
+
+        geminiData["Remaining"] = remainingText;
     }
 }
 
-// --- 11. MAIN VERIFICATION LOGIC ---
+// --- 9. MAIN VERIFICATION LOGIC (Replaces GAS processSingleAddress) ---
 async function runVerificationLogic(address, customerName) {
     const originalAddress = String(address || '').trim();
     if (!originalAddress) {
-        return { status: "Error", remarks: "Empty address.", success: false };
+        return { status: "Error", remarks: "Empty address found.", success: false, addressQuality: "Very Bad" };
     }
 
     let remarks = [];
     let geminiData = {};
     const originalAddressLower = originalAddress.toLowerCase();
 
-    // A. Testing & Email Check
-    const isTesting = testingKeywords.some(k => originalAddressLower.includes(k) || (customerName || '').toLowerCase().includes(k));
-    if (isTesting) return { status: "Success", remarks: "Testing Order", addressQuality: "Bad", success: true };
-    if (extractEmail(originalAddress)) return { status: "Skipped", remarks: "Invalid Address: Contains email.", addressQuality: "Very Bad", success: false };
-
-    // B. Translation & Data Fetch
-    const translatedAddress = await translateToEnglish(originalAddress);
-    const initialPin = extractPin(originalAddress);
-    let postalData = initialPin ? await getIndiaPostData(initialPin) : { PinStatus: 'Error' };
-    
-    // C. Deterministic PO Matching (PRE-CALCULATION)
-    // We try to find the best PO *before* AI to guide/overwrite it later
-    let forcedPO = null;
-    if (postalData.PinStatus === 'Success') {
-        forcedPO = findBestPOMatch(originalAddress, postalData.PostOfficeList);
+    // A. Testing Order Check
+    const isTesting = testingKeywords.some(keyword => 
+        (customerName && customerName.toLowerCase().includes(keyword)) || 
+        originalAddressLower.includes(keyword)
+    );
+    if (isTesting) {
+        return { status: "Success", remarks: "Testing Order", addressQuality: "Bad", success: true };
     }
 
-    // D. Gemini Verification
+    // B. Email Check
+    if (extractEmail(originalAddress)) {
+        return { status: "Skipped", remarks: "Invalid Address: Contains an email.", addressQuality: "Very Bad", success: false };
+    }
+
+    // C. TRANSLATION (Replaces LanguageApp)
+    const translatedAddress = await translateToEnglish(originalAddress);
+
+    // D. PIN Extraction & Fetch
+    const originalPin = extractPin(originalAddress);
+    let postalData = originalPin ? await getIndiaPostData(originalPin) : { PinStatus: 'Error' };
+
+    // E. Gemini Verification
     const geminiPrompt = buildGeminiPrompt(translatedAddress, postalData);
-    const geminiResponse = await getGeminiResponse(geminiPrompt, 0.0);
+    const geminiResponse = await getGeminiResponse(geminiPrompt, 0.0); // Strict
 
     if (geminiResponse.text) {
         try {
             const cleanResponse = geminiResponse.text.replace(/```json\n|\n```|```/g, '').trim();
             geminiData = JSON.parse(cleanResponse);
+
+            // F. AI-Provided PIN Check (Logic from GAS)
+            const aiPin = geminiData["PIN"];
+            if (aiPin && postalData.PinStatus !== 'Success') {
+                const aiPostalData = await getIndiaPostData(aiPin);
+                if (aiPostalData.PinStatus === 'Success') {
+                    geminiData["P.O."] = `P.O. ${aiPostalData.PostOfficeList[0].Name}`;
+                    geminiData["Tehsil"] = `Tehsil ${aiPostalData.PostOfficeList[0].Taluk}`;
+                    geminiData["DIST."] = aiPostalData.PostOfficeList[0].District;
+                    geminiData["State"] = aiPostalData.PostOfficeList[0].State;
+                    remarks.push(`PIN verified by AI: (${aiPin})`);
+                    postalData = aiPostalData; 
+                } else {
+                    remarks.push(`Warning: AI-provided PIN (${aiPin}) not verified by API.`);
+                }
+            }
         } catch (e) {
-            remarks.push("JSON Parse Failed");
+            remarks.push(`JSON parse failed: ${e.message}`);
             geminiData = { FormattedAddress: originalAddress, AddressQuality: "Very Bad" };
         }
     } else {
-        remarks.push(geminiResponse.error || "AI Error");
+        remarks.push(geminiResponse.error || "Address could not be verified by Gemini.");
     }
 
-    // E. PIN Validation & Correction
-    let finalPin = geminiData["PIN"] || initialPin;
-    if (finalPin && finalPin !== initialPin) {
-        const aiPostalData = await getIndiaPostData(finalPin);
-        if (aiPostalData.PinStatus === 'Success') {
-            postalData = aiPostalData;
-            remarks.push(`PIN verified by AI: ${finalPin}`);
-            // Re-run PO matching for new PIN
-            forcedPO = findBestPOMatch(originalAddress, postalData.PostOfficeList);
-        } else {
-            finalPin = initialPin; // Revert
-            remarks.push(`Reverted AI PIN hallucination.`);
-        }
-    }
+    // G. Verify and Correct (Logic from GAS)
+    verifyAndCorrectAddress(geminiData, originalAddress, remarks);
 
-    // F. ENFORCE OFFICIAL DATA (The Critical Fix)
-    if (postalData.PinStatus === 'Success') {
-        // 1. Select the PO Object
-        let selectedPO = forcedPO;
-        
-        // If no code-match, check AI's string against the list
-        if (!selectedPO && geminiData["P.O."]) {
-            const cleanAIName = geminiData["P.O."].replace('P.O.', '').trim().toLowerCase();
-            selectedPO = postalData.PostOfficeList.find(p => p.Name.toLowerCase() === cleanAIName);
-        }
-        
-        // Fallback to first S.O. or first in list
-        if (!selectedPO) {
-            selectedPO = postalData.PostOfficeList.find(po => po.Name.includes("S.O")) || postalData.PostOfficeList[0];
-        }
-
-        // 2. OVERWRITE FIELDS
-        geminiData["P.O."] = `P.O. ${selectedPO.Name}`;
-        geminiData["State"] = selectedPO.State;
-        
-        // 3. District Correction (Raigarh -> Raigad)
-        const apiDist = selectedPO.District;
-        const correctedDist = DISTRICT_SPELLING_CORRECTIONS[apiDist.toLowerCase()] || apiDist;
-        geminiData["DIST."] = correctedDist;
-
-        // 4. Tehsil Logic (Suppress for Metros)
-        const distLower = correctedDist.toLowerCase();
-        const isMetro = METRO_CITIES.some(m => distLower.includes(m));
-        
-        if (isMetro) {
-            geminiData["Tehsil"] = ""; // Blank out for metros
-        } else {
-            // Use API Tehsil if available, else generic
-            geminiData["Tehsil"] = selectedPO.Taluk ? `Tehsil ${selectedPO.Taluk}` : geminiData["Tehsil"];
-        }
-    }
-
-    // G. Corrections & Cleanup
-    verifyAndCorrectAddress(geminiData, remarks);
+    // H. Cleanup (Logic from GAS)
     cleanUpGeminiData(geminiData);
 
-    // H. Landmark Logic
+    // I. Landmark Directional Logic (Logic from GAS)
+    let landmarkValue = geminiData["Landmark"] || '';
     let finalLandmark = '';
-    const landmarkVal = geminiData["Landmark"] || '';
-    if (landmarkVal) {
-        const foundDir = directionalKeywords.find(k => originalAddressLower.includes(k));
-        if (foundDir) {
-             const originalDirWord = originalAddress.match(new RegExp(`\\b${foundDir}\\b`, 'i'))?.[0] || foundDir; 
-             finalLandmark = `${originalDirWord.charAt(0).toUpperCase() + originalDirWord.slice(1)} ${landmarkVal}`;
-        } else {
-             finalLandmark = `Near ${landmarkVal}`;
+    const foundDirectionalWord = directionalKeywords.find(keyword => originalAddressLower.includes(keyword));
+
+    if (foundDirectionalWord) {
+        // Find original spelling in raw address
+        const originalDirectionalWord = originalAddress.match(new RegExp(`\\b${foundDirectionalWord}\\b`, 'i'))?.[0] || '';
+        if (landmarkValue.trim() !== '') {
+            finalLandmark = `${originalDirectionalWord.charAt(0).toUpperCase() + originalDirectionalWord.slice(1)} ${landmarkValue.trim()}`;
+        }
+    } else {
+        if (landmarkValue.trim() !== '') {
+            finalLandmark = `Near ${landmarkValue.trim()}`;
         }
     }
 
-    // I. Name Cleaning
-    let cleanedName = await translateToEnglish(customerName); // Simple cleaner
+    // J. Name Cleaning (Using Gemini)
+    let cleanedName = customerName;
+    if (customerName) {
+        const namePrompt = `Clean and correct the following customer name. Remove any numbers or special characters and translate the name to English if needed. Provide only the cleaned name. Provide only the name with no other text. Name: "${customerName}"`;
+        const cleanedNameResponse = await getGeminiResponse(namePrompt, 0.0);
+        if (cleanedNameResponse.text) {
+            cleanedName = cleanedNameResponse.text.trim();
+        } else {
+            remarks.push("Name cleaning failed.");
+        }
+    }
 
-    // J. Final Formatting
+    // K. Final Formatting (Logic from GAS)
+    const finalPin = geminiData["PIN"];
     let formattedAddress = geminiData["FormattedAddress"] || '';
-    if (originalAddressLower.includes('village') && !formattedAddress.toLowerCase().includes('village')) {
+
+    // Village Prefix
+    if (originalAddressLower.includes('village') && formattedAddress.length > 0 && !formattedAddress.toLowerCase().includes('village')) {
         formattedAddress = `Village ${formattedAddress}`;
     }
-    
-    // Duplicate Landmark Check (Fix for "Near ZP School" appearing twice)
-    if (finalLandmark && formattedAddress.toLowerCase().includes(finalLandmark.toLowerCase())) {
-        // If landmark is already in address, don't duplicate it in the separate field? 
-        // Or remove from formatted? Usually we keep formatted clean.
-        // Let's ensure formatted address doesn't end with the landmark if we are displaying it separately.
+
+    // PIN Remarks
+    if (!finalPin) {
+        remarks.push("Warning: PIN not found after verification attempts. Manual check needed.");
+    } else if (originalPin && finalPin !== originalPin) {
+        remarks.push(`Wrong PIN (${originalPin}) Corrected to (${finalPin})`);
+    } else if (!originalPin && finalPin) {
+        remarks.push(`Correct PIN (${finalPin}) added`);
     }
 
+    // Short Address Check
+    if (formattedAddress.length < 35) {
+        remarks.push("Warning: Formatted address is too short. Please verify manually.");
+    }
+
+    // Adjacent Duplicates
     formattedAddress = removeAdjacentDuplicates(formattedAddress);
-    
+    finalLandmark = removeAdjacentDuplicates(finalLandmark);
+
+    // Return Final Object
     return {
         status: "Success",
         customerRawName: customerName,
@@ -415,27 +375,31 @@ async function runVerificationLogic(address, customerName) {
         tehsil: geminiData["Tehsil"] || '',
         district: geminiData["DIST."] || '',
         state: geminiData["State"] || '',
-        pin: finalPin || initialPin,
+        pin: finalPin || originalPin,
         addressQuality: geminiData["AddressQuality"] || 'Medium',
         locationType: geminiData["LocationType"] || 'Unknown',
+        locationSuitability: geminiData["LocationSuitability"] || 'Unknown',
         remarks: remarks.join('; ').trim(),
         success: true
     };
 }
 
-// --- 12. MAIN EXPORT ---
+// --- 10. MAIN HANDLER ---
 module.exports = async (req, res) => {
-    // ... [KEEP YOUR EXISTING AUTH / DB / CREDITS LOGIC HERE] ...
-    // Note: Standard Boilerplate
+    // ... (AUTH & DB - SAME AS BEFORE) ...
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '[https://dfame237-oss.github.io](https://dfame237-oss.github.io)');
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
     if (req.method === 'OPTIONS') { res.status(200).end(); return; }
 
     let db;
-    try { const dbResult = await connectToDatabase(); db = dbResult.db; } 
-    catch (e) { return res.status(500).json({ status: 'Error', error: 'Database connection failed.' }); }
+    try {
+        const dbResult = await connectToDatabase(); 
+        db = dbResult.db;
+    } catch (e) {
+        return res.status(500).json({ status: 'Error', error: 'Database connection failed.' }); 
+    }
     const clients = db.collection('clients');
 
     function parseJwtFromHeader(req) {
@@ -444,41 +408,100 @@ module.exports = async (req, res) => {
         const parts = authHeader.split(' '); 
         if (parts.length !== 2) return null; 
         const token = parts[1];
-        try { return jwt.verify(token, JWT_SECRET); } catch (e) { return null; }
+        try {
+            const payload = jwt.verify(token, JWT_SECRET);
+            if (!payload || !payload.clientId) return null;
+            return payload;
+        } catch (e) { return null; }
     }
 
     if (req.method === 'GET') {
         const jwtPayload = parseJwtFromHeader(req);
-        if (!jwtPayload) return res.status(401).json({ status: 'Error', message: 'Auth required.' });
-        const client = await clients.findOne({ _id: new ObjectId(jwtPayload.clientId) });
-        return res.status(200).json({ status: 'Success', remainingCredits: client?.remainingCredits ?? 0, initialCredits: client?.initialCredits ?? 0 });
+        if (!jwtPayload) return res.status(401).json({ status: 'Error', message: 'Authentication required.' });
+        try {
+            const client = await clients.findOne({ _id: new ObjectId(jwtPayload.clientId) });
+            if (!client) return res.status(404).json({ status: 'Error', message: 'Client not found.' });
+            return res.status(200).json({
+                status: 'Success',
+                remainingCredits: client.remainingCredits ?? 0,
+                initialCredits: client.initialCredits ?? 0
+            });
+        } catch (e) { return res.status(500).json({ status: 'Error', message: 'Internal server error.' }); }
     }
 
     if (req.method === 'POST') {
         const jwtPayload = parseJwtFromHeader(req);
-        if (!jwtPayload) return res.status(401).json({ status: 'Error', message: 'Auth required.' });
+        if (!jwtPayload) return res.status(401).json({ status: 'Error', message: 'Authentication required.' });
         
         let body = req.body;
         if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { /* ignore */ } }
         const { address, customerName } = body || {}; 
+        
         if (!address) return res.status(400).json({ status: 'Error', error: 'Address is required.' });
 
         try {
             const client = await clients.findOne({ _id: new ObjectId(jwtPayload.clientId) });
-            // ... Credits Logic (Use your existing snippet) ...
-            
+            if (!client) return res.status(404).json({ status: 'Error', message: 'Client not found.' });
+
+            const remaining = client.remainingCredits;
+            const isUnlimited = (remaining === 'Unlimited');
+            let reserved = false;
+
+            if (!isUnlimited) {
+                const reserveResult = await clients.findOneAndUpdate(
+                    { _id: client._id, remainingCredits: { $gt: 0 } },
+                    { $inc: { remainingCredits: -1 }, $set: { lastActivityAt: new Date() } },
+                    { returnDocument: 'after' }
+                );
+                if (!reserveResult.value) {
+                    return res.status(200).json({ status: 'QuotaExceeded', message: 'No credits left.' });
+                }
+                reserved = true;
+            }
+
+            // RUN THE VERIFICATION
             const finalResponse = await runVerificationLogic(address, customerName);
+
+            // Refund if error
+            if ((finalResponse.status === "Error" || finalResponse.status === "Skipped") && reserved) {
+                 await clients.updateOne({ _id: client._id }, { $inc: { remainingCredits: 1 } });
+                 return res.status(500).json({ status: finalResponse.status, message: finalResponse.remarks });
+            }
+             
+            // If skipped, return 200 but notify
+            if (finalResponse.status === "Skipped") {
+                return res.status(200).json({ status: finalResponse.status, message: finalResponse.remarks, remainingCredits: reserved ? (client.remainingCredits ?? 0) : 'Unlimited' });
+            }
+
+            const updatedClient = isUnlimited ? { remainingCredits: 'Unlimited' } : await clients.findOne({ _id: client._id });
             
-            // ... Final Response ...
-            return res.status(200).json({ ...finalResponse, remainingCredits: client.remainingCredits });
+            return res.status(200).json({
+                ...finalResponse,
+                remainingCredits: isUnlimited ? 'Unlimited' : (updatedClient.remainingCredits ?? 0)
+            });
         } catch (e) {
-            return res.status(500).json({ status: 'Error', message: e.message });
+            return res.status(500).json({ status: 'Error', message: `Internal Server Error: ${e.message}` });
         }
     }
     return res.status(405).json({ status: 'Error', error: 'Method Not Allowed' }); 
 };
 
-// Exports
+// EXPORTS
 module.exports.runVerificationLogic = runVerificationLogic;
 module.exports.getIndiaPostData = getIndiaPostData;
+module.exports.getGeminiResponse = getGeminiResponse;
+module.exports.extractPin = extractPin;
+module.exports.meaninglessRegex = meaninglessRegex;
+// Define CRITICAL_KEYWORDS here if needed for export compatibility with bulk-jobs
+const CRITICAL_KEYWORDS = [
+    'CRITICAL_ALERT: Wrong PIN', 
+    'CRITICAL_ALERT: AI-provided PIN',
+    'CRITICAL_ALERT: PIN not found',
+    'CRITICAL_ALERT: Raw address lacks',
+    'CRITICAL_ALERT: Raw address contains email', 
+    'CRITICAL_ALERT: Major location conflict',
+    'CRITICAL_ALERT: Formatted address is short',
+    'CRITICAL_ALERT: JSON parse failed',
+    'CRITICAL_ALERT: Address lacks specificity'
+];
 module.exports.CRITICAL_KEYWORDS = CRITICAL_KEYWORDS;
