@@ -1,7 +1,7 @@
 // api/verify-single-address.js
 // Logic Ported EXACTLY from Google Apps Script (GAS) to Node.js
 
-const INDIA_POST_API = 'https://api.postalpincode.in/pincode/'; 
+const INDIA_POST_API = '[https://api.postalpincode.in/pincode/](https://api.postalpincode.in/pincode/)'; 
 let pincodeCache = {};
 
 // --- 1. CONFIGURATION & KEYWORDS (Synced with GAS) ---
@@ -180,7 +180,10 @@ Raw Address: "${originalAddress}"
 function getPostalDataByLocality(locality) {
     const lookupTable = {
         "boduppal": { "P.O.": "Boduppal", "DIST.": "Hyderabad", "State": "Telangana", "PIN": "500092" },
-        "putlibowli": { "P.O.": "Putlibowli", "DIST.": "Hyderabad", "State": "Telangana", "PIN": "500095" }
+        "putlibowli": { "P.O.": "Putlibowli", "DIST.": "Hyderabad", "State": "Telangana", "PIN": "500095" },
+        // START OF FIX: Added 'baraula' to resolve Noida/Delhi PIN conflict
+        "baraula": { "P.O.": "Noida", "DIST.": "Gautam Buddha Nagar", "State": "Uttar Pradesh", "PIN": "201301" }
+        // END OF FIX
     };
     return lookupTable[locality.toLowerCase()] || null;
 }
